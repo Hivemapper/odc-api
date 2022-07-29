@@ -1,0 +1,35 @@
+import { Request } from 'express';
+import { CameraFile } from '../types';
+
+export const getDateFromFilename = (filename: string) => {
+  try {
+    const parts = filename.split('T');
+    const time = parts[1].replace(/-/g, ':').split('.');
+    time.pop();
+    parts[1] = time.join('.');
+    return new Date(parts.join('T'));
+  } catch (e) {
+    return new Date();
+  }
+};
+
+export const getDateFromUnicodeTimastamp = (filename: string) => {
+  try {
+    const parts = filename.split('_');
+    return new Date(Number(parts[0] + parts[1].substring(0, 3)));
+  } catch (e) {
+    return new Date();
+  }
+};
+
+export const filterBySinceUntil = (files: CameraFile[], req: Request) => {
+  if (req.query.since || req.query.until) {
+    const since = Number(req.query.since);
+    const until = Number(req.query.until);
+    return files.filter((file: CameraFile) => {
+      return !((since && file.date < since) || (until && file.date > until));
+    });
+  } else {
+    return files;
+  }
+};
