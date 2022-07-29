@@ -6,7 +6,7 @@ For a quick start,
 
 `npm run build`
 
-Check if it's healthy hitting:
+Check if it's healthy:
 
 `http://localhost:5000/api/1/info`
 
@@ -20,10 +20,11 @@ and then execute:
 `npm run compile`
 
 Server got compiled into single file, and located in compiled/index.js
+
 To check if everything OK with compiled server file, execute:
 
 `npm run build-compiled`
 
-And check if it's healthy hitting:
+And double-check if it's healthy:
 
 `http://localhost:5000/api/1/info`
