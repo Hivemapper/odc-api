@@ -3,10 +3,10 @@
 import cp from 'child_process';
 import fs from 'fs';
 
-const EMPTY_PAYLOAD = new UInt8Array(0);
+const EMPTY_PAYLOAD = new Uint8Array(0);
 const DEFAULT_ALAMANC_FIXTURE = 'fixtures/mgaoffline.ubx';
 
-type UBX_MGA_COMMAND = 'UBX-MGA-FLASH-DATA' | 'UBX_MGA_FLASH-STOP';
+type UBX_MGA_COMMAND = 'UBX-MGA-FLASH-DATA' & 'UBX_MGA_FLASH-STOP';
 const UBX_COMMAND_CLASS_ID_BYTES: Record<UBX_MGA_COMMAND, string> = {
   'UBX-MGA-FLASH-DATA': '0x13,0x21',
   'UBX-MGA-FLASH-STOP': '0x13,0x22',
@@ -15,7 +15,7 @@ const UBX_COMMAND_CLASS_ID_BYTES: Record<UBX_MGA_COMMAND, string> = {
 function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
   const buf = fs.readFileSync(fileIn);
   // get blocks of 512 bytes
-  const blocks: UInt8Array[] = [];
+  const blocks: Uint8Array[] = [];
 
   for (let i = 0; i < buf.length; i += 512) {
     const start = i * 512;
@@ -26,7 +26,8 @@ function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
   return blocks;
 }
 
-function makeCommand(mgaCommand: UBX_MGA_COMMAND, block: UInt8Array) {
+function makeCommand(mgaCommand: UBX_MGA_COMMAND, block: Uint8Array) {
+  //@ts-ignore
   const payload = block.map(byte => `0x${byte.toString(16)}`).join(',');
   return `${UBX_COMMAND_CLASS_ID_BYTES[mgaCommand]},${payload}`;
 }
@@ -58,9 +59,14 @@ the last block or aborts the whole process.
  */
 export function submitOfflineAlmanac() {
   const blocks = readMGAOffline();
-  const msgQueue = blocks.map(block => makeCommand('UBX-MGA-FLASH-DATA', block));
-  msgQueue.push(makeCommand('UBX-MGA-FLASH-STOP', EMPTY_PAYLOAD));
+  const msgQueue = blocks.map(block =>
+    makeCommand('UBX-MGA-FLASH-DATA' as UBX_MGA_COMMAND, block),
+  );
+  msgQueue.push(
+    makeCommand('UBX-MGA-FLASH-STOP' as UBX_MGA_COMMAND, EMPTY_PAYLOAD),
+  );
 
+  let idx = 0;
   while (idx < msgQueue.length) {
     const msg = msgQueue[idx];
     const cmd = `ubxtool -c ${msg}`;
@@ -69,7 +75,7 @@ export function submitOfflineAlmanac() {
     const resp = cp.execSync(cmd);
     console.log(resp);
 
-    const parsed = parseMsg(resp);
+    const parsed = parseMsg(resp.toString());
 
     if (parsed === 'ACK') {
       idx++;
