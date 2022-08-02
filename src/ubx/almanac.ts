@@ -6,7 +6,7 @@ import fs from 'fs';
 const EMPTY_PAYLOAD = new UInt8Array(0);
 const DEFAULT_ALAMANC_FIXTURE = 'fixtures/mgaoffline.ubx';
 
-type UBX_MGA_COMMAND = 'UBX-MGA-ACK' | 'UBX-MGA-ANO' | 'UBX-MGA-BDS' | 'UBX-MGA-DBD' | 'UBX-MGA-FLASH' | 'UBX-MGA-GAL' | 'UBX-MGA-GLO' | 'UBX-MGA-GPS' | 'UBX-MGA-INI' | 'UBX-MGA-QZSS';
+type UBX_MGA_COMMAND = 'UBX-MGA-FLASH-DATA' | 'UBX_MGA_FLASH-STOP';
 const UBX_COMMAND_CLASS_ID_BYTES: Record<UBX_MGA_COMMAND, string> = {
   'UBX-MGA-FLASH-DATA': '0x13,0x21',
   'UBX-MGA-FLASH-STOP': '0x13,0x22',
