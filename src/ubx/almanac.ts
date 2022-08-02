@@ -62,7 +62,7 @@ export function submitOfflineAlmanac() {
   msgQueue.push(makeCommand('UBX-MGA-FLASH-STOP', EMPTY_PAYLOAD));
 
   while (idx < msgQueue.length) {
-    const msg = msgQueue[0];
+    const msg = msgQueue[idx];
     const cmd = `ubxtool -c ${msg}`;
     console.log(cmd);
 
