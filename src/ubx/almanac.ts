@@ -5,11 +5,12 @@ import fs from 'fs';
 
 const EMPTY_PAYLOAD = new Uint8Array(0);
 const DEFAULT_ALAMANC_FIXTURE = 'fixtures/mgaoffline.ubx';
+const BLOCK_LENGTH = 128;
 
 type UBX_MGA_COMMAND = 'UBX-MGA-FLASH-DATA' & 'UBX_MGA_FLASH-STOP';
 const UBX_COMMAND_CLASS_ID_BYTES: Record<UBX_MGA_COMMAND, string> = {
-  'UBX-MGA-FLASH-DATA': '0x13,0x21',
-  'UBX-MGA-FLASH-STOP': '0x13,0x22',
+  'UBX-MGA-FLASH-DATA': '13,21',
+  'UBX-MGA-FLASH-STOP': '13,22',
 };
 
 function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
@@ -17,23 +18,42 @@ function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
   // get blocks of 512 bytes
   const blocks: Uint8Array[] = [];
 
-  for (let i = 0; i < buf.length; i += 512) {
-    const start = i * 512;
-    const end = Math.min(buf.length, (i + 1) * 512);
+  for (let i = 0; i < buf.length; i += BLOCK_LENGTH) {
+    const start = i * BLOCK_LENGTH;
+    const end = Math.min(buf.length, (i + 1) * BLOCK_LENGTH);
     blocks.push(buf.slice(start, end));
   }
 
   return blocks;
 }
 
-function makeCommand(mgaCommand: UBX_MGA_COMMAND, block: Uint8Array) {
+function makeCommand(mgaCommand: UBX_MGA_COMMAND, block?: Uint8Array) {
   //@ts-ignore
-  const payload = block.map(byte => `0x${byte.toString(16)}`).join(',');
-  return `${UBX_COMMAND_CLASS_ID_BYTES[mgaCommand]},${payload}`;
+  if (block) {
+    const payload: any = Array.from(block)
+      .map(byte =>
+        String(`${('00' + byte.toString(16)).substr(-2).toUpperCase()}`),
+      )
+      .join(',');
+    return `${UBX_COMMAND_CLASS_ID_BYTES[mgaCommand]},${payload.trim()}`;
+  } else {
+    return UBX_COMMAND_CLASS_ID_BYTES[mgaCommand];
+  }
 }
 
 function parseMsg(data: string) {
-  const bytes = data.split(',');
+  const lines = data.split('\n');
+  if (!lines.length) {
+    throw new Error(`Expected Message UBX-MGA-FLASH-ACK`);
+  }
+  const i = lines.findIndex(line => line.indexOf('UBX-MGA-FLASH') !== -1);
+  if (i === -1) {
+    throw new Error(`Expected Message UBX-MGA-FLASH-ACK`);
+  }
+  const bytes = lines[i + 1]
+    .split('raw ')[1]
+    .split(',')
+    .map(byte => `0x${byte}`);
   if (bytes[0] !== '0x03') {
     throw new Error(`Expected Message UBX-MGA-FLASH-ACK`);
   }
@@ -62,9 +82,8 @@ export function submitOfflineAlmanac() {
   const msgQueue = blocks.map(block =>
     makeCommand('UBX-MGA-FLASH-DATA' as UBX_MGA_COMMAND, block),
   );
-  msgQueue.push(
-    makeCommand('UBX-MGA-FLASH-STOP' as UBX_MGA_COMMAND, EMPTY_PAYLOAD),
-  );
+  msgQueue.push(makeCommand('UBX-MGA-FLASH-STOP' as UBX_MGA_COMMAND));
+  // msgQueue.unshift(makeCommand('UBX-MGA-FLASH-STOP' as UBX_MGA_COMMAND));
 
   let idx = 0;
   while (idx < msgQueue.length) {
@@ -72,10 +91,10 @@ export function submitOfflineAlmanac() {
     const cmd = `ubxtool -c ${msg}`;
     console.log(cmd);
 
-    const resp = cp.execSync(cmd);
+    const resp = String(cp.execSync(cmd));
     console.log(resp);
 
-    const parsed = parseMsg(resp.toString());
+    const parsed = parseMsg(resp);
 
     if (parsed === 'ACK') {
       idx++;

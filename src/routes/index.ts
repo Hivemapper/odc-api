@@ -7,6 +7,7 @@ import framesRouter from './frames';
 import gpsRouter from './gps';
 import imuRouter from './imu';
 import loraRouter from './lora';
+import { submitOfflineAlmanac } from 'ubx/almanac';
 
 const router = Router();
 
@@ -17,6 +18,16 @@ router.use('/imu', imuRouter);
 router.use('/lora', loraRouter);
 
 router.get('/init', configureOnBoot);
+
+router.get('/assistnow', async (req: Request, res: Response) => {
+  try {
+    submitOfflineAlmanac();
+    res.json({ output: 'in progress' });
+  } catch (e: any) {
+    console.log(e);
+    res.json({ error: e });
+  }
+});
 
 router.get('/info', async (req: Request, res: Response) => {
   let versionInfo = {};
