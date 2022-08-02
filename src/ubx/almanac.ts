@@ -16,7 +16,7 @@ const UBX_COMMAND_CLASS_ID_BYTES: Record<UBX_MGA_COMMAND, string> = {
 function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
   const buf = fs.readFileSync(fileIn);
   // get blocks of 512 bytes
-  const blocks: Uint8Array[] = [];
+  const blocks: Buffer[] = [];
 
   for (let i = 0; i < buf.length; i += BLOCK_LENGTH) {
     const start = i * BLOCK_LENGTH;
@@ -27,15 +27,14 @@ function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
   return blocks;
 }
 
-function makeCommand(mgaCommand: UBX_MGA_COMMAND, block?: Uint8Array) {
+function makeCommand(mgaCommand: UBX_MGA_COMMAND, block?: Buffer) {
   //@ts-ignore
   if (block) {
-    const payload: any = Array.from(block)
-      .map(byte =>
-        String(`${('00' + byte.toString(16)).substr(-2).toUpperCase()}`),
-      )
-      .join(',');
-    return `${UBX_COMMAND_CLASS_ID_BYTES[mgaCommand]},${payload.trim()}`;
+    const payload: string[] = [];
+    for (let i = 0; i < block.length; i += 2) {
+      payload.push(block.slice(i, i + 2).toString('hex'));
+    }
+    return `${UBX_COMMAND_CLASS_ID_BYTES[mgaCommand]},${payload.join(',')}`;
   } else {
     return UBX_COMMAND_CLASS_ID_BYTES[mgaCommand];
   }
