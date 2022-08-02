@@ -3,14 +3,14 @@ import { Request, Response, Router } from 'express';
 import { readdirSync } from 'fs';
 
 import { filterBySinceUntil, getDateFromUnicodeTimastamp } from '../util';
-import { CameraFile } from '../types';
+import { ICameraFile } from '../types';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
     const files = await readdirSync(FRAMES_ROOT_FOLDER);
-    const jpgFiles: CameraFile[] = files
+    const jpgFiles: ICameraFile[] = files
       .filter((filename: string) => filename.indexOf('.jpg') !== -1)
       .map(filename => {
         return {

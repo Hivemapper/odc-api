@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { CameraFile } from '../types';
+import { ICameraFile } from '../types';
 
 export const getDateFromFilename = (filename: string) => {
   try {
@@ -22,11 +22,11 @@ export const getDateFromUnicodeTimastamp = (filename: string) => {
   }
 };
 
-export const filterBySinceUntil = (files: CameraFile[], req: Request) => {
+export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   if (req.query.since || req.query.until) {
     const since = Number(req.query.since);
     const until = Number(req.query.until);
-    return files.filter((file: CameraFile) => {
+    return files.filter((file: ICameraFile) => {
       return !((since && file.date < since) || (until && file.date > until));
     });
   } else {

@@ -1,0 +1,29 @@
+import { IService } from 'types';
+
+class ServiceRunner {
+  services: IService[] = [];
+  add(service: IService) {
+    this.services.push(service);
+  }
+  run() {
+    this.services.map((service: IService) => {
+      if (service.interval) {
+        setInterval(() => {
+          try {
+            service.execute();
+          } catch (e: any) {
+            console.log('Service error', e);
+          }
+        }, service.interval);
+      } else {
+        try {
+          service.execute();
+        } catch (e: any) {
+          console.log('Service stopped with error', e);
+        }
+      }
+    });
+  }
+}
+
+export const serviceRunner = new ServiceRunner();
