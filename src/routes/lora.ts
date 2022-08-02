@@ -2,7 +2,7 @@ import { LORA_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
 import { readdirSync } from 'fs';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
-import { CameraFile } from '../types';
+import { ICameraFile } from '../types';
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.get('/', async (req: Request, res: Response) => {
       files.pop();
     }
 
-    const loraFiles: CameraFile[] = files
+    const loraFiles: ICameraFile[] = files
       .filter((filename: string) => filename.indexOf('.json') !== -1)
       .map(filename => {
         return {
