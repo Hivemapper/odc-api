@@ -30,7 +30,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "compile": "rm -rf dist && tsc && rm -rf compiled && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/dashcam-api.js && copyfiles -u 2 src/fixtures/* compiled/fixtures",
-    "start-compiled": "node compiled/index.js",
+    "start-compiled": "node compiled/dashcam-api.js",
     "prestart": "npm run build",
     "start": "node dist/index.js",
     "lint": "eslint --fix",

@@ -12,17 +12,13 @@ export const setMostRecentPing = (_mostRecentPing: number) => {
 
 export const LedService: IService = {
   execute: async () => {
-    return false;
     try {
-      const ubxtoolOutput = await execSync('ubxtool -p NAV-PVT | grep fix', {
+      const ubxtoolOutput = execSync('ubxtool -p NAV-PVT | grep fix', {
         encoding: 'utf-8',
       });
-      const imgOutput = await execSync(
-        'ls ' + FRAMES_ROOT_FOLDER + ' | tail -2',
-        {
-          encoding: 'utf-8',
-        },
-      );
+      const imgOutput = execSync('ls ' + FRAMES_ROOT_FOLDER + ' | tail -2', {
+        encoding: 'utf-8',
+      });
       let gpsLED = COLORS.RED;
       if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
         gpsLED = COLORS.GREEN;
@@ -37,9 +33,9 @@ export const LedService: IService = {
           : COLORS.RED;
 
       console.log('Lights updated');
-      updateLED(appLED, gpsLED, imgLED);
+      updateLED(imgLED, gpsLED, appLED);
       mostRecentImg = imgOutput;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.log('LED service failed with error', e);
     }
   },

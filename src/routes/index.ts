@@ -11,7 +11,7 @@ import loraRouter from './lora';
 const router = Router();
 
 router.use('/api/1', router);
-router.use('/frames', framesRouter);
+router.use('/recordings', framesRouter);
 router.use('/gps', gpsRouter);
 router.use('/imu', imuRouter);
 router.use('/lora', loraRouter);
@@ -21,7 +21,7 @@ router.get('/init', configureOnBoot);
 router.get('/info', async (req: Request, res: Response) => {
   let versionInfo = {};
   try {
-    const versionInfoPayload = await readFileSync(BUILD_INFO_PATH, {
+    const versionInfoPayload = readFileSync(BUILD_INFO_PATH, {
       encoding: 'utf-8',
     });
     versionInfo = JSON.parse(versionInfoPayload);
@@ -36,7 +36,7 @@ router.get('/info', async (req: Request, res: Response) => {
 
 router.post('/cmd', async (req, res) => {
   try {
-    const output = await execSync(req.body.cmd, {
+    const output = execSync(req.body.cmd, {
       encoding: 'utf-8',
     });
     res.json({
