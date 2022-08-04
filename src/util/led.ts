@@ -24,9 +24,9 @@ export const COLORS = {
 };
 
 export const updateLED = async (
-  appLED: ILED,
-  gpsLED: ILED,
   framesLED: ILED,
+  gpsLED: ILED,
+  appLED: ILED,
 ) => {
   try {
     let leds: ILED[] = [
@@ -35,7 +35,7 @@ export const updateLED = async (
       { index: 2, ...COLORS.RED },
     ];
     try {
-      const ledPayload = await readFileSync(LED_CONFIG_PATH, {
+      const ledPayload = readFileSync(LED_CONFIG_PATH, {
         encoding: 'utf-8',
       });
       leds = JSON.parse(ledPayload).leds;
@@ -43,14 +43,14 @@ export const updateLED = async (
       console.log('No file for LED. Creating one');
     }
 
-    const app = appLED ? { ...leds[0], ...appLED } : leds[0];
-    const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
     const frames = framesLED ? { ...leds[2], ...framesLED } : leds[2];
+    const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
+    const app = appLED ? { ...leds[0], ...appLED } : leds[0];
 
-    await writeFileSync(
+    writeFileSync(
       LED_CONFIG_PATH,
       JSON.stringify({
-        leds: [app, gps, frames],
+        leds: [frames, gps, app],
       }),
       {
         encoding: 'utf-8',

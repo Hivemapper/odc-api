@@ -9,7 +9,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = await readdirSync(FRAMES_ROOT_FOLDER);
+    const files = readdirSync(FRAMES_ROOT_FOLDER);
     const jpgFiles: ICameraFile[] = files
       .filter((filename: string) => filename.indexOf('.jpg') !== -1)
       .map(filename => {

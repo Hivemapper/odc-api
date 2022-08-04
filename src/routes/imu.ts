@@ -9,7 +9,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = await readdirSync(IMU_ROOT_FOLDER);
+    const files = readdirSync(IMU_ROOT_FOLDER);
     if (files.length) {
       // Last IMU file is not finished yet
       files.pop();

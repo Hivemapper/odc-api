@@ -9,7 +9,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = await readdirSync(GPS_ROOT_FOLDER);
+    const files = readdirSync(GPS_ROOT_FOLDER);
     if (files.length) {
       // Last GPS file is not finished yet
       files.pop();
@@ -26,7 +26,9 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json(filterBySinceUntil(gpsFiles, req));
   } catch (error) {
-    res.json({ error });
+    // It's an important route for an App poller to check the connection,
+    // so we return successful 200 OK no matter what
+    res.json([]);
   }
 });
 

@@ -18,9 +18,9 @@ export const configureOnBoot = async (req: Request, res: Response) => {
       .split(' ');
 
     // setting up initial time for camera
-    await execSync('timedatectl set-ntp 0');
-    await execSync(`timedatectl set-time ${timeToSet[0]}`);
-    await execSync(`timedatectl set-time ${timeToSet[1]}`);
+    execSync('timedatectl set-ntp 0');
+    execSync(`timedatectl set-time ${timeToSet[0]}`);
+    execSync(`timedatectl set-time ${timeToSet[1]}`);
 
     res.json({
       output: 'done',

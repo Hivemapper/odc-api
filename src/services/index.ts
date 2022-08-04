@@ -11,14 +11,14 @@ class ServiceRunner {
         setInterval(() => {
           try {
             service.execute();
-          } catch (e: any) {
+          } catch (e: unknown) {
             console.log('Service error', e);
           }
         }, service.interval);
       } else {
         try {
           service.execute();
-        } catch (e: any) {
+        } catch (e: unknown) {
           console.log('Service stopped with error', e);
         }
       }
