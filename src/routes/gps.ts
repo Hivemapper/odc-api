@@ -4,6 +4,7 @@ import { readdirSync } from 'fs';
 
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
+import { setMostRecentPing } from 'services/led';
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.get('/', async (req: Request, res: Response) => {
       });
 
     res.json(filterBySinceUntil(gpsFiles, req));
+    setMostRecentPing(Date.now());
   } catch (error) {
     // It's an important route for an App poller to check the connection,
     // so we return successful 200 OK no matter what
