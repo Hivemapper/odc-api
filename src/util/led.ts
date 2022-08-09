@@ -1,6 +1,6 @@
 import { LED_CONFIG_PATH } from 'config';
 import { ILED } from '../types';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFile, writeFile } from 'fs';
 
 export const COLORS = {
   RED: {
@@ -12,7 +12,7 @@ export const COLORS = {
   YELLOW: {
     red: 255,
     blue: 0,
-    green: 255,
+    green: 80,
     on: true,
   },
   GREEN: {
@@ -35,27 +35,35 @@ export const updateLED = async (
       { index: 2, ...COLORS.RED },
     ];
     try {
-      const ledPayload = readFileSync(LED_CONFIG_PATH, {
-        encoding: 'utf-8',
-      });
-      leds = JSON.parse(ledPayload).leds;
+      readFile(
+        LED_CONFIG_PATH,
+        {
+          encoding: 'utf-8',
+        },
+        (err: NodeJS.ErrnoException | null, data: string) => {
+          if (data && !err) {
+            leds = JSON.parse(data).leds;
+          }
+
+          const frames = framesLED ? { ...leds[0], ...framesLED } : leds[0];
+          const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
+          const app = appLED ? { ...leds[2], ...appLED } : leds[2];
+
+          writeFile(
+            LED_CONFIG_PATH,
+            JSON.stringify({
+              leds: [frames, gps, app],
+            }),
+            {
+              encoding: 'utf-8',
+            },
+            () => {},
+          );
+        },
+      );
     } catch (e) {
       console.log('No file for LED. Creating one');
     }
-
-    const frames = framesLED ? { ...leds[2], ...framesLED } : leds[2];
-    const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
-    const app = appLED ? { ...leds[0], ...appLED } : leds[0];
-
-    writeFileSync(
-      LED_CONFIG_PATH,
-      JSON.stringify({
-        leds: [frames, gps, app],
-      }),
-      {
-        encoding: 'utf-8',
-      },
-    );
   } catch (e) {
     console.log('Error updating LEDs', e);
   }

@@ -7,15 +7,17 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.configureOnBoot = exports.LED_CONFIG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PORT = void 0;
+exports.updateFirmware = exports.configureOnBoot = exports.UPLOAD_PATH = exports.LED_CONFIG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 exports.PORT = 5000;
-exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording';
+exports.PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
+exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording/pic';
 exports.GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
 exports.IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
 exports.LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
 exports.BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 exports.LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
+exports.UPLOAD_PATH = __dirname + '/../../../tmp/';
 const configureOnBoot = async (req, res) => {
     try {
         const timeToSet = new Date(Number(req.query.time))
@@ -24,9 +26,14 @@ const configureOnBoot = async (req, res) => {
             .replace(/\..+/, '')
             .split(' ');
         // setting up initial time for camera
-        (0, child_process_1.execSync)('timedatectl set-ntp 0');
-        (0, child_process_1.execSync)(`timedatectl set-time ${timeToSet[0]}`);
-        (0, child_process_1.execSync)(`timedatectl set-time ${timeToSet[1]}`);
+        (0, child_process_1.exec)('timedatectl set-ntp 0', () => {
+            (0, child_process_1.exec)(`timedatectl set-time ${timeToSet[0]}`, () => {
+                (0, child_process_1.exec)(`timedatectl set-time ${timeToSet[1]}`, () => {
+                    // make sure that camera started when the App is connected
+                    (0, child_process_1.exec)('systemctl start camera-bridge');
+                });
+            });
+        });
         res.json({
             output: 'done',
         });
@@ -36,7 +43,21 @@ const configureOnBoot = async (req, res) => {
     }
 };
 exports.configureOnBoot = configureOnBoot;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2NvbmZpZy9oZGMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQXlDO0FBRzVCLFFBQUEsSUFBSSxHQUFHLElBQUksQ0FBQztBQUNaLFFBQUEsa0JBQWtCLEdBQUcsU0FBUyxHQUFHLHlCQUF5QixDQUFDO0FBQzNELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw2QkFBNkIsQ0FBQztBQUM1RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNkJBQTZCLENBQUM7QUFDNUQsUUFBQSxnQkFBZ0IsR0FBRyxTQUFTLEdBQUcsOEJBQThCLENBQUM7QUFDOUQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLDRCQUE0QixDQUFDO0FBQzNELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUU3RCxNQUFNLGVBQWUsR0FBRyxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ25FLElBQUk7UUFDRixNQUFNLFNBQVMsR0FBRyxJQUFJLElBQUksQ0FBQyxNQUFNLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsQ0FBQzthQUMvQyxXQUFXLEVBQUU7YUFDYixPQUFPLENBQUMsR0FBRyxFQUFFLEdBQUcsQ0FBQzthQUNqQixPQUFPLENBQUMsTUFBTSxFQUFFLEVBQUUsQ0FBQzthQUNuQixLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7UUFFZCxxQ0FBcUM7UUFDckMsSUFBQSx3QkFBUSxFQUFDLHVCQUF1QixDQUFDLENBQUM7UUFDbEMsSUFBQSx3QkFBUSxFQUFDLHdCQUF3QixTQUFTLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDO1FBQ2pELElBQUEsd0JBQVEsRUFBQyx3QkFBd0IsU0FBUyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQztRQUVqRCxHQUFHLENBQUMsSUFBSSxDQUFDO1lBQ1AsTUFBTSxFQUFFLE1BQU07U0FDZixDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sS0FBSyxFQUFFO1FBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7S0FDckI7QUFDSCxDQUFDLENBQUM7QUFuQlcsUUFBQSxlQUFlLG1CQW1CMUIifQ==
+const updateFirmware = async (req, res) => {
+    try {
+        const output = (0, child_process_1.execSync)('rauc install /tmp/' + req.query.filename, {
+            encoding: 'utf-8',
+        });
+        res.json({
+            output,
+        });
+    }
+    catch (error) {
+        res.json({ error: error.stdout || error.stderr });
+    }
+};
+exports.updateFirmware = updateFirmware;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2NvbmZpZy9oZGMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQStDO0FBR2xDLFFBQUEsSUFBSSxHQUFHLElBQUksQ0FBQztBQUNaLFFBQUEsYUFBYSxHQUFHLFNBQVMsR0FBRyx5QkFBeUIsQ0FBQztBQUN0RCxRQUFBLGtCQUFrQixHQUFHLFNBQVMsR0FBRyw2QkFBNkIsQ0FBQztBQUMvRCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNkJBQTZCLENBQUM7QUFDNUQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLDZCQUE2QixDQUFDO0FBQzVELFFBQUEsZ0JBQWdCLEdBQUcsU0FBUyxHQUFHLDhCQUE4QixDQUFDO0FBQzlELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw0QkFBNEIsQ0FBQztBQUMzRCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDdkQsUUFBQSxXQUFXLEdBQUcsU0FBUyxHQUFHLGdCQUFnQixDQUFDO0FBRWpELE1BQU0sZUFBZSxHQUFHLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDbkUsSUFBSTtRQUNGLE1BQU0sU0FBUyxHQUFHLElBQUksSUFBSSxDQUFDLE1BQU0sQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDO2FBQy9DLFdBQVcsRUFBRTthQUNiLE9BQU8sQ0FBQyxHQUFHLEVBQUUsR0FBRyxDQUFDO2FBQ2pCLE9BQU8sQ0FBQyxNQUFNLEVBQUUsRUFBRSxDQUFDO2FBQ25CLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUVkLHFDQUFxQztRQUNyQyxJQUFBLG9CQUFJLEVBQUMsdUJBQXVCLEVBQUUsR0FBRyxFQUFFO1lBQ2pDLElBQUEsb0JBQUksRUFBQyx3QkFBd0IsU0FBUyxDQUFDLENBQUMsQ0FBQyxFQUFFLEVBQUUsR0FBRyxFQUFFO2dCQUNoRCxJQUFBLG9CQUFJLEVBQUMsd0JBQXdCLFNBQVMsQ0FBQyxDQUFDLENBQUMsRUFBRSxFQUFFLEdBQUcsRUFBRTtvQkFDaEQsMERBQTBEO29CQUMxRCxJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztnQkFDeEMsQ0FBQyxDQUFDLENBQUM7WUFDTCxDQUFDLENBQUMsQ0FBQztRQUNMLENBQUMsQ0FBQyxDQUFDO1FBRUgsR0FBRyxDQUFDLElBQUksQ0FBQztZQUNQLE1BQU0sRUFBRSxNQUFNO1NBQ2YsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDO0FBeEJXLFFBQUEsZUFBZSxtQkF3QjFCO0FBRUssTUFBTSxjQUFjLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNsRSxJQUFJO1FBQ0YsTUFBTSxNQUFNLEdBQUcsSUFBQSx3QkFBUSxFQUFDLG9CQUFvQixHQUFHLEdBQUcsQ0FBQyxLQUFLLENBQUMsUUFBUSxFQUFFO1lBQ2pFLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztRQUNILEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxNQUFNO1NBQ1AsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLEtBQVUsRUFBRTtRQUNuQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLEtBQUssQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQUM7S0FDbkQ7QUFDSCxDQUFDLENBQUM7QUFYVyxRQUFBLGNBQWMsa0JBV3pCIn0=
 
 /***/ }),
 
@@ -62,7 +83,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.API_VERSION = void 0;
 __exportStar(__nccwpck_require__(1546), exports);
-exports.API_VERSION = '0.0.7';
+exports.API_VERSION = '0.8.0';
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZmlnL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsd0NBQXNCO0FBQ1QsUUFBQSxXQUFXLEdBQUcsT0FBTyxDQUFDIn0=
 
 /***/ }),
@@ -79,13 +100,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.initAppServer = void 0;
 const express_1 = __importDefault(__nccwpck_require__(7086));
 const routes_1 = __importDefault(__nccwpck_require__(4154));
+const connect_busboy_1 = __importDefault(__nccwpck_require__(4570));
 const config_1 = __nccwpck_require__(1806);
 const services_1 = __nccwpck_require__(669);
-const assistNow_1 = __nccwpck_require__(3890);
+const led_1 = __nccwpck_require__(118);
+// import { AssistNowService } from 'services/assistNow';
 async function initAppServer() {
     const app = (0, express_1.default)();
     // Making all the files accessible via direct HTTP urls
-    app.use(express_1.default.static(config_1.FRAMES_ROOT_FOLDER));
+    app.use('/public', express_1.default.static(config_1.PUBLIC_FOLDER));
+    app.use((0, connect_busboy_1.default)({
+        highWaterMark: 2 * 1024 * 1024, // Set 2MiB buffer
+    })); // Handles file uploads for Over-The-Air update
     app.use(express_1.default.json());
     app.use(express_1.default.urlencoded({ extended: true }));
     app.use(routes_1.default);
@@ -93,13 +119,13 @@ async function initAppServer() {
         app.listen(config_1.PORT, resolve);
     });
     console.log(`Dashcam API (process ${process.pid}) started and listening on ${config_1.PORT}`);
-    // serviceRunner.add(LedService);
-    services_1.serviceRunner.add(assistNow_1.AssistNowService);
+    services_1.serviceRunner.add(led_1.LedService);
+    // serviceRunner.add(AssistNowService);
     services_1.serviceRunner.run();
 }
 exports.initAppServer = initAppServer;
 initAppServer();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7O0FBQUEsc0RBQThCO0FBQzlCLHNEQUE4QjtBQUM5QixxQ0FBb0Q7QUFDcEQsdUNBQXlDO0FBRXpDLGtEQUFzRDtBQUUvQyxLQUFLLFVBQVUsYUFBYTtJQUNqQyxNQUFNLEdBQUcsR0FBRyxJQUFBLGlCQUFPLEdBQUUsQ0FBQztJQUV0Qix1REFBdUQ7SUFDdkQsR0FBRyxDQUFDLEdBQUcsQ0FBQyxpQkFBTyxDQUFDLE1BQU0sQ0FBQywyQkFBa0IsQ0FBQyxDQUFDLENBQUM7SUFDNUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxpQkFBTyxDQUFDLElBQUksRUFBRSxDQUFDLENBQUM7SUFDeEIsR0FBRyxDQUFDLEdBQUcsQ0FBQyxpQkFBTyxDQUFDLFVBQVUsQ0FBQyxFQUFFLFFBQVEsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDLENBQUM7SUFFaEQsR0FBRyxDQUFDLEdBQUcsQ0FBQyxnQkFBTSxDQUFDLENBQUM7SUFFaEIsTUFBTSxJQUFJLE9BQU8sQ0FBTyxDQUFDLE9BQU8sRUFBRSxNQUFNLEVBQUUsRUFBRTtRQUMxQyxHQUFHLENBQUMsTUFBTSxDQUFDLGFBQUksRUFBRSxPQUFPLENBQUMsQ0FBQztJQUM1QixDQUFDLENBQUMsQ0FBQztJQUNILE9BQU8sQ0FBQyxHQUFHLENBQ1Qsd0JBQXdCLE9BQU8sQ0FBQyxHQUFHLDhCQUE4QixhQUFJLEVBQUUsQ0FDeEUsQ0FBQztJQUVGLGlDQUFpQztJQUNqQyx3QkFBYSxDQUFDLEdBQUcsQ0FBQyw0QkFBZ0IsQ0FBQyxDQUFDO0lBRXBDLHdCQUFhLENBQUMsR0FBRyxFQUFFLENBQUM7QUFDdEIsQ0FBQztBQXJCRCxzQ0FxQkM7QUFFRCxhQUFhLEVBQUUsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7O0FBQUEsc0RBQThCO0FBQzlCLHNEQUE4QjtBQUM5QixvRUFBb0M7QUFDcEMscUNBQStDO0FBQy9DLHVDQUF5QztBQUN6QyxzQ0FBMEM7QUFDMUMseURBQXlEO0FBRWxELEtBQUssVUFBVSxhQUFhO0lBQ2pDLE1BQU0sR0FBRyxHQUFHLElBQUEsaUJBQU8sR0FBRSxDQUFDO0lBRXRCLHVEQUF1RDtJQUN2RCxHQUFHLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxpQkFBTyxDQUFDLE1BQU0sQ0FBQyxzQkFBYSxDQUFDLENBQUMsQ0FBQztJQUNsRCxHQUFHLENBQUMsR0FBRyxDQUNMLElBQUEsd0JBQU0sRUFBQztRQUNMLGFBQWEsRUFBRSxDQUFDLEdBQUcsSUFBSSxHQUFHLElBQUksRUFBRSxrQkFBa0I7S0FDbkQsQ0FBQyxDQUNILENBQUMsQ0FBQywrQ0FBK0M7SUFDbEQsR0FBRyxDQUFDLEdBQUcsQ0FBQyxpQkFBTyxDQUFDLElBQUksRUFBRSxDQUFDLENBQUM7SUFDeEIsR0FBRyxDQUFDLEdBQUcsQ0FBQyxpQkFBTyxDQUFDLFVBQVUsQ0FBQyxFQUFFLFFBQVEsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDLENBQUM7SUFFaEQsR0FBRyxDQUFDLEdBQUcsQ0FBQyxnQkFBTSxDQUFDLENBQUM7SUFFaEIsTUFBTSxJQUFJLE9BQU8sQ0FBTyxDQUFDLE9BQU8sRUFBRSxNQUFNLEVBQUUsRUFBRTtRQUMxQyxHQUFHLENBQUMsTUFBTSxDQUFDLGFBQUksRUFBRSxPQUFPLENBQUMsQ0FBQztJQUM1QixDQUFDLENBQUMsQ0FBQztJQUNILE9BQU8sQ0FBQyxHQUFHLENBQ1Qsd0JBQXdCLE9BQU8sQ0FBQyxHQUFHLDhCQUE4QixhQUFJLEVBQUUsQ0FDeEUsQ0FBQztJQUVGLHdCQUFhLENBQUMsR0FBRyxDQUFDLGdCQUFVLENBQUMsQ0FBQztJQUM5Qix1Q0FBdUM7SUFFdkMsd0JBQWEsQ0FBQyxHQUFHLEVBQUUsQ0FBQztBQUN0QixDQUFDO0FBMUJELHNDQTBCQztBQUVELGFBQWEsRUFBRSxDQUFDIn0=
 
 /***/ }),
 
@@ -116,23 +142,29 @@ const util_1 = __nccwpck_require__(5960);
 const router = (0, express_1.Router)();
 router.get('/', async (req, res) => {
     try {
-        const files = (0, fs_1.readdirSync)(config_1.FRAMES_ROOT_FOLDER);
-        const jpgFiles = files
-            .filter((filename) => filename.indexOf('.jpg') !== -1)
-            .map(filename => {
-            return {
-                path: filename,
-                date: (0, util_1.getDateFromUnicodeTimastamp)(filename).getTime(),
-            };
+        (0, fs_1.readdir)(config_1.FRAMES_ROOT_FOLDER, (err, files) => {
+            try {
+                const jpgFiles = files
+                    .filter((filename) => filename.indexOf('.jpg') !== -1)
+                    .map(filename => {
+                    return {
+                        path: filename,
+                        date: (0, util_1.getDateFromUnicodeTimastamp)(filename).getTime(),
+                    };
+                });
+                res.json((0, util_1.filterBySinceUntil)(jpgFiles, req));
+            }
+            catch (error) {
+                res.json({ error });
+            }
         });
-        res.json((0, util_1.filterBySinceUntil)(jpgFiles, req));
     }
     catch (error) {
         res.json({ error });
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZnJhbWVzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9mcmFtZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBK0M7QUFDL0MscUNBQW9EO0FBQ3BELDJCQUFpQztBQUVqQyxrQ0FBMEU7QUFHMUUsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNwRCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsSUFBQSxnQkFBVyxFQUFDLDJCQUFrQixDQUFDLENBQUM7UUFDOUMsTUFBTSxRQUFRLEdBQWtCLEtBQUs7YUFDbEMsTUFBTSxDQUFDLENBQUMsUUFBZ0IsRUFBRSxFQUFFLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQzthQUM3RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7WUFDZCxPQUFPO2dCQUNMLElBQUksRUFBRSxRQUFRO2dCQUNkLElBQUksRUFBRSxJQUFBLGtDQUEyQixFQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sRUFBRTthQUN0RCxDQUFDO1FBQ0osQ0FBQyxDQUFDLENBQUM7UUFFTCxHQUFHLENBQUMsSUFBSSxDQUFDLElBQUEseUJBQWtCLEVBQUMsUUFBUSxFQUFFLEdBQUcsQ0FBQyxDQUFDLENBQUM7S0FDN0M7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZnJhbWVzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9mcmFtZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBK0M7QUFDL0MscUNBQW9EO0FBQ3BELDJCQUE2QjtBQUU3QixrQ0FBMEU7QUFHMUUsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNwRCxJQUFJO1FBQ0YsSUFBQSxZQUFPLEVBQ0wsMkJBQWtCLEVBQ2xCLENBQUMsR0FBaUMsRUFBRSxLQUFlLEVBQUUsRUFBRTtZQUNyRCxJQUFJO2dCQUNGLE1BQU0sUUFBUSxHQUFrQixLQUFLO3FCQUNsQyxNQUFNLENBQUMsQ0FBQyxRQUFnQixFQUFFLEVBQUUsQ0FBQyxRQUFRLENBQUMsT0FBTyxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDO3FCQUM3RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7b0JBQ2QsT0FBTzt3QkFDTCxJQUFJLEVBQUUsUUFBUTt3QkFDZCxJQUFJLEVBQUUsSUFBQSxrQ0FBMkIsRUFBQyxRQUFRLENBQUMsQ0FBQyxPQUFPLEVBQUU7cUJBQ3RELENBQUM7Z0JBQ0osQ0FBQyxDQUFDLENBQUM7Z0JBRUwsR0FBRyxDQUFDLElBQUksQ0FBQyxJQUFBLHlCQUFrQixFQUFDLFFBQVEsRUFBRSxHQUFHLENBQUMsQ0FBQyxDQUFDO2FBQzdDO1lBQUMsT0FBTyxLQUFLLEVBQUU7Z0JBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7YUFDckI7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFLLEVBQUU7UUFDZCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQztLQUNyQjtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
 
 /***/ }),
 
@@ -146,6 +178,7 @@ const config_1 = __nccwpck_require__(1806);
 const express_1 = __nccwpck_require__(7086);
 const fs_1 = __nccwpck_require__(7147);
 const util_1 = __nccwpck_require__(5960);
+const led_1 = __nccwpck_require__(118);
 const router = (0, express_1.Router)();
 router.get('/', async (req, res) => {
     try {
@@ -163,6 +196,7 @@ router.get('/', async (req, res) => {
             };
         });
         res.json((0, util_1.filterBySinceUntil)(gpsFiles, req));
+        (0, led_1.setMostRecentPing)(Date.now());
     }
     catch (error) {
         // It's an important route for an App poller to check the connection,
@@ -188,7 +222,7 @@ router.get('/sample', async (req, res) => {
     });
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ3BzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9ncHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBNEM7QUFDNUMscUNBQW9EO0FBQ3BELDJCQUFpQztBQUVqQyxrQ0FBa0U7QUFHbEUsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNwRCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsSUFBQSxnQkFBVyxFQUFDLHdCQUFlLENBQUMsQ0FBQztRQUMzQyxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUU7WUFDaEIsb0NBQW9DO1lBQ3BDLEtBQUssQ0FBQyxHQUFHLEVBQUUsQ0FBQztTQUNiO1FBRUQsTUFBTSxRQUFRLEdBQWtCLEtBQUs7YUFDbEMsTUFBTSxDQUFDLENBQUMsUUFBZ0IsRUFBRSxFQUFFLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQzthQUM5RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7WUFDZCxPQUFPO2dCQUNMLElBQUksRUFBRSxRQUFRO2dCQUNkLElBQUksRUFBRSxJQUFBLDBCQUFtQixFQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sRUFBRTthQUM5QyxDQUFDO1FBQ0osQ0FBQyxDQUFDLENBQUM7UUFFTCxHQUFHLENBQUMsSUFBSSxDQUFDLElBQUEseUJBQWtCLEVBQUMsUUFBUSxFQUFFLEdBQUcsQ0FBQyxDQUFDLENBQUM7S0FDN0M7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLHFFQUFxRTtRQUNyRSxnREFBZ0Q7UUFDaEQsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsQ0FBQztLQUNkO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxPQUFPO0FBQ1AsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUMxRCxHQUFHLENBQUMsSUFBSSxDQUFDO1FBQ1AsR0FBRyxFQUFFLEVBQUU7UUFDUCxTQUFTLEVBQUUsMEJBQTBCO1FBQ3JDLFNBQVMsRUFBRSxDQUFDLFVBQVU7UUFDdEIsUUFBUSxFQUFFLFVBQVU7UUFDcEIsTUFBTSxFQUFFLFVBQVU7UUFDbEIsT0FBTyxFQUFFLFVBQVU7UUFDbkIsS0FBSyxFQUFFLFlBQVk7UUFDbkIsUUFBUSxFQUFFLENBQUMsWUFBWSxFQUFFLENBQUMsWUFBWSxFQUFFLFdBQVcsQ0FBQztRQUNwRCxlQUFlLEVBQUUsRUFBRTtRQUNuQixRQUFRLEVBQUUsQ0FBQztRQUNYLEtBQUssRUFBRSxDQUFDLENBQUMsRUFBRSxHQUFHLEVBQUUsQ0FBQyxDQUFDO1FBQ2xCLEdBQUcsRUFBRSxVQUFVO0tBQ2hCLENBQUMsQ0FBQztBQUNMLENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ3BzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9ncHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBNEM7QUFDNUMscUNBQW9EO0FBQ3BELDJCQUFpQztBQUVqQyxrQ0FBa0U7QUFFbEUsc0NBQWlEO0FBRWpELE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDcEQsSUFBSTtRQUNGLE1BQU0sS0FBSyxHQUFHLElBQUEsZ0JBQVcsRUFBQyx3QkFBZSxDQUFDLENBQUM7UUFDM0MsSUFBSSxLQUFLLENBQUMsTUFBTSxFQUFFO1lBQ2hCLG9DQUFvQztZQUNwQyxLQUFLLENBQUMsR0FBRyxFQUFFLENBQUM7U0FDYjtRQUVELE1BQU0sUUFBUSxHQUFrQixLQUFLO2FBQ2xDLE1BQU0sQ0FBQyxDQUFDLFFBQWdCLEVBQUUsRUFBRSxDQUFDLFFBQVEsQ0FBQyxPQUFPLENBQUMsT0FBTyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUM7YUFDOUQsR0FBRyxDQUFDLFFBQVEsQ0FBQyxFQUFFO1lBQ2QsT0FBTztnQkFDTCxJQUFJLEVBQUUsUUFBUTtnQkFDZCxJQUFJLEVBQUUsSUFBQSwwQkFBbUIsRUFBQyxRQUFRLENBQUMsQ0FBQyxPQUFPLEVBQUU7YUFDOUMsQ0FBQztRQUNKLENBQUMsQ0FBQyxDQUFDO1FBRUwsR0FBRyxDQUFDLElBQUksQ0FBQyxJQUFBLHlCQUFrQixFQUFDLFFBQVEsRUFBRSxHQUFHLENBQUMsQ0FBQyxDQUFDO1FBQzVDLElBQUEsdUJBQWlCLEVBQUMsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDLENBQUM7S0FDL0I7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLHFFQUFxRTtRQUNyRSxnREFBZ0Q7UUFDaEQsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsQ0FBQztLQUNkO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxPQUFPO0FBQ1AsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUMxRCxHQUFHLENBQUMsSUFBSSxDQUFDO1FBQ1AsR0FBRyxFQUFFLEVBQUU7UUFDUCxTQUFTLEVBQUUsMEJBQTBCO1FBQ3JDLFNBQVMsRUFBRSxDQUFDLFVBQVU7UUFDdEIsUUFBUSxFQUFFLFVBQVU7UUFDcEIsTUFBTSxFQUFFLFVBQVU7UUFDbEIsT0FBTyxFQUFFLFVBQVU7UUFDbkIsS0FBSyxFQUFFLFlBQVk7UUFDbkIsUUFBUSxFQUFFLENBQUMsWUFBWSxFQUFFLENBQUMsWUFBWSxFQUFFLFdBQVcsQ0FBQztRQUNwRCxlQUFlLEVBQUUsRUFBRTtRQUNuQixRQUFRLEVBQUUsQ0FBQztRQUNYLEtBQUssRUFBRSxDQUFDLENBQUMsRUFBRSxHQUFHLEVBQUUsQ0FBQyxDQUFDO1FBQ2xCLEdBQUcsRUFBRSxVQUFVO0tBQ2hCLENBQUMsQ0FBQztBQUNMLENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
 
 /***/ }),
 
@@ -256,12 +290,15 @@ const frames_1 = __importDefault(__nccwpck_require__(2479));
 const gps_1 = __importDefault(__nccwpck_require__(4016));
 const imu_1 = __importDefault(__nccwpck_require__(608));
 const lora_1 = __importDefault(__nccwpck_require__(8956));
+const upload_1 = __importDefault(__nccwpck_require__(5408));
 const router = (0, express_1.Router)();
 router.use('/api/1', router);
 router.use('/recordings', frames_1.default);
 router.use('/gps', gps_1.default);
 router.use('/imu', imu_1.default);
 router.use('/lora', lora_1.default);
+router.use('/upload', upload_1.default);
+router.use('/ota', config_1.updateFirmware);
 router.get('/init', config_1.configureOnBoot);
 router.get('/info', async (req, res) => {
     let versionInfo = {};
@@ -281,11 +318,17 @@ router.get('/info', async (req, res) => {
 });
 router.post('/cmd', async (req, res) => {
     try {
-        const output = (0, child_process_1.execSync)(req.body.cmd, {
+        (0, child_process_1.exec)(req.body.cmd, {
             encoding: 'utf-8',
-        });
-        res.json({
-            output,
+        }, (error, stdout, stderr) => {
+            if (error) {
+                res.json({ error: stdout || stderr });
+            }
+            else {
+                res.json({
+                    output: stdout,
+                });
+            }
         });
     }
     catch (error) {
@@ -293,7 +336,7 @@ router.post('/cmd', async (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvcm91dGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscUNBQW9EO0FBQ3BELDJCQUFrQztBQUNsQyxpREFBeUM7QUFFekMsc0NBQTBFO0FBQzFFLHNEQUFvQztBQUNwQyxnREFBOEI7QUFDOUIsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUVoQyxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsR0FBRyxDQUFDLFFBQVEsRUFBRSxNQUFNLENBQUMsQ0FBQztBQUM3QixNQUFNLENBQUMsR0FBRyxDQUFDLGFBQWEsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDeEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsY0FBVSxDQUFDLENBQUM7QUFFaEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsd0JBQWUsQ0FBQyxDQUFDO0FBRXJDLE1BQU0sQ0FBQyxHQUFHLENBQUMsT0FBTyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDeEQsSUFBSSxXQUFXLEdBQUcsRUFBRSxDQUFDO0lBQ3JCLElBQUk7UUFDRixNQUFNLGtCQUFrQixHQUFHLElBQUEsaUJBQVksRUFBQyx3QkFBZSxFQUFFO1lBQ3ZELFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztRQUNILFdBQVcsR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLGtCQUFrQixDQUFDLENBQUM7S0FDOUM7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLE9BQU8sQ0FBQyxHQUFHLENBQUMsNEJBQTRCLENBQUMsQ0FBQztLQUMzQztJQUNELEdBQUcsQ0FBQyxJQUFJLENBQUM7UUFDUCxHQUFHLFdBQVc7UUFDZCxXQUFXLEVBQUUsb0JBQVc7S0FDekIsQ0FBQyxDQUFDO0FBQ0wsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsSUFBSSxDQUFDLE1BQU0sRUFBRSxLQUFLLEVBQUUsR0FBRyxFQUFFLEdBQUcsRUFBRSxFQUFFO0lBQ3JDLElBQUk7UUFDRixNQUFNLE1BQU0sR0FBRyxJQUFBLHdCQUFRLEVBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxHQUFHLEVBQUU7WUFDcEMsUUFBUSxFQUFFLE9BQU87U0FDbEIsQ0FBQyxDQUFDO1FBQ0gsR0FBRyxDQUFDLElBQUksQ0FBQztZQUNQLE1BQU07U0FDUCxDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sS0FBVSxFQUFFO1FBQ25CLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsS0FBSyxDQUFDLE1BQU0sSUFBSSxLQUFLLENBQUMsTUFBTSxFQUFFLENBQUMsQ0FBQztLQUNuRDtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvcm91dGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscUNBQW9EO0FBQ3BELDJCQUFrQztBQUNsQyxpREFBcUM7QUFFckMsc0NBS21CO0FBQ25CLHNEQUFvQztBQUNwQyxnREFBOEI7QUFDOUIsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxzREFBb0M7QUFFcEMsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxRQUFRLEVBQUUsTUFBTSxDQUFDLENBQUM7QUFDN0IsTUFBTSxDQUFDLEdBQUcsQ0FBQyxhQUFhLEVBQUUsZ0JBQVksQ0FBQyxDQUFDO0FBQ3hDLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxFQUFFLGFBQVMsQ0FBQyxDQUFDO0FBQzlCLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxFQUFFLGFBQVMsQ0FBQyxDQUFDO0FBQzlCLE1BQU0sQ0FBQyxHQUFHLENBQUMsT0FBTyxFQUFFLGNBQVUsQ0FBQyxDQUFDO0FBQ2hDLE1BQU0sQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLGdCQUFZLENBQUMsQ0FBQztBQUVwQyxNQUFNLENBQUMsR0FBRyxDQUFDLE1BQU0sRUFBRSx1QkFBYyxDQUFDLENBQUM7QUFFbkMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsd0JBQWUsQ0FBQyxDQUFDO0FBRXJDLE1BQU0sQ0FBQyxHQUFHLENBQUMsT0FBTyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDeEQsSUFBSSxXQUFXLEdBQUcsRUFBRSxDQUFDO0lBQ3JCLElBQUk7UUFDRixNQUFNLGtCQUFrQixHQUFHLElBQUEsaUJBQVksRUFBQyx3QkFBZSxFQUFFO1lBQ3ZELFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztRQUNILFdBQVcsR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLGtCQUFrQixDQUFDLENBQUM7S0FDOUM7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLE9BQU8sQ0FBQyxHQUFHLENBQUMsNEJBQTRCLENBQUMsQ0FBQztLQUMzQztJQUNELEdBQUcsQ0FBQyxJQUFJLENBQUM7UUFDUCxHQUFHLFdBQVc7UUFDZCxXQUFXLEVBQUUsb0JBQVc7S0FDekIsQ0FBQyxDQUFDO0FBQ0wsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsSUFBSSxDQUFDLE1BQU0sRUFBRSxLQUFLLEVBQUUsR0FBRyxFQUFFLEdBQUcsRUFBRSxFQUFFO0lBQ3JDLElBQUk7UUFDRixJQUFBLG9CQUFJLEVBQ0YsR0FBRyxDQUFDLElBQUksQ0FBQyxHQUFHLEVBQ1o7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsS0FBSyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsRUFBRTtZQUN4QixJQUFJLEtBQUssRUFBRTtnQkFDVCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLE1BQU0sSUFBSSxNQUFNLEVBQUUsQ0FBQyxDQUFDO2FBQ3ZDO2lCQUFNO2dCQUNMLEdBQUcsQ0FBQyxJQUFJLENBQUM7b0JBQ1AsTUFBTSxFQUFFLE1BQU07aUJBQ2YsQ0FBQyxDQUFDO2FBQ0o7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFVLEVBQUU7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO0tBQ25EO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
 
 /***/ }),
 
@@ -341,6 +384,46 @@ router.get('/sample', async (req, res) => {
 });
 exports["default"] = router;
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibG9yYS5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvbG9yYS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHNDQUE2QztBQUM3QyxxQ0FBb0Q7QUFDcEQsMkJBQWlDO0FBQ2pDLGtDQUFrRTtBQUdsRSxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsR0FBRyxDQUFDLEdBQUcsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ3BELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxJQUFBLGdCQUFXLEVBQUMseUJBQWdCLENBQUMsQ0FBQztRQUM1QyxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUU7WUFDaEIsb0NBQW9DO1lBQ3BDLEtBQUssQ0FBQyxHQUFHLEVBQUUsQ0FBQztTQUNiO1FBRUQsTUFBTSxTQUFTLEdBQWtCLEtBQUs7YUFDbkMsTUFBTSxDQUFDLENBQUMsUUFBZ0IsRUFBRSxFQUFFLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQzthQUM5RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7WUFDZCxPQUFPO2dCQUNMLElBQUksRUFBRSxRQUFRO2dCQUNkLElBQUksRUFBRSxJQUFBLDBCQUFtQixFQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sRUFBRTthQUM5QyxDQUFDO1FBQ0osQ0FBQyxDQUFDLENBQUM7UUFFTCxHQUFHLENBQUMsSUFBSSxDQUFDLElBQUEseUJBQWtCLEVBQUMsU0FBUyxFQUFFLEdBQUcsQ0FBQyxDQUFDLENBQUM7S0FDOUM7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxPQUFPO0FBQ1AsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUMxRCxHQUFHLENBQUMsSUFBSSxDQUFDO1FBQ1AsR0FBRyxFQUFFLEdBQUc7UUFDUixXQUFXLEVBQUUsT0FBTztRQUNwQixXQUFXLEVBQUUsVUFBVTtRQUN2QixhQUFhLEVBQUUsQ0FBQyxDQUFDLGNBQWMsRUFBRSxjQUFjLEVBQUUsV0FBVyxDQUFDO1FBQzdELFNBQVMsRUFBRSxDQUFDLENBQUMsWUFBWSxFQUFFLENBQUMsVUFBVSxFQUFFLGFBQWEsQ0FBQztLQUN2RCxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQztBQUVILGtCQUFlLE1BQU0sQ0FBQyJ9
+
+/***/ }),
+
+/***/ 5408:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const config_1 = __nccwpck_require__(1806);
+const express_1 = __nccwpck_require__(7086);
+const fs_1 = __nccwpck_require__(7147);
+const router = (0, express_1.Router)();
+router.post('/', (req, res) => {
+    try {
+        req.pipe(req.busboy); // Pipe it trough busboy
+        req.busboy.on('file', (fieldname, file, data) => {
+            const filename = data?.filename || 'upload.raucb';
+            console.log(`Upload of '${filename}' started`);
+            // Create a write stream of the new file
+            const fstream = (0, fs_1.createWriteStream)(config_1.UPLOAD_PATH + filename);
+            // Pipe it trough
+            file.pipe(fstream);
+            // On finish of the upload
+            fstream.on('close', () => {
+                console.log(`Upload of '${filename}' finished`);
+                res.json({
+                    output: 'done',
+                });
+            });
+        });
+    }
+    catch (e) {
+        res.json({
+            error: e,
+        });
+    }
+});
+exports["default"] = router;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXBsb2FkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy91cGxvYWQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBd0M7QUFDeEMscUNBQWlDO0FBQ2pDLDJCQUF1QztBQUV2QyxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDLEdBQUcsRUFBRSxHQUFHLEVBQUUsRUFBRTtJQUM1QixJQUFJO1FBQ0YsR0FBRyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLENBQUMsQ0FBQyx3QkFBd0I7UUFFOUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxFQUFFLENBQUMsTUFBTSxFQUFFLENBQUMsU0FBUyxFQUFFLElBQUksRUFBRSxJQUFJLEVBQUUsRUFBRTtZQUM5QyxNQUFNLFFBQVEsR0FBRyxJQUFJLEVBQUUsUUFBUSxJQUFJLGNBQWMsQ0FBQztZQUNsRCxPQUFPLENBQUMsR0FBRyxDQUFDLGNBQWMsUUFBUSxXQUFXLENBQUMsQ0FBQztZQUMvQyx3Q0FBd0M7WUFDeEMsTUFBTSxPQUFPLEdBQUcsSUFBQSxzQkFBaUIsRUFBQyxvQkFBVyxHQUFHLFFBQVEsQ0FBQyxDQUFDO1lBQzFELGlCQUFpQjtZQUNqQixJQUFJLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxDQUFDO1lBRW5CLDBCQUEwQjtZQUMxQixPQUFPLENBQUMsRUFBRSxDQUFDLE9BQU8sRUFBRSxHQUFHLEVBQUU7Z0JBQ3ZCLE9BQU8sQ0FBQyxHQUFHLENBQUMsY0FBYyxRQUFRLFlBQVksQ0FBQyxDQUFDO2dCQUNoRCxHQUFHLENBQUMsSUFBSSxDQUFDO29CQUNQLE1BQU0sRUFBRSxNQUFNO2lCQUNmLENBQUMsQ0FBQztZQUNMLENBQUMsQ0FBQyxDQUFDO1FBQ0wsQ0FBQyxDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxLQUFLLEVBQUUsQ0FBQztTQUNULENBQUMsQ0FBQztLQUNKO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
 
 /***/ }),
 
@@ -2693,6 +2776,1694 @@ function plural(ms, n, name) {
 
 /***/ }),
 
+/***/ 7182:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { parseContentType } = __nccwpck_require__(2584);
+
+function getInstance(cfg) {
+  const headers = cfg.headers;
+  const conType = parseContentType(headers['content-type']);
+  if (!conType)
+    throw new Error('Malformed content type');
+
+  for (const type of TYPES) {
+    const matched = type.detect(conType);
+    if (!matched)
+      continue;
+
+    const instanceCfg = {
+      limits: cfg.limits,
+      headers,
+      conType,
+      highWaterMark: undefined,
+      fileHwm: undefined,
+      defCharset: undefined,
+      defParamCharset: undefined,
+      preservePath: false,
+    };
+    if (cfg.highWaterMark)
+      instanceCfg.highWaterMark = cfg.highWaterMark;
+    if (cfg.fileHwm)
+      instanceCfg.fileHwm = cfg.fileHwm;
+    instanceCfg.defCharset = cfg.defCharset;
+    instanceCfg.defParamCharset = cfg.defParamCharset;
+    instanceCfg.preservePath = cfg.preservePath;
+    return new type(instanceCfg);
+  }
+
+  throw new Error(`Unsupported content type: ${headers['content-type']}`);
+}
+
+// Note: types are explicitly listed here for easier bundling
+// See: https://github.com/mscdex/busboy/issues/121
+const TYPES = [
+  __nccwpck_require__(7905),
+  __nccwpck_require__(5676),
+].filter(function(typemod) { return typeof typemod.detect === 'function'; });
+
+module.exports = (cfg) => {
+  if (typeof cfg !== 'object' || cfg === null)
+    cfg = {};
+
+  if (typeof cfg.headers !== 'object'
+      || cfg.headers === null
+      || typeof cfg.headers['content-type'] !== 'string') {
+    throw new Error('Missing Content-Type');
+  }
+
+  return getInstance(cfg);
+};
+
+
+/***/ }),
+
+/***/ 7905:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { Readable, Writable } = __nccwpck_require__(2781);
+
+const StreamSearch = __nccwpck_require__(4187);
+
+const {
+  basename,
+  convertToUTF8,
+  getDecoder,
+  parseContentType,
+  parseDisposition,
+} = __nccwpck_require__(2584);
+
+const BUF_CRLF = Buffer.from('\r\n');
+const BUF_CR = Buffer.from('\r');
+const BUF_DASH = Buffer.from('-');
+
+function noop() {}
+
+const MAX_HEADER_PAIRS = 2000; // From node
+const MAX_HEADER_SIZE = 16 * 1024; // From node (its default value)
+
+const HPARSER_NAME = 0;
+const HPARSER_PRE_OWS = 1;
+const HPARSER_VALUE = 2;
+class HeaderParser {
+  constructor(cb) {
+    this.header = Object.create(null);
+    this.pairCount = 0;
+    this.byteCount = 0;
+    this.state = HPARSER_NAME;
+    this.name = '';
+    this.value = '';
+    this.crlf = 0;
+    this.cb = cb;
+  }
+
+  reset() {
+    this.header = Object.create(null);
+    this.pairCount = 0;
+    this.byteCount = 0;
+    this.state = HPARSER_NAME;
+    this.name = '';
+    this.value = '';
+    this.crlf = 0;
+  }
+
+  push(chunk, pos, end) {
+    let start = pos;
+    while (pos < end) {
+      switch (this.state) {
+        case HPARSER_NAME: {
+          let done = false;
+          for (; pos < end; ++pos) {
+            if (this.byteCount === MAX_HEADER_SIZE)
+              return -1;
+            ++this.byteCount;
+            const code = chunk[pos];
+            if (TOKEN[code] !== 1) {
+              if (code !== 58/* ':' */)
+                return -1;
+              this.name += chunk.latin1Slice(start, pos);
+              if (this.name.length === 0)
+                return -1;
+              ++pos;
+              done = true;
+              this.state = HPARSER_PRE_OWS;
+              break;
+            }
+          }
+          if (!done) {
+            this.name += chunk.latin1Slice(start, pos);
+            break;
+          }
+          // FALLTHROUGH
+        }
+        case HPARSER_PRE_OWS: {
+          // Skip optional whitespace
+          let done = false;
+          for (; pos < end; ++pos) {
+            if (this.byteCount === MAX_HEADER_SIZE)
+              return -1;
+            ++this.byteCount;
+            const code = chunk[pos];
+            if (code !== 32/* ' ' */ && code !== 9/* '\t' */) {
+              start = pos;
+              done = true;
+              this.state = HPARSER_VALUE;
+              break;
+            }
+          }
+          if (!done)
+            break;
+          // FALLTHROUGH
+        }
+        case HPARSER_VALUE:
+          switch (this.crlf) {
+            case 0: // Nothing yet
+              for (; pos < end; ++pos) {
+                if (this.byteCount === MAX_HEADER_SIZE)
+                  return -1;
+                ++this.byteCount;
+                const code = chunk[pos];
+                if (FIELD_VCHAR[code] !== 1) {
+                  if (code !== 13/* '\r' */)
+                    return -1;
+                  ++this.crlf;
+                  break;
+                }
+              }
+              this.value += chunk.latin1Slice(start, pos++);
+              break;
+            case 1: // Received CR
+              if (this.byteCount === MAX_HEADER_SIZE)
+                return -1;
+              ++this.byteCount;
+              if (chunk[pos++] !== 10/* '\n' */)
+                return -1;
+              ++this.crlf;
+              break;
+            case 2: { // Received CR LF
+              if (this.byteCount === MAX_HEADER_SIZE)
+                return -1;
+              ++this.byteCount;
+              const code = chunk[pos];
+              if (code === 32/* ' ' */ || code === 9/* '\t' */) {
+                // Folded value
+                start = pos;
+                this.crlf = 0;
+              } else {
+                if (++this.pairCount < MAX_HEADER_PAIRS) {
+                  this.name = this.name.toLowerCase();
+                  if (this.header[this.name] === undefined)
+                    this.header[this.name] = [this.value];
+                  else
+                    this.header[this.name].push(this.value);
+                }
+                if (code === 13/* '\r' */) {
+                  ++this.crlf;
+                  ++pos;
+                } else {
+                  // Assume start of next header field name
+                  start = pos;
+                  this.crlf = 0;
+                  this.state = HPARSER_NAME;
+                  this.name = '';
+                  this.value = '';
+                }
+              }
+              break;
+            }
+            case 3: { // Received CR LF CR
+              if (this.byteCount === MAX_HEADER_SIZE)
+                return -1;
+              ++this.byteCount;
+              if (chunk[pos++] !== 10/* '\n' */)
+                return -1;
+              // End of header
+              const header = this.header;
+              this.reset();
+              this.cb(header);
+              return pos;
+            }
+          }
+          break;
+      }
+    }
+
+    return pos;
+  }
+}
+
+class FileStream extends Readable {
+  constructor(opts, owner) {
+    super(opts);
+    this.truncated = false;
+    this._readcb = null;
+    this.once('end', () => {
+      // We need to make sure that we call any outstanding _writecb() that is
+      // associated with this file so that processing of the rest of the form
+      // can continue. This may not happen if the file stream ends right after
+      // backpressure kicks in, so we force it here.
+      this._read();
+      if (--owner._fileEndsLeft === 0 && owner._finalcb) {
+        const cb = owner._finalcb;
+        owner._finalcb = null;
+        // Make sure other 'end' event handlers get a chance to be executed
+        // before busboy's 'finish' event is emitted
+        process.nextTick(cb);
+      }
+    });
+  }
+  _read(n) {
+    const cb = this._readcb;
+    if (cb) {
+      this._readcb = null;
+      cb();
+    }
+  }
+}
+
+const ignoreData = {
+  push: (chunk, pos) => {},
+  destroy: () => {},
+};
+
+function callAndUnsetCb(self, err) {
+  const cb = self._writecb;
+  self._writecb = null;
+  if (err)
+    self.destroy(err);
+  else if (cb)
+    cb();
+}
+
+function nullDecoder(val, hint) {
+  return val;
+}
+
+class Multipart extends Writable {
+  constructor(cfg) {
+    const streamOpts = {
+      autoDestroy: true,
+      emitClose: true,
+      highWaterMark: (typeof cfg.highWaterMark === 'number'
+                      ? cfg.highWaterMark
+                      : undefined),
+    };
+    super(streamOpts);
+
+    if (!cfg.conType.params || typeof cfg.conType.params.boundary !== 'string')
+      throw new Error('Multipart: Boundary not found');
+
+    const boundary = cfg.conType.params.boundary;
+    const paramDecoder = (typeof cfg.defParamCharset === 'string'
+                            && cfg.defParamCharset
+                          ? getDecoder(cfg.defParamCharset)
+                          : nullDecoder);
+    const defCharset = (cfg.defCharset || 'utf8');
+    const preservePath = cfg.preservePath;
+    const fileOpts = {
+      autoDestroy: true,
+      emitClose: true,
+      highWaterMark: (typeof cfg.fileHwm === 'number'
+                      ? cfg.fileHwm
+                      : undefined),
+    };
+
+    const limits = cfg.limits;
+    const fieldSizeLimit = (limits && typeof limits.fieldSize === 'number'
+                            ? limits.fieldSize
+                            : 1 * 1024 * 1024);
+    const fileSizeLimit = (limits && typeof limits.fileSize === 'number'
+                           ? limits.fileSize
+                           : Infinity);
+    const filesLimit = (limits && typeof limits.files === 'number'
+                        ? limits.files
+                        : Infinity);
+    const fieldsLimit = (limits && typeof limits.fields === 'number'
+                         ? limits.fields
+                         : Infinity);
+    const partsLimit = (limits && typeof limits.parts === 'number'
+                        ? limits.parts
+                        : Infinity);
+
+    let parts = -1; // Account for initial boundary
+    let fields = 0;
+    let files = 0;
+    let skipPart = false;
+
+    this._fileEndsLeft = 0;
+    this._fileStream = undefined;
+    this._complete = false;
+    let fileSize = 0;
+
+    let field;
+    let fieldSize = 0;
+    let partCharset;
+    let partEncoding;
+    let partType;
+    let partName;
+    let partTruncated = false;
+
+    let hitFilesLimit = false;
+    let hitFieldsLimit = false;
+
+    this._hparser = null;
+    const hparser = new HeaderParser((header) => {
+      this._hparser = null;
+      skipPart = false;
+
+      partType = 'text/plain';
+      partCharset = defCharset;
+      partEncoding = '7bit';
+      partName = undefined;
+      partTruncated = false;
+
+      let filename;
+      if (!header['content-disposition']) {
+        skipPart = true;
+        return;
+      }
+
+      const disp = parseDisposition(header['content-disposition'][0],
+                                    paramDecoder);
+      if (!disp || disp.type !== 'form-data') {
+        skipPart = true;
+        return;
+      }
+
+      if (disp.params) {
+        if (disp.params.name)
+          partName = disp.params.name;
+
+        if (disp.params['filename*'])
+          filename = disp.params['filename*'];
+        else if (disp.params.filename)
+          filename = disp.params.filename;
+
+        if (filename !== undefined && !preservePath)
+          filename = basename(filename);
+      }
+
+      if (header['content-type']) {
+        const conType = parseContentType(header['content-type'][0]);
+        if (conType) {
+          partType = `${conType.type}/${conType.subtype}`;
+          if (conType.params && typeof conType.params.charset === 'string')
+            partCharset = conType.params.charset.toLowerCase();
+        }
+      }
+
+      if (header['content-transfer-encoding'])
+        partEncoding = header['content-transfer-encoding'][0].toLowerCase();
+
+      if (partType === 'application/octet-stream' || filename !== undefined) {
+        // File
+
+        if (files === filesLimit) {
+          if (!hitFilesLimit) {
+            hitFilesLimit = true;
+            this.emit('filesLimit');
+          }
+          skipPart = true;
+          return;
+        }
+        ++files;
+
+        if (this.listenerCount('file') === 0) {
+          skipPart = true;
+          return;
+        }
+
+        fileSize = 0;
+        this._fileStream = new FileStream(fileOpts, this);
+        ++this._fileEndsLeft;
+        this.emit(
+          'file',
+          partName,
+          this._fileStream,
+          { filename,
+            encoding: partEncoding,
+            mimeType: partType }
+        );
+      } else {
+        // Non-file
+
+        if (fields === fieldsLimit) {
+          if (!hitFieldsLimit) {
+            hitFieldsLimit = true;
+            this.emit('fieldsLimit');
+          }
+          skipPart = true;
+          return;
+        }
+        ++fields;
+
+        if (this.listenerCount('field') === 0) {
+          skipPart = true;
+          return;
+        }
+
+        field = [];
+        fieldSize = 0;
+      }
+    });
+
+    let matchPostBoundary = 0;
+    const ssCb = (isMatch, data, start, end, isDataSafe) => {
+retrydata:
+      while (data) {
+        if (this._hparser !== null) {
+          const ret = this._hparser.push(data, start, end);
+          if (ret === -1) {
+            this._hparser = null;
+            hparser.reset();
+            this.emit('error', new Error('Malformed part header'));
+            break;
+          }
+          start = ret;
+        }
+
+        if (start === end)
+          break;
+
+        if (matchPostBoundary !== 0) {
+          if (matchPostBoundary === 1) {
+            switch (data[start]) {
+              case 45: // '-'
+                // Try matching '--' after boundary
+                matchPostBoundary = 2;
+                ++start;
+                break;
+              case 13: // '\r'
+                // Try matching CR LF before header
+                matchPostBoundary = 3;
+                ++start;
+                break;
+              default:
+                matchPostBoundary = 0;
+            }
+            if (start === end)
+              return;
+          }
+
+          if (matchPostBoundary === 2) {
+            matchPostBoundary = 0;
+            if (data[start] === 45/* '-' */) {
+              // End of multipart data
+              this._complete = true;
+              this._bparser = ignoreData;
+              return;
+            }
+            // We saw something other than '-', so put the dash we consumed
+            // "back"
+            const writecb = this._writecb;
+            this._writecb = noop;
+            ssCb(false, BUF_DASH, 0, 1, false);
+            this._writecb = writecb;
+          } else if (matchPostBoundary === 3) {
+            matchPostBoundary = 0;
+            if (data[start] === 10/* '\n' */) {
+              ++start;
+              if (parts >= partsLimit)
+                break;
+              // Prepare the header parser
+              this._hparser = hparser;
+              if (start === end)
+                break;
+              // Process the remaining data as a header
+              continue retrydata;
+            } else {
+              // We saw something other than LF, so put the CR we consumed
+              // "back"
+              const writecb = this._writecb;
+              this._writecb = noop;
+              ssCb(false, BUF_CR, 0, 1, false);
+              this._writecb = writecb;
+            }
+          }
+        }
+
+        if (!skipPart) {
+          if (this._fileStream) {
+            let chunk;
+            const actualLen = Math.min(end - start, fileSizeLimit - fileSize);
+            if (!isDataSafe) {
+              chunk = Buffer.allocUnsafe(actualLen);
+              data.copy(chunk, 0, start, start + actualLen);
+            } else {
+              chunk = data.slice(start, start + actualLen);
+            }
+
+            fileSize += chunk.length;
+            if (fileSize === fileSizeLimit) {
+              if (chunk.length > 0)
+                this._fileStream.push(chunk);
+              this._fileStream.emit('limit');
+              this._fileStream.truncated = true;
+              skipPart = true;
+            } else if (!this._fileStream.push(chunk)) {
+              if (this._writecb)
+                this._fileStream._readcb = this._writecb;
+              this._writecb = null;
+            }
+          } else if (field !== undefined) {
+            let chunk;
+            const actualLen = Math.min(
+              end - start,
+              fieldSizeLimit - fieldSize
+            );
+            if (!isDataSafe) {
+              chunk = Buffer.allocUnsafe(actualLen);
+              data.copy(chunk, 0, start, start + actualLen);
+            } else {
+              chunk = data.slice(start, start + actualLen);
+            }
+
+            fieldSize += actualLen;
+            field.push(chunk);
+            if (fieldSize === fieldSizeLimit) {
+              skipPart = true;
+              partTruncated = true;
+            }
+          }
+        }
+
+        break;
+      }
+
+      if (isMatch) {
+        matchPostBoundary = 1;
+
+        if (this._fileStream) {
+          // End the active file stream if the previous part was a file
+          this._fileStream.push(null);
+          this._fileStream = null;
+        } else if (field !== undefined) {
+          let data;
+          switch (field.length) {
+            case 0:
+              data = '';
+              break;
+            case 1:
+              data = convertToUTF8(field[0], partCharset, 0);
+              break;
+            default:
+              data = convertToUTF8(
+                Buffer.concat(field, fieldSize),
+                partCharset,
+                0
+              );
+          }
+          field = undefined;
+          fieldSize = 0;
+          this.emit(
+            'field',
+            partName,
+            data,
+            { nameTruncated: false,
+              valueTruncated: partTruncated,
+              encoding: partEncoding,
+              mimeType: partType }
+          );
+        }
+
+        if (++parts === partsLimit)
+          this.emit('partsLimit');
+      }
+    };
+    this._bparser = new StreamSearch(`\r\n--${boundary}`, ssCb);
+
+    this._writecb = null;
+    this._finalcb = null;
+
+    // Just in case there is no preamble
+    this.write(BUF_CRLF);
+  }
+
+  static detect(conType) {
+    return (conType.type === 'multipart' && conType.subtype === 'form-data');
+  }
+
+  _write(chunk, enc, cb) {
+    this._writecb = cb;
+    this._bparser.push(chunk, 0);
+    if (this._writecb)
+      callAndUnsetCb(this);
+  }
+
+  _destroy(err, cb) {
+    this._hparser = null;
+    this._bparser = ignoreData;
+    if (!err)
+      err = checkEndState(this);
+    const fileStream = this._fileStream;
+    if (fileStream) {
+      this._fileStream = null;
+      fileStream.destroy(err);
+    }
+    cb(err);
+  }
+
+  _final(cb) {
+    this._bparser.destroy();
+    if (!this._complete)
+      return cb(new Error('Unexpected end of form'));
+    if (this._fileEndsLeft)
+      this._finalcb = finalcb.bind(null, this, cb);
+    else
+      finalcb(this, cb);
+  }
+}
+
+function finalcb(self, cb, err) {
+  if (err)
+    return cb(err);
+  err = checkEndState(self);
+  cb(err);
+}
+
+function checkEndState(self) {
+  if (self._hparser)
+    return new Error('Malformed part header');
+  const fileStream = self._fileStream;
+  if (fileStream) {
+    self._fileStream = null;
+    fileStream.destroy(new Error('Unexpected end of file'));
+  }
+  if (!self._complete)
+    return new Error('Unexpected end of form');
+}
+
+const TOKEN = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+  0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+const FIELD_VCHAR = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+];
+
+module.exports = Multipart;
+
+
+/***/ }),
+
+/***/ 5676:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const { Writable } = __nccwpck_require__(2781);
+
+const { getDecoder } = __nccwpck_require__(2584);
+
+class URLEncoded extends Writable {
+  constructor(cfg) {
+    const streamOpts = {
+      autoDestroy: true,
+      emitClose: true,
+      highWaterMark: (typeof cfg.highWaterMark === 'number'
+                      ? cfg.highWaterMark
+                      : undefined),
+    };
+    super(streamOpts);
+
+    let charset = (cfg.defCharset || 'utf8');
+    if (cfg.conType.params && typeof cfg.conType.params.charset === 'string')
+      charset = cfg.conType.params.charset;
+
+    this.charset = charset;
+
+    const limits = cfg.limits;
+    this.fieldSizeLimit = (limits && typeof limits.fieldSize === 'number'
+                           ? limits.fieldSize
+                           : 1 * 1024 * 1024);
+    this.fieldsLimit = (limits && typeof limits.fields === 'number'
+                        ? limits.fields
+                        : Infinity);
+    this.fieldNameSizeLimit = (
+      limits && typeof limits.fieldNameSize === 'number'
+      ? limits.fieldNameSize
+      : 100
+    );
+
+    this._inKey = true;
+    this._keyTrunc = false;
+    this._valTrunc = false;
+    this._bytesKey = 0;
+    this._bytesVal = 0;
+    this._fields = 0;
+    this._key = '';
+    this._val = '';
+    this._byte = -2;
+    this._lastPos = 0;
+    this._encode = 0;
+    this._decoder = getDecoder(charset);
+  }
+
+  static detect(conType) {
+    return (conType.type === 'application'
+            && conType.subtype === 'x-www-form-urlencoded');
+  }
+
+  _write(chunk, enc, cb) {
+    if (this._fields >= this.fieldsLimit)
+      return cb();
+
+    let i = 0;
+    const len = chunk.length;
+    this._lastPos = 0;
+
+    // Check if we last ended mid-percent-encoded byte
+    if (this._byte !== -2) {
+      i = readPctEnc(this, chunk, i, len);
+      if (i === -1)
+        return cb(new Error('Malformed urlencoded form'));
+      if (i >= len)
+        return cb();
+      if (this._inKey)
+        ++this._bytesKey;
+      else
+        ++this._bytesVal;
+    }
+
+main:
+    while (i < len) {
+      if (this._inKey) {
+        // Parsing key
+
+        i = skipKeyBytes(this, chunk, i, len);
+
+        while (i < len) {
+          switch (chunk[i]) {
+            case 61: // '='
+              if (this._lastPos < i)
+                this._key += chunk.latin1Slice(this._lastPos, i);
+              this._lastPos = ++i;
+              this._key = this._decoder(this._key, this._encode);
+              this._encode = 0;
+              this._inKey = false;
+              continue main;
+            case 38: // '&'
+              if (this._lastPos < i)
+                this._key += chunk.latin1Slice(this._lastPos, i);
+              this._lastPos = ++i;
+              this._key = this._decoder(this._key, this._encode);
+              this._encode = 0;
+              if (this._bytesKey > 0) {
+                this.emit(
+                  'field',
+                  this._key,
+                  '',
+                  { nameTruncated: this._keyTrunc,
+                    valueTruncated: false,
+                    encoding: this.charset,
+                    mimeType: 'text/plain' }
+                );
+              }
+              this._key = '';
+              this._val = '';
+              this._keyTrunc = false;
+              this._valTrunc = false;
+              this._bytesKey = 0;
+              this._bytesVal = 0;
+              if (++this._fields >= this.fieldsLimit) {
+                this.emit('fieldsLimit');
+                return cb();
+              }
+              continue;
+            case 43: // '+'
+              if (this._lastPos < i)
+                this._key += chunk.latin1Slice(this._lastPos, i);
+              this._key += ' ';
+              this._lastPos = i + 1;
+              break;
+            case 37: // '%'
+              if (this._encode === 0)
+                this._encode = 1;
+              if (this._lastPos < i)
+                this._key += chunk.latin1Slice(this._lastPos, i);
+              this._lastPos = i + 1;
+              this._byte = -1;
+              i = readPctEnc(this, chunk, i + 1, len);
+              if (i === -1)
+                return cb(new Error('Malformed urlencoded form'));
+              if (i >= len)
+                return cb();
+              ++this._bytesKey;
+              i = skipKeyBytes(this, chunk, i, len);
+              continue;
+          }
+          ++i;
+          ++this._bytesKey;
+          i = skipKeyBytes(this, chunk, i, len);
+        }
+        if (this._lastPos < i)
+          this._key += chunk.latin1Slice(this._lastPos, i);
+      } else {
+        // Parsing value
+
+        i = skipValBytes(this, chunk, i, len);
+
+        while (i < len) {
+          switch (chunk[i]) {
+            case 38: // '&'
+              if (this._lastPos < i)
+                this._val += chunk.latin1Slice(this._lastPos, i);
+              this._lastPos = ++i;
+              this._inKey = true;
+              this._val = this._decoder(this._val, this._encode);
+              this._encode = 0;
+              if (this._bytesKey > 0 || this._bytesVal > 0) {
+                this.emit(
+                  'field',
+                  this._key,
+                  this._val,
+                  { nameTruncated: this._keyTrunc,
+                    valueTruncated: this._valTrunc,
+                    encoding: this.charset,
+                    mimeType: 'text/plain' }
+                );
+              }
+              this._key = '';
+              this._val = '';
+              this._keyTrunc = false;
+              this._valTrunc = false;
+              this._bytesKey = 0;
+              this._bytesVal = 0;
+              if (++this._fields >= this.fieldsLimit) {
+                this.emit('fieldsLimit');
+                return cb();
+              }
+              continue main;
+            case 43: // '+'
+              if (this._lastPos < i)
+                this._val += chunk.latin1Slice(this._lastPos, i);
+              this._val += ' ';
+              this._lastPos = i + 1;
+              break;
+            case 37: // '%'
+              if (this._encode === 0)
+                this._encode = 1;
+              if (this._lastPos < i)
+                this._val += chunk.latin1Slice(this._lastPos, i);
+              this._lastPos = i + 1;
+              this._byte = -1;
+              i = readPctEnc(this, chunk, i + 1, len);
+              if (i === -1)
+                return cb(new Error('Malformed urlencoded form'));
+              if (i >= len)
+                return cb();
+              ++this._bytesVal;
+              i = skipValBytes(this, chunk, i, len);
+              continue;
+          }
+          ++i;
+          ++this._bytesVal;
+          i = skipValBytes(this, chunk, i, len);
+        }
+        if (this._lastPos < i)
+          this._val += chunk.latin1Slice(this._lastPos, i);
+      }
+    }
+
+    cb();
+  }
+
+  _final(cb) {
+    if (this._byte !== -2)
+      return cb(new Error('Malformed urlencoded form'));
+    if (!this._inKey || this._bytesKey > 0 || this._bytesVal > 0) {
+      if (this._inKey)
+        this._key = this._decoder(this._key, this._encode);
+      else
+        this._val = this._decoder(this._val, this._encode);
+      this.emit(
+        'field',
+        this._key,
+        this._val,
+        { nameTruncated: this._keyTrunc,
+          valueTruncated: this._valTrunc,
+          encoding: this.charset,
+          mimeType: 'text/plain' }
+      );
+    }
+    cb();
+  }
+}
+
+function readPctEnc(self, chunk, pos, len) {
+  if (pos >= len)
+    return len;
+
+  if (self._byte === -1) {
+    // We saw a '%' but no hex characters yet
+    const hexUpper = HEX_VALUES[chunk[pos++]];
+    if (hexUpper === -1)
+      return -1;
+
+    if (hexUpper >= 8)
+      self._encode = 2; // Indicate high bits detected
+
+    if (pos < len) {
+      // Both hex characters are in this chunk
+      const hexLower = HEX_VALUES[chunk[pos++]];
+      if (hexLower === -1)
+        return -1;
+
+      if (self._inKey)
+        self._key += String.fromCharCode((hexUpper << 4) + hexLower);
+      else
+        self._val += String.fromCharCode((hexUpper << 4) + hexLower);
+
+      self._byte = -2;
+      self._lastPos = pos;
+    } else {
+      // Only one hex character was available in this chunk
+      self._byte = hexUpper;
+    }
+  } else {
+    // We saw only one hex character so far
+    const hexLower = HEX_VALUES[chunk[pos++]];
+    if (hexLower === -1)
+      return -1;
+
+    if (self._inKey)
+      self._key += String.fromCharCode((self._byte << 4) + hexLower);
+    else
+      self._val += String.fromCharCode((self._byte << 4) + hexLower);
+
+    self._byte = -2;
+    self._lastPos = pos;
+  }
+
+  return pos;
+}
+
+function skipKeyBytes(self, chunk, pos, len) {
+  // Skip bytes if we've truncated
+  if (self._bytesKey > self.fieldNameSizeLimit) {
+    if (!self._keyTrunc) {
+      if (self._lastPos < pos)
+        self._key += chunk.latin1Slice(self._lastPos, pos - 1);
+    }
+    self._keyTrunc = true;
+    for (; pos < len; ++pos) {
+      const code = chunk[pos];
+      if (code === 61/* '=' */ || code === 38/* '&' */)
+        break;
+      ++self._bytesKey;
+    }
+    self._lastPos = pos;
+  }
+
+  return pos;
+}
+
+function skipValBytes(self, chunk, pos, len) {
+  // Skip bytes if we've truncated
+  if (self._bytesVal > self.fieldSizeLimit) {
+    if (!self._valTrunc) {
+      if (self._lastPos < pos)
+        self._val += chunk.latin1Slice(self._lastPos, pos - 1);
+    }
+    self._valTrunc = true;
+    for (; pos < len; ++pos) {
+      if (chunk[pos] === 38/* '&' */)
+        break;
+      ++self._bytesVal;
+    }
+    self._lastPos = pos;
+  }
+
+  return pos;
+}
+
+/* eslint-disable no-multi-spaces */
+const HEX_VALUES = [
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+  -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+];
+/* eslint-enable no-multi-spaces */
+
+module.exports = URLEncoded;
+
+
+/***/ }),
+
+/***/ 2584:
+/***/ (function(module) {
+
+"use strict";
+
+
+function parseContentType(str) {
+  if (str.length === 0)
+    return;
+
+  const params = Object.create(null);
+  let i = 0;
+
+  // Parse type
+  for (; i < str.length; ++i) {
+    const code = str.charCodeAt(i);
+    if (TOKEN[code] !== 1) {
+      if (code !== 47/* '/' */ || i === 0)
+        return;
+      break;
+    }
+  }
+  // Check for type without subtype
+  if (i === str.length)
+    return;
+
+  const type = str.slice(0, i).toLowerCase();
+
+  // Parse subtype
+  const subtypeStart = ++i;
+  for (; i < str.length; ++i) {
+    const code = str.charCodeAt(i);
+    if (TOKEN[code] !== 1) {
+      // Make sure we have a subtype
+      if (i === subtypeStart)
+        return;
+
+      if (parseContentTypeParams(str, i, params) === undefined)
+        return;
+      break;
+    }
+  }
+  // Make sure we have a subtype
+  if (i === subtypeStart)
+    return;
+
+  const subtype = str.slice(subtypeStart, i).toLowerCase();
+
+  return { type, subtype, params };
+}
+
+function parseContentTypeParams(str, i, params) {
+  while (i < str.length) {
+    // Consume whitespace
+    for (; i < str.length; ++i) {
+      const code = str.charCodeAt(i);
+      if (code !== 32/* ' ' */ && code !== 9/* '\t' */)
+        break;
+    }
+
+    // Ended on whitespace
+    if (i === str.length)
+      break;
+
+    // Check for malformed parameter
+    if (str.charCodeAt(i++) !== 59/* ';' */)
+      return;
+
+    // Consume whitespace
+    for (; i < str.length; ++i) {
+      const code = str.charCodeAt(i);
+      if (code !== 32/* ' ' */ && code !== 9/* '\t' */)
+        break;
+    }
+
+    // Ended on whitespace (malformed)
+    if (i === str.length)
+      return;
+
+    let name;
+    const nameStart = i;
+    // Parse parameter name
+    for (; i < str.length; ++i) {
+      const code = str.charCodeAt(i);
+      if (TOKEN[code] !== 1) {
+        if (code !== 61/* '=' */)
+          return;
+        break;
+      }
+    }
+
+    // No value (malformed)
+    if (i === str.length)
+      return;
+
+    name = str.slice(nameStart, i);
+    ++i; // Skip over '='
+
+    // No value (malformed)
+    if (i === str.length)
+      return;
+
+    let value = '';
+    let valueStart;
+    if (str.charCodeAt(i) === 34/* '"' */) {
+      valueStart = ++i;
+      let escaping = false;
+      // Parse quoted value
+      for (; i < str.length; ++i) {
+        const code = str.charCodeAt(i);
+        if (code === 92/* '\\' */) {
+          if (escaping) {
+            valueStart = i;
+            escaping = false;
+          } else {
+            value += str.slice(valueStart, i);
+            escaping = true;
+          }
+          continue;
+        }
+        if (code === 34/* '"' */) {
+          if (escaping) {
+            valueStart = i;
+            escaping = false;
+            continue;
+          }
+          value += str.slice(valueStart, i);
+          break;
+        }
+        if (escaping) {
+          valueStart = i - 1;
+          escaping = false;
+        }
+        // Invalid unescaped quoted character (malformed)
+        if (QDTEXT[code] !== 1)
+          return;
+      }
+
+      // No end quote (malformed)
+      if (i === str.length)
+        return;
+
+      ++i; // Skip over double quote
+    } else {
+      valueStart = i;
+      // Parse unquoted value
+      for (; i < str.length; ++i) {
+        const code = str.charCodeAt(i);
+        if (TOKEN[code] !== 1) {
+          // No value (malformed)
+          if (i === valueStart)
+            return;
+          break;
+        }
+      }
+      value = str.slice(valueStart, i);
+    }
+
+    name = name.toLowerCase();
+    if (params[name] === undefined)
+      params[name] = value;
+  }
+
+  return params;
+}
+
+function parseDisposition(str, defDecoder) {
+  if (str.length === 0)
+    return;
+
+  const params = Object.create(null);
+  let i = 0;
+
+  for (; i < str.length; ++i) {
+    const code = str.charCodeAt(i);
+    if (TOKEN[code] !== 1) {
+      if (parseDispositionParams(str, i, params, defDecoder) === undefined)
+        return;
+      break;
+    }
+  }
+
+  const type = str.slice(0, i).toLowerCase();
+
+  return { type, params };
+}
+
+function parseDispositionParams(str, i, params, defDecoder) {
+  while (i < str.length) {
+    // Consume whitespace
+    for (; i < str.length; ++i) {
+      const code = str.charCodeAt(i);
+      if (code !== 32/* ' ' */ && code !== 9/* '\t' */)
+        break;
+    }
+
+    // Ended on whitespace
+    if (i === str.length)
+      break;
+
+    // Check for malformed parameter
+    if (str.charCodeAt(i++) !== 59/* ';' */)
+      return;
+
+    // Consume whitespace
+    for (; i < str.length; ++i) {
+      const code = str.charCodeAt(i);
+      if (code !== 32/* ' ' */ && code !== 9/* '\t' */)
+        break;
+    }
+
+    // Ended on whitespace (malformed)
+    if (i === str.length)
+      return;
+
+    let name;
+    const nameStart = i;
+    // Parse parameter name
+    for (; i < str.length; ++i) {
+      const code = str.charCodeAt(i);
+      if (TOKEN[code] !== 1) {
+        if (code === 61/* '=' */)
+          break;
+        return;
+      }
+    }
+
+    // No value (malformed)
+    if (i === str.length)
+      return;
+
+    let value = '';
+    let valueStart;
+    let charset;
+    //~ let lang;
+    name = str.slice(nameStart, i);
+    if (name.charCodeAt(name.length - 1) === 42/* '*' */) {
+      // Extended value
+
+      const charsetStart = ++i;
+      // Parse charset name
+      for (; i < str.length; ++i) {
+        const code = str.charCodeAt(i);
+        if (CHARSET[code] !== 1) {
+          if (code !== 39/* '\'' */)
+            return;
+          break;
+        }
+      }
+
+      // Incomplete charset (malformed)
+      if (i === str.length)
+        return;
+
+      charset = str.slice(charsetStart, i);
+      ++i; // Skip over the '\''
+
+      //~ const langStart = ++i;
+      // Parse language name
+      for (; i < str.length; ++i) {
+        const code = str.charCodeAt(i);
+        if (code === 39/* '\'' */)
+          break;
+      }
+
+      // Incomplete language (malformed)
+      if (i === str.length)
+        return;
+
+      //~ lang = str.slice(langStart, i);
+      ++i; // Skip over the '\''
+
+      // No value (malformed)
+      if (i === str.length)
+        return;
+
+      valueStart = i;
+
+      let encode = 0;
+      // Parse value
+      for (; i < str.length; ++i) {
+        const code = str.charCodeAt(i);
+        if (EXTENDED_VALUE[code] !== 1) {
+          if (code === 37/* '%' */) {
+            let hexUpper;
+            let hexLower;
+            if (i + 2 < str.length
+                && (hexUpper = HEX_VALUES[str.charCodeAt(i + 1)]) !== -1
+                && (hexLower = HEX_VALUES[str.charCodeAt(i + 2)]) !== -1) {
+              const byteVal = (hexUpper << 4) + hexLower;
+              value += str.slice(valueStart, i);
+              value += String.fromCharCode(byteVal);
+              i += 2;
+              valueStart = i + 1;
+              if (byteVal >= 128)
+                encode = 2;
+              else if (encode === 0)
+                encode = 1;
+              continue;
+            }
+            // '%' disallowed in non-percent encoded contexts (malformed)
+            return;
+          }
+          break;
+        }
+      }
+
+      value += str.slice(valueStart, i);
+      value = convertToUTF8(value, charset, encode);
+      if (value === undefined)
+        return;
+    } else {
+      // Non-extended value
+
+      ++i; // Skip over '='
+
+      // No value (malformed)
+      if (i === str.length)
+        return;
+
+      if (str.charCodeAt(i) === 34/* '"' */) {
+        valueStart = ++i;
+        let escaping = false;
+        // Parse quoted value
+        for (; i < str.length; ++i) {
+          const code = str.charCodeAt(i);
+          if (code === 92/* '\\' */) {
+            if (escaping) {
+              valueStart = i;
+              escaping = false;
+            } else {
+              value += str.slice(valueStart, i);
+              escaping = true;
+            }
+            continue;
+          }
+          if (code === 34/* '"' */) {
+            if (escaping) {
+              valueStart = i;
+              escaping = false;
+              continue;
+            }
+            value += str.slice(valueStart, i);
+            break;
+          }
+          if (escaping) {
+            valueStart = i - 1;
+            escaping = false;
+          }
+          // Invalid unescaped quoted character (malformed)
+          if (QDTEXT[code] !== 1)
+            return;
+        }
+
+        // No end quote (malformed)
+        if (i === str.length)
+          return;
+
+        ++i; // Skip over double quote
+      } else {
+        valueStart = i;
+        // Parse unquoted value
+        for (; i < str.length; ++i) {
+          const code = str.charCodeAt(i);
+          if (TOKEN[code] !== 1) {
+            // No value (malformed)
+            if (i === valueStart)
+              return;
+            break;
+          }
+        }
+        value = str.slice(valueStart, i);
+      }
+
+      value = defDecoder(value, 2);
+      if (value === undefined)
+        return;
+    }
+
+    name = name.toLowerCase();
+    if (params[name] === undefined)
+      params[name] = value;
+  }
+
+  return params;
+}
+
+function getDecoder(charset) {
+  let lc;
+  while (true) {
+    switch (charset) {
+      case 'utf-8':
+      case 'utf8':
+        return decoders.utf8;
+      case 'latin1':
+      case 'ascii': // TODO: Make these a separate, strict decoder?
+      case 'us-ascii':
+      case 'iso-8859-1':
+      case 'iso8859-1':
+      case 'iso88591':
+      case 'iso_8859-1':
+      case 'windows-1252':
+      case 'iso_8859-1:1987':
+      case 'cp1252':
+      case 'x-cp1252':
+        return decoders.latin1;
+      case 'utf16le':
+      case 'utf-16le':
+      case 'ucs2':
+      case 'ucs-2':
+        return decoders.utf16le;
+      case 'base64':
+        return decoders.base64;
+      default:
+        if (lc === undefined) {
+          lc = true;
+          charset = charset.toLowerCase();
+          continue;
+        }
+        return decoders.other.bind(charset);
+    }
+  }
+}
+
+const decoders = {
+  utf8: (data, hint) => {
+    if (data.length === 0)
+      return '';
+    if (typeof data === 'string') {
+      // If `data` never had any percent-encoded bytes or never had any that
+      // were outside of the ASCII range, then we can safely just return the
+      // input since UTF-8 is ASCII compatible
+      if (hint < 2)
+        return data;
+
+      data = Buffer.from(data, 'latin1');
+    }
+    return data.utf8Slice(0, data.length);
+  },
+
+  latin1: (data, hint) => {
+    if (data.length === 0)
+      return '';
+    if (typeof data === 'string')
+      return data;
+    return data.latin1Slice(0, data.length);
+  },
+
+  utf16le: (data, hint) => {
+    if (data.length === 0)
+      return '';
+    if (typeof data === 'string')
+      data = Buffer.from(data, 'latin1');
+    return data.ucs2Slice(0, data.length);
+  },
+
+  base64: (data, hint) => {
+    if (data.length === 0)
+      return '';
+    if (typeof data === 'string')
+      data = Buffer.from(data, 'latin1');
+    return data.base64Slice(0, data.length);
+  },
+
+  other: (data, hint) => {
+    if (data.length === 0)
+      return '';
+    if (typeof data === 'string')
+      data = Buffer.from(data, 'latin1');
+    try {
+      const decoder = new TextDecoder(this);
+      return decoder.decode(data);
+    } catch {}
+  },
+};
+
+function convertToUTF8(data, charset, hint) {
+  const decode = getDecoder(charset);
+  if (decode)
+    return decode(data, hint);
+}
+
+function basename(path) {
+  if (typeof path !== 'string')
+    return '';
+  for (let i = path.length - 1; i >= 0; --i) {
+    switch (path.charCodeAt(i)) {
+      case 0x2F: // '/'
+      case 0x5C: // '\'
+        path = path.slice(i + 1);
+        return (path === '..' || path === '.' ? '' : path);
+    }
+  }
+  return (path === '..' || path === '.' ? '' : path);
+}
+
+const TOKEN = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+  0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+const QDTEXT = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+];
+
+const CHARSET = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+  0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+const EXTENDED_VALUE = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+  0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+/* eslint-disable no-multi-spaces */
+const HEX_VALUES = [
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+  -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+];
+/* eslint-enable no-multi-spaces */
+
+module.exports = {
+  basename,
+  convertToUTF8,
+  getDecoder,
+  parseContentType,
+  parseDisposition,
+};
+
+
+/***/ }),
+
 /***/ 1856:
 /***/ ((module) => {
 
@@ -2944,6 +4715,60 @@ if ($defineProperty) {
 	$defineProperty(module.exports, 'apply', { value: applyBind });
 } else {
 	module.exports.apply = applyBind;
+}
+
+
+/***/ }),
+
+/***/ 4570:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const busboy = __nccwpck_require__(7182);
+
+const RE_MIME = /^(?:multipart\/.+)|(?:application\/x-www-form-urlencoded)$/i;
+
+module.exports = (options) => {
+  options = options || {};
+
+  return (req, res, next) => {
+    if (req.busboy
+        || req.method === 'GET'
+        || req.method === 'HEAD'
+        || !hasBody(req)
+        || !RE_MIME.test(mime(req))) {
+      return next();
+    }
+
+    const cfg = { ...options, headers: req.headers };
+
+    req.busboy = busboy(cfg);
+
+    if (options.immediate) {
+      process.nextTick(() => {
+        req.pipe(req.busboy);
+      });
+    }
+
+    next();
+  };
+};
+
+// Utility functions copied from Connect
+
+function hasBody(req) {
+  const encoding = ('transfer-encoding' in req.headers);
+  const length = (
+    'content-length' in req.headers && req.headers['content-length'] !== '0'
+  );
+  return (encoding || length);
+}
+
+function mime(req) {
+  const str = (req.headers['content-type'] || '');
+  return str.split(';')[0];
 }
 
 
@@ -23328,6 +25153,281 @@ function status (code) {
 
 /***/ }),
 
+/***/ 4187:
+/***/ ((module) => {
+
+"use strict";
+
+/*
+  Based heavily on the Streaming Boyer-Moore-Horspool C++ implementation
+  by Hongli Lai at: https://github.com/FooBarWidget/boyer-moore-horspool
+*/
+function memcmp(buf1, pos1, buf2, pos2, num) {
+  for (let i = 0; i < num; ++i) {
+    if (buf1[pos1 + i] !== buf2[pos2 + i])
+      return false;
+  }
+  return true;
+}
+
+class SBMH {
+  constructor(needle, cb) {
+    if (typeof cb !== 'function')
+      throw new Error('Missing match callback');
+
+    if (typeof needle === 'string')
+      needle = Buffer.from(needle);
+    else if (!Buffer.isBuffer(needle))
+      throw new Error(`Expected Buffer for needle, got ${typeof needle}`);
+
+    const needleLen = needle.length;
+
+    this.maxMatches = Infinity;
+    this.matches = 0;
+
+    this._cb = cb;
+    this._lookbehindSize = 0;
+    this._needle = needle;
+    this._bufPos = 0;
+
+    this._lookbehind = Buffer.allocUnsafe(needleLen);
+
+    // Initialize occurrence table.
+    this._occ = [
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen, needleLen, needleLen,
+      needleLen, needleLen, needleLen, needleLen
+    ];
+
+    // Populate occurrence table with analysis of the needle, ignoring the last
+    // letter.
+    if (needleLen > 1) {
+      for (let i = 0; i < needleLen - 1; ++i)
+        this._occ[needle[i]] = needleLen - 1 - i;
+    }
+  }
+
+  reset() {
+    this.matches = 0;
+    this._lookbehindSize = 0;
+    this._bufPos = 0;
+  }
+
+  push(chunk, pos) {
+    let result;
+    if (!Buffer.isBuffer(chunk))
+      chunk = Buffer.from(chunk, 'latin1');
+    const chunkLen = chunk.length;
+    this._bufPos = pos || 0;
+    while (result !== chunkLen && this.matches < this.maxMatches)
+      result = feed(this, chunk);
+    return result;
+  }
+
+  destroy() {
+    const lbSize = this._lookbehindSize;
+    if (lbSize)
+      this._cb(false, this._lookbehind, 0, lbSize, false);
+    this.reset();
+  }
+}
+
+function feed(self, data) {
+  const len = data.length;
+  const needle = self._needle;
+  const needleLen = needle.length;
+
+  // Positive: points to a position in `data`
+  //           pos == 3 points to data[3]
+  // Negative: points to a position in the lookbehind buffer
+  //           pos == -2 points to lookbehind[lookbehindSize - 2]
+  let pos = -self._lookbehindSize;
+  const lastNeedleCharPos = needleLen - 1;
+  const lastNeedleChar = needle[lastNeedleCharPos];
+  const end = len - needleLen;
+  const occ = self._occ;
+  const lookbehind = self._lookbehind;
+
+  if (pos < 0) {
+    // Lookbehind buffer is not empty. Perform Boyer-Moore-Horspool
+    // search with character lookup code that considers both the
+    // lookbehind buffer and the current round's haystack data.
+    //
+    // Loop until
+    //   there is a match.
+    // or until
+    //   we've moved past the position that requires the
+    //   lookbehind buffer. In this case we switch to the
+    //   optimized loop.
+    // or until
+    //   the character to look at lies outside the haystack.
+    while (pos < 0 && pos <= end) {
+      const nextPos = pos + lastNeedleCharPos;
+      const ch = (nextPos < 0
+                  ? lookbehind[self._lookbehindSize + nextPos]
+                  : data[nextPos]);
+
+      if (ch === lastNeedleChar
+          && matchNeedle(self, data, pos, lastNeedleCharPos)) {
+        self._lookbehindSize = 0;
+        ++self.matches;
+        if (pos > -self._lookbehindSize)
+          self._cb(true, lookbehind, 0, self._lookbehindSize + pos, false);
+        else
+          self._cb(true, undefined, 0, 0, true);
+
+        return (self._bufPos = pos + needleLen);
+      }
+
+      pos += occ[ch];
+    }
+
+    // No match.
+
+    // There's too few data for Boyer-Moore-Horspool to run,
+    // so let's use a different algorithm to skip as much as
+    // we can.
+    // Forward pos until
+    //   the trailing part of lookbehind + data
+    //   looks like the beginning of the needle
+    // or until
+    //   pos == 0
+    while (pos < 0 && !matchNeedle(self, data, pos, len - pos))
+      ++pos;
+
+    if (pos < 0) {
+      // Cut off part of the lookbehind buffer that has
+      // been processed and append the entire haystack
+      // into it.
+      const bytesToCutOff = self._lookbehindSize + pos;
+
+      if (bytesToCutOff > 0) {
+        // The cut off data is guaranteed not to contain the needle.
+        self._cb(false, lookbehind, 0, bytesToCutOff, false);
+      }
+
+      self._lookbehindSize -= bytesToCutOff;
+      lookbehind.copy(lookbehind, 0, bytesToCutOff, self._lookbehindSize);
+      lookbehind.set(data, self._lookbehindSize);
+      self._lookbehindSize += len;
+
+      self._bufPos = len;
+      return len;
+    }
+
+    // Discard lookbehind buffer.
+    self._cb(false, lookbehind, 0, self._lookbehindSize, false);
+    self._lookbehindSize = 0;
+  }
+
+  pos += self._bufPos;
+
+  const firstNeedleChar = needle[0];
+
+  // Lookbehind buffer is now empty. Perform Boyer-Moore-Horspool
+  // search with optimized character lookup code that only considers
+  // the current round's haystack data.
+  while (pos <= end) {
+    const ch = data[pos + lastNeedleCharPos];
+
+    if (ch === lastNeedleChar
+        && data[pos] === firstNeedleChar
+        && memcmp(needle, 0, data, pos, lastNeedleCharPos)) {
+      ++self.matches;
+      if (pos > 0)
+        self._cb(true, data, self._bufPos, pos, true);
+      else
+        self._cb(true, undefined, 0, 0, true);
+
+      return (self._bufPos = pos + needleLen);
+    }
+
+    pos += occ[ch];
+  }
+
+  // There was no match. If there's trailing haystack data that we cannot
+  // match yet using the Boyer-Moore-Horspool algorithm (because the trailing
+  // data is less than the needle size) then match using a modified
+  // algorithm that starts matching from the beginning instead of the end.
+  // Whatever trailing data is left after running this algorithm is added to
+  // the lookbehind buffer.
+  while (pos < len) {
+    if (data[pos] !== firstNeedleChar
+        || !memcmp(data, pos, needle, 0, len - pos)) {
+      ++pos;
+      continue;
+    }
+    data.copy(lookbehind, 0, pos, len);
+    self._lookbehindSize = len - pos;
+    break;
+  }
+
+  // Everything until `pos` is guaranteed not to contain needle data.
+  if (pos > 0)
+    self._cb(false, data, self._bufPos, pos < len ? pos : len, true);
+
+  self._bufPos = len;
+  return len;
+}
+
+function matchNeedle(self, data, pos, len) {
+  const lb = self._lookbehind;
+  const lbSize = self._lookbehindSize;
+  const needle = self._needle;
+
+  for (let i = 0; i < len; ++i, ++pos) {
+    const ch = (pos < 0 ? lb[lbSize + pos] : data[pos]);
+    if (ch !== needle[i])
+      return false;
+  }
+  return true;
+}
+
+module.exports = SBMH;
+
+
+/***/ }),
+
 /***/ 3646:
 /***/ ((module) => {
 
@@ -23906,32 +26006,90 @@ function vary (res, field) {
 
 /***/ }),
 
-/***/ 3890:
+/***/ 6207:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AssistNowService = void 0;
-const fs_1 = __nccwpck_require__(7147);
-const almanac_1 = __nccwpck_require__(4575);
-const ALMANAC_CONFIG = './almanac.json';
-const ASSISTNOW_ERROR_LOG = './assistnow_error.log';
-exports.AssistNowService = {
-    execute: async () => {
-        const done = (0, fs_1.existsSync)(ALMANAC_CONFIG);
-        if (!done) {
-            try {
-                await (0, almanac_1.submitOfflineAlmanac)();
-                (0, fs_1.writeFileSync)(ALMANAC_CONFIG, '');
-            }
-            catch (e) {
-                (0, fs_1.writeFileSync)(ASSISTNOW_ERROR_LOG, JSON.stringify(e));
-            }
-        }
-    },
+exports.updateFirmware = exports.configureOnBoot = exports.UPLOAD_PATH = exports.LED_CONFIG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+exports.PORT = 5000;
+exports.PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
+exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording/pic';
+exports.GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
+exports.IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
+exports.LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
+exports.BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
+exports.LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
+exports.UPLOAD_PATH = __dirname + '/../../../tmp/';
+const configureOnBoot = async (req, res) => {
+    try {
+        const timeToSet = new Date(Number(req.query.time))
+            .toISOString()
+            .replace(/T/, ' ')
+            .replace(/\..+/, '')
+            .split(' ');
+        // setting up initial time for camera
+        (0, child_process_1.exec)('timedatectl set-ntp 0', () => {
+            (0, child_process_1.exec)(`timedatectl set-time ${timeToSet[0]}`, () => {
+                (0, child_process_1.exec)(`timedatectl set-time ${timeToSet[1]}`, () => {
+                    // make sure that camera started when the App is connected
+                    (0, child_process_1.exec)('systemctl start camera-bridge');
+                });
+            });
+        });
+        res.json({
+            output: 'done',
+        });
+    }
+    catch (error) {
+        res.json({ error });
+    }
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXNzaXN0Tm93LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvYXNzaXN0Tm93LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLDJCQUErQztBQUMvQyx5Q0FBbUQ7QUFFbkQsTUFBTSxjQUFjLEdBQUcsZ0JBQWdCLENBQUM7QUFDeEMsTUFBTSxtQkFBbUIsR0FBRyx1QkFBdUIsQ0FBQztBQUV2QyxRQUFBLGdCQUFnQixHQUFhO0lBQ3hDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixNQUFNLElBQUksR0FBRyxJQUFBLGVBQVUsRUFBQyxjQUFjLENBQUMsQ0FBQztRQUN4QyxJQUFJLENBQUMsSUFBSSxFQUFFO1lBQ1QsSUFBSTtnQkFDRixNQUFNLElBQUEsOEJBQW9CLEdBQUUsQ0FBQztnQkFDN0IsSUFBQSxrQkFBYSxFQUFDLGNBQWMsRUFBRSxFQUFFLENBQUMsQ0FBQzthQUNuQztZQUFDLE9BQU8sQ0FBVSxFQUFFO2dCQUNuQixJQUFBLGtCQUFhLEVBQUMsbUJBQW1CLEVBQUUsSUFBSSxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO2FBQ3ZEO1NBQ0Y7SUFDSCxDQUFDO0NBQ0YsQ0FBQyJ9
+exports.configureOnBoot = configureOnBoot;
+const updateFirmware = async (req, res) => {
+    try {
+        const output = (0, child_process_1.execSync)('rauc install /tmp/' + req.query.filename, {
+            encoding: 'utf-8',
+        });
+        res.json({
+            output,
+        });
+    }
+    catch (error) {
+        res.json({ error: error.stdout || error.stderr });
+    }
+};
+exports.updateFirmware = updateFirmware;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvY29uZmlnL2hkYy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBK0M7QUFHbEMsUUFBQSxJQUFJLEdBQUcsSUFBSSxDQUFDO0FBQ1osUUFBQSxhQUFhLEdBQUcsU0FBUyxHQUFHLHlCQUF5QixDQUFDO0FBQ3RELFFBQUEsa0JBQWtCLEdBQUcsU0FBUyxHQUFHLDZCQUE2QixDQUFDO0FBQy9ELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw2QkFBNkIsQ0FBQztBQUM1RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNkJBQTZCLENBQUM7QUFDNUQsUUFBQSxnQkFBZ0IsR0FBRyxTQUFTLEdBQUcsOEJBQThCLENBQUM7QUFDOUQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLDRCQUE0QixDQUFDO0FBQzNELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLFdBQVcsR0FBRyxTQUFTLEdBQUcsZ0JBQWdCLENBQUM7QUFFakQsTUFBTSxlQUFlLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNuRSxJQUFJO1FBQ0YsTUFBTSxTQUFTLEdBQUcsSUFBSSxJQUFJLENBQUMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUM7YUFDL0MsV0FBVyxFQUFFO2FBQ2IsT0FBTyxDQUFDLEdBQUcsRUFBRSxHQUFHLENBQUM7YUFDakIsT0FBTyxDQUFDLE1BQU0sRUFBRSxFQUFFLENBQUM7YUFDbkIsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBRWQscUNBQXFDO1FBQ3JDLElBQUEsb0JBQUksRUFBQyx1QkFBdUIsRUFBRSxHQUFHLEVBQUU7WUFDakMsSUFBQSxvQkFBSSxFQUFDLHdCQUF3QixTQUFTLENBQUMsQ0FBQyxDQUFDLEVBQUUsRUFBRSxHQUFHLEVBQUU7Z0JBQ2hELElBQUEsb0JBQUksRUFBQyx3QkFBd0IsU0FBUyxDQUFDLENBQUMsQ0FBQyxFQUFFLEVBQUUsR0FBRyxFQUFFO29CQUNoRCwwREFBMEQ7b0JBQzFELElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDO2dCQUN4QyxDQUFDLENBQUMsQ0FBQztZQUNMLENBQUMsQ0FBQyxDQUFDO1FBQ0wsQ0FBQyxDQUFDLENBQUM7UUFFSCxHQUFHLENBQUMsSUFBSSxDQUFDO1lBQ1AsTUFBTSxFQUFFLE1BQU07U0FDZixDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sS0FBSyxFQUFFO1FBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7S0FDckI7QUFDSCxDQUFDLENBQUM7QUF4QlcsUUFBQSxlQUFlLG1CQXdCMUI7QUFFSyxNQUFNLGNBQWMsR0FBRyxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ2xFLElBQUk7UUFDRixNQUFNLE1BQU0sR0FBRyxJQUFBLHdCQUFRLEVBQUMsb0JBQW9CLEdBQUcsR0FBRyxDQUFDLEtBQUssQ0FBQyxRQUFRLEVBQUU7WUFDakUsUUFBUSxFQUFFLE9BQU87U0FDbEIsQ0FBQyxDQUFDO1FBQ0gsR0FBRyxDQUFDLElBQUksQ0FBQztZQUNQLE1BQU07U0FDUCxDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sS0FBVSxFQUFFO1FBQ25CLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsS0FBSyxDQUFDLE1BQU0sSUFBSSxLQUFLLENBQUMsTUFBTSxFQUFFLENBQUMsQ0FBQztLQUNuRDtBQUNILENBQUMsQ0FBQztBQVhXLFFBQUEsY0FBYyxrQkFXekIifQ==
+
+/***/ }),
+
+/***/ 6039:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.API_VERSION = void 0;
+__exportStar(__nccwpck_require__(6207), exports);
+exports.API_VERSION = '0.8.0';
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9jb25maWcvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSx3Q0FBc0I7QUFDVCxRQUFBLFdBQVcsR0FBRyxPQUFPLENBQUMifQ==
 
 /***/ }),
 
@@ -23977,117 +26135,127 @@ exports.serviceRunner = new ServiceRunner();
 
 /***/ }),
 
-/***/ 4575:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 118:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.submitOfflineAlmanac = void 0;
-// https://cdn.sparkfun.com/assets/learn_tutorials/8/1/5/u-blox8-M8_ReceiverDescrProtSpec__UBX-13003221__Public.pdf
-// https://content.u-blox.com/sites/default/files/products/documents/MultiGNSS-Assistance_UserGuide_%28UBX-13004360%29.pdf
-const child_process_1 = __importDefault(__nccwpck_require__(2081));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const DEFAULT_ALAMANC_FIXTURE = './fixtures/mgaoffline.ubx';
-var UBX_MGA_ACK;
-(function (UBX_MGA_ACK) {
-    UBX_MGA_ACK["ACK"] = "ACK";
-    UBX_MGA_ACK["ABORT"] = "ABORT";
-})(UBX_MGA_ACK || (UBX_MGA_ACK = {}));
-const UBX_COMMAND_CLASS_ID_BYTES = {
-    'UBX-MGA-FLASH-DATA': '0x13,0x21',
-    'UBX-MGA-FLASH-STOP': '0x13,0x22',
-    'UBX-MGA-ANO': '0x13,0x20',
+exports.LedService = exports.setMostRecentPing = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const config_1 = __nccwpck_require__(6039);
+const led_1 = __nccwpck_require__(4011);
+let mostRecentImg = '';
+let mostRecentPing = -1;
+const setMostRecentPing = (_mostRecentPing) => {
+    mostRecentPing = _mostRecentPing;
 };
-function readMGAOffline(fileIn = DEFAULT_ALAMANC_FIXTURE) {
-    const file = fs_1.default.readFileSync(fileIn).toString('hex');
-    const blocks = [];
-    let prev = '';
-    let cursor = 0;
-    const msgLength = 76;
-    let isPayload = false;
-    for (let i = 0; i < file.length; i += 2) {
-        const hex = '0x' + file[i] + '' + file[i + 1];
-        if (hex === '0x20' && prev === '0x13' && !isPayload) {
-            if (blocks.length) {
-                console.log(blocks[blocks.length - 1]);
-            }
-            blocks.push([]);
-            cursor = -1;
+exports.setMostRecentPing = setMostRecentPing;
+exports.LedService = {
+    execute: async () => {
+        try {
+            (0, child_process_1.exec)('ubxtool -p NAV-PVT | grep fix', {
+                encoding: 'utf-8',
+            }, (error, stdout) => {
+                if (stdout && !error) {
+                    const ubxtoolOutput = stdout;
+                    (0, child_process_1.exec)('ls ' + config_1.FRAMES_ROOT_FOLDER + ' | tail -1', {
+                        encoding: 'utf-8',
+                    }, (error, stdout) => {
+                        if (stdout && !error) {
+                            const imgOutput = stdout;
+                            let gpsLED = led_1.COLORS.RED;
+                            if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
+                                gpsLED = led_1.COLORS.GREEN;
+                            }
+                            else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
+                                gpsLED = led_1.COLORS.YELLOW;
+                            }
+                            const imgLED = imgOutput !== mostRecentImg ? led_1.COLORS.GREEN : led_1.COLORS.RED;
+                            const appLED = mostRecentPing &&
+                                Math.abs(Date.now() - mostRecentPing) < 15000
+                                ? led_1.COLORS.GREEN
+                                : led_1.COLORS.YELLOW;
+                            (0, led_1.updateLED)(imgLED, gpsLED, appLED);
+                            mostRecentImg = imgOutput;
+                        }
+                    });
+                }
+            });
         }
-        else {
-            if (cursor > 0 && cursor < msgLength + 1 && blocks.length) {
-                blocks[blocks.length - 1].push(hex);
-                isPayload = true;
-            }
-            else {
-                isPayload = false;
-            }
-            cursor++;
+        catch (e) {
+            console.log('LED service failed with error', e);
         }
-        prev = hex;
-    }
-    return blocks;
-}
-function makeCommand(mgaCommand, block) {
-    //@ts-ignore
-    if (block) {
-        const payload = Array.from(block)
-            // .map(byte => String(`\\x${('00' + byte.toString(16)).substr(-2)}`))
-            .join(',');
-        return `${UBX_COMMAND_CLASS_ID_BYTES[mgaCommand]},${payload.trim()}`;
-    }
-    else {
-        return UBX_COMMAND_CLASS_ID_BYTES[mgaCommand];
-    }
-}
-function parseMsg(data) {
-    const lines = data.split('\n');
-    if (!lines.length) {
-        throw new Error(`Expected Message UBX-MGA-ACK`);
-    }
-    const i = lines.findIndex(line => line.indexOf('UBX-MGA-ACK') !== -1);
-    if (i === -1) {
-        throw new Error(`Expected Message UBX-MGA-ACK`);
-    }
-    return lines[i + 1].indexOf('type 1') !== -1
-        ? UBX_MGA_ACK.ACK
-        : UBX_MGA_ACK.ABORT;
-}
-/**
- The host downloads a copy of a latest data from the AssistNow Offline service and stores it locally.
-• It sends the first 512 bytes of that data using the UBX-MGA-FLASH-DATA message.
-• It awaits a UBX-MGA-FLASH-ACK message in reply.
-• Based on the contents of the UBX-MGA-FLASH-ACK message, the host sends the next block, resends
-the last block or aborts the whole process.
- */
-async function submitOfflineAlmanac() {
-    const blocks = readMGAOffline();
-    const msgQueue = blocks.map(block => makeCommand('UBX-MGA-ANO', block));
-    let idx = 0;
-    while (idx < msgQueue.length) {
-        const msg = msgQueue[idx];
-        const cmd = `ubxtool -c ${msg}`;
-        console.log(cmd);
-        const resp = String(child_process_1.default.execSync(cmd));
-        console.log(resp);
-        const parsed = parseMsg(resp);
-        switch (parsed) {
-            case UBX_MGA_ACK.ACK:
-                idx++;
-                continue;
-            case UBX_MGA_ACK.ABORT:
-                throw new Error('UBX-MGA-ACK says Abort!');
-            default:
-                continue;
+    },
+    interval: 5000,
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGVkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvbGVkLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFvRDtBQUNwRCxtQ0FBNEM7QUFFNUMscUNBQWdEO0FBRWhELElBQUksYUFBYSxHQUFHLEVBQUUsQ0FBQztBQUN2QixJQUFJLGNBQWMsR0FBRyxDQUFDLENBQUMsQ0FBQztBQUVqQixNQUFNLGlCQUFpQixHQUFHLENBQUMsZUFBdUIsRUFBRSxFQUFFO0lBQzNELGNBQWMsR0FBRyxlQUFlLENBQUM7QUFDbkMsQ0FBQyxDQUFDO0FBRlcsUUFBQSxpQkFBaUIscUJBRTVCO0FBRVcsUUFBQSxVQUFVLEdBQWE7SUFDbEMsT0FBTyxFQUFFLEtBQUssSUFBSSxFQUFFO1FBQ2xCLElBQUk7WUFDRixJQUFBLG9CQUFJLEVBQ0YsK0JBQStCLEVBQy9CO2dCQUNFLFFBQVEsRUFBRSxPQUFPO2FBQ2xCLEVBQ0QsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO2dCQUM5QyxJQUFJLE1BQU0sSUFBSSxDQUFDLEtBQUssRUFBRTtvQkFDcEIsTUFBTSxhQUFhLEdBQUcsTUFBTSxDQUFDO29CQUU3QixJQUFBLG9CQUFJLEVBQ0YsS0FBSyxHQUFHLDJCQUFrQixHQUFHLFlBQVksRUFDekM7d0JBQ0UsUUFBUSxFQUFFLE9BQU87cUJBQ2xCLEVBQ0QsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO3dCQUM5QyxJQUFJLE1BQU0sSUFBSSxDQUFDLEtBQUssRUFBRTs0QkFDcEIsTUFBTSxTQUFTLEdBQUcsTUFBTSxDQUFDOzRCQUV6QixJQUFJLE1BQU0sR0FBRyxZQUFNLENBQUMsR0FBRyxDQUFDOzRCQUN4QixJQUFJLGFBQWEsQ0FBQyxPQUFPLENBQUMsV0FBVyxDQUFDLEtBQUssQ0FBQyxDQUFDLEVBQUU7Z0NBQzdDLE1BQU0sR0FBRyxZQUFNLENBQUMsS0FBSyxDQUFDOzZCQUN2QjtpQ0FBTSxJQUFJLGFBQWEsQ0FBQyxPQUFPLENBQUMsV0FBVyxDQUFDLEtBQUssQ0FBQyxDQUFDLEVBQUU7Z0NBQ3BELE1BQU0sR0FBRyxZQUFNLENBQUMsTUFBTSxDQUFDOzZCQUN4Qjs0QkFFRCxNQUFNLE1BQU0sR0FDVixTQUFTLEtBQUssYUFBYSxDQUFDLENBQUMsQ0FBQyxZQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxZQUFNLENBQUMsR0FBRyxDQUFDOzRCQUMxRCxNQUFNLE1BQU0sR0FDVixjQUFjO2dDQUNkLElBQUksQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLEdBQUcsRUFBRSxHQUFHLGNBQWMsQ0FBQyxHQUFHLEtBQUs7Z0NBQzNDLENBQUMsQ0FBQyxZQUFNLENBQUMsS0FBSztnQ0FDZCxDQUFDLENBQUMsWUFBTSxDQUFDLE1BQU0sQ0FBQzs0QkFFcEIsSUFBQSxlQUFTLEVBQUMsTUFBTSxFQUFFLE1BQU0sRUFBRSxNQUFNLENBQUMsQ0FBQzs0QkFDbEMsYUFBYSxHQUFHLFNBQVMsQ0FBQzt5QkFDM0I7b0JBQ0gsQ0FBQyxDQUNGLENBQUM7aUJBQ0g7WUFDSCxDQUFDLENBQ0YsQ0FBQztTQUNIO1FBQUMsT0FBTyxDQUFVLEVBQUU7WUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQywrQkFBK0IsRUFBRSxDQUFDLENBQUMsQ0FBQztTQUNqRDtJQUNILENBQUM7SUFDRCxRQUFRLEVBQUUsSUFBSTtDQUNmLENBQUMifQ==
+
+/***/ }),
+
+/***/ 4011:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateLED = exports.COLORS = void 0;
+const config_1 = __nccwpck_require__(6039);
+const fs_1 = __nccwpck_require__(7147);
+exports.COLORS = {
+    RED: {
+        red: 255,
+        blue: 0,
+        green: 0,
+        on: true,
+    },
+    YELLOW: {
+        red: 255,
+        blue: 0,
+        green: 80,
+        on: true,
+    },
+    GREEN: {
+        red: 0,
+        blue: 0,
+        green: 255,
+        on: true,
+    },
+};
+const updateLED = async (framesLED, gpsLED, appLED) => {
+    try {
+        let leds = [
+            { index: 0, ...exports.COLORS.RED },
+            { index: 1, ...exports.COLORS.RED },
+            { index: 2, ...exports.COLORS.RED },
+        ];
+        try {
+            (0, fs_1.readFile)(config_1.LED_CONFIG_PATH, {
+                encoding: 'utf-8',
+            }, (err, data) => {
+                if (data && !err) {
+                    leds = JSON.parse(data).leds;
+                }
+                const frames = framesLED ? { ...leds[0], ...framesLED } : leds[0];
+                const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
+                const app = appLED ? { ...leds[2], ...appLED } : leds[2];
+                (0, fs_1.writeFile)(config_1.LED_CONFIG_PATH, JSON.stringify({
+                    leds: [frames, gps, app],
+                }), {
+                    encoding: 'utf-8',
+                }, () => { });
+            });
+        }
+        catch (e) {
+            console.log('No file for LED. Creating one');
         }
     }
-}
-exports.submitOfflineAlmanac = submitOfflineAlmanac;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYWxtYW5hYy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3VieC9hbG1hbmFjLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7OztBQUFBLG1IQUFtSDtBQUNuSCwwSEFBMEg7QUFDMUgsa0VBQStCO0FBQy9CLDRDQUFvQjtBQUVwQixNQUFNLHVCQUF1QixHQUFHLDJCQUEyQixDQUFDO0FBSzVELElBQUssV0FHSjtBQUhELFdBQUssV0FBVztJQUNkLDBCQUFXLENBQUE7SUFDWCw4QkFBZSxDQUFBO0FBQ2pCLENBQUMsRUFISSxXQUFXLEtBQVgsV0FBVyxRQUdmO0FBQ0QsTUFBTSwwQkFBMEIsR0FBb0M7SUFDbEUsb0JBQW9CLEVBQUUsV0FBVztJQUNqQyxvQkFBb0IsRUFBRSxXQUFXO0lBQ2pDLGFBQWEsRUFBRSxXQUFXO0NBQzNCLENBQUM7QUFFRixTQUFTLGNBQWMsQ0FBQyxNQUFNLEdBQUcsdUJBQXVCO0lBQ3RELE1BQU0sSUFBSSxHQUFHLFlBQUUsQ0FBQyxZQUFZLENBQUMsTUFBTSxDQUFDLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQyxDQUFDO0lBRXJELE1BQU0sTUFBTSxHQUFlLEVBQUUsQ0FBQztJQUM5QixJQUFJLElBQUksR0FBRyxFQUFFLENBQUM7SUFDZCxJQUFJLE1BQU0sR0FBRyxDQUFDLENBQUM7SUFDZixNQUFNLFNBQVMsR0FBRyxFQUFFLENBQUM7SUFDckIsSUFBSSxTQUFTLEdBQUcsS0FBSyxDQUFDO0lBRXRCLEtBQUssSUFBSSxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsR0FBRyxJQUFJLENBQUMsTUFBTSxFQUFFLENBQUMsSUFBSSxDQUFDLEVBQUU7UUFDdkMsTUFBTSxHQUFHLEdBQUcsSUFBSSxHQUFHLElBQUksQ0FBQyxDQUFDLENBQUMsR0FBRyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQztRQUM5QyxJQUFJLEdBQUcsS0FBSyxNQUFNLElBQUksSUFBSSxLQUFLLE1BQU0sSUFBSSxDQUFDLFNBQVMsRUFBRTtZQUNuRCxJQUFJLE1BQU0sQ0FBQyxNQUFNLEVBQUU7Z0JBQ2pCLE9BQU8sQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLE1BQU0sQ0FBQyxNQUFNLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQzthQUN4QztZQUNELE1BQU0sQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDLENBQUM7WUFDaEIsTUFBTSxHQUFHLENBQUMsQ0FBQyxDQUFDO1NBQ2I7YUFBTTtZQUNMLElBQUksTUFBTSxHQUFHLENBQUMsSUFBSSxNQUFNLEdBQUcsU0FBUyxHQUFHLENBQUMsSUFBSSxNQUFNLENBQUMsTUFBTSxFQUFFO2dCQUN6RCxNQUFNLENBQUMsTUFBTSxDQUFDLE1BQU0sR0FBRyxDQUFDLENBQUMsQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUM7Z0JBQ3BDLFNBQVMsR0FBRyxJQUFJLENBQUM7YUFDbEI7aUJBQU07Z0JBQ0wsU0FBUyxHQUFHLEtBQUssQ0FBQzthQUNuQjtZQUNELE1BQU0sRUFBRSxDQUFDO1NBQ1Y7UUFDRCxJQUFJLEdBQUcsR0FBRyxDQUFDO0tBQ1o7SUFFRCxPQUFPLE1BQU0sQ0FBQztBQUNoQixDQUFDO0FBRUQsU0FBUyxXQUFXLENBQUMsVUFBMkIsRUFBRSxLQUFnQjtJQUNoRSxZQUFZO0lBQ1osSUFBSSxLQUFLLEVBQUU7UUFDVCxNQUFNLE9BQU8sR0FBUSxLQUFLLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQztZQUNwQyxzRUFBc0U7YUFDckUsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ2IsT0FBTyxHQUFHLDBCQUEwQixDQUFDLFVBQVUsQ0FBQyxJQUFJLE9BQU8sQ0FBQyxJQUFJLEVBQUUsRUFBRSxDQUFDO0tBQ3RFO1NBQU07UUFDTCxPQUFPLDBCQUEwQixDQUFDLFVBQVUsQ0FBQyxDQUFDO0tBQy9DO0FBQ0gsQ0FBQztBQUVELFNBQVMsUUFBUSxDQUFDLElBQVk7SUFDNUIsTUFBTSxLQUFLLEdBQUcsSUFBSSxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsQ0FBQztJQUMvQixJQUFJLENBQUMsS0FBSyxDQUFDLE1BQU0sRUFBRTtRQUNqQixNQUFNLElBQUksS0FBSyxDQUFDLDhCQUE4QixDQUFDLENBQUM7S0FDakQ7SUFDRCxNQUFNLENBQUMsR0FBRyxLQUFLLENBQUMsU0FBUyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxhQUFhLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDO0lBQ3RFLElBQUksQ0FBQyxLQUFLLENBQUMsQ0FBQyxFQUFFO1FBQ1osTUFBTSxJQUFJLEtBQUssQ0FBQyw4QkFBOEIsQ0FBQyxDQUFDO0tBQ2pEO0lBQ0QsT0FBTyxLQUFLLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxRQUFRLENBQUMsS0FBSyxDQUFDLENBQUM7UUFDMUMsQ0FBQyxDQUFDLFdBQVcsQ0FBQyxHQUFHO1FBQ2pCLENBQUMsQ0FBQyxXQUFXLENBQUMsS0FBSyxDQUFDO0FBQ3hCLENBQUM7QUFFRDs7Ozs7O0dBTUc7QUFDSSxLQUFLLFVBQVUsb0JBQW9CO0lBQ3hDLE1BQU0sTUFBTSxHQUFHLGNBQWMsRUFBRSxDQUFDO0lBRWhDLE1BQU0sUUFBUSxHQUFHLE1BQU0sQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLEVBQUUsQ0FDbEMsV0FBVyxDQUFDLGFBQWdDLEVBQUUsS0FBSyxDQUFDLENBQ3JELENBQUM7SUFFRixJQUFJLEdBQUcsR0FBRyxDQUFDLENBQUM7SUFDWixPQUFPLEdBQUcsR0FBRyxRQUFRLENBQUMsTUFBTSxFQUFFO1FBQzVCLE1BQU0sR0FBRyxHQUFHLFFBQVEsQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUMxQixNQUFNLEdBQUcsR0FBRyxjQUFjLEdBQUcsRUFBRSxDQUFDO1FBQ2hDLE9BQU8sQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLENBQUM7UUFFakIsTUFBTSxJQUFJLEdBQUcsTUFBTSxDQUFDLHVCQUFFLENBQUMsUUFBUSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUM7UUFDdEMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQztRQUVsQixNQUFNLE1BQU0sR0FBRyxRQUFRLENBQUMsSUFBSSxDQUFDLENBQUM7UUFFOUIsUUFBUSxNQUFNLEVBQUU7WUFDZCxLQUFLLFdBQVcsQ0FBQyxHQUFHO2dCQUNsQixHQUFHLEVBQUUsQ0FBQztnQkFDTixTQUFTO1lBQ1gsS0FBSyxXQUFXLENBQUMsS0FBSztnQkFDcEIsTUFBTSxJQUFJLEtBQUssQ0FBQyx5QkFBeUIsQ0FBQyxDQUFDO1lBQzdDO2dCQUNFLFNBQVM7U0FDWjtLQUNGO0FBQ0gsQ0FBQztBQTVCRCxvREE0QkMifQ==
+    catch (e) {
+        console.log('Error updating LEDs', e);
+    }
+};
+exports.updateLED = updateLED;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGVkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvdXRpbC9sZWQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsbUNBQXlDO0FBRXpDLDJCQUF5QztBQUU1QixRQUFBLE1BQU0sR0FBRztJQUNwQixHQUFHLEVBQUU7UUFDSCxHQUFHLEVBQUUsR0FBRztRQUNSLElBQUksRUFBRSxDQUFDO1FBQ1AsS0FBSyxFQUFFLENBQUM7UUFDUixFQUFFLEVBQUUsSUFBSTtLQUNUO0lBQ0QsTUFBTSxFQUFFO1FBQ04sR0FBRyxFQUFFLEdBQUc7UUFDUixJQUFJLEVBQUUsQ0FBQztRQUNQLEtBQUssRUFBRSxFQUFFO1FBQ1QsRUFBRSxFQUFFLElBQUk7S0FDVDtJQUNELEtBQUssRUFBRTtRQUNMLEdBQUcsRUFBRSxDQUFDO1FBQ04sSUFBSSxFQUFFLENBQUM7UUFDUCxLQUFLLEVBQUUsR0FBRztRQUNWLEVBQUUsRUFBRSxJQUFJO0tBQ1Q7Q0FDRixDQUFDO0FBRUssTUFBTSxTQUFTLEdBQUcsS0FBSyxFQUM1QixTQUFlLEVBQ2YsTUFBWSxFQUNaLE1BQVksRUFDWixFQUFFO0lBQ0YsSUFBSTtRQUNGLElBQUksSUFBSSxHQUFXO1lBQ2pCLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxHQUFHLGNBQU0sQ0FBQyxHQUFHLEVBQUU7WUFDM0IsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsY0FBTSxDQUFDLEdBQUcsRUFBRTtZQUMzQixFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxjQUFNLENBQUMsR0FBRyxFQUFFO1NBQzVCLENBQUM7UUFDRixJQUFJO1lBQ0YsSUFBQSxhQUFRLEVBQ04sd0JBQWUsRUFDZjtnQkFDRSxRQUFRLEVBQUUsT0FBTzthQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTtnQkFDbEQsSUFBSSxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUU7b0JBQ2hCLElBQUksR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDLElBQUksQ0FBQztpQkFDOUI7Z0JBRUQsTUFBTSxNQUFNLEdBQUcsU0FBUyxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsU0FBUyxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFDbEUsTUFBTSxHQUFHLEdBQUcsTUFBTSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsTUFBTSxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFDekQsTUFBTSxHQUFHLEdBQUcsTUFBTSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsTUFBTSxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFFekQsSUFBQSxjQUFTLEVBQ1Asd0JBQWUsRUFDZixJQUFJLENBQUMsU0FBUyxDQUFDO29CQUNiLElBQUksRUFBRSxDQUFDLE1BQU0sRUFBRSxHQUFHLEVBQUUsR0FBRyxDQUFDO2lCQUN6QixDQUFDLEVBQ0Y7b0JBQ0UsUUFBUSxFQUFFLE9BQU87aUJBQ2xCLEVBQ0QsR0FBRyxFQUFFLEdBQUUsQ0FBQyxDQUNULENBQUM7WUFDSixDQUFDLENBQ0YsQ0FBQztTQUNIO1FBQUMsT0FBTyxDQUFDLEVBQUU7WUFDVixPQUFPLENBQUMsR0FBRyxDQUFDLCtCQUErQixDQUFDLENBQUM7U0FDOUM7S0FDRjtJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsT0FBTyxDQUFDLEdBQUcsQ0FBQyxxQkFBcUIsRUFBRSxDQUFDLENBQUMsQ0FBQztLQUN2QztBQUNILENBQUMsQ0FBQztBQTVDVyxRQUFBLFNBQVMsYUE0Q3BCIn0=
 
 /***/ }),
 
