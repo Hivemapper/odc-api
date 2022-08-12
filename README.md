@@ -1,6 +1,11 @@
 ![Open Dashcam](/Open_Dashcam_logo.png?raw=true "Open Dashcam")
 
 
+# About the Open Dashcam (ODC)
+
+The Open Dashcam (ODC) project is an open source hardware and software toolkit for building dashcam devices that collect data on the Hivemapper Mapping Network.  The ODC API provides the core the software needed to run the dashcam and connect the dashcam to the Hivemapper App enabling data to be transferred to the mapping network via the app.
+
+
 # ODC API
 
 To make it up-n-running, it's as simple as
