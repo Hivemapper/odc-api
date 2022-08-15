@@ -12,7 +12,7 @@ The [Hivemapper Dashcam](https://hivemapper.com/hivemapper-dashcam) is one of th
 
 The Open Dashcam (ODC) device and software enables collection and transfer of imagery and location data to the Hivemapper Mapping Network as illustrated below.
 
-![Data Flow](/hivemapper_data_transfer_process.png?raw=true "Data Flow")
+![Data Flow](/hivemapper_data_transfer_process.png?raw=true "End to End Data Flow")
 
 
 # ODC API
