@@ -1,4 +1,7 @@
-![Open Dashcam](/Open_Dashcam_logo.png?raw=true "Open Dashcam")
+<p align="center">
+  <img src="/Open_Dashcam_logo.png?raw=true" width=40% height=40% />
+</p>
+
 
 
 # About the Open Dashcam (ODC)
