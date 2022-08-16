@@ -84,7 +84,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.API_VERSION = void 0;
 __exportStar(__nccwpck_require__(1546), exports);
-exports.API_VERSION = '0.8.0';
+exports.API_VERSION = '0.8.1';
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZmlnL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsd0NBQXNCO0FBQ1QsUUFBQSxXQUFXLEdBQUcsT0FBTyxDQUFDIn0=
 
 /***/ }),
@@ -26096,7 +26096,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.API_VERSION = void 0;
 __exportStar(__nccwpck_require__(6207), exports);
-exports.API_VERSION = '0.8.0';
+exports.API_VERSION = '0.8.1';
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9jb25maWcvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSx3Q0FBc0I7QUFDVCxRQUFBLFdBQVcsR0FBRyxPQUFPLENBQUMifQ==
 
 /***/ }),
@@ -26114,41 +26114,46 @@ const fs_1 = __nccwpck_require__(7147);
 exports.ImageRotationService = {
     execute: async () => {
         try {
-            // TODO: read config file
-            // then read N-1 IMU file
-            // if 0 > all should be -1, if 180 > all should be 1. Need to flip?
-            // exec stop
-            // edit json
-            // exec start
             (0, child_process_1.exec)('systemctl stop camera-bridge', {
                 encoding: 'utf-8',
-            }, (error, stdout) => {
+            }, (error) => {
                 if (!error) {
-                    (0, fs_1.readFile)(config_1.IMAGER_CONFIG_PATH, {
-                        encoding: 'utf-8',
-                    }, (err, data) => {
-                        let config = {};
-                        if (data && !err) {
-                            config = JSON.parse(data);
-                            console.log(config);
-                        }
-                        if (config?.camera?.adjustment &&
-                            !config?.camera?.adjustment.rotation) {
-                            config.camera.adjustment.rotation = 180;
-                            console.log('Set to 180');
-                        }
-                        (0, fs_1.writeFile)(config_1.IMAGER_CONFIG_PATH, JSON.stringify(config), {
+                    try {
+                        (0, fs_1.readFile)(config_1.IMAGER_CONFIG_PATH, {
                             encoding: 'utf-8',
-                        }, (err) => {
-                            if (err) {
-                                console.log('Error updating camera config');
+                        }, (err, data) => {
+                            let config = {};
+                            if (data && !err) {
+                                config = JSON.parse(data);
                             }
-                            else {
-                                console.log('Successfully updated the camera config');
+                            if (config?.camera?.adjustment &&
+                                !config?.camera?.adjustment.rotation) {
+                                config.camera.adjustment.rotation = 180;
+                                console.log('Set rotation to 180');
                             }
-                            (0, child_process_1.exec)('systemctl start camera-bridge');
+                            try {
+                                (0, fs_1.writeFile)(config_1.IMAGER_CONFIG_PATH, JSON.stringify(config), {
+                                    encoding: 'utf-8',
+                                }, (err) => {
+                                    if (err) {
+                                        console.log('Error updating camera config');
+                                    }
+                                    else {
+                                        console.log('Successfully updated the camera config');
+                                    }
+                                    (0, child_process_1.exec)('systemctl start camera-bridge');
+                                });
+                            }
+                            catch (e) {
+                                console.log(e);
+                                (0, child_process_1.exec)('systemctl start camera-bridge');
+                            }
                         });
-                    });
+                    }
+                    catch (e) {
+                        console.log(e);
+                        (0, child_process_1.exec)('systemctl start camera-bridge');
+                    }
                 }
                 else {
                     (0, child_process_1.exec)('systemctl start camera-bridge');
@@ -26163,7 +26168,7 @@ exports.ImageRotationService = {
     interval: 34000,
     executeOnce: true,
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW1hZ2VSb3RhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3NlcnZpY2VzL2ltYWdlUm90YXRpb24udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQW9EO0FBQ3BELG1DQUE0QztBQUM1QywyQkFBeUM7QUFHNUIsUUFBQSxvQkFBb0IsR0FBYTtJQUM1QyxPQUFPLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEIsSUFBSTtZQUNGLHlCQUF5QjtZQUN6Qix5QkFBeUI7WUFDekIsbUVBQW1FO1lBQ25FLFlBQVk7WUFDWixZQUFZO1lBQ1osYUFBYTtZQUNiLElBQUEsb0JBQUksRUFDRiw4QkFBOEIsRUFDOUI7Z0JBQ0UsUUFBUSxFQUFFLE9BQU87YUFDbEIsRUFDRCxDQUFDLEtBQTJCLEVBQUUsTUFBYyxFQUFFLEVBQUU7Z0JBQzlDLElBQUksQ0FBQyxLQUFLLEVBQUU7b0JBQ1YsSUFBQSxhQUFRLEVBQ04sMkJBQWtCLEVBQ2xCO3dCQUNFLFFBQVEsRUFBRSxPQUFPO3FCQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTt3QkFDbEQsSUFBSSxNQUFNLEdBQVEsRUFBRSxDQUFDO3dCQUNyQixJQUFJLElBQUksSUFBSSxDQUFDLEdBQUcsRUFBRTs0QkFDaEIsTUFBTSxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUM7NEJBQzFCLE9BQU8sQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLENBQUM7eUJBQ3JCO3dCQUVELElBQ0UsTUFBTSxFQUFFLE1BQU0sRUFBRSxVQUFVOzRCQUMxQixDQUFDLE1BQU0sRUFBRSxNQUFNLEVBQUUsVUFBVSxDQUFDLFFBQVEsRUFDcEM7NEJBQ0EsTUFBTSxDQUFDLE1BQU0sQ0FBQyxVQUFVLENBQUMsUUFBUSxHQUFHLEdBQUcsQ0FBQzs0QkFDeEMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxZQUFZLENBQUMsQ0FBQzt5QkFDM0I7d0JBRUQsSUFBQSxjQUFTLEVBQ1AsMkJBQWtCLEVBQ2xCLElBQUksQ0FBQyxTQUFTLENBQUMsTUFBTSxDQUFDLEVBQ3RCOzRCQUNFLFFBQVEsRUFBRSxPQUFPO3lCQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxFQUFFOzRCQUNwQyxJQUFJLEdBQUcsRUFBRTtnQ0FDUCxPQUFPLENBQUMsR0FBRyxDQUFDLDhCQUE4QixDQUFDLENBQUM7NkJBQzdDO2lDQUFNO2dDQUNMLE9BQU8sQ0FBQyxHQUFHLENBQUMsd0NBQXdDLENBQUMsQ0FBQzs2QkFDdkQ7NEJBQ0QsSUFBQSxvQkFBSSxFQUFDLCtCQUErQixDQUFDLENBQUM7d0JBQ3hDLENBQUMsQ0FDRixDQUFDO29CQUNKLENBQUMsQ0FDRixDQUFDO2lCQUNIO3FCQUFNO29CQUNMLElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDO2lCQUN2QztZQUNILENBQUMsQ0FDRixDQUFDO1NBQ0g7UUFBQyxPQUFPLENBQVUsRUFBRTtZQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLCtCQUErQixFQUFFLENBQUMsQ0FBQyxDQUFDO1lBQ2hELElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDO1NBQ3ZDO0lBQ0gsQ0FBQztJQUNELFFBQVEsRUFBRSxLQUFLO0lBQ2YsV0FBVyxFQUFFLElBQUk7Q0FDbEIsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW1hZ2VSb3RhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3NlcnZpY2VzL2ltYWdlUm90YXRpb24udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQW9EO0FBQ3BELG1DQUE0QztBQUM1QywyQkFBeUM7QUFHNUIsUUFBQSxvQkFBb0IsR0FBYTtJQUM1QyxPQUFPLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEIsSUFBSTtZQUNGLElBQUEsb0JBQUksRUFDRiw4QkFBOEIsRUFDOUI7Z0JBQ0UsUUFBUSxFQUFFLE9BQU87YUFDbEIsRUFDRCxDQUFDLEtBQTJCLEVBQUUsRUFBRTtnQkFDOUIsSUFBSSxDQUFDLEtBQUssRUFBRTtvQkFDVixJQUFJO3dCQUNGLElBQUEsYUFBUSxFQUNOLDJCQUFrQixFQUNsQjs0QkFDRSxRQUFRLEVBQUUsT0FBTzt5QkFDbEIsRUFDRCxDQUFDLEdBQWlDLEVBQUUsSUFBWSxFQUFFLEVBQUU7NEJBQ2xELElBQUksTUFBTSxHQUFRLEVBQUUsQ0FBQzs0QkFDckIsSUFBSSxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUU7Z0NBQ2hCLE1BQU0sR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDOzZCQUMzQjs0QkFFRCxJQUNFLE1BQU0sRUFBRSxNQUFNLEVBQUUsVUFBVTtnQ0FDMUIsQ0FBQyxNQUFNLEVBQUUsTUFBTSxFQUFFLFVBQVUsQ0FBQyxRQUFRLEVBQ3BDO2dDQUNBLE1BQU0sQ0FBQyxNQUFNLENBQUMsVUFBVSxDQUFDLFFBQVEsR0FBRyxHQUFHLENBQUM7Z0NBQ3hDLE9BQU8sQ0FBQyxHQUFHLENBQUMscUJBQXFCLENBQUMsQ0FBQzs2QkFDcEM7NEJBRUQsSUFBSTtnQ0FDRixJQUFBLGNBQVMsRUFDUCwyQkFBa0IsRUFDbEIsSUFBSSxDQUFDLFNBQVMsQ0FBQyxNQUFNLENBQUMsRUFDdEI7b0NBQ0UsUUFBUSxFQUFFLE9BQU87aUNBQ2xCLEVBQ0QsQ0FBQyxHQUFpQyxFQUFFLEVBQUU7b0NBQ3BDLElBQUksR0FBRyxFQUFFO3dDQUNQLE9BQU8sQ0FBQyxHQUFHLENBQUMsOEJBQThCLENBQUMsQ0FBQztxQ0FDN0M7eUNBQU07d0NBQ0wsT0FBTyxDQUFDLEdBQUcsQ0FBQyx3Q0FBd0MsQ0FBQyxDQUFDO3FDQUN2RDtvQ0FDRCxJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztnQ0FDeEMsQ0FBQyxDQUNGLENBQUM7NkJBQ0g7NEJBQUMsT0FBTyxDQUFVLEVBQUU7Z0NBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7Z0NBQ2YsSUFBQSxvQkFBSSxFQUFDLCtCQUErQixDQUFDLENBQUM7NkJBQ3ZDO3dCQUNILENBQUMsQ0FDRixDQUFDO3FCQUNIO29CQUFDLE9BQU8sQ0FBVSxFQUFFO3dCQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO3dCQUNmLElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDO3FCQUN2QztpQkFDRjtxQkFBTTtvQkFDTCxJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztpQkFDdkM7WUFDSCxDQUFDLENBQ0YsQ0FBQztTQUNIO1FBQUMsT0FBTyxDQUFVLEVBQUU7WUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQywrQkFBK0IsRUFBRSxDQUFDLENBQUMsQ0FBQztZQUNoRCxJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztTQUN2QztJQUNILENBQUM7SUFDRCxRQUFRLEVBQUUsS0FBSztJQUNmLFdBQVcsRUFBRSxJQUFJO0NBQ2xCLENBQUMifQ==
 
 /***/ }),
 
