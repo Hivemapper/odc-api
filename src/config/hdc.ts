@@ -9,6 +9,8 @@ export const IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
 export const LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
+export const IMAGER_CONFIG_PATH =
+  __dirname + '/../../../opt/dashcam/bin/config.json';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 
 export const configureOnBoot = async (req: Request, res: Response) => {

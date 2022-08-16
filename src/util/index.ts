@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { ICameraFile } from '../types';
+import { ICameraFile, IMU } from '../types';
 
 export const getDateFromFilename = (filename: string) => {
   try {
@@ -32,4 +32,8 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   } else {
     return files;
   }
+};
+
+export const checkIfUpsideDown = (imu: IMU) => {
+  return imu?.accel.y < -0.8;
 };

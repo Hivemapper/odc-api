@@ -8,9 +8,12 @@ class ServiceRunner {
   run() {
     this.services.map((service: IService) => {
       if (service.interval) {
-        setInterval(() => {
+        const interval = setInterval(() => {
           try {
             service.execute();
+            if (service.executeOnce) {
+              clearInterval(interval);
+            }
           } catch (e: unknown) {
             console.log('Service error', e);
           }

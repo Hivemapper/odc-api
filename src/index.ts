@@ -4,6 +4,7 @@ import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { LedService } from 'services/led';
+import { ImageRotationService } from 'services/imageRotation';
 // import { AssistNowService } from 'services/assistNow';
 
 export async function initAppServer() {
@@ -29,6 +30,7 @@ export async function initAppServer() {
   );
 
   serviceRunner.add(LedService);
+  serviceRunner.add(ImageRotationService);
   // serviceRunner.add(AssistNowService);
 
   serviceRunner.run();
