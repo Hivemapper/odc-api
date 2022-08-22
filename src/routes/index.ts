@@ -1,18 +1,17 @@
 import { Request, Response, Router } from 'express';
 import { readFileSync } from 'fs';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 
-import {
-  API_VERSION,
-  BUILD_INFO_PATH,
-  configureOnBoot,
-  updateFirmware,
-} from '../config';
+import { API_VERSION, BUILD_INFO_PATH, configureOnBoot } from '../config';
 import framesRouter from './frames';
 import gpsRouter from './gps';
 import imuRouter from './imu';
 import loraRouter from './lora';
 import uploadRouter from './upload';
+import otaRouter from './ota';
+import networkRouter from './network';
+import configRouter from './config';
+import { setMostRecentPing } from 'services/led';
 
 const router = Router();
 
@@ -22,8 +21,9 @@ router.use('/gps', gpsRouter);
 router.use('/imu', imuRouter);
 router.use('/lora', loraRouter);
 router.use('/upload', uploadRouter);
-
-router.use('/ota', updateFirmware);
+router.use('/ota', otaRouter);
+router.use('/network', networkRouter);
+router.use('/config', configRouter);
 
 router.get('/init', configureOnBoot);
 
@@ -40,6 +40,13 @@ router.get('/info', async (req: Request, res: Response) => {
   res.json({
     ...versionInfo,
     api_version: API_VERSION,
+  });
+});
+
+router.get('/ping', (req, res) => {
+  setMostRecentPing(Date.now());
+  res.json({
+    healthy: true,
   });
 });
 
@@ -60,6 +67,19 @@ router.post('/cmd', async (req, res) => {
         }
       },
     );
+  } catch (error: any) {
+    res.json({ error: error.stdout || error.stderr });
+  }
+});
+
+router.post('/cmd/sync', async (req, res) => {
+  try {
+    const output = execSync(req.body.cmd, {
+      encoding: 'utf-8',
+    });
+    res.json({
+      output,
+    });
   } catch (error: any) {
     res.json({ error: error.stdout || error.stderr });
   }

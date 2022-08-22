@@ -4,21 +4,27 @@ import { readFile, writeFile } from 'fs';
 
 export const COLORS = {
   RED: {
-    red: 255,
+    red: 25,
     blue: 0,
     green: 0,
     on: true,
   },
   YELLOW: {
-    red: 255,
+    red: 25,
     blue: 0,
-    green: 80,
+    green: 8,
     on: true,
   },
   GREEN: {
     red: 0,
     blue: 0,
-    green: 255,
+    green: 25,
+    on: true,
+  },
+  PURPLE: {
+    red: 15,
+    blue: 25,
+    green: 5,
     on: true,
   },
 };

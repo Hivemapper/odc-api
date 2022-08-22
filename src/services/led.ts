@@ -5,14 +5,23 @@ import { COLORS, updateLED } from '../util/led';
 
 let mostRecentImg = '';
 let mostRecentPing = -1;
+let isFirmwareUpdate = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
 };
 
+export const switchToFirmwareUpdate = (state: boolean) => {
+  isFirmwareUpdate = state;
+};
+
 export const LedService: IService = {
   execute: async () => {
     try {
+      if (isFirmwareUpdate) {
+        updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
+        return;
+      }
       exec(
         'ubxtool -p NAV-PVT | grep fix',
         {
