@@ -1,4 +1,5 @@
-import { exec, execSync } from 'child_process';
+import { exec, execSync, ExecException } from 'child_process';
+import { readFile, writeFile } from 'fs';
 import { Request, Response } from 'express';
 
 export const PORT = 5000;
@@ -25,8 +26,11 @@ export const configureOnBoot = async (req: Request, res: Response) => {
     exec('timedatectl set-ntp 0', () => {
       exec(`timedatectl set-time ${timeToSet[0]}`, () => {
         exec(`timedatectl set-time ${timeToSet[1]}`, () => {
-          // make sure that camera started when the App is connected
-          exec('systemctl start camera-bridge');
+          // TODO: Temp solution for restarting the camera to catch the freshest timestamp
+          // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
+          exec('systemctl stop camera-bridge', () => {
+            exec('systemctl start camera-bridge');
+          });
         });
       });
     });
@@ -49,5 +53,91 @@ export const updateFirmware = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.json({ error: error.stdout || error.stderr });
+  }
+};
+
+export const switchToP2P = async (req: Request, res: Response) => {
+  try {
+    // No need to wait for response — it's tearing down current Network method, so it will kill the connection anyways
+    exec(__dirname + '/switch_P2P.sh');
+    res.json({
+      output: 'done',
+    });
+  } catch (error: any) {
+    res.json({ error: error.stdout || error.stderr });
+  }
+};
+
+export const switchToAP = async (req: Request, res: Response) => {
+  try {
+    exec(__dirname + '/switch_AP.sh');
+    res.json({
+      output: 'done',
+    });
+  } catch (error: any) {
+    res.json({ error: error.stdout || error.stderr });
+  }
+};
+
+export const updateCameraConfig = (newConfig: any) => {
+  try {
+    exec(
+      'systemctl stop camera-bridge',
+      {
+        encoding: 'utf-8',
+      },
+      (error: ExecException | null) => {
+        if (!error) {
+          try {
+            readFile(
+              IMAGER_CONFIG_PATH,
+              {
+                encoding: 'utf-8',
+              },
+              (err: NodeJS.ErrnoException | null, data: string) => {
+                let config: any = {};
+                if (data && !err) {
+                  config = JSON.parse(data);
+                }
+
+                config = {
+                  ...config,
+                  camera: {
+                    ...config.camera,
+                    ...newConfig,
+                  },
+                };
+
+                try {
+                  writeFile(
+                    IMAGER_CONFIG_PATH,
+                    JSON.stringify(config),
+                    {
+                      encoding: 'utf-8',
+                    },
+                    (err: NodeJS.ErrnoException | null) => {
+                      if (err) {
+                        console.log('Error updating camera config');
+                      } else {
+                        console.log('Successfully updated the camera config');
+                      }
+                      exec('systemctl start camera-bridge');
+                    },
+                  );
+                } catch (e: unknown) {
+                  exec('systemctl start camera-bridge');
+                }
+              },
+            );
+          } catch (e: unknown) {
+            exec('systemctl start camera-bridge');
+          }
+        } else {
+          exec('systemctl start camera-bridge');
+        }
+      },
+    );
+  } catch (e: unknown) {
+    exec('systemctl start camera-bridge');
   }
 };

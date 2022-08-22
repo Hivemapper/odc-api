@@ -69,6 +69,6 @@ export const ImageRotationService: IService = {
       exec('systemctl start camera-bridge');
     }
   },
-  interval: 34000,
+  interval: 15000,
   executeOnce: true,
 };
