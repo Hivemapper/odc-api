@@ -2,9 +2,9 @@ import { updateCameraConfig } from '../config';
 import { Router, Request, Response } from 'express';
 const router = Router();
 
-router.get('/camera', async (req: Request, res: Response) => {
+router.post('/camera', async (req: Request, res: Response) => {
   try {
-    updateCameraConfig(JSON.parse(req.body.payload));
+    updateCameraConfig(req.body.replace, req.body.path);
     res.json({
       output: 'in progress',
     });

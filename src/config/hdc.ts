@@ -1,6 +1,6 @@
 import { exec, execSync, ExecException } from 'child_process';
-import { readFile, writeFile } from 'fs';
 import { Request, Response } from 'express';
+import { fixTimeDiff } from 'util/lock';
 
 export const PORT = 5000;
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
@@ -12,16 +12,22 @@ export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
+export const IMAGER_CONFIG_FLIP_PATH =
+  __dirname + '/../../../opt/dashcam/bin/config_flip.json';
+export const IMAGER_BRIDGE_PATH =
+  __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 
 export const configureOnBoot = async (req: Request, res: Response) => {
   try {
-    const timeToSet = new Date(Number(req.query.time))
+    const realTime = Number(req.query.time);
+    const timeToSet = new Date(realTime)
       .toISOString()
       .replace(/T/, ' ')
       .replace(/\..+/, '')
       .split(' ');
 
+    fixTimeDiff(realTime - Date.now());
     // setting up initial time for camera
     exec('timedatectl set-ntp 0', () => {
       exec(`timedatectl set-time ${timeToSet[0]}`, () => {
@@ -79,7 +85,7 @@ export const switchToAP = async (req: Request, res: Response) => {
   }
 };
 
-export const updateCameraConfig = (newConfig: any) => {
+export const updateCameraConfig = (replaceLine: string, path: string) => {
   try {
     exec(
       'systemctl stop camera-bridge',
@@ -89,44 +95,14 @@ export const updateCameraConfig = (newConfig: any) => {
       (error: ExecException | null) => {
         if (!error) {
           try {
-            readFile(
-              IMAGER_CONFIG_PATH,
+            exec(
+              `sed -i 's/${replaceLine}/g' ${path}`,
               {
                 encoding: 'utf-8',
               },
-              (err: NodeJS.ErrnoException | null, data: string) => {
-                let config: any = {};
-                if (data && !err) {
-                  config = JSON.parse(data);
-                }
-
-                config = {
-                  ...config,
-                  camera: {
-                    ...config.camera,
-                    ...newConfig,
-                  },
-                };
-
-                try {
-                  writeFile(
-                    IMAGER_CONFIG_PATH,
-                    JSON.stringify(config),
-                    {
-                      encoding: 'utf-8',
-                    },
-                    (err: NodeJS.ErrnoException | null) => {
-                      if (err) {
-                        console.log('Error updating camera config');
-                      } else {
-                        console.log('Successfully updated the camera config');
-                      }
-                      exec('systemctl start camera-bridge');
-                    },
-                  );
-                } catch (e: unknown) {
-                  exec('systemctl start camera-bridge');
-                }
+              () => {
+                console.log('Successfully restarted the camera');
+                exec('systemctl start camera-bridge');
               },
             );
           } catch (e: unknown) {

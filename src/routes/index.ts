@@ -12,6 +12,7 @@ import otaRouter from './ota';
 import networkRouter from './network';
 import configRouter from './config';
 import { setMostRecentPing } from 'services/led';
+import { getLockTime } from 'util/lock';
 
 const router = Router();
 
@@ -47,6 +48,13 @@ router.get('/ping', (req, res) => {
   setMostRecentPing(Date.now());
   res.json({
     healthy: true,
+  });
+});
+
+router.get('/locktime', (req, res) => {
+  const lockTime = getLockTime();
+  res.json({
+    lockTime,
   });
 });
 

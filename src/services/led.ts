@@ -1,6 +1,7 @@
 import { exec, ExecException } from 'child_process';
 import { FRAMES_ROOT_FOLDER, GPS_ROOT_FOLDER } from 'config';
 import { IService } from 'types';
+import { setLockTime } from 'util/lock';
 import { COLORS, updateLED } from '../util/led';
 
 let mostRecentImg = '';
@@ -41,6 +42,7 @@ export const LedService: IService = {
               let gpsLED = COLORS.RED;
               if (ubxtoolOutput.indexOf('3D') !== -1) {
                 gpsLED = COLORS.GREEN;
+                setLockTime();
               } else if (ubxtoolOutput.indexOf('2D') !== -1) {
                 gpsLED = COLORS.YELLOW;
               }

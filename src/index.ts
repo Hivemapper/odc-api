@@ -5,6 +5,7 @@ import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { LedService } from 'services/led';
 import { ImageRotationService } from 'services/imageRotation';
+import { setStartTime } from 'util/lock';
 // import { AssistNowService } from 'services/assistNow';
 
 export async function initAppServer() {
@@ -30,6 +31,7 @@ export async function initAppServer() {
   );
 
   serviceRunner.add(LedService);
+  setStartTime();
   serviceRunner.add(ImageRotationService);
   // serviceRunner.add(AssistNowService);
 
