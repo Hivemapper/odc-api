@@ -1,9 +1,5 @@
 import { exec, ExecException } from 'child_process';
-import {
-  IMAGER_CONFIG_PATH,
-  IMAGER_CONFIG_FLIP_PATH,
-  IMAGER_BRIDGE_PATH,
-} from 'config';
+import { IMAGER_CONFIG_PATH } from 'config';
 import { readFile, writeFile } from 'fs';
 import { IService } from 'types';
 
@@ -39,22 +35,24 @@ export const ImageRotationService: IService = {
 
                   try {
                     writeFile(
-                      IMAGER_CONFIG_FLIP_PATH,
+                      IMAGER_CONFIG_PATH,
                       JSON.stringify(config),
                       {
                         encoding: 'utf-8',
                       },
                       () => {
-                        exec(
-                          `sed -i 's/--config config.json/--config config_flip.json/g' ${IMAGER_BRIDGE_PATH}`,
-                          {
-                            encoding: 'utf-8',
-                          },
-                          () => {
-                            console.log('Successfully restarted the camera');
-                            exec('systemctl start camera-bridge');
-                          },
-                        );
+                        console.log('Successfully restarted the camera');
+                        exec('systemctl start camera-bridge');
+                        // exec(
+                        //   `sed -i 's/--config config.json/--config config_flip.json/g' ${IMAGER_BRIDGE_PATH}`,
+                        //   {
+                        //     encoding: 'utf-8',
+                        //   },
+                        //   () => {
+                        //     console.log('Successfully restarted the camera');
+                        //     exec('systemctl start camera-bridge');
+                        //   },
+                        // );
                       },
                     );
                   } catch (e: unknown) {

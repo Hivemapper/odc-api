@@ -31,11 +31,10 @@ export async function initAppServer() {
   );
 
   serviceRunner.add(LedService);
-  setStartTime();
   serviceRunner.add(ImageRotationService);
   // serviceRunner.add(AssistNowService);
-
   serviceRunner.run();
+  setStartTime();
 }
 
 initAppServer();
