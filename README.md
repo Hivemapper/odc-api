@@ -63,8 +63,8 @@ And double-check if it's healthy:
 
 ### Index
 
-- [Info](#info)
-- [Init](#init)
+- [GET /info](#info)
+- [GET /init?time=<UNIX_TIMESTAMP>](#init)
 
 ### GPS
 
@@ -90,11 +90,11 @@ And double-check if it's healthy:
 
 **Please note:** the entire API prefixed with `api/1/` string.
 
-So any request for you will start with `http://<Dashcam_Host>:<Api_Port>/api/1/<Api_Url>`
+So any API request for you will look like `http://<Dashcam_Host>:<Api_Port>/api/1/<Api_Url>`
 
-**Please note #2:** If you request a static file (frame / GPS file / IMU file), prefix your request with `public/` string.
+**Please note #2:** If you fetch a static file (frame / GPS file / IMU file), prefix your request with `public/` string.
 
-So any request for you will start with `http://<Dashcam_Host>:<Api_Port>/public/pic/<Frame_File_Name>`
+So any request for a static file will look like `http://<Dashcam_Host>:<Api_Port>/public/pic/<Frame_File_Name>`
 
 ## Index
 
