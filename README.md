@@ -101,6 +101,7 @@ So any request for a static file will look like `http://<Dashcam_Host>:<Api_Port
 ### Info
 
 **GET /info**
+
 Method to return information about current ODC API version and firmware data (build, version, etc)
 
 ```javascript
@@ -117,7 +118,9 @@ $ curl --GET http://192.168.0.10:5000/api/1/info
 ### Init
 
 **GET /init?time=<UNIX_TIMESTAMP>**
+
 Request to initiate the communication between App and the camera. Requires current timestamp to be provided.
+
 Camera time will be reset to the time provided by this API call.
 
 ```javascript
@@ -133,9 +136,7 @@ $ curl --GET http://192.168.0.10:5000/api/1/init?time=1661866828027
 
 **GET /gps?since=<UNIX_TIMESTAMP>&until<UNIX_TIMESTAMP>**
 
-Request to get the list of gps files containing on the dashcam.
-
-Filters `since` and `until` provide a possibility to get a particular range of results.
+Request to get the list of gps files containing on the dashcam. Filters `since` and `until` provide a possibility to get a particular range of results.
 
 ```javascript
 $ curl --GET http://192.168.0.10:5000/api/1/gps
@@ -166,9 +167,7 @@ $ curl --GET http://192.168.0.10:5000/public/gps/2022-08-30T00:10:07.455Z.json
 
 **GET /imu?since=<UNIX_TIMESTAMP>&until<UNIX_TIMESTAMP>**
 
-Request to get the list of IMU files containing on the dashcam.
-
-Filters `since` and `until` provide a possibility to get a particular range of results.
+Request to get the list of IMU files containing on the dashcam. Filters `since` and `until` provide a possibility to get a particular range of results.
 
 ```javascript
 $ curl --GET http://192.168.0.10:5000/api/1/imu
