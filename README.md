@@ -2,20 +2,17 @@
   <img src="/Open_Dashcam_logo.png?raw=true" width=40% height=40% />
 </p>
 
-
-
 # About the Open Dashcam (ODC)
 
-The Open Dashcam (ODC) project is an open source hardware and software toolkit for building dashcam devices that collect data on the [Hivemapper Mapping Network](https://hivemapper.com/mapping-network#introduction).  The ODC API provides the core software needed to run the dashcam and connect the dashcam to the Hivemapper App enabling data to be transferred to the mapping network via the app.
+The Open Dashcam (ODC) project is an open source hardware and software toolkit for building dashcam devices that collect data on the [Hivemapper Mapping Network](https://hivemapper.com/mapping-network#introduction). The ODC API provides the core software needed to run the dashcam and connect the dashcam to the Hivemapper App enabling data to be transferred to the mapping network via the app.
 
 The [Hivemapper Dashcam](https://hivemapper.com/hivemapper-dashcam) is one of the first dashcams being built using the ODC software toolkit.
-
 
 # Data Flow
 
 The Open Dashcam (ODC) device and software enables collection and transfer of imagery and location data to the Hivemapper Mapping Network as illustrated below.
 
-![End to End Data Flow](/hivemapper_data_transfer_process-3.png?raw=true "Open Dashcam")
+![End to End Data Flow](/hivemapper_data_transfer_process-3.png?raw=true 'Open Dashcam')
 
 # ODC API
 
@@ -59,3 +56,53 @@ To check if everything OK with compiled server file, execute:
 And double-check if it's healthy:
 
 `http://localhost:5000/api/1/info`
+
+# Overview
+
+## API
+
+### Index
+
+- [Info](#info)
+- [Init](#init)
+
+### GPS
+
+- [List Files](#gps-list)
+- [Get single file](#gps-single)
+
+### IMU
+
+- [List Files](#imu-list)
+- [Get single file](#imu-single)
+
+### Recordings
+
+- [List Files](#recordings-list)
+- [Get single Frame](#recordings-single)
+
+## API
+
+Please note: the entire API prefixed with `api/1/` string.
+So any request for you will start with `http://<Dashcam_Host>:<Api_Port>/api/1/<Api_Url>`
+
+## Index
+
+### Info
+
+GET /info
+Method to return information about current ODC API version and firmware data (build, version, etc)
+
+```javascript
+some here
+```
+
+### Init
+
+GET /init?time=<UNIX_TIMESTAMP>
+Request to initiate the communication between App and the camera. Requires current timestamp to be provided.
+Camera time will be reset to the time provided by this API call.
+
+```javascript
+some here
+```
