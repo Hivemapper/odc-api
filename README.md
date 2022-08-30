@@ -81,28 +81,160 @@ And double-check if it's healthy:
 - [List Files](#recordings-list)
 - [Get single Frame](#recordings-single)
 
+### Networking
+
+- [Switch to P2P](#switch-to-p2p)
+- [Switch to AP](#switch-to-ap)
+
 ## API
 
-Please note: the entire API prefixed with `api/1/` string.
+**Please note:** the entire API prefixed with `api/1/` string.
+
 So any request for you will start with `http://<Dashcam_Host>:<Api_Port>/api/1/<Api_Url>`
+
+**Please note #2:** If you request a static file (frame / GPS file / IMU file), prefix your request with `public/` string.
+
+So any request for you will start with `http://<Dashcam_Host>:<Api_Port>/public/pic/<Frame_File_Name>`
 
 ## Index
 
-### Info
+### GET /info
 
-GET /info
 Method to return information about current ODC API version and firmware data (build, version, etc)
 
 ```javascript
-some here
+$ curl --GET http://192.168.0.10:5000/api/1/info
+
+{
+  "api_version":"0.9.2"
+  "build_date":"Thu Aug 25 16:27:26 UTC 2022",
+  ...
+}
+
 ```
 
-### Init
+### GET /init?time=<UNIX_TIMESTAMP>
 
-GET /init?time=<UNIX_TIMESTAMP>
 Request to initiate the communication between App and the camera. Requires current timestamp to be provided.
 Camera time will be reset to the time provided by this API call.
 
 ```javascript
-some here
+$ curl --GET http://192.168.0.10:5000/api/1/init?time=1661866828027
+
+{"output":"done"}
+
+```
+
+## GPS
+
+### GET /gps?since=<UNIX_TIMESTAMP>&until<UNIX_TIMESTAMP>
+
+Request to get the list of gps files containing on the dashcam.
+Filters `since` and `until` provide a possibility to get a particular range of results.
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/gps
+
+[
+  {
+    "path":"2022-08-30T00:10:07.455Z.json",
+    "date":1661818207455
+  },
+  ...
+]
+
+```
+
+### GET /public/gps/<FILENAME>
+
+Request to get the contents of particular GPS file
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/public/gps/2022-08-30T00:10:07.455Z.json
+```
+
+## IMU
+
+### GET /imu?since=<UNIX_TIMESTAMP>&until<UNIX_TIMESTAMP>
+
+Request to get the list of IMU files containing on the dashcam.
+Filters `since` and `until` provide a possibility to get a particular range of results.
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/imu
+
+[
+  {
+    "path":"2022-08-30T00:10:07.455Z.json",
+    "date":1661818207455
+  },
+  ...
+]
+
+```
+
+### GET /public/imu/<FILENAME>
+
+Request to get the contents of particular IMU file
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/public/imu/2022-08-30T00:10:07.455Z.json
+```
+
+## Recordings
+
+### GET /recordings?since=<UNIX_TIMESTAMP>&until<UNIX_TIMESTAMP>
+
+Request to get the list of frames being created on camera.
+Filters `since` and `until` provide a possibility to get a particular range of results.
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/recordings
+
+[
+  {
+    "path":"1661867302_878800.jpg",
+    "date":1661867302878
+  },
+  ...
+]
+
+```
+
+### GET /public/pic/<FILENAME>
+
+Request to get the particular frame by its filename.
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/public/pic/1661867302_878800.jpg
+```
+
+## Networking
+
+### GET /network/p2p
+
+Method to tear down current Access Point interface on camera, and make Wi-Fi Direct P2P up & running.
+**Obvious note:** your current connection with the camera is going to be terminated
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/network/p2p
+
+{
+  "output": "done"
+}
+
+```
+
+### GET /network/ap
+
+Method to tear down current P2P interface on camera, and make Wi-Fi Access Point up & running.
+**Important note:** your current connection with the camera is going to be terminated
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/network/ap
+
+{
+  "output": "done"
+}
+
 ```
