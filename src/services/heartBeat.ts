@@ -24,8 +24,10 @@ export const HeartBeatService: IService = {
         updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
         return;
       }
+      // ubxtool -p NAV-PVT | grep fix
+      // grep fix ${GPS_ROOT_FOLDER}/"$(ls ${GPS_ROOT_FOLDER} | tail -1)" | tail -1
       exec(
-        `grep fix ${GPS_ROOT_FOLDER}/"$(ls ${GPS_ROOT_FOLDER} | tail -1)" | tail -1`,
+        'ubxtool -p NAV-PVT | grep fix',
         {
           encoding: 'utf-8',
         },
@@ -41,22 +43,27 @@ export const HeartBeatService: IService = {
               const isCameraBridgeActive = error ? '' : stdout;
 
               let gpsLED = COLORS.RED;
-              if (ubxtoolOutput.indexOf('3D') !== -1) {
+              if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
                 gpsLED = COLORS.GREEN;
-                setLockTime();
-              } else if (ubxtoolOutput.indexOf('2D') !== -1) {
+              } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
                 gpsLED = COLORS.YELLOW;
               }
 
-              const imgLED = isCameraBridgeActive.indexOf('active') === 0 ? COLORS.GREEN : COLORS.RED;
-
-              const appDisconnectionPeriod = mostRecentPing ? Math.abs(Date.now() - mostRecentPing) : 30000;
-              const appLED =
-                appDisconnectionPeriod < 15000
+              const imgLED =
+                isCameraBridgeActive.indexOf('active') === 0
                   ? COLORS.GREEN
-                  : COLORS.YELLOW;
+                  : COLORS.RED;
 
-              if (appDisconnectionPeriod > 31000 && appDisconnectionPeriod < 40000) {
+              const appDisconnectionPeriod = mostRecentPing
+                ? Math.abs(Date.now() - mostRecentPing)
+                : 30000;
+              const appLED =
+                appDisconnectionPeriod < 15000 ? COLORS.GREEN : COLORS.YELLOW;
+
+              if (
+                appDisconnectionPeriod > 31000 &&
+                appDisconnectionPeriod < 40000
+              ) {
                 repairNetworking();
               }
 
