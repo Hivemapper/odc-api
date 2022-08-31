@@ -11,9 +11,7 @@ export const LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const IMAGER_CONFIG_PATH =
-  __dirname + '/../../../opt/dashcam/bin/config.json';
-export const IMAGER_CONFIG_FLIP_PATH =
-  __dirname + '/../../../opt/dashcam/bin/config_flip.json';
+  __dirname + '/../../../opt/dashcam/bin/emmc_config.json';
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';

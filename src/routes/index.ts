@@ -11,7 +11,7 @@ import uploadRouter from './upload';
 import otaRouter from './ota';
 import networkRouter from './network';
 import configRouter from './config';
-import { setMostRecentPing } from 'services/led';
+import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 
 const router = Router();

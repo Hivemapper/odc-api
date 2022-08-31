@@ -4,7 +4,7 @@ import { readdirSync } from 'fs';
 
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
-import { setMostRecentPing } from 'services/led';
+import { setMostRecentPing } from 'services/heartBeat';
 
 const router = Router();
 

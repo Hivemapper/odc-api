@@ -1,6 +1,6 @@
 import { updateFirmware } from '../config';
 import { Request, Response, Router } from 'express';
-import { switchToFirmwareUpdate } from 'services/led';
+import { switchToFirmwareUpdate } from 'services/heartBeat';
 const router = Router();
 
 router.get('/', updateFirmware);

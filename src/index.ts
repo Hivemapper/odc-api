@@ -3,7 +3,7 @@ import router from './routes';
 import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
-import { LedService } from 'services/led';
+import { HeartBeatService } from 'services/heartBeat';
 import { ImageRotationService } from 'services/imageRotation';
 import { setStartTime } from 'util/lock';
 // import { AssistNowService } from 'services/assistNow';
@@ -30,7 +30,7 @@ export async function initAppServer() {
     `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
   );
 
-  serviceRunner.add(LedService);
+  serviceRunner.add(HeartBeatService);
   serviceRunner.add(ImageRotationService);
   // serviceRunner.add(AssistNowService);
   serviceRunner.run();

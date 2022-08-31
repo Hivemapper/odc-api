@@ -5,6 +5,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
+import { setMostRecentPing } from 'services/heartBeat';
 
 const router = Router();
 let imuLogger: ChildProcessWithoutNullStreams;
@@ -88,6 +89,7 @@ router.get('/close', async (req: Request, res: Response) => {
 
 // TODO
 router.get('/sample', async (req: Request, res: Response) => {
+  setMostRecentPing(Date.now());
   res.json({
     age: 362,
     received_at: 1107921,

@@ -41,18 +41,8 @@ export const ImageRotationService: IService = {
                         encoding: 'utf-8',
                       },
                       () => {
-                        console.log('Successfully restarted the camera');
                         exec('systemctl start camera-bridge');
-                        // exec(
-                        //   `sed -i 's/--config config.json/--config config_flip.json/g' ${IMAGER_BRIDGE_PATH}`,
-                        //   {
-                        //     encoding: 'utf-8',
-                        //   },
-                        //   () => {
-                        //     console.log('Successfully restarted the camera');
-                        //     exec('systemctl start camera-bridge');
-                        //   },
-                        // );
+                        console.log('Successfully restarted the camera');
                       },
                     );
                   } catch (e: unknown) {

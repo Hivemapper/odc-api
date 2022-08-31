@@ -1,11 +1,12 @@
 import { exec, ExecException } from 'child_process';
-import { FRAMES_ROOT_FOLDER, GPS_ROOT_FOLDER } from 'config';
+import { GPS_ROOT_FOLDER } from 'config';
 import { IService } from 'types';
 import { setLockTime } from 'util/lock';
+import { repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
-let mostRecentImg = '';
-let mostRecentPing = -1;
+// let mostRecentImg = '';
+let mostRecentPing = 0;
 let isFirmwareUpdate = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
@@ -16,7 +17,7 @@ export const switchToFirmwareUpdate = (state: boolean) => {
   isFirmwareUpdate = state;
 };
 
-export const LedService: IService = {
+export const HeartBeatService: IService = {
   execute: async () => {
     try {
       if (isFirmwareUpdate) {
@@ -32,12 +33,12 @@ export const LedService: IService = {
           const ubxtoolOutput = error ? '' : stdout;
 
           exec(
-            'ls ' + FRAMES_ROOT_FOLDER + ' | tail -1',
+            'systemctl is-active camera-bridge',
             {
               encoding: 'utf-8',
             },
             (error: ExecException | null, stdout: string) => {
-              const imgOutput = error ? '' : stdout;
+              const isCameraBridgeActive = error ? '' : stdout;
 
               let gpsLED = COLORS.RED;
               if (ubxtoolOutput.indexOf('3D') !== -1) {
@@ -47,15 +48,20 @@ export const LedService: IService = {
                 gpsLED = COLORS.YELLOW;
               }
 
-              const imgLED =
-                imgOutput !== mostRecentImg ? COLORS.GREEN : COLORS.RED;
+              const imgLED = isCameraBridgeActive.indexOf('active') === 0 ? COLORS.GREEN : COLORS.RED;
+
+              const appDisconnectionPeriod = mostRecentPing ? Math.abs(Date.now() - mostRecentPing) : 30000;
               const appLED =
-                mostRecentPing && Math.abs(Date.now() - mostRecentPing) < 15000
+                appDisconnectionPeriod < 15000
                   ? COLORS.GREEN
                   : COLORS.YELLOW;
 
+              if (appDisconnectionPeriod > 31000 && appDisconnectionPeriod < 40000) {
+                repairNetworking();
+              }
+
               updateLED(imgLED, gpsLED, appLED);
-              mostRecentImg = imgOutput;
+              // mostRecentImg = imgOutput;
             },
           );
         },
