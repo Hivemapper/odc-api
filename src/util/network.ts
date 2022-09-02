@@ -4,7 +4,7 @@ let inProgress = false;
 
 export const isPairing = () => {
   return inProgress;
-}
+};
 /**
  * Workaround for networking
  * If App disconnected from the Camera,
@@ -29,4 +29,4 @@ export const repairNetworking = (currentNetwork: string) => {
     console.log(e);
     inProgress = false;
   }
-}
+};

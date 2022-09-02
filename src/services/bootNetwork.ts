@@ -20,7 +20,7 @@ export const BootNetworkService: IService = {
               });
             }
           }
-        }
+        },
       );
     } catch (e: unknown) {
       console.log(e);

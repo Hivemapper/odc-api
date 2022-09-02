@@ -15,7 +15,8 @@ export const IMAGER_CONFIG_PATH =
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
-export const NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../mnt/data/network_mode.txt';
+export const NETWORK_BOOT_CONFIG_PATH =
+  __dirname + '/../../../mnt/data/network_mode.txt';
 export const NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
 
 export const configureOnBoot = async (req: Request, res: Response) => {

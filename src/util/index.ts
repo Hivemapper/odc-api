@@ -27,11 +27,11 @@ export const getDateFromUnicodeTimastamp = (filename: string) => {
 
 export const setSessionId = () => {
   sessionId = generate();
-}
+};
 
 export const getSessionId = () => {
   return sessionId;
-}
+};
 
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   if (req.query.since || req.query.until) {

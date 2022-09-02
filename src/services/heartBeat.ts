@@ -1,5 +1,5 @@
 import { exec, ExecException } from 'child_process';
-import { FRAMES_ROOT_FOLDER, GPS_ROOT_FOLDER, NETWORK_CONFIG_PATH } from 'config';
+import { FRAMES_ROOT_FOLDER, NETWORK_CONFIG_PATH } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime } from 'util/lock';
@@ -41,7 +41,6 @@ export const HeartBeatService: IService = {
               encoding: 'utf-8',
             },
             (error: ExecException | null, stdout: string) => {
-
               const cameraResponse = error ? '' : stdout;
 
               try {
@@ -51,7 +50,6 @@ export const HeartBeatService: IService = {
                     encoding: 'utf-8',
                   },
                   (err: NodeJS.ErrnoException | null, data: string) => {
-
                     const currentNetwork = err ? '' : data;
 
                     let gpsLED = COLORS.RED;
@@ -61,13 +59,15 @@ export const HeartBeatService: IService = {
                       gpsLED = COLORS.YELLOW;
                     }
                     setLockTime();
-    
+
                     const imgLED =
-                    cameraResponse.indexOf('active') === 0
-                        ? cameraResponse !== previousCameraResponse ? COLORS.GREEN : COLORS.YELLOW
+                      cameraResponse.indexOf('active') === 0
+                        ? cameraResponse !== previousCameraResponse
+                          ? COLORS.GREEN
+                          : COLORS.YELLOW
                         : COLORS.RED;
                     previousCameraResponse = cameraResponse;
-    
+
                     const appDisconnectionPeriod = mostRecentPing
                       ? Math.abs(Date.now() - mostRecentPing)
                       : 30000;
@@ -88,7 +88,7 @@ export const HeartBeatService: IService = {
                       }
                     }
                     updateLED(imgLED, gpsLED, appLED);
-                  }
+                  },
                 );
               } catch (e: unknown) {
                 //

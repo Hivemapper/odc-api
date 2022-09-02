@@ -1,4 +1,4 @@
-import { exec, ExecException } from "child_process";
+import { exec, ExecException } from 'child_process';
 
 let lockTime = 0;
 let startTime = 0;
@@ -24,11 +24,14 @@ export const setLockTime = () => {
           let validHex = elems.pop();
           if (validHex && validHex.indexOf('x') === 0) {
             validHex = validHex.slice(1);
-            const timeDateBytes = (parseInt(validHex, 16).toString(2)).padStart(4, '0').slice(-4);
+            const timeDateBytes = parseInt(validHex, 16)
+              .toString(2)
+              .padStart(4, '0')
+              .slice(-4);
             if (timeDateBytes === '1111' || timeDateBytes === '0111') {
               elems.pop();
               const time = elems.pop();
-              const date = elems.pop()?.replace(/\//g,'-');
+              const date = elems.pop()?.replace(/\//g, '-');
               if (time && date && !lockTime) {
                 const approxLockTime = Date.now() - startTime;
                 exec('timedatectl set-ntp 0', () => {
@@ -50,7 +53,8 @@ export const setLockTime = () => {
             }
           }
           inProgress = false;
-        });
+        },
+      );
     } catch (e: unknown) {
       inProgress = false;
     }
