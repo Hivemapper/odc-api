@@ -13,6 +13,7 @@ import networkRouter from './network';
 import configRouter from './config';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
+import { getSessionId } from 'util/index';
 
 const router = Router();
 
@@ -48,6 +49,8 @@ router.get('/ping', (req, res) => {
   setMostRecentPing(Date.now());
   res.json({
     healthy: true,
+    sessionId: getSessionId(),
+    lockTime: getLockTime(),
   });
 });
 

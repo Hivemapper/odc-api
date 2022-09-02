@@ -1,11 +1,12 @@
 import { exec, ExecException } from 'child_process';
-import { GPS_ROOT_FOLDER } from 'config';
+import { FRAMES_ROOT_FOLDER, GPS_ROOT_FOLDER, NETWORK_CONFIG_PATH } from 'config';
+import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime } from 'util/lock';
-import { repairNetworking } from 'util/network';
+import { isPairing, repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
-// let mostRecentImg = '';
+let previousCameraResponse = '';
 let mostRecentPing = 0;
 let isFirmwareUpdate = false;
 
@@ -35,40 +36,63 @@ export const HeartBeatService: IService = {
           const ubxtoolOutput = error ? '' : stdout;
 
           exec(
-            'systemctl is-active camera-bridge',
+            `systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1`,
             {
               encoding: 'utf-8',
             },
             (error: ExecException | null, stdout: string) => {
-              const isCameraBridgeActive = error ? '' : stdout;
 
-              let gpsLED = COLORS.RED;
-              if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
-                gpsLED = COLORS.GREEN;
-              } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
-                gpsLED = COLORS.YELLOW;
+              const cameraResponse = error ? '' : stdout;
+
+              try {
+                readFile(
+                  NETWORK_CONFIG_PATH,
+                  {
+                    encoding: 'utf-8',
+                  },
+                  (err: NodeJS.ErrnoException | null, data: string) => {
+
+                    const currentNetwork = err ? '' : data;
+
+                    let gpsLED = COLORS.RED;
+                    if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
+                      gpsLED = COLORS.GREEN;
+                    } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
+                      gpsLED = COLORS.YELLOW;
+                    }
+                    setLockTime();
+    
+                    const imgLED =
+                    cameraResponse.indexOf('active') === 0
+                        ? cameraResponse !== previousCameraResponse ? COLORS.GREEN : COLORS.YELLOW
+                        : COLORS.RED;
+                    previousCameraResponse = cameraResponse;
+    
+                    const appDisconnectionPeriod = mostRecentPing
+                      ? Math.abs(Date.now() - mostRecentPing)
+                      : 30000;
+
+                    let appLED = COLORS.RED;
+                    if (appDisconnectionPeriod < 15000) {
+                      appLED = COLORS.GREEN;
+                    } else {
+                      if (currentNetwork.indexOf('AP') === -1) {
+                        if (appDisconnectionPeriod === 30000 || isPairing()) {
+                          appLED = COLORS.BLUE;
+                        } else {
+                          appLED = COLORS.PINK;
+                          repairNetworking(currentNetwork);
+                        }
+                      } else {
+                        appLED = COLORS.YELLOW;
+                      }
+                    }
+                    updateLED(imgLED, gpsLED, appLED);
+                  }
+                );
+              } catch (e: unknown) {
+                //
               }
-
-              const imgLED =
-                isCameraBridgeActive.indexOf('active') === 0
-                  ? COLORS.GREEN
-                  : COLORS.RED;
-
-              const appDisconnectionPeriod = mostRecentPing
-                ? Math.abs(Date.now() - mostRecentPing)
-                : 30000;
-              const appLED =
-                appDisconnectionPeriod < 15000 ? COLORS.GREEN : COLORS.YELLOW;
-
-              if (
-                appDisconnectionPeriod > 31000 &&
-                appDisconnectionPeriod < 40000
-              ) {
-                repairNetworking();
-              }
-
-              updateLED(imgLED, gpsLED, appLED);
-              // mostRecentImg = imgOutput;
             },
           );
         },
@@ -77,5 +101,5 @@ export const HeartBeatService: IService = {
       console.log('LED service failed with error', e);
     }
   },
-  interval: 5000,
+  interval: 7000,
 };

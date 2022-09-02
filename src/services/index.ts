@@ -7,17 +7,17 @@ class ServiceRunner {
   }
   run() {
     this.services.map((service: IService) => {
-      if (service.interval) {
+      if (service.interval || service.delay) {
         const interval = setInterval(() => {
           try {
             service.execute();
-            if (service.executeOnce) {
+            if (service.delay) {
               clearInterval(interval);
             }
           } catch (e: unknown) {
             console.log('Service error', e);
           }
-        }, service.interval);
+        }, service.interval || service.delay);
       } else {
         try {
           service.execute();

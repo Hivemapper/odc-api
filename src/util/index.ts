@@ -1,5 +1,8 @@
 import { Request } from 'express';
 import { ICameraFile, IMU } from '../types';
+import { generate } from 'shortid';
+
+let sessionId: string;
 
 export const getDateFromFilename = (filename: string) => {
   try {
@@ -21,6 +24,14 @@ export const getDateFromUnicodeTimastamp = (filename: string) => {
     return new Date();
   }
 };
+
+export const setSessionId = () => {
+  sessionId = generate();
+}
+
+export const getSessionId = () => {
+  return sessionId;
+}
 
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   if (req.query.since || req.query.until) {

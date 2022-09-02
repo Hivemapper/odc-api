@@ -27,6 +27,18 @@ export const COLORS = {
     green: 5,
     on: true,
   },
+  BLUE: {
+    red: 0,
+    blue: 25,
+    green: 0,
+    on: true,
+  },
+  PINK: {
+    red: 25,
+    blue: 25,
+    green: 0,
+    on: true,
+  },
 };
 
 export const updateLED = async (

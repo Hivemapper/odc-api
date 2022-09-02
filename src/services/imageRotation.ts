@@ -61,10 +61,9 @@ export const ImageRotationService: IService = {
         },
       );
     } catch (e: unknown) {
-      console.log('LED service failed with error', e);
+      console.log('Image Rotation service failed with error', e);
       exec('systemctl start camera-bridge');
     }
   },
-  interval: 15000,
-  executeOnce: true,
+  delay: 4000,
 };

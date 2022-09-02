@@ -15,7 +15,7 @@ export interface ILED {
 export interface IService {
   execute: () => void;
   interval?: number;
-  executeOnce?: boolean;
+  delay?: number;
 }
 
 export interface GNSS {

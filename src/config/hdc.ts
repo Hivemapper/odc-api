@@ -1,6 +1,6 @@
 import { exec, execSync, ExecException } from 'child_process';
 import { Request, Response } from 'express';
-import { fixTimeDiff } from 'util/lock';
+import { writeFile } from 'fs';
 
 export const PORT = 5000;
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
@@ -15,29 +15,30 @@ export const IMAGER_CONFIG_PATH =
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
+export const NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../mnt/data/network_mode.txt';
+export const NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
 
 export const configureOnBoot = async (req: Request, res: Response) => {
   try {
-    const realTime = Number(req.query.time);
-    const timeToSet = new Date(realTime)
-      .toISOString()
-      .replace(/T/, ' ')
-      .replace(/\..+/, '')
-      .split(' ');
+    // const realTime = Number(req.query.time);
+    // const timeToSet = new Date(realTime)
+    //   .toISOString()
+    //   .replace(/T/, ' ')
+    //   .replace(/\..+/, '')
+    //   .split(' ');
 
-    fixTimeDiff(realTime - Date.now());
-    // setting up initial time for camera
-    exec('timedatectl set-ntp 0', () => {
-      exec(`timedatectl set-time ${timeToSet[0]}`, () => {
-        exec(`timedatectl set-time ${timeToSet[1]}`, () => {
-          // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-          // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
-          exec('systemctl stop camera-bridge', () => {
-            exec('systemctl start camera-bridge');
-          });
-        });
-      });
-    });
+    // // setting up initial time for camera
+    // exec('timedatectl set-ntp 0', () => {
+    //   exec(`timedatectl set-time ${timeToSet[0]}`, () => {
+    //     exec(`timedatectl set-time ${timeToSet[1]}`, () => {
+    //       // TODO: Temp solution for restarting the camera to catch the freshest timestamp
+    //       // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
+    //       exec('systemctl stop camera-bridge', () => {
+    //         exec('systemctl start camera-bridge');
+    //       });
+    //     });
+    //   });
+    // });
 
     res.json({
       output: 'done',
@@ -64,6 +65,11 @@ export const switchToP2P = async (req: Request, res: Response) => {
   try {
     // No need to wait for response — it's tearing down current Network method, so it will kill the connection anyways
     exec(__dirname + '/network/test_P2Pconnect_any.sh');
+    try {
+      writeFile(NETWORK_BOOT_CONFIG_PATH, 'P2P', null, () => {});
+    } catch (e: unknown) {
+      console.log(e);
+    }
     res.json({
       output: 'done',
     });
@@ -75,6 +81,11 @@ export const switchToP2P = async (req: Request, res: Response) => {
 export const switchToAP = async (req: Request, res: Response) => {
   try {
     exec(__dirname + '/network/wifi_switch_AP.sh');
+    try {
+      writeFile(NETWORK_BOOT_CONFIG_PATH, 'AP', null, () => {});
+    } catch (e: unknown) {
+      console.log(e);
+    }
     res.json({
       output: 'done',
     });
