@@ -2,14 +2,16 @@ import { exec, ExecException } from 'child_process';
 
 let lockTime = 0;
 let startTime = 0;
+let timeDiff = 0;
 let inProgress = false;
+let isTimeSet = false;
 
 export const setStartTime = () => {
   startTime = Date.now();
 };
 
-export const setLockTime = () => {
-  if (!inProgress && !lockTime) {
+export const setLockTime = (fixType: string) => {
+  if (!inProgress && !isTimeSet) {
     inProgress = true;
 
     try {
@@ -32,7 +34,7 @@ export const setLockTime = () => {
               elems.pop();
               const time = elems.pop();
               const date = elems.pop()?.replace(/\//g, '-');
-              if (time && date && !lockTime) {
+              if (time && date && !isTimeSet) {
                 const approxLockTime = Date.now() - startTime;
                 exec('timedatectl set-ntp 0', () => {
                   exec(`timedatectl set-time ${date}`, () => {
@@ -42,8 +44,13 @@ export const setLockTime = () => {
                       exec('systemctl stop camera-bridge', () => {
                         exec('systemctl start camera-bridge');
                         inProgress = false;
-                        if (!lockTime) {
-                          lockTime = approxLockTime;
+                        if (!isTimeSet) {
+                          isTimeSet = true;
+                          if (fixType.indexOf('fixType 3') !== -1) {
+                            lockTime = approxLockTime;
+                          } else {
+                            timeDiff = Date.now() - startTime + approxLockTime;
+                          }
                         }
                       });
                     });
@@ -59,6 +66,10 @@ export const setLockTime = () => {
       inProgress = false;
     }
     inProgress = false;
+  } else {
+    if (isTimeSet && !lockTime && fixType.indexOf('fixType 3') !== -1) {
+      lockTime = Date.now() - startTime - timeDiff;
+    }
   }
 };
 

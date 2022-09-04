@@ -58,12 +58,14 @@ export const HeartBeatService: IService = {
                     } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
                       gpsLED = COLORS.YELLOW;
                     }
-                    setLockTime();
+                    setLockTime(ubxtoolOutput);
 
                     const imgLED =
                       cameraResponse.indexOf('active') === 0
                         ? cameraResponse !== previousCameraResponse
-                          ? COLORS.GREEN
+                          ? previousCameraResponse
+                            ? COLORS.GREEN
+                            : COLORS.YELLOW
                           : COLORS.YELLOW
                         : COLORS.RED;
                     previousCameraResponse = cameraResponse;
