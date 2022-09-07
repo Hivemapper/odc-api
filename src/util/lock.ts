@@ -1,16 +1,29 @@
 import { exec, ExecException } from 'child_process';
 
 let lockTime = 0;
-let startTime = 0;
-let timeDiff = 0;
 let inProgress = false;
 let isTimeSet = false;
 
-export const setStartTime = () => {
-  startTime = Date.now();
-};
+export const setLockTime = () => {
+  if (!lockTime) {
+    try {
+      exec('ubxtool -p NAV-STATUS | grep ttff', { encoding: 'utf-8' }, (error: ExecException | null, stdout: string) => {
+        const output = error ? '' : stdout;
+        const elems = output.split(',');
+        if (elems.length && elems[0].indexOf('ttff') !== -1) {
+          const ttff = elems[0].split(' ').pop();
+          if (ttff) {
+            lockTime = Number(ttff);
+          }
+        }
+      })
+    } catch (e: unknown) {
+      console.log(e);
+    }
+  }
+}
 
-export const setLockTime = (fixType: string) => {
+export const setCameraTime = () => {
   if (!inProgress && !isTimeSet) {
     inProgress = true;
 
@@ -35,7 +48,6 @@ export const setLockTime = (fixType: string) => {
               const time = elems.pop();
               const date = elems.pop()?.replace(/\//g, '-');
               if (time && date && !isTimeSet) {
-                const approxLockTime = Date.now() - startTime;
                 exec('timedatectl set-ntp 0', () => {
                   exec(`timedatectl set-time ${date}`, () => {
                     exec(`timedatectl set-time ${time}`, () => {
@@ -44,14 +56,7 @@ export const setLockTime = (fixType: string) => {
                       exec('systemctl stop camera-bridge', () => {
                         exec('systemctl start camera-bridge');
                         inProgress = false;
-                        if (!isTimeSet) {
-                          isTimeSet = true;
-                          if (fixType.indexOf('fixType 3') !== -1) {
-                            lockTime = approxLockTime;
-                          } else {
-                            timeDiff = Date.now() - startTime + approxLockTime;
-                          }
-                        }
+                        isTimeSet = true;
                       });
                     });
                   });
@@ -66,10 +71,6 @@ export const setLockTime = (fixType: string) => {
       inProgress = false;
     }
     inProgress = false;
-  } else {
-    if (isTimeSet && !lockTime && fixType.indexOf('fixType 3') !== -1) {
-      lockTime = Date.now() - startTime - timeDiff;
-    }
   }
 };
 
