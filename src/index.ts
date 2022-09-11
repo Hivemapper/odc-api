@@ -32,8 +32,8 @@ export async function initAppServer() {
   );
 
   serviceRunner.add(HeartBeatService);
-  serviceRunner.add(ImageRotationService);
-  serviceRunner.add(BootNetworkService);
+  // serviceRunner.add(ImageRotationService);
+  // serviceRunner.add(BootNetworkService);
   // serviceRunner.add(AssistNowService);
   serviceRunner.run();
   setSessionId();

@@ -3,17 +3,12 @@ import { FRAMES_ROOT_FOLDER, NETWORK_CONFIG_PATH } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime } from 'util/lock';
-import { isPairing, repairNetworking } from 'util/network';
+// import { isPairing, repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
 let previousCameraResponse = '';
 let mostRecentPing = 0;
 let isFirmwareUpdate = false;
-let dropsCount = 0;
-
-export const getDropsCount = () => {
-  return dropsCount;
-}
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -63,7 +58,6 @@ export const HeartBeatService: IService = {
                       setLockTime();
                     } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
                       gpsLED = COLORS.YELLOW;
-                      dropsCount++;
                     }
                     setCameraTime();
 
@@ -86,12 +80,13 @@ export const HeartBeatService: IService = {
                       appLED = COLORS.GREEN;
                     } else {
                       if (currentNetwork.indexOf('AP') === -1) {
-                        if (appDisconnectionPeriod === 30000 || isPairing()) {
-                          appLED = COLORS.BLUE;
-                        } else {
-                          appLED = COLORS.PINK;
-                          repairNetworking(currentNetwork);
-                        }
+                        appLED = COLORS.BLUE;
+                        // if (appDisconnectionPeriod === 30000 || isPairing()) {
+                        //   appLED = COLORS.BLUE;
+                        // } else {
+                        //   appLED = COLORS.PINK;
+                        //   repairNetworking(currentNetwork);
+                        // }
                       } else {
                         appLED = COLORS.YELLOW;
                       }

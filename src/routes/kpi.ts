@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { getDropsCount } from 'services/heartBeat';
 
 const router = Router();
 
 router.post('/drops', (req, res) => {
+  // TBD, done via App for now
   res.json({
-    drops: getDropsCount(),
+    drops: 0,
   });
 });
 
