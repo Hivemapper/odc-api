@@ -1,18 +1,64 @@
 import { exec, ExecException } from 'child_process';
 
 let lockTime = 0;
-let startTime = 0;
-let timeDiff = 0;
-let inProgress = false;
+let msss = 0;
+let gnssIds: number[] = [];
 let isTimeSet = false;
+let isCameraTimeInProgress = false;
+let isLockTimeInProgress = false;
 
-export const setStartTime = () => {
-  startTime = Date.now();
+export const setLockTime = () => {
+  if (!isLockTimeInProgress && !lockTime) {
+    isLockTimeInProgress = true;
+    try {
+      exec(
+        'ubxtool -p NAV-STATUS | grep ttff',
+        { encoding: 'utf-8' },
+        (error: ExecException | null, stdout: string) => {
+          let output = error ? '' : stdout;
+          const elems = output.split(',');
+          if (elems.length && elems[0].indexOf('ttff') !== -1) {
+            const ttff = elems[0].split(' ').pop();
+            if (ttff) {
+              if (elems[1]) {
+                const ms = elems[1].split(' ').pop();
+                msss = Number(ms);
+              }
+              exec(
+                'ubxtool -p NAV-SIG | grep gnssId',
+                { encoding: 'utf-8' },
+                (error: ExecException | null, stdout: string) => {
+                  output = error ? '' : stdout;
+                  // collect ssids
+                  gnssIds = [];
+                  output.split('\n').map(sat => {
+                    const parts = sat.split(' ');
+                    const gnssIndex = parts.findIndex(
+                      elem => elem.indexOf('gnssId') !== -1,
+                    );
+                    if (gnssIndex !== -1) {
+                      gnssIds.push(Number(parts[gnssIndex + 1]));
+                    }
+                  });
+                  lockTime = Number(ttff);
+                  isLockTimeInProgress = false;
+                },
+              );
+            }
+          }
+          isLockTimeInProgress = false;
+        },
+      );
+    } catch (e: unknown) {
+      isLockTimeInProgress = false;
+      console.log(e);
+    }
+  }
 };
 
-export const setLockTime = (fixType: string) => {
-  if (!inProgress && !isTimeSet) {
-    inProgress = true;
+export const setCameraTime = () => {
+  if (!isCameraTimeInProgress && !isTimeSet) {
+    isCameraTimeInProgress = true;
 
     try {
       exec(
@@ -35,7 +81,6 @@ export const setLockTime = (fixType: string) => {
               const time = elems.pop();
               const date = elems.pop()?.replace(/\//g, '-');
               if (time && date && !isTimeSet) {
-                const approxLockTime = Date.now() - startTime;
                 exec('timedatectl set-ntp 0', () => {
                   exec(`timedatectl set-time ${date}`, () => {
                     exec(`timedatectl set-time ${time}`, () => {
@@ -43,15 +88,8 @@ export const setLockTime = (fixType: string) => {
                       // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
                       exec('systemctl stop camera-bridge', () => {
                         exec('systemctl start camera-bridge');
-                        inProgress = false;
-                        if (!isTimeSet) {
-                          isTimeSet = true;
-                          if (fixType.indexOf('fixType 3') !== -1) {
-                            lockTime = approxLockTime;
-                          } else {
-                            timeDiff = Date.now() - startTime + approxLockTime;
-                          }
-                        }
+                        isCameraTimeInProgress = false;
+                        isTimeSet = true;
                       });
                     });
                   });
@@ -59,20 +97,20 @@ export const setLockTime = (fixType: string) => {
               }
             }
           }
-          inProgress = false;
+          isCameraTimeInProgress = false;
         },
       );
     } catch (e: unknown) {
-      inProgress = false;
+      isCameraTimeInProgress = false;
     }
-    inProgress = false;
-  } else {
-    if (isTimeSet && !lockTime && fixType.indexOf('fixType 3') !== -1) {
-      lockTime = Date.now() - startTime - timeDiff;
-    }
+    isCameraTimeInProgress = false;
   }
 };
 
 export const getLockTime = () => {
-  return lockTime;
+  return {
+    lockTime,
+    msss,
+    gnssId: gnssIds.join(' '),
+  };
 };

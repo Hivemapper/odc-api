@@ -2,8 +2,8 @@ import { exec, ExecException } from 'child_process';
 import { FRAMES_ROOT_FOLDER, NETWORK_CONFIG_PATH } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
-import { setLockTime } from 'util/lock';
-import { isPairing, repairNetworking } from 'util/network';
+import { setLockTime, setCameraTime } from 'util/lock';
+// import { isPairing, repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
 let previousCameraResponse = '';
@@ -55,10 +55,11 @@ export const HeartBeatService: IService = {
                     let gpsLED = COLORS.RED;
                     if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
                       gpsLED = COLORS.GREEN;
+                      setLockTime();
                     } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
                       gpsLED = COLORS.YELLOW;
                     }
-                    setLockTime(ubxtoolOutput);
+                    setCameraTime();
 
                     const imgLED =
                       cameraResponse.indexOf('active') === 0
@@ -79,12 +80,13 @@ export const HeartBeatService: IService = {
                       appLED = COLORS.GREEN;
                     } else {
                       if (currentNetwork.indexOf('AP') === -1) {
-                        if (appDisconnectionPeriod === 30000 || isPairing()) {
-                          appLED = COLORS.BLUE;
-                        } else {
-                          appLED = COLORS.PINK;
-                          repairNetworking(currentNetwork);
-                        }
+                        appLED = COLORS.BLUE;
+                        // if (appDisconnectionPeriod === 30000 || isPairing()) {
+                        //   appLED = COLORS.BLUE;
+                        // } else {
+                        //   appLED = COLORS.PINK;
+                        //   repairNetworking(currentNetwork);
+                        // }
                       } else {
                         appLED = COLORS.YELLOW;
                       }

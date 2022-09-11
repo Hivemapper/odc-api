@@ -11,6 +11,8 @@ import uploadRouter from './upload';
 import otaRouter from './ota';
 import networkRouter from './network';
 import configRouter from './config';
+import kpiRouter from './kpi';
+import utilRouter from './util';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
@@ -26,11 +28,14 @@ router.use('/upload', uploadRouter);
 router.use('/ota', otaRouter);
 router.use('/network', networkRouter);
 router.use('/config', configRouter);
+router.use('/kpi', kpiRouter);
+router.use('/util', utilRouter);
 
 router.get('/init', configureOnBoot);
 
 router.get('/info', async (req: Request, res: Response) => {
   let versionInfo = {};
+  setMostRecentPing(Date.now());
   try {
     const versionInfoPayload = readFileSync(BUILD_INFO_PATH, {
       encoding: 'utf-8',
@@ -50,15 +55,12 @@ router.get('/ping', (req, res) => {
   res.json({
     healthy: true,
     sessionId: getSessionId(),
-    lockTime: getLockTime(),
+    ...getLockTime(),
   });
 });
 
 router.get('/locktime', (req, res) => {
-  const lockTime = getLockTime();
-  res.json({
-    lockTime,
-  });
+  res.json(getLockTime());
 });
 
 router.post('/cmd', async (req, res) => {

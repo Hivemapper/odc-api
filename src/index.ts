@@ -5,7 +5,6 @@ import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { ImageRotationService } from 'services/imageRotation';
-import { setStartTime } from 'util/lock';
 import { BootNetworkService } from 'services/bootNetwork';
 import { setSessionId } from 'util/index';
 // import { AssistNowService } from 'services/assistNow';
@@ -33,11 +32,10 @@ export async function initAppServer() {
   );
 
   serviceRunner.add(HeartBeatService);
-  serviceRunner.add(ImageRotationService);
-  serviceRunner.add(BootNetworkService);
+  // serviceRunner.add(ImageRotationService);
+  // serviceRunner.add(BootNetworkService);
   // serviceRunner.add(AssistNowService);
   serviceRunner.run();
-  setStartTime();
   setSessionId();
 }
 
