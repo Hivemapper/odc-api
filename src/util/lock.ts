@@ -37,7 +37,10 @@ export const setLockTime = () => {
                       elem => elem.indexOf('gnssId') !== -1,
                     );
                     if (gnssIndex !== -1) {
-                      gnssIds.push(Number(parts[gnssIndex + 1]));
+                      const gnssToAdd = Number(parts[gnssIndex + 1]);
+                      if (gnssIds.indexOf(gnssToAdd) === -1) {
+                        gnssIds.push(gnssToAdd);
+                      }
                     }
                   });
                   lockTime = Number(ttff);
