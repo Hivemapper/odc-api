@@ -54,6 +54,7 @@ router.get('/ping', (req, res) => {
   setMostRecentPing(Date.now());
   res.json({
     healthy: true,
+    cameraTime: Date.now(),
     sessionId: getSessionId(),
     ...getLockTime(),
   });
@@ -61,6 +62,10 @@ router.get('/ping', (req, res) => {
 
 router.get('/locktime', (req, res) => {
   res.json(getLockTime());
+});
+
+router.get('/time', (req, res) => {
+  res.json(Date.now());
 });
 
 router.post('/cmd', async (req, res) => {

@@ -36,7 +36,7 @@ export const HeartBeatService: IService = {
           const ubxtoolOutput = error ? '' : stdout;
 
           exec(
-            `systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1`,
+            `systemctl is-active camera-bridge && ls /mnt/data/pic/ | tail -1`,
             {
               encoding: 'utf-8',
             },
