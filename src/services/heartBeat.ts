@@ -46,10 +46,10 @@ export const HeartBeatService: IService = {
                 if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
                   gpsLED = COLORS.GREEN;
                   setLockTime();
+                  setCameraTime();
                 } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
                   gpsLED = COLORS.YELLOW;
                 }
-                setCameraTime();
 
                 const imgLED =
                   cameraResponse.indexOf('active') === 0

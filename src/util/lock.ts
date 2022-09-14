@@ -85,26 +85,25 @@ export const setCameraTime = () => {
               .toString(2)
               .padStart(4, '0')
               .slice(-4);
-            if (timeDateBytes === '1111') {
+            if (timeDateBytes === '1111' || timeDateBytes === '0111') {
               elems.pop();
               const time = elems.pop();
               const date = elems.pop()?.replace(/\//g, '-');
               if (time && date && !isTimeSet) {
                 try {
                   exec('timedatectl set-ntp 0', () => {
-                    exec(`timedatectl set-time ${date}`, () => {
-                      exec(`timedatectl set-time ${time}`, () => {
-                        // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-                        // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
-                        exec('systemctl stop camera-bridge', () => {
-                          exec(`touch ${TMP_FILE_PATH}`, () => {
-                            exec(
-                              `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
-                            );
-                            exec('systemctl start camera-bridge');
-                            isCameraTimeInProgress = false;
-                            isTimeSet = true;
-                          });
+                    exec(`timedatectl set-time '${date} ${time}'`, () => {
+                      isCameraTimeInProgress = false;
+                      isTimeSet = true;
+                      console.log('System time set to ' + date + ' ' + time);
+                      // TODO: Temp solution for restarting the camera to catch the freshest timestamp
+                      // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
+                      exec('systemctl stop camera-bridge', () => {
+                        exec(`touch ${TMP_FILE_PATH}`, () => {
+                          exec(
+                            `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
+                          );
+                          exec('systemctl start camera-bridge');
                         });
                       });
                     });
@@ -122,6 +121,7 @@ export const setCameraTime = () => {
           } else {
             isCameraTimeInProgress = false;
           }
+          isCameraTimeInProgress = false;
         },
       );
     } catch (e: unknown) {
