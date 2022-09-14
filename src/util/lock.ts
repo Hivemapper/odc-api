@@ -25,29 +25,34 @@ export const setLockTime = () => {
                 const ms = elems[1].split(' ').pop();
                 msss = Number(ms);
               }
-              exec(
-                'ubxtool -p NAV-SIG | grep gnssId',
-                { encoding: 'utf-8' },
-                (error: ExecException | null, stdout: string) => {
-                  output = error ? '' : stdout;
-                  // collect ssids
-                  gnssIds = [];
-                  output.split('\n').map(sat => {
-                    const parts = sat.split(' ');
-                    const gnssIndex = parts.findIndex(
-                      elem => elem.indexOf('gnssId') !== -1,
-                    );
-                    if (gnssIndex !== -1) {
-                      const gnssToAdd = Number(parts[gnssIndex + 1]);
-                      if (gnssIds.indexOf(gnssToAdd) === -1) {
-                        gnssIds.push(gnssToAdd);
+              try {
+                exec(
+                  'ubxtool -p NAV-SIG | grep gnssId',
+                  { encoding: 'utf-8' },
+                  (error: ExecException | null, stdout: string) => {
+                    output = error ? '' : stdout;
+                    // collect ssids
+                    gnssIds = [];
+                    output.split('\n').map(sat => {
+                      const parts = sat.split(' ');
+                      const gnssIndex = parts.findIndex(
+                        elem => elem.indexOf('gnssId') !== -1,
+                      );
+                      if (gnssIndex !== -1) {
+                        const gnssToAdd = Number(parts[gnssIndex + 1]);
+                        if (gnssIds.indexOf(gnssToAdd) === -1) {
+                          gnssIds.push(gnssToAdd);
+                        }
                       }
-                    }
-                  });
-                  lockTime = Number(ttff);
-                  isLockTimeInProgress = false;
-                },
-              );
+                    });
+                    lockTime = Number(ttff);
+                    isLockTimeInProgress = false;
+                  },
+                );
+              } catch (e: unknown) {
+                isLockTimeInProgress = false;
+                console.log(e);
+              }
             }
           }
           isLockTimeInProgress = false;
@@ -85,24 +90,29 @@ export const setCameraTime = () => {
               const time = elems.pop();
               const date = elems.pop()?.replace(/\//g, '-');
               if (time && date && !isTimeSet) {
-                exec('timedatectl set-ntp 0', () => {
-                  exec(`timedatectl set-time ${date}`, () => {
-                    exec(`timedatectl set-time ${time}`, () => {
-                      // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-                      // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
-                      exec('systemctl stop camera-bridge', () => {
-                        exec(`touch ${TMP_FILE_PATH}`, () => {
-                          exec(
-                            `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
-                          );
-                          exec('systemctl start camera-bridge');
-                          isCameraTimeInProgress = false;
-                          isTimeSet = true;
+                try {
+                  exec('timedatectl set-ntp 0', () => {
+                    exec(`timedatectl set-time ${date}`, () => {
+                      exec(`timedatectl set-time ${time}`, () => {
+                        // TODO: Temp solution for restarting the camera to catch the freshest timestamp
+                        // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
+                        exec('systemctl stop camera-bridge', () => {
+                          exec(`touch ${TMP_FILE_PATH}`, () => {
+                            exec(
+                              `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
+                            );
+                            exec('systemctl start camera-bridge');
+                            isCameraTimeInProgress = false;
+                            isTimeSet = true;
+                          });
                         });
                       });
                     });
                   });
-                });
+                } catch (e: unknown) {
+                  isCameraTimeInProgress = false;
+                  console.log(e);
+                }
               } else {
                 isCameraTimeInProgress = false;
               }

@@ -31,12 +31,16 @@ export async function initAppServer() {
     `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
   );
 
-  serviceRunner.add(HeartBeatService);
-  // serviceRunner.add(ImageRotationService);
-  // serviceRunner.add(BootNetworkService);
-  // serviceRunner.add(AssistNowService);
-  serviceRunner.run();
-  setSessionId();
+  try {
+    serviceRunner.add(HeartBeatService);
+    serviceRunner.add(ImageRotationService);
+    // serviceRunner.add(BootNetworkService);
+    // serviceRunner.add(AssistNowService);
+    serviceRunner.run();
+    setSessionId();
+  } catch (e: unknown) {
+    console.log('Error running services:', e);
+  }
 }
 
 initAppServer();

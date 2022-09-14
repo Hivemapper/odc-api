@@ -85,8 +85,8 @@ router.post('/cmd', async (req, res) => {
         }
       },
     );
-  } catch (error: any) {
-    res.json({ error: error.stdout || error.stderr });
+  } catch (error: unknown) {
+    res.json({ error });
   }
 });
 
@@ -98,8 +98,8 @@ router.post('/cmd/sync', async (req, res) => {
     res.json({
       output,
     });
-  } catch (error: any) {
-    res.json({ error: error.stdout || error.stderr });
+  } catch (error: unknown) {
+    res.json({ error });
   }
 });
 

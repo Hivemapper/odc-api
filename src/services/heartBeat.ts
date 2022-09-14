@@ -1,6 +1,4 @@
 import { exec, ExecException } from 'child_process';
-import { FRAMES_ROOT_FOLDER, NETWORK_CONFIG_PATH } from 'config';
-import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime } from 'util/lock';
 // import { isPairing, repairNetworking } from 'util/network';
@@ -44,58 +42,38 @@ export const HeartBeatService: IService = {
               const cameraResponse = error ? '' : stdout;
 
               try {
-                readFile(
-                  NETWORK_CONFIG_PATH,
-                  {
-                    encoding: 'utf-8',
-                  },
-                  (err: NodeJS.ErrnoException | null, data: string) => {
-                    const currentNetwork = err ? '' : data;
+                let gpsLED = COLORS.RED;
+                if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
+                  gpsLED = COLORS.GREEN;
+                  setLockTime();
+                } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
+                  gpsLED = COLORS.YELLOW;
+                }
+                setCameraTime();
 
-                    let gpsLED = COLORS.RED;
-                    if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
-                      gpsLED = COLORS.GREEN;
-                      setLockTime();
-                    } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
-                      gpsLED = COLORS.YELLOW;
-                    }
-                    setCameraTime();
+                const imgLED =
+                  cameraResponse.indexOf('active') === 0
+                    ? cameraResponse !== previousCameraResponse
+                      ? previousCameraResponse
+                        ? COLORS.GREEN
+                        : COLORS.YELLOW
+                      : COLORS.YELLOW
+                    : COLORS.RED;
+                previousCameraResponse = cameraResponse;
 
-                    const imgLED =
-                      cameraResponse.indexOf('active') === 0
-                        ? cameraResponse !== previousCameraResponse
-                          ? previousCameraResponse
-                            ? COLORS.GREEN
-                            : COLORS.YELLOW
-                          : COLORS.YELLOW
-                        : COLORS.RED;
-                    previousCameraResponse = cameraResponse;
+                const appDisconnectionPeriod = mostRecentPing
+                  ? Math.abs(Date.now() - mostRecentPing)
+                  : 30000;
 
-                    const appDisconnectionPeriod = mostRecentPing
-                      ? Math.abs(Date.now() - mostRecentPing)
-                      : 30000;
-
-                    let appLED = COLORS.RED;
-                    if (appDisconnectionPeriod < 15000) {
-                      appLED = COLORS.GREEN;
-                    } else {
-                      if (currentNetwork.indexOf('AP') === -1) {
-                        appLED = COLORS.BLUE;
-                        // if (appDisconnectionPeriod === 30000 || isPairing()) {
-                        //   appLED = COLORS.BLUE;
-                        // } else {
-                        //   appLED = COLORS.PINK;
-                        //   repairNetworking(currentNetwork);
-                        // }
-                      } else {
-                        appLED = COLORS.YELLOW;
-                      }
-                    }
-                    updateLED(imgLED, gpsLED, appLED);
-                  },
-                );
+                let appLED = COLORS.RED;
+                if (appDisconnectionPeriod < 15000) {
+                  appLED = COLORS.GREEN;
+                } else {
+                  appLED = COLORS.YELLOW;
+                }
+                updateLED(imgLED, gpsLED, appLED);
               } catch (e: unknown) {
-                //
+                console.log(e);
               }
             },
           );

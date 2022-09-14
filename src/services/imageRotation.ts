@@ -1,5 +1,5 @@
 import { exec, ExecException } from 'child_process';
-import { IMAGER_CONFIG_PATH } from 'config';
+import { IMAGER_CONFIG_PATH, IMAGER_EMMC_CONFIG_PATH } from 'config';
 import { readFile, writeFile } from 'fs';
 import { IService } from 'types';
 
@@ -35,7 +35,7 @@ export const ImageRotationService: IService = {
 
                   try {
                     writeFile(
-                      IMAGER_CONFIG_PATH,
+                      IMAGER_EMMC_CONFIG_PATH,
                       JSON.stringify(config),
                       {
                         encoding: 'utf-8',

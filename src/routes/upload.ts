@@ -12,19 +12,27 @@ router.post('/', (req, res) => {
       const filename = data?.filename || 'upload.raucb';
       console.log(`Upload of '${filename}' started`);
       // Create a write stream of the new file
-      const fstream = createWriteStream(UPLOAD_PATH + filename);
-      // Pipe it trough
-      file.pipe(fstream);
+      try {
+        const fstream = createWriteStream(UPLOAD_PATH + filename);
+        // Pipe it trough
+        file.pipe(fstream);
 
-      // On finish of the upload
-      fstream.on('close', () => {
-        console.log(`Upload of '${filename}' finished`);
-        res.json({
-          output: 'done',
+        // On finish of the upload
+        fstream.on('close', () => {
+          console.log(`Upload of '${filename}' finished`);
+          res.json({
+            output: 'done',
+          });
         });
-      });
+      } catch (e: unknown) {
+        console.log(e);
+        res.json({
+          error: e,
+        });
+      }
     });
   } catch (e: unknown) {
+    console.log(e);
     res.json({
       error: e,
     });
