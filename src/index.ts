@@ -5,8 +5,10 @@ import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { ImageRotationService } from 'services/imageRotation';
-import { BootNetworkService } from 'services/bootNetwork';
 import { setSessionId } from 'util/index';
+import console_stamp from 'console-stamp';
+
+//import { BootNetworkService } from 'services/bootNetwork';
 // import { AssistNowService } from 'services/assistNow';
 
 export async function initAppServer() {
@@ -30,6 +32,13 @@ export async function initAppServer() {
   console.log(
     `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
   );
+
+  try {
+    // Setting up logger
+    console_stamp(console);
+  } catch (e: unknown) {
+    console.log(e);
+  }
 
   try {
     serviceRunner.add(HeartBeatService);

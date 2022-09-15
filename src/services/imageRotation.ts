@@ -35,7 +35,7 @@ export const ImageRotationService: IService = {
 
                   try {
                     writeFile(
-                      IMAGER_EMMC_CONFIG_PATH,
+                      IMAGER_CONFIG_PATH,
                       JSON.stringify(config),
                       {
                         encoding: 'utf-8',

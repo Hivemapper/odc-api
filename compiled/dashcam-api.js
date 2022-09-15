@@ -1,13 +1,13 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 1546:
+/***/ 3612:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateCameraConfig = exports.switchToAP = exports.switchToP2P = exports.updateFirmware = exports.configureOnBoot = exports.TMP_FILE_PATH = exports.NETWORK_CONFIG_PATH = exports.NETWORK_BOOT_CONFIG_PATH = exports.UPLOAD_PATH = exports.IMAGER_BRIDGE_PATH = exports.IMAGER_CONFIG_PATH = exports.IMAGER_EMMC_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
+exports.updateCameraConfig = exports.switchToAP = exports.switchToP2P = exports.updateFirmware = exports.configureOnBoot = exports.TMP_FILE_PATH = exports.NETWORK_CONFIG_PATH = exports.NETWORK_BOOT_CONFIG_PATH = exports.UPLOAD_PATH = exports.IMAGER_BRIDGE_PATH = exports.IMAGER_CONFIG_PATH = exports.IMAGER_EMMC_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.WEBSERVER_LOG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 const fs_1 = __nccwpck_require__(7147);
 exports.PORT = 5000;
@@ -17,6 +17,7 @@ exports.GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
 exports.IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
 exports.LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
 exports.BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
+exports.WEBSERVER_LOG_PATH = __dirname + '/../../../mnt/data/camera-node.log';
 exports.LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 exports.IMAGER_EMMC_CONFIG_PATH = __dirname + '/../../../opt/dashcam/bin/emmc_config.json';
 exports.IMAGER_CONFIG_PATH = __dirname + '/../../../opt/dashcam/bin/config.json';
@@ -133,11 +134,11 @@ const updateCameraConfig = (replaceLine, path) => {
     }
 };
 exports.updateCameraConfig = updateCameraConfig;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2NvbmZpZy9oZGMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQThEO0FBRTlELDJCQUErQjtBQUVsQixRQUFBLElBQUksR0FBRyxJQUFJLENBQUM7QUFDWixRQUFBLGFBQWEsR0FBRyxTQUFTLEdBQUcsb0JBQW9CLENBQUM7QUFDakQsUUFBQSxrQkFBa0IsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDMUQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLGdCQUFnQixHQUFHLFNBQVMsR0FBRyx5QkFBeUIsQ0FBQztBQUN6RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNEJBQTRCLENBQUM7QUFDM0QsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsdUJBQXVCLEdBQ2xDLFNBQVMsR0FBRyw0Q0FBNEMsQ0FBQztBQUM5QyxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcsdUNBQXVDLENBQUM7QUFDekMsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLHFDQUFxQyxDQUFDO0FBQ3ZDLFFBQUEsV0FBVyxHQUFHLFNBQVMsR0FBRyxnQkFBZ0IsQ0FBQztBQUMzQyxRQUFBLHdCQUF3QixHQUNuQyxTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxtQkFBbUIsR0FBRyxTQUFTLEdBQUcsc0JBQXNCLENBQUM7QUFDekQsUUFBQSxhQUFhLEdBQUcsbUJBQW1CLENBQUM7QUFFMUMsTUFBTSxlQUFlLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNuRSxJQUFJO1FBQ0YsMkNBQTJDO1FBQzNDLHVDQUF1QztRQUN2QyxtQkFBbUI7UUFDbkIsdUJBQXVCO1FBQ3ZCLHlC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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2NvbmZpZy9oZGMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQThEO0FBRTlELDJCQUErQjtBQUVsQixRQUFBLElBQUksR0FBRyxJQUFJLENBQUM7QUFDWixRQUFBLGFBQWEsR0FBRyxTQUFTLEdBQUcsb0JBQW9CLENBQUM7QUFDakQsUUFBQSxrQkFBa0IsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDMUQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLGdCQUFnQixHQUFHLFNBQVMsR0FBRyx5QkFBeUIsQ0FBQztBQUN6RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNEJBQTRCLENBQUM7QUFDM0QsUUFBQSxrQkFBa0IsR0FBRyxTQUFTLEdBQUcsb0NBQW9DLENBQUM7QUFDdEUsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsdUJBQXVCLEdBQ2xDLFNBQVMsR0FBRyw0Q0FBNEMsQ0FBQztBQUM5QyxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcsdUNBQXVDLENBQUM7QUFDekMsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLHFDQUFxQyxDQUFDO0FBQ3ZDLFFBQUEsV0FBVyxHQUFHLFNBQVMsR0FBRyxnQkFBZ0IsQ0FBQztBQUMzQyxRQUFBLHdCQUF3QixHQUNuQyxTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxtQkFBbUIsR0FBRyxTQUFTLEdBQUcsc0JBQXNCLENBQUM7QUFDekQsUUFBQSxhQUFhLEdBQUcsbUJBQW1CLENBQUM7QUFFMUMsTUFBTSxlQUFlLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNuRSxJQUFJO1FBQ0YsMkNBQTJDO1FB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
 
 /***/ }),
 
-/***/ 1806:
+/***/ 2635:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -158,13 +159,13 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.API_VERSION = void 0;
-__exportStar(__nccwpck_require__(1546), exports);
-exports.API_VERSION = '0.9.8';
+__exportStar(__nccwpck_require__(3612), exports);
+exports.API_VERSION = '0.9.9';
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZmlnL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsd0NBQXNCO0FBQ1QsUUFBQSxXQUFXLEdBQUcsT0FBTyxDQUFDIn0=
 
 /***/ }),
 
-/***/ 647:
+/***/ 6599:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -174,14 +175,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.initAppServer = void 0;
-const express_1 = __importDefault(__nccwpck_require__(7086));
-const routes_1 = __importDefault(__nccwpck_require__(4154));
-const connect_busboy_1 = __importDefault(__nccwpck_require__(4570));
-const config_1 = __nccwpck_require__(1806);
-const services_1 = __nccwpck_require__(669);
-const heartBeat_1 = __nccwpck_require__(6754);
-const imageRotation_1 = __nccwpck_require__(1242);
-const index_1 = __nccwpck_require__(5896);
+const express_1 = __importDefault(__nccwpck_require__(4682));
+const routes_1 = __importDefault(__nccwpck_require__(472));
+const connect_busboy_1 = __importDefault(__nccwpck_require__(2720));
+const config_1 = __nccwpck_require__(2635);
+const services_1 = __nccwpck_require__(225);
+const heartBeat_1 = __nccwpck_require__(4670);
+const imageRotation_1 = __nccwpck_require__(721);
+const index_1 = __nccwpck_require__(5042);
+const console_stamp_1 = __importDefault(__nccwpck_require__(951));
+//import { BootNetworkService } from 'services/bootNetwork';
 // import { AssistNowService } from 'services/assistNow';
 async function initAppServer() {
     const app = (0, express_1.default)();
@@ -198,6 +201,13 @@ async function initAppServer() {
     });
     console.log(`Dashcam API (process ${process.pid}) started and listening on ${config_1.PORT}`);
     try {
+        // Setting up logger
+        (0, console_stamp_1.default)(console);
+    }
+    catch (e) {
+        console.log(e);
+    }
+    try {
         services_1.serviceRunner.add(heartBeat_1.HeartBeatService);
         services_1.serviceRunner.add(imageRotation_1.ImageRotationService);
         // serviceRunner.add(BootNetworkService);
@@ -211,18 +221,18 @@ async function initAppServer() {
 }
 exports.initAppServer = initAppServer;
 initAppServer();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7O0FBQUEsc0RBQThCO0FBQzlCLHNEQUE4QjtBQUM5QixvRUFBb0M7QUFDcEMscUNBQStDO0FBQy9DLHVDQUF5QztBQUN6QyxrREFBc0Q7QUFDdEQsMERBQThEO0FBRTlELHNDQUEwQztBQUMxQyx5REFBeUQ7QUFFbEQsS0FBSyxVQUFVLGFBQWE7SUFDakMsTUFBTSxHQUFHLEdBQUcsSUFBQSxpQkFBTyxHQUFFLENBQUM7SUFFdEIsdURBQXVEO0lBQ3ZELEdBQUcsQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLGlCQUFPLENBQUMsTUFBTSxDQUFDLHNCQUFhLENBQUMsQ0FBQyxDQUFDO0lBQ2xELEdBQUcsQ0FBQyxHQUFHLENBQ0wsSUFBQSx3QkFBTSxFQUFDO1FBQ0wsYUFBYSxFQUFFLENBQUMsR0FBRyxJQUFJLEdBQUcsSUFBSSxFQUFFLGtCQUFrQjtLQUNuRCxDQUFDLENBQ0gsQ0FBQyxDQUFDLCtDQUErQztJQUNsRCxHQUFHLENBQUMsR0FBRyxDQUFDLGlCQUFPLENBQUMsSUFBSSxFQUFFLENBQUMsQ0FBQztJQUN4QixHQUFHLENBQUMsR0FBRyxDQUFDLGlCQUFPLENBQUMsVUFBVSxDQUFDLEVBQUUsUUFBUSxFQUFFLElBQUksRUFBRSxDQUFDLENBQUMsQ0FBQztJQUVoRCxHQUFHLENBQUMsR0FBRyxDQUFDLGdCQUFNLENBQUMsQ0FBQztJQUVoQixNQUFNLElBQUksT0FBTyxDQUFPLENBQUMsT0FBTyxFQUFFLE1BQU0sRUFBRSxFQUFFO1FBQzFDLEdBQUcsQ0FBQyxNQUFNLENBQUMsYUFBSSxFQUFFLE9BQU8sQ0FBQyxDQUFDO0lBQzVCLENBQUMsQ0FBQyxDQUFDO0lBQ0gsT0FBTyxDQUFDLEdBQUcsQ0FDVCx3QkFBd0IsT0FBTyxDQUFDLEdBQUcsOEJBQThCLGFBQUksRUFBRSxDQUN4RSxDQUFDO0lBRUYsSUFBSTtRQUNGLHdCQUFhLENBQUMsR0FBRyxDQUFDLDRCQUFnQixDQUFDLENBQUM7UUFDcEMsd0JBQWEsQ0FBQyxHQUFHLENBQUMsb0NBQW9CLENBQUMsQ0FBQztRQUN4Qyx5Q0FBeUM7UUFDekMsdUNBQXVDO1FBQ3ZDLHdCQUFhLENBQUMsR0FBRyxFQUFFLENBQUM7UUFDcEIsSUFBQSxvQkFBWSxHQUFFLENBQUM7S0FDaEI7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLHlCQUF5QixFQUFFLENBQUMsQ0FBQyxDQUFDO0tBQzNDO0FBQ0gsQ0FBQztBQWhDRCxzQ0FnQ0M7QUFFRCxhQUFhLEVBQUUsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7O0FBQUEsc0RBQThCO0FBQzlCLHNEQUE4QjtBQUM5QixvRUFBb0M7QUFDcEMscUNBQStDO0FBQy9DLHVDQUF5QztBQUN6QyxrREFBc0Q7QUFDdEQsMERBQThEO0FBQzlELHNDQUEwQztBQUMxQyxrRUFBMEM7QUFFMUMsNERBQTREO0FBQzVELHlEQUF5RDtBQUVsRCxLQUFLLFVBQVUsYUFBYTtJQUNqQyxNQUFNLEdBQUcsR0FBRyxJQUFBLGlCQUFPLEdBQUUsQ0FBQztJQUV0Qix1REFBdUQ7SUFDdkQsR0FBRyxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsaUJBQU8sQ0FBQyxNQUFNLENBQUMsc0JBQWEsQ0FBQyxDQUFDLENBQUM7SUFDbEQsR0FBRyxDQUFDLEdBQUcsQ0FDTCxJQUFBLHdCQUFNLEVBQUM7UUFDTCxhQUFhLEVBQUUsQ0FBQyxHQUFHLElBQUksR0FBRyxJQUFJLEVBQUUsa0JBQWtCO0tBQ25ELENBQUMsQ0FDSCxDQUFDLENBQUMsK0NBQStDO0lBQ2xELEdBQUcsQ0FBQyxHQUFHLENBQUMsaUJBQU8sQ0FBQyxJQUFJLEVBQUUsQ0FBQyxDQUFDO0lBQ3hCLEdBQUcsQ0FBQyxHQUFHLENBQUMsaUJBQU8sQ0FBQyxVQUFVLENBQUMsRUFBRSxRQUFRLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBRWhELEdBQUcsQ0FBQyxHQUFHLENBQUMsZ0JBQU0sQ0FBQyxDQUFDO0lBRWhCLE1BQU0sSUFBSSxPQUFPLENBQU8sQ0FBQyxPQUFPLEVBQUUsTUFBTSxFQUFFLEVBQUU7UUFDMUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxhQUFJLEVBQUUsT0FBTyxDQUFDLENBQUM7SUFDNUIsQ0FBQyxDQUFDLENBQUM7SUFDSCxPQUFPLENBQUMsR0FBRyxDQUNULHdCQUF3QixPQUFPLENBQUMsR0FBRyw4QkFBOEIsYUFBSSxFQUFFLENBQ3hFLENBQUM7SUFFRixJQUFJO1FBQ0Ysb0JBQW9CO1FBQ3BCLElBQUEsdUJBQWEsRUFBQyxPQUFPLENBQUMsQ0FBQztLQUN4QjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7S0FDaEI7SUFFRCxJQUFJO1FBQ0Ysd0JBQWEsQ0FBQyxHQUFHLENBQUMsNEJBQWdCLENBQUMsQ0FBQztRQUNwQyx3QkFBYSxDQUFDLEdBQUcsQ0FBQyxvQ0FBb0IsQ0FBQyxDQUFDO1FBQ3hDLHlDQUF5QztRQUN6Qyx1Q0FBdUM7UUFDdkMsd0JBQWEsQ0FBQyxHQUFHLEVBQUUsQ0FBQztRQUNwQixJQUFBLG9CQUFZLEdBQUUsQ0FBQztLQUNoQjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMseUJBQXlCLEVBQUUsQ0FBQyxDQUFDLENBQUM7S0FDM0M7QUFDSCxDQUFDO0FBdkNELHNDQXVDQztBQUVELGFBQWEsRUFBRSxDQUFDIn0=
 
 /***/ }),
 
-/***/ 4059:
+/***/ 1541:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const router = (0, express_1.Router)();
 router.post('/camera', async (req, res) => {
     try {
@@ -240,16 +250,16 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 2479:
+/***/ 3079:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const fs_1 = __nccwpck_require__(7147);
-const util_1 = __nccwpck_require__(5960);
+const util_1 = __nccwpck_require__(6797);
 const router = (0, express_1.Router)();
 router.get('/', async (req, res) => {
     try {
@@ -279,17 +289,17 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 4016:
+/***/ 1742:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const fs_1 = __nccwpck_require__(7147);
-const util_1 = __nccwpck_require__(5960);
-const heartBeat_1 = __nccwpck_require__(6754);
+const util_1 = __nccwpck_require__(6797);
+const heartBeat_1 = __nccwpck_require__(4670);
 const router = (0, express_1.Router)();
 router.get('/', async (req, res) => {
     try {
@@ -337,18 +347,18 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 608:
+/***/ 5917:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const fs_1 = __nccwpck_require__(7147);
 const child_process_1 = __nccwpck_require__(2081);
-const util_1 = __nccwpck_require__(5960);
-const heartBeat_1 = __nccwpck_require__(6754);
+const util_1 = __nccwpck_require__(6797);
+const heartBeat_1 = __nccwpck_require__(4670);
 const router = (0, express_1.Router)();
 let imuLogger;
 let timeStarted;
@@ -436,7 +446,7 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 4154:
+/***/ 472:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -445,23 +455,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const express_1 = __nccwpck_require__(7086);
+const express_1 = __nccwpck_require__(4682);
 const fs_1 = __nccwpck_require__(7147);
 const child_process_1 = __nccwpck_require__(2081);
-const config_1 = __nccwpck_require__(1806);
-const frames_1 = __importDefault(__nccwpck_require__(2479));
-const gps_1 = __importDefault(__nccwpck_require__(4016));
-const imu_1 = __importDefault(__nccwpck_require__(608));
-const lora_1 = __importDefault(__nccwpck_require__(8956));
-const upload_1 = __importDefault(__nccwpck_require__(5408));
-const ota_1 = __importDefault(__nccwpck_require__(2122));
-const network_1 = __importDefault(__nccwpck_require__(6873));
-const config_2 = __importDefault(__nccwpck_require__(4059));
-const kpi_1 = __importDefault(__nccwpck_require__(4583));
-const util_1 = __importDefault(__nccwpck_require__(8466));
-const heartBeat_1 = __nccwpck_require__(6754);
-const lock_1 = __nccwpck_require__(5609);
-const index_1 = __nccwpck_require__(5896);
+const config_1 = __nccwpck_require__(2635);
+const frames_1 = __importDefault(__nccwpck_require__(3079));
+const gps_1 = __importDefault(__nccwpck_require__(1742));
+const imu_1 = __importDefault(__nccwpck_require__(5917));
+const lora_1 = __importDefault(__nccwpck_require__(2436));
+const upload_1 = __importDefault(__nccwpck_require__(623));
+const ota_1 = __importDefault(__nccwpck_require__(9924));
+const network_1 = __importDefault(__nccwpck_require__(9138));
+const config_2 = __importDefault(__nccwpck_require__(1541));
+const kpi_1 = __importDefault(__nccwpck_require__(4276));
+const util_1 = __importDefault(__nccwpck_require__(8418));
+const heartBeat_1 = __nccwpck_require__(4670);
+const lock_1 = __nccwpck_require__(5765);
+const index_1 = __nccwpck_require__(5042);
 const router = (0, express_1.Router)();
 router.use('/api/1', router);
 router.use('/recordings', frames_1.default);
@@ -507,15 +517,36 @@ router.get('/locktime', (req, res) => {
 router.get('/time', (req, res) => {
     res.json(Date.now());
 });
+router.get('/log', async (req, res) => {
+    let log = '';
+    try {
+        log = (0, fs_1.readFileSync)(config_1.WEBSERVER_LOG_PATH, {
+            encoding: 'utf-8',
+        });
+        if (log) {
+            (0, fs_1.writeFileSync)(config_1.WEBSERVER_LOG_PATH, '', {
+                encoding: 'utf-8',
+            });
+        }
+    }
+    catch (error) {
+        console.log('Webserver Log file is missing');
+    }
+    res.json({
+        log
+    });
+});
 router.post('/cmd', async (req, res) => {
     try {
         (0, child_process_1.exec)(req.body.cmd, {
             encoding: 'utf-8',
         }, (error, stdout, stderr) => {
             if (error) {
+                console.log(error);
                 res.json({ error: stdout || stderr });
             }
             else {
+                console.log(stdout);
                 res.json({
                     output: stdout,
                 });
@@ -531,6 +562,7 @@ router.post('/cmd/sync', async (req, res) => {
         const output = (0, child_process_1.execSync)(req.body.cmd, {
             encoding: 'utf-8',
         });
+        console.log(output);
         res.json({
             output,
         });
@@ -540,17 +572,17 @@ router.post('/cmd/sync', async (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvcm91dGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscUNBQW9EO0FBQ3BELDJCQUFrQztBQUNsQyxpREFBK0M7QUFFL0Msc0NBQTBFO0FBQzFFLHNEQUFvQztBQUNwQyxnREFBOEI7QUFDOUIsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLHdEQUFzQztBQUN0QyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxrREFBdUQ7QUFDdkQsb0NBQXdDO0FBQ3hDLHNDQUEwQztBQUUxQyxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsR0FBRyxDQUFDLFFBQVEsRUFBRSxNQUFNLENBQUMsQ0FBQztBQUM3QixNQUFNLENBQUMsR0FBRyxDQUFDLGFBQWEsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDeEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsY0FBVSxDQUFDLENBQUM7QUFDaEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsZ0JBQVksQ0FBQyxDQUFDO0FBQ3BDLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxFQUFFLGFBQVMsQ0FBQyxDQUFDO0FBQzlCLE1BQU0sQ0FBQyxHQUFHLENBQUMsVUFBVSxFQUFFLGlCQUFhLENBQUMsQ0FBQztBQUN0QyxNQUFNLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDcEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFB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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvcm91dGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscUNBQW9EO0FBQ3BELDJCQUFpRDtBQUNqRCxpREFBK0M7QUFFL0Msc0NBQThGO0FBQzlGLHNEQUFvQztBQUNwQyxnREFBOEI7QUFDOUIsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLHdEQUFzQztBQUN0QyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxrREFBdUQ7QUFDdkQsb0NBQXdDO0FBQ3hDLHNDQUEwQztBQUUxQyxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsR0FBRyxDQUFDLFFBQVEsRUFBRSxNQUFNLENBQUMsQ0FBQztBQUM3QixNQUFNLENBQUMsR0FBRyxDQUFDLGFBQWEsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDeEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsY0FBVSxDQUFDLENBQUM7QUFDaEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsZ0JBQVksQ0FBQyxDQUFDO0FBQ3BDLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxFQUFFLGFBQVMsQ0FBQyxDQUFDO0FBQzlCLE1BQU0sQ0FBQyxHQUFHLENBQUMsVUFBVSxFQUFFLGlCQUFhLENBQUMsQ0FBQztBQUN0QyxNQUFNLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDcEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFB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
 
 /***/ }),
 
-/***/ 4583:
+/***/ 4276:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const express_1 = __nccwpck_require__(7086);
+const express_1 = __nccwpck_require__(4682);
 const router = (0, express_1.Router)();
 router.post('/drops', (req, res) => {
     // TBD, done via App for now
@@ -563,16 +595,16 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 8956:
+/***/ 2436:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const fs_1 = __nccwpck_require__(7147);
-const util_1 = __nccwpck_require__(5960);
+const util_1 = __nccwpck_require__(6797);
 const router = (0, express_1.Router)();
 router.get('/', async (req, res) => {
     try {
@@ -610,14 +642,14 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 6873:
+/***/ 9138:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const router = (0, express_1.Router)();
 router.get('/p2p', config_1.switchToP2P);
 router.get('/ap', config_1.switchToAP);
@@ -626,15 +658,15 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 2122:
+/***/ 9924:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
-const heartBeat_1 = __nccwpck_require__(6754);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
+const heartBeat_1 = __nccwpck_require__(4670);
 const router = (0, express_1.Router)();
 router.get('/', config_1.updateFirmware);
 router.get('/start', async (req, res) => {
@@ -654,14 +686,14 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 5408:
+/***/ 623:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
+const config_1 = __nccwpck_require__(2635);
+const express_1 = __nccwpck_require__(4682);
 const fs_1 = __nccwpck_require__(7147);
 const router = (0, express_1.Router)();
 router.post('/', (req, res) => {
@@ -703,13 +735,13 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 8466:
+/***/ 8418:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const express_1 = __nccwpck_require__(7086);
+const express_1 = __nccwpck_require__(4682);
 const child_process_1 = __nccwpck_require__(2081);
 const router = (0, express_1.Router)();
 router.post('/camera/stop', (req, res) => {
@@ -782,14 +814,14 @@ exports["default"] = router;
 
 /***/ }),
 
-/***/ 5960:
+/***/ 6797:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.checkIfUpsideDown = exports.filterBySinceUntil = exports.getSessionId = exports.setSessionId = exports.getDateFromUnicodeTimastamp = exports.getDateFromFilename = void 0;
-const shortid_1 = __nccwpck_require__(8777);
+const shortid_1 = __nccwpck_require__(8453);
 let sessionId;
 const getDateFromFilename = (filename) => {
     try {
@@ -843,7 +875,7 @@ exports.checkIfUpsideDown = checkIfUpsideDown;
 
 /***/ }),
 
-/***/ 9993:
+/***/ 5905:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -861,8 +893,8 @@ exports.checkIfUpsideDown = checkIfUpsideDown;
  * @private
  */
 
-var Negotiator = __nccwpck_require__(4522)
-var mime = __nccwpck_require__(2277)
+var Negotiator = __nccwpck_require__(7090)
+var mime = __nccwpck_require__(5160)
 
 /**
  * Module exports.
@@ -1089,7 +1121,7 @@ function validMime (type) {
 
 /***/ }),
 
-/***/ 5712:
+/***/ 8732:
 /***/ ((module) => {
 
 "use strict";
@@ -1161,7 +1193,7 @@ function arrayFlatten (array, depth) {
 
 /***/ }),
 
-/***/ 951:
+/***/ 6517:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1178,7 +1210,7 @@ function arrayFlatten (array, depth) {
  * @private
  */
 
-var deprecate = __nccwpck_require__(6192)('body-parser')
+var deprecate = __nccwpck_require__(8087)('body-parser')
 
 /**
  * Cache of loaded parsers.
@@ -1306,16 +1338,16 @@ function loadParser (parserName) {
   // this uses a switch for static require analysis
   switch (parserName) {
     case 'json':
-      parser = __nccwpck_require__(2023)
+      parser = __nccwpck_require__(4413)
       break
     case 'raw':
-      parser = __nccwpck_require__(4658)
+      parser = __nccwpck_require__(2796)
       break
     case 'text':
-      parser = __nccwpck_require__(7358)
+      parser = __nccwpck_require__(738)
       break
     case 'urlencoded':
-      parser = __nccwpck_require__(1922)
+      parser = __nccwpck_require__(2747)
       break
   }
 
@@ -1326,7 +1358,7 @@ function loadParser (parserName) {
 
 /***/ }),
 
-/***/ 3588:
+/***/ 999:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1343,12 +1375,12 @@ function loadParser (parserName) {
  * @private
  */
 
-var createError = __nccwpck_require__(3086)
-var destroy = __nccwpck_require__(8849)
-var getBody = __nccwpck_require__(653)
-var iconv = __nccwpck_require__(6411)
-var onFinished = __nccwpck_require__(6990)
-var unpipe = __nccwpck_require__(1913)
+var createError = __nccwpck_require__(9257)
+var destroy = __nccwpck_require__(7918)
+var getBody = __nccwpck_require__(4331)
+var iconv = __nccwpck_require__(1670)
+var onFinished = __nccwpck_require__(7703)
+var unpipe = __nccwpck_require__(1224)
 var zlib = __nccwpck_require__(9796)
 
 /**
@@ -1539,7 +1571,7 @@ function dump (req, callback) {
 
 /***/ }),
 
-/***/ 2023:
+/***/ 4413:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1557,12 +1589,12 @@ function dump (req, callback) {
  * @private
  */
 
-var bytes = __nccwpck_require__(1856)
-var contentType = __nccwpck_require__(8220)
-var createError = __nccwpck_require__(3086)
-var debug = __nccwpck_require__(5700)('body-parser:json')
-var read = __nccwpck_require__(3588)
-var typeis = __nccwpck_require__(7138)
+var bytes = __nccwpck_require__(8100)
+var contentType = __nccwpck_require__(3855)
+var createError = __nccwpck_require__(9257)
+var debug = __nccwpck_require__(5775)('body-parser:json')
+var read = __nccwpck_require__(999)
+var typeis = __nccwpck_require__(8177)
 
 /**
  * Module exports.
@@ -1783,7 +1815,7 @@ function typeChecker (type) {
 
 /***/ }),
 
-/***/ 4658:
+/***/ 2796:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1799,10 +1831,10 @@ function typeChecker (type) {
  * Module dependencies.
  */
 
-var bytes = __nccwpck_require__(1856)
-var debug = __nccwpck_require__(5700)('body-parser:raw')
-var read = __nccwpck_require__(3588)
-var typeis = __nccwpck_require__(7138)
+var bytes = __nccwpck_require__(8100)
+var debug = __nccwpck_require__(5775)('body-parser:raw')
+var read = __nccwpck_require__(999)
+var typeis = __nccwpck_require__(8177)
 
 /**
  * Module exports.
@@ -1892,7 +1924,7 @@ function typeChecker (type) {
 
 /***/ }),
 
-/***/ 7358:
+/***/ 738:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -1908,11 +1940,11 @@ function typeChecker (type) {
  * Module dependencies.
  */
 
-var bytes = __nccwpck_require__(1856)
-var contentType = __nccwpck_require__(8220)
-var debug = __nccwpck_require__(5700)('body-parser:text')
-var read = __nccwpck_require__(3588)
-var typeis = __nccwpck_require__(7138)
+var bytes = __nccwpck_require__(8100)
+var contentType = __nccwpck_require__(3855)
+var debug = __nccwpck_require__(5775)('body-parser:text')
+var read = __nccwpck_require__(999)
+var typeis = __nccwpck_require__(8177)
 
 /**
  * Module exports.
@@ -2021,7 +2053,7 @@ function typeChecker (type) {
 
 /***/ }),
 
-/***/ 1922:
+/***/ 2747:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2039,13 +2071,13 @@ function typeChecker (type) {
  * @private
  */
 
-var bytes = __nccwpck_require__(1856)
-var contentType = __nccwpck_require__(8220)
-var createError = __nccwpck_require__(3086)
-var debug = __nccwpck_require__(5700)('body-parser:urlencoded')
-var deprecate = __nccwpck_require__(6192)('body-parser')
-var read = __nccwpck_require__(3588)
-var typeis = __nccwpck_require__(7138)
+var bytes = __nccwpck_require__(8100)
+var contentType = __nccwpck_require__(3855)
+var createError = __nccwpck_require__(9257)
+var debug = __nccwpck_require__(5775)('body-parser:urlencoded')
+var deprecate = __nccwpck_require__(8087)('body-parser')
+var read = __nccwpck_require__(999)
+var typeis = __nccwpck_require__(8177)
 
 /**
  * Module exports.
@@ -2249,7 +2281,7 @@ function parser (name) {
   // this uses a switch for static require analysis
   switch (name) {
     case 'qs':
-      mod = __nccwpck_require__(5638)
+      mod = __nccwpck_require__(5553)
       break
     case 'querystring':
       mod = __nccwpck_require__(3477)
@@ -2313,7 +2345,7 @@ function typeChecker (type) {
 
 /***/ }),
 
-/***/ 1519:
+/***/ 7492:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -2322,7 +2354,7 @@ function typeChecker (type) {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(9963);
+exports = module.exports = __nccwpck_require__(6729);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -2505,7 +2537,7 @@ function localstorage() {
 
 /***/ }),
 
-/***/ 9963:
+/***/ 6729:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 
@@ -2521,7 +2553,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = __nccwpck_require__(5282);
+exports.humanize = __nccwpck_require__(4481);
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -2714,7 +2746,7 @@ function coerce(val) {
 
 /***/ }),
 
-/***/ 5700:
+/***/ 5775:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -2723,15 +2755,15 @@ function coerce(val) {
  */
 
 if (typeof process !== 'undefined' && process.type === 'renderer') {
-  module.exports = __nccwpck_require__(1519);
+  module.exports = __nccwpck_require__(7492);
 } else {
-  module.exports = __nccwpck_require__(6894);
+  module.exports = __nccwpck_require__(7244);
 }
 
 
 /***/ }),
 
-/***/ 6894:
+/***/ 7244:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -2747,7 +2779,7 @@ var util = __nccwpck_require__(3837);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(9963);
+exports = module.exports = __nccwpck_require__(6729);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -2986,7 +3018,7 @@ exports.enable(load());
 
 /***/ }),
 
-/***/ 5282:
+/***/ 4481:
 /***/ ((module) => {
 
 /**
@@ -3145,13 +3177,13 @@ function plural(ms, n, name) {
 
 /***/ }),
 
-/***/ 7182:
+/***/ 5052:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { parseContentType } = __nccwpck_require__(2584);
+const { parseContentType } = __nccwpck_require__(6002);
 
 function getInstance(cfg) {
   const headers = cfg.headers;
@@ -3190,8 +3222,8 @@ function getInstance(cfg) {
 // Note: types are explicitly listed here for easier bundling
 // See: https://github.com/mscdex/busboy/issues/121
 const TYPES = [
-  __nccwpck_require__(7905),
-  __nccwpck_require__(5676),
+  __nccwpck_require__(5725),
+  __nccwpck_require__(1724),
 ].filter(function(typemod) { return typeof typemod.detect === 'function'; });
 
 module.exports = (cfg) => {
@@ -3210,7 +3242,7 @@ module.exports = (cfg) => {
 
 /***/ }),
 
-/***/ 7905:
+/***/ 5725:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -3218,7 +3250,7 @@ module.exports = (cfg) => {
 
 const { Readable, Writable } = __nccwpck_require__(2781);
 
-const StreamSearch = __nccwpck_require__(4187);
+const StreamSearch = __nccwpck_require__(5581);
 
 const {
   basename,
@@ -3226,7 +3258,7 @@ const {
   getDecoder,
   parseContentType,
   parseDisposition,
-} = __nccwpck_require__(2584);
+} = __nccwpck_require__(6002);
 
 const BUF_CRLF = Buffer.from('\r\n');
 const BUF_CR = Buffer.from('\r');
@@ -3871,7 +3903,7 @@ module.exports = Multipart;
 
 /***/ }),
 
-/***/ 5676:
+/***/ 1724:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -3879,7 +3911,7 @@ module.exports = Multipart;
 
 const { Writable } = __nccwpck_require__(2781);
 
-const { getDecoder } = __nccwpck_require__(2584);
+const { getDecoder } = __nccwpck_require__(6002);
 
 class URLEncoded extends Writable {
   constructor(cfg) {
@@ -4229,7 +4261,7 @@ module.exports = URLEncoded;
 
 /***/ }),
 
-/***/ 2584:
+/***/ 6002:
 /***/ (function(module) {
 
 "use strict";
@@ -4833,7 +4865,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1856:
+/***/ 8100:
 /***/ ((module) => {
 
 "use strict";
@@ -5011,15 +5043,15 @@ function parse(val) {
 
 /***/ }),
 
-/***/ 8396:
+/***/ 9307:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var GetIntrinsic = __nccwpck_require__(4527);
+var GetIntrinsic = __nccwpck_require__(1658);
 
-var callBind = __nccwpck_require__(9799);
+var callBind = __nccwpck_require__(839);
 
 var $indexOf = callBind(GetIntrinsic('String.prototype.indexOf'));
 
@@ -5034,14 +5066,14 @@ module.exports = function callBoundIntrinsic(name, allowMissing) {
 
 /***/ }),
 
-/***/ 9799:
+/***/ 839:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var bind = __nccwpck_require__(353);
-var GetIntrinsic = __nccwpck_require__(4527);
+var bind = __nccwpck_require__(2144);
+var GetIntrinsic = __nccwpck_require__(1658);
 
 var $apply = GetIntrinsic('%Function.prototype.apply%');
 var $call = GetIntrinsic('%Function.prototype.call%');
@@ -5089,13 +5121,13 @@ if ($defineProperty) {
 
 /***/ }),
 
-/***/ 4570:
+/***/ 2720:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const busboy = __nccwpck_require__(7182);
+const busboy = __nccwpck_require__(5052);
 
 const RE_MIME = /^(?:multipart\/.+)|(?:application\/x-www-form-urlencoded)$/i;
 
@@ -5143,7 +5175,2213 @@ function mime(req) {
 
 /***/ }),
 
-/***/ 8423:
+/***/ 951:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const { checkLogLevel, generateConfig, generatePrefix, selectOutputStream, FakeStream } = __nccwpck_require__( 2489 );
+let consoleStamp = ( con, options = {} ) => {
+
+    if ( con.__patched ) {
+        con.reset();
+    }
+
+    const isCustom = con !== console;
+    const customConsoleStream = new FakeStream();
+    const customConsole = new console.Console( customConsoleStream, customConsoleStream );
+
+    // Fix the lack of debug alias in pre 8.0 node
+    if ( typeof con.debug === "undefined" ) {
+        con.debug = ( ...arg ) => con.org.log ? con.org.log( ...arg ) : con.log( ...arg );
+    }
+
+    const config = generateConfig( options );
+    const include = config.include.filter( m => typeof con[m] === 'function' );
+
+    const helperConsole = new console.Console( config.stdout, config.stderr );
+    const org = {};
+    Object.keys( con ).forEach( m => org[m] = con[m] );
+    con.org = org;
+
+    include.forEach( method => {
+        const stream = selectOutputStream( method, config );
+        const trg = con[method];
+
+        con[method] = new Proxy( trg, {
+            apply: ( target, context, args ) => {
+                if ( checkLogLevel( config, method ) ) {
+                    customConsole.log.apply( context, args );
+                    stream.write( `${generatePrefix( method, config, customConsoleStream.last_msg )} ` );
+                    if ( config.preventDefaultMessage || /:msg\b/.test( config.format ) ) {
+                        stream.write('\n');
+                    }else if(method === 'table'){
+                        stream.write('\n');
+                        // Normaly table calls log to write to stream, so we need to prevent double prefix
+                        helperConsole.table.apply( context, args);
+                    }else if( !isCustom && options.stdout){
+                        stream.write(`${customConsoleStream.last_msg}\n`);
+                    } else {
+                        target.apply( context, args );
+                    }
+                }
+            }
+        } );
+
+        con.__patched = true
+    } );
+
+    if(!include.includes('table')) {
+        // Normaly table calls log to write to stream, we need to prevent prefix when table is not included
+        con.table = helperConsole.table;
+    }
+
+    con.reset = () => {
+        Object.keys( con.org ).forEach( m => {
+            con[m] = con.org[m];
+            delete con.org[m];
+        } );
+        delete con.org;
+        delete con.__patched;
+        delete con.reset;
+        customConsoleStream.end();
+    };
+
+};
+
+module.exports = consoleStamp;
+module.exports["default"] = consoleStamp;
+
+
+/***/ }),
+
+/***/ 5977:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const date = __nccwpck_require__( 4305 );
+const { label } = __nccwpck_require__( 5312 );
+const msg = __nccwpck_require__( 7151 );
+
+module.exports = {
+    format: '',
+    dfFormat: ':date($$) :label(7)',
+    dfDateFormat: 'dd.mm.yyyy HH:MM.ss.l',
+    include: ['debug', 'log', 'info', 'warn', 'error'],
+    tokens: {
+        date,
+        label,
+        msg
+    },
+    level: 'log',
+    levels: {
+        error: 1,
+        warn: 2,
+        info: 3,
+        log: 4,
+        debug: 4,
+    },
+    extend: {},
+    groupCount: 0,
+    preventDefaultMessage: false,
+};
+
+
+/***/ }),
+
+/***/ 2489:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const df = __nccwpck_require__( 5977 );
+const chalk = __nccwpck_require__( 1278 );
+const { Writable } = __nccwpck_require__( 2781 );
+
+function checkLogLevel( { levels, level }, method ) {
+    return levels[level] >= levels[method];
+}
+
+function parseParams( str = '' ) {
+    return str
+        .replace( /[()"']*/g, '' )
+        .split( ',' )
+        .map( s => s.trim() )
+        .filter( s => s !== '' )
+        .map( s => isNaN( +s ) ? s : +s );
+}
+
+function generateConfig( options ) {
+
+    if ( typeof options === 'string' ) {
+        options = {
+            format: df.dfFormat.replace( '$$', options )
+        }
+    }
+
+    // Using Object.assign and not Object spread properties to support Node v6.4
+    const config = Object.assign( {}, df, options || {}, {
+        format: typeof options.format === 'undefined' ? df.dfFormat.replace( '$$', df.dfDateFormat ) : options.format,
+        include: [...( new Set( [...( options.include || df.include ), ...Object.keys( options.extend || {} )] ) )],
+        tokens: Object.assign( {}, df.tokens, options.tokens || {} ),
+        levels: Object.assign( {}, df.levels, options.levels || {}, options.extend || {} ),
+        stdout: options.stdout || process.stdout,
+        stderr: options.stderr || options.stdout || process.stderr
+    } );
+
+    config.tokensKeys = Object.keys( config.tokens );
+    config.defaultTokens = df.tokens;
+
+    return config;
+}
+
+function generatePrefix( method, { tokens, defaultTokens, format: prefix, tokensKeys }, msg ) {
+    tokensKeys
+        .sort( ( a, b ) => b.length - a.length )
+        .forEach( key => {
+            const token = tokens[key];
+            const re = new RegExp( `:${key}(\\([^)]*\\))?(\\.\\w+)*`, 'g' );
+            prefix = prefix.replace( re, ( match, params ) => {
+                let ret = token( { method, defaultTokens, params: parseParams( params ), tokens, msg } );
+                match.replace( params, '' ).split( '.' ).slice( 1 ).forEach( decorator => {
+                    ret = chalk`{${decorator} ${ret}}`;
+                } );
+
+                return ret;
+            } );
+        } );
+
+    // Color groups
+    const rec = /(\([^)]*\))(\.\w+)+/g;
+    prefix = prefix.replace( rec, ( match, text ) => {
+        let ret = text.replace( /[\(\)]/g, '' );
+        match.replace( text, '' ).split( '.' ).slice( 1 ).forEach( decorator => {
+            ret = chalk`{${decorator} ${ret}}`;
+        } );
+        return ret;
+    } )
+    return prefix;
+}
+
+function selectOutputStream( method, { levels, stdout, stderr } ) {
+    return levels[method] <= 2 ? stderr : stdout;
+}
+
+class FakeStream extends Writable {
+    constructor() {
+        super();
+        this._last_message = '';
+    }
+
+    get last_msg() {
+        return this._last_message.replace( /\n$/, '' );
+    }
+
+    _write( chunk, enc, cb ) {
+        this._last_message = chunk.toString();
+        cb();
+    }
+}
+
+module.exports = {
+    checkLogLevel,
+    parseParams,
+    generateConfig,
+    generatePrefix,
+    selectOutputStream,
+    FakeStream
+};
+
+
+/***/ }),
+
+/***/ 4903:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+/* module decorator */ module = __nccwpck_require__.nmd(module);
+
+
+const wrapAnsi16 = (fn, offset) => (...args) => {
+	const code = fn(...args);
+	return `\u001B[${code + offset}m`;
+};
+
+const wrapAnsi256 = (fn, offset) => (...args) => {
+	const code = fn(...args);
+	return `\u001B[${38 + offset};5;${code}m`;
+};
+
+const wrapAnsi16m = (fn, offset) => (...args) => {
+	const rgb = fn(...args);
+	return `\u001B[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
+};
+
+const ansi2ansi = n => n;
+const rgb2rgb = (r, g, b) => [r, g, b];
+
+const setLazyProperty = (object, property, get) => {
+	Object.defineProperty(object, property, {
+		get: () => {
+			const value = get();
+
+			Object.defineProperty(object, property, {
+				value,
+				enumerable: true,
+				configurable: true
+			});
+
+			return value;
+		},
+		enumerable: true,
+		configurable: true
+	});
+};
+
+/** @type {typeof import('color-convert')} */
+let colorConvert;
+const makeDynamicStyles = (wrap, targetSpace, identity, isBackground) => {
+	if (colorConvert === undefined) {
+		colorConvert = __nccwpck_require__(5837);
+	}
+
+	const offset = isBackground ? 10 : 0;
+	const styles = {};
+
+	for (const [sourceSpace, suite] of Object.entries(colorConvert)) {
+		const name = sourceSpace === 'ansi16' ? 'ansi' : sourceSpace;
+		if (sourceSpace === targetSpace) {
+			styles[name] = wrap(identity, offset);
+		} else if (typeof suite === 'object') {
+			styles[name] = wrap(suite[targetSpace], offset);
+		}
+	}
+
+	return styles;
+};
+
+function assembleStyles() {
+	const codes = new Map();
+	const styles = {
+		modifier: {
+			reset: [0, 0],
+			// 21 isn't widely supported and 22 does the same thing
+			bold: [1, 22],
+			dim: [2, 22],
+			italic: [3, 23],
+			underline: [4, 24],
+			inverse: [7, 27],
+			hidden: [8, 28],
+			strikethrough: [9, 29]
+		},
+		color: {
+			black: [30, 39],
+			red: [31, 39],
+			green: [32, 39],
+			yellow: [33, 39],
+			blue: [34, 39],
+			magenta: [35, 39],
+			cyan: [36, 39],
+			white: [37, 39],
+
+			// Bright color
+			blackBright: [90, 39],
+			redBright: [91, 39],
+			greenBright: [92, 39],
+			yellowBright: [93, 39],
+			blueBright: [94, 39],
+			magentaBright: [95, 39],
+			cyanBright: [96, 39],
+			whiteBright: [97, 39]
+		},
+		bgColor: {
+			bgBlack: [40, 49],
+			bgRed: [41, 49],
+			bgGreen: [42, 49],
+			bgYellow: [43, 49],
+			bgBlue: [44, 49],
+			bgMagenta: [45, 49],
+			bgCyan: [46, 49],
+			bgWhite: [47, 49],
+
+			// Bright color
+			bgBlackBright: [100, 49],
+			bgRedBright: [101, 49],
+			bgGreenBright: [102, 49],
+			bgYellowBright: [103, 49],
+			bgBlueBright: [104, 49],
+			bgMagentaBright: [105, 49],
+			bgCyanBright: [106, 49],
+			bgWhiteBright: [107, 49]
+		}
+	};
+
+	// Alias bright black as gray (and grey)
+	styles.color.gray = styles.color.blackBright;
+	styles.bgColor.bgGray = styles.bgColor.bgBlackBright;
+	styles.color.grey = styles.color.blackBright;
+	styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
+
+	for (const [groupName, group] of Object.entries(styles)) {
+		for (const [styleName, style] of Object.entries(group)) {
+			styles[styleName] = {
+				open: `\u001B[${style[0]}m`,
+				close: `\u001B[${style[1]}m`
+			};
+
+			group[styleName] = styles[styleName];
+
+			codes.set(style[0], style[1]);
+		}
+
+		Object.defineProperty(styles, groupName, {
+			value: group,
+			enumerable: false
+		});
+	}
+
+	Object.defineProperty(styles, 'codes', {
+		value: codes,
+		enumerable: false
+	});
+
+	styles.color.close = '\u001B[39m';
+	styles.bgColor.close = '\u001B[49m';
+
+	setLazyProperty(styles.color, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, false));
+	setLazyProperty(styles.color, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, false));
+	setLazyProperty(styles.color, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, false));
+	setLazyProperty(styles.bgColor, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, true));
+	setLazyProperty(styles.bgColor, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, true));
+	setLazyProperty(styles.bgColor, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, true));
+
+	return styles;
+}
+
+// Make the export immutable
+Object.defineProperty(module, 'exports', {
+	enumerable: true,
+	get: assembleStyles
+});
+
+
+/***/ }),
+
+/***/ 1278:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ansiStyles = __nccwpck_require__(4903);
+const {stdout: stdoutColor, stderr: stderrColor} = __nccwpck_require__(9590);
+const {
+	stringReplaceAll,
+	stringEncaseCRLFWithFirstIndex
+} = __nccwpck_require__(3088);
+
+const {isArray} = Array;
+
+// `supportsColor.level` → `ansiStyles.color[name]` mapping
+const levelMapping = [
+	'ansi',
+	'ansi',
+	'ansi256',
+	'ansi16m'
+];
+
+const styles = Object.create(null);
+
+const applyOptions = (object, options = {}) => {
+	if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
+		throw new Error('The `level` option should be an integer from 0 to 3');
+	}
+
+	// Detect level if not set manually
+	const colorLevel = stdoutColor ? stdoutColor.level : 0;
+	object.level = options.level === undefined ? colorLevel : options.level;
+};
+
+class ChalkClass {
+	constructor(options) {
+		// eslint-disable-next-line no-constructor-return
+		return chalkFactory(options);
+	}
+}
+
+const chalkFactory = options => {
+	const chalk = {};
+	applyOptions(chalk, options);
+
+	chalk.template = (...arguments_) => chalkTag(chalk.template, ...arguments_);
+
+	Object.setPrototypeOf(chalk, Chalk.prototype);
+	Object.setPrototypeOf(chalk.template, chalk);
+
+	chalk.template.constructor = () => {
+		throw new Error('`chalk.constructor()` is deprecated. Use `new chalk.Instance()` instead.');
+	};
+
+	chalk.template.Instance = ChalkClass;
+
+	return chalk.template;
+};
+
+function Chalk(options) {
+	return chalkFactory(options);
+}
+
+for (const [styleName, style] of Object.entries(ansiStyles)) {
+	styles[styleName] = {
+		get() {
+			const builder = createBuilder(this, createStyler(style.open, style.close, this._styler), this._isEmpty);
+			Object.defineProperty(this, styleName, {value: builder});
+			return builder;
+		}
+	};
+}
+
+styles.visible = {
+	get() {
+		const builder = createBuilder(this, this._styler, true);
+		Object.defineProperty(this, 'visible', {value: builder});
+		return builder;
+	}
+};
+
+const usedModels = ['rgb', 'hex', 'keyword', 'hsl', 'hsv', 'hwb', 'ansi', 'ansi256'];
+
+for (const model of usedModels) {
+	styles[model] = {
+		get() {
+			const {level} = this;
+			return function (...arguments_) {
+				const styler = createStyler(ansiStyles.color[levelMapping[level]][model](...arguments_), ansiStyles.color.close, this._styler);
+				return createBuilder(this, styler, this._isEmpty);
+			};
+		}
+	};
+}
+
+for (const model of usedModels) {
+	const bgModel = 'bg' + model[0].toUpperCase() + model.slice(1);
+	styles[bgModel] = {
+		get() {
+			const {level} = this;
+			return function (...arguments_) {
+				const styler = createStyler(ansiStyles.bgColor[levelMapping[level]][model](...arguments_), ansiStyles.bgColor.close, this._styler);
+				return createBuilder(this, styler, this._isEmpty);
+			};
+		}
+	};
+}
+
+const proto = Object.defineProperties(() => {}, {
+	...styles,
+	level: {
+		enumerable: true,
+		get() {
+			return this._generator.level;
+		},
+		set(level) {
+			this._generator.level = level;
+		}
+	}
+});
+
+const createStyler = (open, close, parent) => {
+	let openAll;
+	let closeAll;
+	if (parent === undefined) {
+		openAll = open;
+		closeAll = close;
+	} else {
+		openAll = parent.openAll + open;
+		closeAll = close + parent.closeAll;
+	}
+
+	return {
+		open,
+		close,
+		openAll,
+		closeAll,
+		parent
+	};
+};
+
+const createBuilder = (self, _styler, _isEmpty) => {
+	const builder = (...arguments_) => {
+		if (isArray(arguments_[0]) && isArray(arguments_[0].raw)) {
+			// Called as a template literal, for example: chalk.red`2 + 3 = {bold ${2+3}}`
+			return applyStyle(builder, chalkTag(builder, ...arguments_));
+		}
+
+		// Single argument is hot path, implicit coercion is faster than anything
+		// eslint-disable-next-line no-implicit-coercion
+		return applyStyle(builder, (arguments_.length === 1) ? ('' + arguments_[0]) : arguments_.join(' '));
+	};
+
+	// We alter the prototype because we must return a function, but there is
+	// no way to create a function with a different prototype
+	Object.setPrototypeOf(builder, proto);
+
+	builder._generator = self;
+	builder._styler = _styler;
+	builder._isEmpty = _isEmpty;
+
+	return builder;
+};
+
+const applyStyle = (self, string) => {
+	if (self.level <= 0 || !string) {
+		return self._isEmpty ? '' : string;
+	}
+
+	let styler = self._styler;
+
+	if (styler === undefined) {
+		return string;
+	}
+
+	const {openAll, closeAll} = styler;
+	if (string.indexOf('\u001B') !== -1) {
+		while (styler !== undefined) {
+			// Replace any instances already present with a re-opening code
+			// otherwise only the part of the string until said closing code
+			// will be colored, and the rest will simply be 'plain'.
+			string = stringReplaceAll(string, styler.close, styler.open);
+
+			styler = styler.parent;
+		}
+	}
+
+	// We can move both next actions out of loop, because remaining actions in loop won't have
+	// any/visible effect on parts we add here. Close the styling before a linebreak and reopen
+	// after next line to fix a bleed issue on macOS: https://github.com/chalk/chalk/pull/92
+	const lfIndex = string.indexOf('\n');
+	if (lfIndex !== -1) {
+		string = stringEncaseCRLFWithFirstIndex(string, closeAll, openAll, lfIndex);
+	}
+
+	return openAll + string + closeAll;
+};
+
+let template;
+const chalkTag = (chalk, ...strings) => {
+	const [firstString] = strings;
+
+	if (!isArray(firstString) || !isArray(firstString.raw)) {
+		// If chalk() was called by itself or with a string,
+		// return the string itself as a string.
+		return strings.join(' ');
+	}
+
+	const arguments_ = strings.slice(1);
+	const parts = [firstString.raw[0]];
+
+	for (let i = 1; i < firstString.length; i++) {
+		parts.push(
+			String(arguments_[i - 1]).replace(/[{}\\]/g, '\\$&'),
+			String(firstString.raw[i])
+		);
+	}
+
+	if (template === undefined) {
+		template = __nccwpck_require__(933);
+	}
+
+	return template(chalk, parts.join(''));
+};
+
+Object.defineProperties(Chalk.prototype, styles);
+
+const chalk = Chalk(); // eslint-disable-line new-cap
+chalk.supportsColor = stdoutColor;
+chalk.stderr = Chalk({level: stderrColor ? stderrColor.level : 0}); // eslint-disable-line new-cap
+chalk.stderr.supportsColor = stderrColor;
+
+module.exports = chalk;
+
+
+/***/ }),
+
+/***/ 933:
+/***/ ((module) => {
+
+"use strict";
+
+const TEMPLATE_REGEX = /(?:\\(u(?:[a-f\d]{4}|\{[a-f\d]{1,6}\})|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;
+const STYLE_REGEX = /(?:^|\.)(\w+)(?:\(([^)]*)\))?/g;
+const STRING_REGEX = /^(['"])((?:\\.|(?!\1)[^\\])*)\1$/;
+const ESCAPE_REGEX = /\\(u(?:[a-f\d]{4}|{[a-f\d]{1,6}})|x[a-f\d]{2}|.)|([^\\])/gi;
+
+const ESCAPES = new Map([
+	['n', '\n'],
+	['r', '\r'],
+	['t', '\t'],
+	['b', '\b'],
+	['f', '\f'],
+	['v', '\v'],
+	['0', '\0'],
+	['\\', '\\'],
+	['e', '\u001B'],
+	['a', '\u0007']
+]);
+
+function unescape(c) {
+	const u = c[0] === 'u';
+	const bracket = c[1] === '{';
+
+	if ((u && !bracket && c.length === 5) || (c[0] === 'x' && c.length === 3)) {
+		return String.fromCharCode(parseInt(c.slice(1), 16));
+	}
+
+	if (u && bracket) {
+		return String.fromCodePoint(parseInt(c.slice(2, -1), 16));
+	}
+
+	return ESCAPES.get(c) || c;
+}
+
+function parseArguments(name, arguments_) {
+	const results = [];
+	const chunks = arguments_.trim().split(/\s*,\s*/g);
+	let matches;
+
+	for (const chunk of chunks) {
+		const number = Number(chunk);
+		if (!Number.isNaN(number)) {
+			results.push(number);
+		} else if ((matches = chunk.match(STRING_REGEX))) {
+			results.push(matches[2].replace(ESCAPE_REGEX, (m, escape, character) => escape ? unescape(escape) : character));
+		} else {
+			throw new Error(`Invalid Chalk template style argument: ${chunk} (in style '${name}')`);
+		}
+	}
+
+	return results;
+}
+
+function parseStyle(style) {
+	STYLE_REGEX.lastIndex = 0;
+
+	const results = [];
+	let matches;
+
+	while ((matches = STYLE_REGEX.exec(style)) !== null) {
+		const name = matches[1];
+
+		if (matches[2]) {
+			const args = parseArguments(name, matches[2]);
+			results.push([name].concat(args));
+		} else {
+			results.push([name]);
+		}
+	}
+
+	return results;
+}
+
+function buildStyle(chalk, styles) {
+	const enabled = {};
+
+	for (const layer of styles) {
+		for (const style of layer.styles) {
+			enabled[style[0]] = layer.inverse ? null : style.slice(1);
+		}
+	}
+
+	let current = chalk;
+	for (const [styleName, styles] of Object.entries(enabled)) {
+		if (!Array.isArray(styles)) {
+			continue;
+		}
+
+		if (!(styleName in current)) {
+			throw new Error(`Unknown Chalk style: ${styleName}`);
+		}
+
+		current = styles.length > 0 ? current[styleName](...styles) : current[styleName];
+	}
+
+	return current;
+}
+
+module.exports = (chalk, temporary) => {
+	const styles = [];
+	const chunks = [];
+	let chunk = [];
+
+	// eslint-disable-next-line max-params
+	temporary.replace(TEMPLATE_REGEX, (m, escapeCharacter, inverse, style, close, character) => {
+		if (escapeCharacter) {
+			chunk.push(unescape(escapeCharacter));
+		} else if (style) {
+			const string = chunk.join('');
+			chunk = [];
+			chunks.push(styles.length === 0 ? string : buildStyle(chalk, styles)(string));
+			styles.push({inverse, styles: parseStyle(style)});
+		} else if (close) {
+			if (styles.length === 0) {
+				throw new Error('Found extraneous } in Chalk template literal');
+			}
+
+			chunks.push(buildStyle(chalk, styles)(chunk.join('')));
+			chunk = [];
+			styles.pop();
+		} else {
+			chunk.push(character);
+		}
+	});
+
+	chunks.push(chunk.join(''));
+
+	if (styles.length > 0) {
+		const errMessage = `Chalk template literal is missing ${styles.length} closing bracket${styles.length === 1 ? '' : 's'} (\`}\`)`;
+		throw new Error(errMessage);
+	}
+
+	return chunks.join('');
+};
+
+
+/***/ }),
+
+/***/ 3088:
+/***/ ((module) => {
+
+"use strict";
+
+
+const stringReplaceAll = (string, substring, replacer) => {
+	let index = string.indexOf(substring);
+	if (index === -1) {
+		return string;
+	}
+
+	const substringLength = substring.length;
+	let endIndex = 0;
+	let returnValue = '';
+	do {
+		returnValue += string.substr(endIndex, index - endIndex) + substring + replacer;
+		endIndex = index + substringLength;
+		index = string.indexOf(substring, endIndex);
+	} while (index !== -1);
+
+	returnValue += string.substr(endIndex);
+	return returnValue;
+};
+
+const stringEncaseCRLFWithFirstIndex = (string, prefix, postfix, index) => {
+	let endIndex = 0;
+	let returnValue = '';
+	do {
+		const gotCR = string[index - 1] === '\r';
+		returnValue += string.substr(endIndex, (gotCR ? index - 1 : index) - endIndex) + prefix + (gotCR ? '\r\n' : '\n') + postfix;
+		endIndex = index + 1;
+		index = string.indexOf('\n', endIndex);
+	} while (index !== -1);
+
+	returnValue += string.substr(endIndex);
+	return returnValue;
+};
+
+module.exports = {
+	stringReplaceAll,
+	stringEncaseCRLFWithFirstIndex
+};
+
+
+/***/ }),
+
+/***/ 1644:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/* MIT license */
+/* eslint-disable no-mixed-operators */
+const cssKeywords = __nccwpck_require__(2480);
+
+// NOTE: conversions should only return primitive values (i.e. arrays, or
+//       values that give correct `typeof` results).
+//       do not use box values types (i.e. Number(), String(), etc.)
+
+const reverseKeywords = {};
+for (const key of Object.keys(cssKeywords)) {
+	reverseKeywords[cssKeywords[key]] = key;
+}
+
+const convert = {
+	rgb: {channels: 3, labels: 'rgb'},
+	hsl: {channels: 3, labels: 'hsl'},
+	hsv: {channels: 3, labels: 'hsv'},
+	hwb: {channels: 3, labels: 'hwb'},
+	cmyk: {channels: 4, labels: 'cmyk'},
+	xyz: {channels: 3, labels: 'xyz'},
+	lab: {channels: 3, labels: 'lab'},
+	lch: {channels: 3, labels: 'lch'},
+	hex: {channels: 1, labels: ['hex']},
+	keyword: {channels: 1, labels: ['keyword']},
+	ansi16: {channels: 1, labels: ['ansi16']},
+	ansi256: {channels: 1, labels: ['ansi256']},
+	hcg: {channels: 3, labels: ['h', 'c', 'g']},
+	apple: {channels: 3, labels: ['r16', 'g16', 'b16']},
+	gray: {channels: 1, labels: ['gray']}
+};
+
+module.exports = convert;
+
+// Hide .channels and .labels properties
+for (const model of Object.keys(convert)) {
+	if (!('channels' in convert[model])) {
+		throw new Error('missing channels property: ' + model);
+	}
+
+	if (!('labels' in convert[model])) {
+		throw new Error('missing channel labels property: ' + model);
+	}
+
+	if (convert[model].labels.length !== convert[model].channels) {
+		throw new Error('channel and label counts mismatch: ' + model);
+	}
+
+	const {channels, labels} = convert[model];
+	delete convert[model].channels;
+	delete convert[model].labels;
+	Object.defineProperty(convert[model], 'channels', {value: channels});
+	Object.defineProperty(convert[model], 'labels', {value: labels});
+}
+
+convert.rgb.hsl = function (rgb) {
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+	const min = Math.min(r, g, b);
+	const max = Math.max(r, g, b);
+	const delta = max - min;
+	let h;
+	let s;
+
+	if (max === min) {
+		h = 0;
+	} else if (r === max) {
+		h = (g - b) / delta;
+	} else if (g === max) {
+		h = 2 + (b - r) / delta;
+	} else if (b === max) {
+		h = 4 + (r - g) / delta;
+	}
+
+	h = Math.min(h * 60, 360);
+
+	if (h < 0) {
+		h += 360;
+	}
+
+	const l = (min + max) / 2;
+
+	if (max === min) {
+		s = 0;
+	} else if (l <= 0.5) {
+		s = delta / (max + min);
+	} else {
+		s = delta / (2 - max - min);
+	}
+
+	return [h, s * 100, l * 100];
+};
+
+convert.rgb.hsv = function (rgb) {
+	let rdif;
+	let gdif;
+	let bdif;
+	let h;
+	let s;
+
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+	const v = Math.max(r, g, b);
+	const diff = v - Math.min(r, g, b);
+	const diffc = function (c) {
+		return (v - c) / 6 / diff + 1 / 2;
+	};
+
+	if (diff === 0) {
+		h = 0;
+		s = 0;
+	} else {
+		s = diff / v;
+		rdif = diffc(r);
+		gdif = diffc(g);
+		bdif = diffc(b);
+
+		if (r === v) {
+			h = bdif - gdif;
+		} else if (g === v) {
+			h = (1 / 3) + rdif - bdif;
+		} else if (b === v) {
+			h = (2 / 3) + gdif - rdif;
+		}
+
+		if (h < 0) {
+			h += 1;
+		} else if (h > 1) {
+			h -= 1;
+		}
+	}
+
+	return [
+		h * 360,
+		s * 100,
+		v * 100
+	];
+};
+
+convert.rgb.hwb = function (rgb) {
+	const r = rgb[0];
+	const g = rgb[1];
+	let b = rgb[2];
+	const h = convert.rgb.hsl(rgb)[0];
+	const w = 1 / 255 * Math.min(r, Math.min(g, b));
+
+	b = 1 - 1 / 255 * Math.max(r, Math.max(g, b));
+
+	return [h, w * 100, b * 100];
+};
+
+convert.rgb.cmyk = function (rgb) {
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+
+	const k = Math.min(1 - r, 1 - g, 1 - b);
+	const c = (1 - r - k) / (1 - k) || 0;
+	const m = (1 - g - k) / (1 - k) || 0;
+	const y = (1 - b - k) / (1 - k) || 0;
+
+	return [c * 100, m * 100, y * 100, k * 100];
+};
+
+function comparativeDistance(x, y) {
+	/*
+		See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance
+	*/
+	return (
+		((x[0] - y[0]) ** 2) +
+		((x[1] - y[1]) ** 2) +
+		((x[2] - y[2]) ** 2)
+	);
+}
+
+convert.rgb.keyword = function (rgb) {
+	const reversed = reverseKeywords[rgb];
+	if (reversed) {
+		return reversed;
+	}
+
+	let currentClosestDistance = Infinity;
+	let currentClosestKeyword;
+
+	for (const keyword of Object.keys(cssKeywords)) {
+		const value = cssKeywords[keyword];
+
+		// Compute comparative distance
+		const distance = comparativeDistance(rgb, value);
+
+		// Check if its less, if so set as closest
+		if (distance < currentClosestDistance) {
+			currentClosestDistance = distance;
+			currentClosestKeyword = keyword;
+		}
+	}
+
+	return currentClosestKeyword;
+};
+
+convert.keyword.rgb = function (keyword) {
+	return cssKeywords[keyword];
+};
+
+convert.rgb.xyz = function (rgb) {
+	let r = rgb[0] / 255;
+	let g = rgb[1] / 255;
+	let b = rgb[2] / 255;
+
+	// Assume sRGB
+	r = r > 0.04045 ? (((r + 0.055) / 1.055) ** 2.4) : (r / 12.92);
+	g = g > 0.04045 ? (((g + 0.055) / 1.055) ** 2.4) : (g / 12.92);
+	b = b > 0.04045 ? (((b + 0.055) / 1.055) ** 2.4) : (b / 12.92);
+
+	const x = (r * 0.4124) + (g * 0.3576) + (b * 0.1805);
+	const y = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+	const z = (r * 0.0193) + (g * 0.1192) + (b * 0.9505);
+
+	return [x * 100, y * 100, z * 100];
+};
+
+convert.rgb.lab = function (rgb) {
+	const xyz = convert.rgb.xyz(rgb);
+	let x = xyz[0];
+	let y = xyz[1];
+	let z = xyz[2];
+
+	x /= 95.047;
+	y /= 100;
+	z /= 108.883;
+
+	x = x > 0.008856 ? (x ** (1 / 3)) : (7.787 * x) + (16 / 116);
+	y = y > 0.008856 ? (y ** (1 / 3)) : (7.787 * y) + (16 / 116);
+	z = z > 0.008856 ? (z ** (1 / 3)) : (7.787 * z) + (16 / 116);
+
+	const l = (116 * y) - 16;
+	const a = 500 * (x - y);
+	const b = 200 * (y - z);
+
+	return [l, a, b];
+};
+
+convert.hsl.rgb = function (hsl) {
+	const h = hsl[0] / 360;
+	const s = hsl[1] / 100;
+	const l = hsl[2] / 100;
+	let t2;
+	let t3;
+	let val;
+
+	if (s === 0) {
+		val = l * 255;
+		return [val, val, val];
+	}
+
+	if (l < 0.5) {
+		t2 = l * (1 + s);
+	} else {
+		t2 = l + s - l * s;
+	}
+
+	const t1 = 2 * l - t2;
+
+	const rgb = [0, 0, 0];
+	for (let i = 0; i < 3; i++) {
+		t3 = h + 1 / 3 * -(i - 1);
+		if (t3 < 0) {
+			t3++;
+		}
+
+		if (t3 > 1) {
+			t3--;
+		}
+
+		if (6 * t3 < 1) {
+			val = t1 + (t2 - t1) * 6 * t3;
+		} else if (2 * t3 < 1) {
+			val = t2;
+		} else if (3 * t3 < 2) {
+			val = t1 + (t2 - t1) * (2 / 3 - t3) * 6;
+		} else {
+			val = t1;
+		}
+
+		rgb[i] = val * 255;
+	}
+
+	return rgb;
+};
+
+convert.hsl.hsv = function (hsl) {
+	const h = hsl[0];
+	let s = hsl[1] / 100;
+	let l = hsl[2] / 100;
+	let smin = s;
+	const lmin = Math.max(l, 0.01);
+
+	l *= 2;
+	s *= (l <= 1) ? l : 2 - l;
+	smin *= lmin <= 1 ? lmin : 2 - lmin;
+	const v = (l + s) / 2;
+	const sv = l === 0 ? (2 * smin) / (lmin + smin) : (2 * s) / (l + s);
+
+	return [h, sv * 100, v * 100];
+};
+
+convert.hsv.rgb = function (hsv) {
+	const h = hsv[0] / 60;
+	const s = hsv[1] / 100;
+	let v = hsv[2] / 100;
+	const hi = Math.floor(h) % 6;
+
+	const f = h - Math.floor(h);
+	const p = 255 * v * (1 - s);
+	const q = 255 * v * (1 - (s * f));
+	const t = 255 * v * (1 - (s * (1 - f)));
+	v *= 255;
+
+	switch (hi) {
+		case 0:
+			return [v, t, p];
+		case 1:
+			return [q, v, p];
+		case 2:
+			return [p, v, t];
+		case 3:
+			return [p, q, v];
+		case 4:
+			return [t, p, v];
+		case 5:
+			return [v, p, q];
+	}
+};
+
+convert.hsv.hsl = function (hsv) {
+	const h = hsv[0];
+	const s = hsv[1] / 100;
+	const v = hsv[2] / 100;
+	const vmin = Math.max(v, 0.01);
+	let sl;
+	let l;
+
+	l = (2 - s) * v;
+	const lmin = (2 - s) * vmin;
+	sl = s * vmin;
+	sl /= (lmin <= 1) ? lmin : 2 - lmin;
+	sl = sl || 0;
+	l /= 2;
+
+	return [h, sl * 100, l * 100];
+};
+
+// http://dev.w3.org/csswg/css-color/#hwb-to-rgb
+convert.hwb.rgb = function (hwb) {
+	const h = hwb[0] / 360;
+	let wh = hwb[1] / 100;
+	let bl = hwb[2] / 100;
+	const ratio = wh + bl;
+	let f;
+
+	// Wh + bl cant be > 1
+	if (ratio > 1) {
+		wh /= ratio;
+		bl /= ratio;
+	}
+
+	const i = Math.floor(6 * h);
+	const v = 1 - bl;
+	f = 6 * h - i;
+
+	if ((i & 0x01) !== 0) {
+		f = 1 - f;
+	}
+
+	const n = wh + f * (v - wh); // Linear interpolation
+
+	let r;
+	let g;
+	let b;
+	/* eslint-disable max-statements-per-line,no-multi-spaces */
+	switch (i) {
+		default:
+		case 6:
+		case 0: r = v;  g = n;  b = wh; break;
+		case 1: r = n;  g = v;  b = wh; break;
+		case 2: r = wh; g = v;  b = n; break;
+		case 3: r = wh; g = n;  b = v; break;
+		case 4: r = n;  g = wh; b = v; break;
+		case 5: r = v;  g = wh; b = n; break;
+	}
+	/* eslint-enable max-statements-per-line,no-multi-spaces */
+
+	return [r * 255, g * 255, b * 255];
+};
+
+convert.cmyk.rgb = function (cmyk) {
+	const c = cmyk[0] / 100;
+	const m = cmyk[1] / 100;
+	const y = cmyk[2] / 100;
+	const k = cmyk[3] / 100;
+
+	const r = 1 - Math.min(1, c * (1 - k) + k);
+	const g = 1 - Math.min(1, m * (1 - k) + k);
+	const b = 1 - Math.min(1, y * (1 - k) + k);
+
+	return [r * 255, g * 255, b * 255];
+};
+
+convert.xyz.rgb = function (xyz) {
+	const x = xyz[0] / 100;
+	const y = xyz[1] / 100;
+	const z = xyz[2] / 100;
+	let r;
+	let g;
+	let b;
+
+	r = (x * 3.2406) + (y * -1.5372) + (z * -0.4986);
+	g = (x * -0.9689) + (y * 1.8758) + (z * 0.0415);
+	b = (x * 0.0557) + (y * -0.2040) + (z * 1.0570);
+
+	// Assume sRGB
+	r = r > 0.0031308
+		? ((1.055 * (r ** (1.0 / 2.4))) - 0.055)
+		: r * 12.92;
+
+	g = g > 0.0031308
+		? ((1.055 * (g ** (1.0 / 2.4))) - 0.055)
+		: g * 12.92;
+
+	b = b > 0.0031308
+		? ((1.055 * (b ** (1.0 / 2.4))) - 0.055)
+		: b * 12.92;
+
+	r = Math.min(Math.max(0, r), 1);
+	g = Math.min(Math.max(0, g), 1);
+	b = Math.min(Math.max(0, b), 1);
+
+	return [r * 255, g * 255, b * 255];
+};
+
+convert.xyz.lab = function (xyz) {
+	let x = xyz[0];
+	let y = xyz[1];
+	let z = xyz[2];
+
+	x /= 95.047;
+	y /= 100;
+	z /= 108.883;
+
+	x = x > 0.008856 ? (x ** (1 / 3)) : (7.787 * x) + (16 / 116);
+	y = y > 0.008856 ? (y ** (1 / 3)) : (7.787 * y) + (16 / 116);
+	z = z > 0.008856 ? (z ** (1 / 3)) : (7.787 * z) + (16 / 116);
+
+	const l = (116 * y) - 16;
+	const a = 500 * (x - y);
+	const b = 200 * (y - z);
+
+	return [l, a, b];
+};
+
+convert.lab.xyz = function (lab) {
+	const l = lab[0];
+	const a = lab[1];
+	const b = lab[2];
+	let x;
+	let y;
+	let z;
+
+	y = (l + 16) / 116;
+	x = a / 500 + y;
+	z = y - b / 200;
+
+	const y2 = y ** 3;
+	const x2 = x ** 3;
+	const z2 = z ** 3;
+	y = y2 > 0.008856 ? y2 : (y - 16 / 116) / 7.787;
+	x = x2 > 0.008856 ? x2 : (x - 16 / 116) / 7.787;
+	z = z2 > 0.008856 ? z2 : (z - 16 / 116) / 7.787;
+
+	x *= 95.047;
+	y *= 100;
+	z *= 108.883;
+
+	return [x, y, z];
+};
+
+convert.lab.lch = function (lab) {
+	const l = lab[0];
+	const a = lab[1];
+	const b = lab[2];
+	let h;
+
+	const hr = Math.atan2(b, a);
+	h = hr * 360 / 2 / Math.PI;
+
+	if (h < 0) {
+		h += 360;
+	}
+
+	const c = Math.sqrt(a * a + b * b);
+
+	return [l, c, h];
+};
+
+convert.lch.lab = function (lch) {
+	const l = lch[0];
+	const c = lch[1];
+	const h = lch[2];
+
+	const hr = h / 360 * 2 * Math.PI;
+	const a = c * Math.cos(hr);
+	const b = c * Math.sin(hr);
+
+	return [l, a, b];
+};
+
+convert.rgb.ansi16 = function (args, saturation = null) {
+	const [r, g, b] = args;
+	let value = saturation === null ? convert.rgb.hsv(args)[2] : saturation; // Hsv -> ansi16 optimization
+
+	value = Math.round(value / 50);
+
+	if (value === 0) {
+		return 30;
+	}
+
+	let ansi = 30
+		+ ((Math.round(b / 255) << 2)
+		| (Math.round(g / 255) << 1)
+		| Math.round(r / 255));
+
+	if (value === 2) {
+		ansi += 60;
+	}
+
+	return ansi;
+};
+
+convert.hsv.ansi16 = function (args) {
+	// Optimization here; we already know the value and don't need to get
+	// it converted for us.
+	return convert.rgb.ansi16(convert.hsv.rgb(args), args[2]);
+};
+
+convert.rgb.ansi256 = function (args) {
+	const r = args[0];
+	const g = args[1];
+	const b = args[2];
+
+	// We use the extended greyscale palette here, with the exception of
+	// black and white. normal palette only has 4 greyscale shades.
+	if (r === g && g === b) {
+		if (r < 8) {
+			return 16;
+		}
+
+		if (r > 248) {
+			return 231;
+		}
+
+		return Math.round(((r - 8) / 247) * 24) + 232;
+	}
+
+	const ansi = 16
+		+ (36 * Math.round(r / 255 * 5))
+		+ (6 * Math.round(g / 255 * 5))
+		+ Math.round(b / 255 * 5);
+
+	return ansi;
+};
+
+convert.ansi16.rgb = function (args) {
+	let color = args % 10;
+
+	// Handle greyscale
+	if (color === 0 || color === 7) {
+		if (args > 50) {
+			color += 3.5;
+		}
+
+		color = color / 10.5 * 255;
+
+		return [color, color, color];
+	}
+
+	const mult = (~~(args > 50) + 1) * 0.5;
+	const r = ((color & 1) * mult) * 255;
+	const g = (((color >> 1) & 1) * mult) * 255;
+	const b = (((color >> 2) & 1) * mult) * 255;
+
+	return [r, g, b];
+};
+
+convert.ansi256.rgb = function (args) {
+	// Handle greyscale
+	if (args >= 232) {
+		const c = (args - 232) * 10 + 8;
+		return [c, c, c];
+	}
+
+	args -= 16;
+
+	let rem;
+	const r = Math.floor(args / 36) / 5 * 255;
+	const g = Math.floor((rem = args % 36) / 6) / 5 * 255;
+	const b = (rem % 6) / 5 * 255;
+
+	return [r, g, b];
+};
+
+convert.rgb.hex = function (args) {
+	const integer = ((Math.round(args[0]) & 0xFF) << 16)
+		+ ((Math.round(args[1]) & 0xFF) << 8)
+		+ (Math.round(args[2]) & 0xFF);
+
+	const string = integer.toString(16).toUpperCase();
+	return '000000'.substring(string.length) + string;
+};
+
+convert.hex.rgb = function (args) {
+	const match = args.toString(16).match(/[a-f0-9]{6}|[a-f0-9]{3}/i);
+	if (!match) {
+		return [0, 0, 0];
+	}
+
+	let colorString = match[0];
+
+	if (match[0].length === 3) {
+		colorString = colorString.split('').map(char => {
+			return char + char;
+		}).join('');
+	}
+
+	const integer = parseInt(colorString, 16);
+	const r = (integer >> 16) & 0xFF;
+	const g = (integer >> 8) & 0xFF;
+	const b = integer & 0xFF;
+
+	return [r, g, b];
+};
+
+convert.rgb.hcg = function (rgb) {
+	const r = rgb[0] / 255;
+	const g = rgb[1] / 255;
+	const b = rgb[2] / 255;
+	const max = Math.max(Math.max(r, g), b);
+	const min = Math.min(Math.min(r, g), b);
+	const chroma = (max - min);
+	let grayscale;
+	let hue;
+
+	if (chroma < 1) {
+		grayscale = min / (1 - chroma);
+	} else {
+		grayscale = 0;
+	}
+
+	if (chroma <= 0) {
+		hue = 0;
+	} else
+	if (max === r) {
+		hue = ((g - b) / chroma) % 6;
+	} else
+	if (max === g) {
+		hue = 2 + (b - r) / chroma;
+	} else {
+		hue = 4 + (r - g) / chroma;
+	}
+
+	hue /= 6;
+	hue %= 1;
+
+	return [hue * 360, chroma * 100, grayscale * 100];
+};
+
+convert.hsl.hcg = function (hsl) {
+	const s = hsl[1] / 100;
+	const l = hsl[2] / 100;
+
+	const c = l < 0.5 ? (2.0 * s * l) : (2.0 * s * (1.0 - l));
+
+	let f = 0;
+	if (c < 1.0) {
+		f = (l - 0.5 * c) / (1.0 - c);
+	}
+
+	return [hsl[0], c * 100, f * 100];
+};
+
+convert.hsv.hcg = function (hsv) {
+	const s = hsv[1] / 100;
+	const v = hsv[2] / 100;
+
+	const c = s * v;
+	let f = 0;
+
+	if (c < 1.0) {
+		f = (v - c) / (1 - c);
+	}
+
+	return [hsv[0], c * 100, f * 100];
+};
+
+convert.hcg.rgb = function (hcg) {
+	const h = hcg[0] / 360;
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+
+	if (c === 0.0) {
+		return [g * 255, g * 255, g * 255];
+	}
+
+	const pure = [0, 0, 0];
+	const hi = (h % 1) * 6;
+	const v = hi % 1;
+	const w = 1 - v;
+	let mg = 0;
+
+	/* eslint-disable max-statements-per-line */
+	switch (Math.floor(hi)) {
+		case 0:
+			pure[0] = 1; pure[1] = v; pure[2] = 0; break;
+		case 1:
+			pure[0] = w; pure[1] = 1; pure[2] = 0; break;
+		case 2:
+			pure[0] = 0; pure[1] = 1; pure[2] = v; break;
+		case 3:
+			pure[0] = 0; pure[1] = w; pure[2] = 1; break;
+		case 4:
+			pure[0] = v; pure[1] = 0; pure[2] = 1; break;
+		default:
+			pure[0] = 1; pure[1] = 0; pure[2] = w;
+	}
+	/* eslint-enable max-statements-per-line */
+
+	mg = (1.0 - c) * g;
+
+	return [
+		(c * pure[0] + mg) * 255,
+		(c * pure[1] + mg) * 255,
+		(c * pure[2] + mg) * 255
+	];
+};
+
+convert.hcg.hsv = function (hcg) {
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+
+	const v = c + g * (1.0 - c);
+	let f = 0;
+
+	if (v > 0.0) {
+		f = c / v;
+	}
+
+	return [hcg[0], f * 100, v * 100];
+};
+
+convert.hcg.hsl = function (hcg) {
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+
+	const l = g * (1.0 - c) + 0.5 * c;
+	let s = 0;
+
+	if (l > 0.0 && l < 0.5) {
+		s = c / (2 * l);
+	} else
+	if (l >= 0.5 && l < 1.0) {
+		s = c / (2 * (1 - l));
+	}
+
+	return [hcg[0], s * 100, l * 100];
+};
+
+convert.hcg.hwb = function (hcg) {
+	const c = hcg[1] / 100;
+	const g = hcg[2] / 100;
+	const v = c + g * (1.0 - c);
+	return [hcg[0], (v - c) * 100, (1 - v) * 100];
+};
+
+convert.hwb.hcg = function (hwb) {
+	const w = hwb[1] / 100;
+	const b = hwb[2] / 100;
+	const v = 1 - b;
+	const c = v - w;
+	let g = 0;
+
+	if (c < 1) {
+		g = (v - c) / (1 - c);
+	}
+
+	return [hwb[0], c * 100, g * 100];
+};
+
+convert.apple.rgb = function (apple) {
+	return [(apple[0] / 65535) * 255, (apple[1] / 65535) * 255, (apple[2] / 65535) * 255];
+};
+
+convert.rgb.apple = function (rgb) {
+	return [(rgb[0] / 255) * 65535, (rgb[1] / 255) * 65535, (rgb[2] / 255) * 65535];
+};
+
+convert.gray.rgb = function (args) {
+	return [args[0] / 100 * 255, args[0] / 100 * 255, args[0] / 100 * 255];
+};
+
+convert.gray.hsl = function (args) {
+	return [0, 0, args[0]];
+};
+
+convert.gray.hsv = convert.gray.hsl;
+
+convert.gray.hwb = function (gray) {
+	return [0, 100, gray[0]];
+};
+
+convert.gray.cmyk = function (gray) {
+	return [0, 0, 0, gray[0]];
+};
+
+convert.gray.lab = function (gray) {
+	return [gray[0], 0, 0];
+};
+
+convert.gray.hex = function (gray) {
+	const val = Math.round(gray[0] / 100 * 255) & 0xFF;
+	const integer = (val << 16) + (val << 8) + val;
+
+	const string = integer.toString(16).toUpperCase();
+	return '000000'.substring(string.length) + string;
+};
+
+convert.rgb.gray = function (rgb) {
+	const val = (rgb[0] + rgb[1] + rgb[2]) / 3;
+	return [val / 255 * 100];
+};
+
+
+/***/ }),
+
+/***/ 5837:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const conversions = __nccwpck_require__(1644);
+const route = __nccwpck_require__(7427);
+
+const convert = {};
+
+const models = Object.keys(conversions);
+
+function wrapRaw(fn) {
+	const wrappedFn = function (...args) {
+		const arg0 = args[0];
+		if (arg0 === undefined || arg0 === null) {
+			return arg0;
+		}
+
+		if (arg0.length > 1) {
+			args = arg0;
+		}
+
+		return fn(args);
+	};
+
+	// Preserve .conversion property if there is one
+	if ('conversion' in fn) {
+		wrappedFn.conversion = fn.conversion;
+	}
+
+	return wrappedFn;
+}
+
+function wrapRounded(fn) {
+	const wrappedFn = function (...args) {
+		const arg0 = args[0];
+
+		if (arg0 === undefined || arg0 === null) {
+			return arg0;
+		}
+
+		if (arg0.length > 1) {
+			args = arg0;
+		}
+
+		const result = fn(args);
+
+		// We're assuming the result is an array here.
+		// see notice in conversions.js; don't use box types
+		// in conversion functions.
+		if (typeof result === 'object') {
+			for (let len = result.length, i = 0; i < len; i++) {
+				result[i] = Math.round(result[i]);
+			}
+		}
+
+		return result;
+	};
+
+	// Preserve .conversion property if there is one
+	if ('conversion' in fn) {
+		wrappedFn.conversion = fn.conversion;
+	}
+
+	return wrappedFn;
+}
+
+models.forEach(fromModel => {
+	convert[fromModel] = {};
+
+	Object.defineProperty(convert[fromModel], 'channels', {value: conversions[fromModel].channels});
+	Object.defineProperty(convert[fromModel], 'labels', {value: conversions[fromModel].labels});
+
+	const routes = route(fromModel);
+	const routeModels = Object.keys(routes);
+
+	routeModels.forEach(toModel => {
+		const fn = routes[toModel];
+
+		convert[fromModel][toModel] = wrapRounded(fn);
+		convert[fromModel][toModel].raw = wrapRaw(fn);
+	});
+});
+
+module.exports = convert;
+
+
+/***/ }),
+
+/***/ 7427:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const conversions = __nccwpck_require__(1644);
+
+/*
+	This function routes a model to all other models.
+
+	all functions that are routed have a property `.conversion` attached
+	to the returned synthetic function. This property is an array
+	of strings, each with the steps in between the 'from' and 'to'
+	color models (inclusive).
+
+	conversions that are not possible simply are not included.
+*/
+
+function buildGraph() {
+	const graph = {};
+	// https://jsperf.com/object-keys-vs-for-in-with-closure/3
+	const models = Object.keys(conversions);
+
+	for (let len = models.length, i = 0; i < len; i++) {
+		graph[models[i]] = {
+			// http://jsperf.com/1-vs-infinity
+			// micro-opt, but this is simple.
+			distance: -1,
+			parent: null
+		};
+	}
+
+	return graph;
+}
+
+// https://en.wikipedia.org/wiki/Breadth-first_search
+function deriveBFS(fromModel) {
+	const graph = buildGraph();
+	const queue = [fromModel]; // Unshift -> queue -> pop
+
+	graph[fromModel].distance = 0;
+
+	while (queue.length) {
+		const current = queue.pop();
+		const adjacents = Object.keys(conversions[current]);
+
+		for (let len = adjacents.length, i = 0; i < len; i++) {
+			const adjacent = adjacents[i];
+			const node = graph[adjacent];
+
+			if (node.distance === -1) {
+				node.distance = graph[current].distance + 1;
+				node.parent = current;
+				queue.unshift(adjacent);
+			}
+		}
+	}
+
+	return graph;
+}
+
+function link(from, to) {
+	return function (args) {
+		return to(from(args));
+	};
+}
+
+function wrapConversion(toModel, graph) {
+	const path = [graph[toModel].parent, toModel];
+	let fn = conversions[graph[toModel].parent][toModel];
+
+	let cur = graph[toModel].parent;
+	while (graph[cur].parent) {
+		path.unshift(graph[cur].parent);
+		fn = link(conversions[graph[cur].parent][cur], fn);
+		cur = graph[cur].parent;
+	}
+
+	fn.conversion = path;
+	return fn;
+}
+
+module.exports = function (fromModel) {
+	const graph = deriveBFS(fromModel);
+	const conversion = {};
+
+	const models = Object.keys(graph);
+	for (let len = models.length, i = 0; i < len; i++) {
+		const toModel = models[i];
+		const node = graph[toModel];
+
+		if (node.parent === null) {
+			// No possible conversion, or this node is the source model.
+			continue;
+		}
+
+		conversion[toModel] = wrapConversion(toModel, graph);
+	}
+
+	return conversion;
+};
+
+
+
+/***/ }),
+
+/***/ 2480:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = {
+	"aliceblue": [240, 248, 255],
+	"antiquewhite": [250, 235, 215],
+	"aqua": [0, 255, 255],
+	"aquamarine": [127, 255, 212],
+	"azure": [240, 255, 255],
+	"beige": [245, 245, 220],
+	"bisque": [255, 228, 196],
+	"black": [0, 0, 0],
+	"blanchedalmond": [255, 235, 205],
+	"blue": [0, 0, 255],
+	"blueviolet": [138, 43, 226],
+	"brown": [165, 42, 42],
+	"burlywood": [222, 184, 135],
+	"cadetblue": [95, 158, 160],
+	"chartreuse": [127, 255, 0],
+	"chocolate": [210, 105, 30],
+	"coral": [255, 127, 80],
+	"cornflowerblue": [100, 149, 237],
+	"cornsilk": [255, 248, 220],
+	"crimson": [220, 20, 60],
+	"cyan": [0, 255, 255],
+	"darkblue": [0, 0, 139],
+	"darkcyan": [0, 139, 139],
+	"darkgoldenrod": [184, 134, 11],
+	"darkgray": [169, 169, 169],
+	"darkgreen": [0, 100, 0],
+	"darkgrey": [169, 169, 169],
+	"darkkhaki": [189, 183, 107],
+	"darkmagenta": [139, 0, 139],
+	"darkolivegreen": [85, 107, 47],
+	"darkorange": [255, 140, 0],
+	"darkorchid": [153, 50, 204],
+	"darkred": [139, 0, 0],
+	"darksalmon": [233, 150, 122],
+	"darkseagreen": [143, 188, 143],
+	"darkslateblue": [72, 61, 139],
+	"darkslategray": [47, 79, 79],
+	"darkslategrey": [47, 79, 79],
+	"darkturquoise": [0, 206, 209],
+	"darkviolet": [148, 0, 211],
+	"deeppink": [255, 20, 147],
+	"deepskyblue": [0, 191, 255],
+	"dimgray": [105, 105, 105],
+	"dimgrey": [105, 105, 105],
+	"dodgerblue": [30, 144, 255],
+	"firebrick": [178, 34, 34],
+	"floralwhite": [255, 250, 240],
+	"forestgreen": [34, 139, 34],
+	"fuchsia": [255, 0, 255],
+	"gainsboro": [220, 220, 220],
+	"ghostwhite": [248, 248, 255],
+	"gold": [255, 215, 0],
+	"goldenrod": [218, 165, 32],
+	"gray": [128, 128, 128],
+	"green": [0, 128, 0],
+	"greenyellow": [173, 255, 47],
+	"grey": [128, 128, 128],
+	"honeydew": [240, 255, 240],
+	"hotpink": [255, 105, 180],
+	"indianred": [205, 92, 92],
+	"indigo": [75, 0, 130],
+	"ivory": [255, 255, 240],
+	"khaki": [240, 230, 140],
+	"lavender": [230, 230, 250],
+	"lavenderblush": [255, 240, 245],
+	"lawngreen": [124, 252, 0],
+	"lemonchiffon": [255, 250, 205],
+	"lightblue": [173, 216, 230],
+	"lightcoral": [240, 128, 128],
+	"lightcyan": [224, 255, 255],
+	"lightgoldenrodyellow": [250, 250, 210],
+	"lightgray": [211, 211, 211],
+	"lightgreen": [144, 238, 144],
+	"lightgrey": [211, 211, 211],
+	"lightpink": [255, 182, 193],
+	"lightsalmon": [255, 160, 122],
+	"lightseagreen": [32, 178, 170],
+	"lightskyblue": [135, 206, 250],
+	"lightslategray": [119, 136, 153],
+	"lightslategrey": [119, 136, 153],
+	"lightsteelblue": [176, 196, 222],
+	"lightyellow": [255, 255, 224],
+	"lime": [0, 255, 0],
+	"limegreen": [50, 205, 50],
+	"linen": [250, 240, 230],
+	"magenta": [255, 0, 255],
+	"maroon": [128, 0, 0],
+	"mediumaquamarine": [102, 205, 170],
+	"mediumblue": [0, 0, 205],
+	"mediumorchid": [186, 85, 211],
+	"mediumpurple": [147, 112, 219],
+	"mediumseagreen": [60, 179, 113],
+	"mediumslateblue": [123, 104, 238],
+	"mediumspringgreen": [0, 250, 154],
+	"mediumturquoise": [72, 209, 204],
+	"mediumvioletred": [199, 21, 133],
+	"midnightblue": [25, 25, 112],
+	"mintcream": [245, 255, 250],
+	"mistyrose": [255, 228, 225],
+	"moccasin": [255, 228, 181],
+	"navajowhite": [255, 222, 173],
+	"navy": [0, 0, 128],
+	"oldlace": [253, 245, 230],
+	"olive": [128, 128, 0],
+	"olivedrab": [107, 142, 35],
+	"orange": [255, 165, 0],
+	"orangered": [255, 69, 0],
+	"orchid": [218, 112, 214],
+	"palegoldenrod": [238, 232, 170],
+	"palegreen": [152, 251, 152],
+	"paleturquoise": [175, 238, 238],
+	"palevioletred": [219, 112, 147],
+	"papayawhip": [255, 239, 213],
+	"peachpuff": [255, 218, 185],
+	"peru": [205, 133, 63],
+	"pink": [255, 192, 203],
+	"plum": [221, 160, 221],
+	"powderblue": [176, 224, 230],
+	"purple": [128, 0, 128],
+	"rebeccapurple": [102, 51, 153],
+	"red": [255, 0, 0],
+	"rosybrown": [188, 143, 143],
+	"royalblue": [65, 105, 225],
+	"saddlebrown": [139, 69, 19],
+	"salmon": [250, 128, 114],
+	"sandybrown": [244, 164, 96],
+	"seagreen": [46, 139, 87],
+	"seashell": [255, 245, 238],
+	"sienna": [160, 82, 45],
+	"silver": [192, 192, 192],
+	"skyblue": [135, 206, 235],
+	"slateblue": [106, 90, 205],
+	"slategray": [112, 128, 144],
+	"slategrey": [112, 128, 144],
+	"snow": [255, 250, 250],
+	"springgreen": [0, 255, 127],
+	"steelblue": [70, 130, 180],
+	"tan": [210, 180, 140],
+	"teal": [0, 128, 128],
+	"thistle": [216, 191, 216],
+	"tomato": [255, 99, 71],
+	"turquoise": [64, 224, 208],
+	"violet": [238, 130, 238],
+	"wheat": [245, 222, 179],
+	"white": [255, 255, 255],
+	"whitesmoke": [245, 245, 245],
+	"yellow": [255, 255, 0],
+	"yellowgreen": [154, 205, 50]
+};
+
+
+/***/ }),
+
+/***/ 5401:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = (flag, argv = process.argv) => {
+	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
+	const position = argv.indexOf(prefix + flag);
+	const terminatorPosition = argv.indexOf('--');
+	return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
+};
+
+
+/***/ }),
+
+/***/ 9590:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const os = __nccwpck_require__(2037);
+const tty = __nccwpck_require__(6224);
+const hasFlag = __nccwpck_require__(5401);
+
+const {env} = process;
+
+let forceColor;
+if (hasFlag('no-color') ||
+	hasFlag('no-colors') ||
+	hasFlag('color=false') ||
+	hasFlag('color=never')) {
+	forceColor = 0;
+} else if (hasFlag('color') ||
+	hasFlag('colors') ||
+	hasFlag('color=true') ||
+	hasFlag('color=always')) {
+	forceColor = 1;
+}
+
+if ('FORCE_COLOR' in env) {
+	if (env.FORCE_COLOR === 'true') {
+		forceColor = 1;
+	} else if (env.FORCE_COLOR === 'false') {
+		forceColor = 0;
+	} else {
+		forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
+	}
+}
+
+function translateLevel(level) {
+	if (level === 0) {
+		return false;
+	}
+
+	return {
+		level,
+		hasBasic: true,
+		has256: level >= 2,
+		has16m: level >= 3
+	};
+}
+
+function supportsColor(haveStream, streamIsTTY) {
+	if (forceColor === 0) {
+		return 0;
+	}
+
+	if (hasFlag('color=16m') ||
+		hasFlag('color=full') ||
+		hasFlag('color=truecolor')) {
+		return 3;
+	}
+
+	if (hasFlag('color=256')) {
+		return 2;
+	}
+
+	if (haveStream && !streamIsTTY && forceColor === undefined) {
+		return 0;
+	}
+
+	const min = forceColor || 0;
+
+	if (env.TERM === 'dumb') {
+		return min;
+	}
+
+	if (process.platform === 'win32') {
+		// Windows 10 build 10586 is the first Windows release that supports 256 colors.
+		// Windows 10 build 14931 is the first release that supports 16m/TrueColor.
+		const osRelease = os.release().split('.');
+		if (
+			Number(osRelease[0]) >= 10 &&
+			Number(osRelease[2]) >= 10586
+		) {
+			return Number(osRelease[2]) >= 14931 ? 3 : 2;
+		}
+
+		return 1;
+	}
+
+	if ('CI' in env) {
+		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'GITHUB_ACTIONS', 'BUILDKITE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
+			return 1;
+		}
+
+		return min;
+	}
+
+	if ('TEAMCITY_VERSION' in env) {
+		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
+	}
+
+	if (env.COLORTERM === 'truecolor') {
+		return 3;
+	}
+
+	if ('TERM_PROGRAM' in env) {
+		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
+
+		switch (env.TERM_PROGRAM) {
+			case 'iTerm.app':
+				return version >= 3 ? 3 : 2;
+			case 'Apple_Terminal':
+				return 2;
+			// No default
+		}
+	}
+
+	if (/-256(color)?$/i.test(env.TERM)) {
+		return 2;
+	}
+
+	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+		return 1;
+	}
+
+	if ('COLORTERM' in env) {
+		return 1;
+	}
+
+	return min;
+}
+
+function getSupportLevel(stream) {
+	const level = supportsColor(stream, stream && stream.isTTY);
+	return translateLevel(level);
+}
+
+module.exports = {
+	supportsColor: getSupportLevel,
+	stdout: translateLevel(supportsColor(true, tty.isatty(1))),
+	stderr: translateLevel(supportsColor(true, tty.isatty(2)))
+};
+
+
+/***/ }),
+
+/***/ 4305:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const dateformat = __nccwpck_require__( 5637 );
+// noinspection JSUnusedLocalSymbols
+module.exports = ( { params: [format, utc = false, date = new Date] } ) => {
+    return `[${dateformat( date, format, utc )}]`;
+}
+
+/***/ }),
+
+/***/ 5312:
+/***/ ((module) => {
+
+function padRight ( str, len = 0 ) {
+    return str + ' '.repeat( Math.max( len - str.length, 0 ) );
+}
+
+function label( { method, params: [len] } ) {
+    return padRight( `[${method.toUpperCase()}]`, len );
+}
+
+module.exports = {
+    padRight,
+    label
+};
+
+/***/ }),
+
+/***/ 7151:
+/***/ ((module) => {
+
+module.exports = ( { msg } ) => msg;
+
+/***/ }),
+
+/***/ 3072:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5169,7 +7407,7 @@ module.exports.parse = parse
  */
 
 var basename = (__nccwpck_require__(1017).basename)
-var Buffer = (__nccwpck_require__(5675).Buffer)
+var Buffer = (__nccwpck_require__(3503).Buffer)
 
 /**
  * RegExp to match non attr-char, *after* encodeURIComponent (i.e. not including "%")
@@ -5609,7 +7847,7 @@ function ContentDisposition (type, parameters) {
 
 /***/ }),
 
-/***/ 5675:
+/***/ 3503:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -5681,7 +7919,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 /***/ }),
 
-/***/ 8220:
+/***/ 3855:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -5911,7 +8149,7 @@ function ContentType (type) {
 
 /***/ }),
 
-/***/ 2038:
+/***/ 7333:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 /**
@@ -5969,7 +8207,7 @@ function sha1(str){
 
 /***/ }),
 
-/***/ 8002:
+/***/ 3991:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -6247,7 +8485,15 @@ function tryDecode(str, decode) {
 
 /***/ }),
 
-/***/ 6192:
+/***/ 5637:
+/***/ ((module, exports) => {
+
+"use strict";
+function _typeof(obj){"@babel/helpers - typeof";if(typeof Symbol==="function"&&typeof Symbol.iterator==="symbol"){_typeof=function _typeof(obj){return typeof obj}}else{_typeof=function _typeof(obj){return obj&&typeof Symbol==="function"&&obj.constructor===Symbol&&obj!==Symbol.prototype?"symbol":typeof obj}}return _typeof(obj)}(function(global){var _arguments=arguments;var dateFormat=function(){var token=/d{1,4}|D{3,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|W{1,2}|[LlopSZN]|"[^"]*"|'[^']*'/g;var timezone=/\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[-+]\d{4})?)\b/g;var timezoneClip=/[^-+\dA-Z]/g;return function(date,mask,utc,gmt){if(_arguments.length===1&&kindOf(date)==="string"&&!/\d/.test(date)){mask=date;date=undefined}date=date||date===0?date:new Date;if(!(date instanceof Date)){date=new Date(date)}if(isNaN(date)){throw TypeError("Invalid date")}mask=String(dateFormat.masks[mask]||mask||dateFormat.masks["default"]);var maskSlice=mask.slice(0,4);if(maskSlice==="UTC:"||maskSlice==="GMT:"){mask=mask.slice(4);utc=true;if(maskSlice==="GMT:"){gmt=true}}var _=function _(){return utc?"getUTC":"get"};var _d=function d(){return date[_()+"Date"]()};var D=function D(){return date[_()+"Day"]()};var _m=function m(){return date[_()+"Month"]()};var y=function y(){return date[_()+"FullYear"]()};var _H=function H(){return date[_()+"Hours"]()};var _M=function M(){return date[_()+"Minutes"]()};var _s=function s(){return date[_()+"Seconds"]()};var _L=function L(){return date[_()+"Milliseconds"]()};var _o=function o(){return utc?0:date.getTimezoneOffset()};var _W=function W(){return getWeek(date)};var _N=function N(){return getDayOfWeek(date)};var flags={d:function d(){return _d()},dd:function dd(){return pad(_d())},ddd:function ddd(){return dateFormat.i18n.dayNames[D()]},DDD:function DDD(){return getDayName({y:y(),m:_m(),d:_d(),_:_(),dayName:dateFormat.i18n.dayNames[D()],short:true})},dddd:function dddd(){return dateFormat.i18n.dayNames[D()+7]},DDDD:function DDDD(){return getDayName({y:y(),m:_m(),d:_d(),_:_(),dayName:dateFormat.i18n.dayNames[D()+7]})},m:function m(){return _m()+1},mm:function mm(){return pad(_m()+1)},mmm:function mmm(){return dateFormat.i18n.monthNames[_m()]},mmmm:function mmmm(){return dateFormat.i18n.monthNames[_m()+12]},yy:function yy(){return String(y()).slice(2)},yyyy:function yyyy(){return pad(y(),4)},h:function h(){return _H()%12||12},hh:function hh(){return pad(_H()%12||12)},H:function H(){return _H()},HH:function HH(){return pad(_H())},M:function M(){return _M()},MM:function MM(){return pad(_M())},s:function s(){return _s()},ss:function ss(){return pad(_s())},l:function l(){return pad(_L(),3)},L:function L(){return pad(Math.floor(_L()/10))},t:function t(){return _H()<12?dateFormat.i18n.timeNames[0]:dateFormat.i18n.timeNames[1]},tt:function tt(){return _H()<12?dateFormat.i18n.timeNames[2]:dateFormat.i18n.timeNames[3]},T:function T(){return _H()<12?dateFormat.i18n.timeNames[4]:dateFormat.i18n.timeNames[5]},TT:function TT(){return _H()<12?dateFormat.i18n.timeNames[6]:dateFormat.i18n.timeNames[7]},Z:function Z(){return gmt?"GMT":utc?"UTC":(String(date).match(timezone)||[""]).pop().replace(timezoneClip,"").replace(/GMT\+0000/g,"UTC")},o:function o(){return(_o()>0?"-":"+")+pad(Math.floor(Math.abs(_o())/60)*100+Math.abs(_o())%60,4)},p:function p(){return(_o()>0?"-":"+")+pad(Math.floor(Math.abs(_o())/60),2)+":"+pad(Math.floor(Math.abs(_o())%60),2)},S:function S(){return["th","st","nd","rd"][_d()%10>3?0:(_d()%100-_d()%10!=10)*_d()%10]},W:function W(){return _W()},WW:function WW(){return pad(_W())},N:function N(){return _N()}};return mask.replace(token,function(match){if(match in flags){return flags[match]()}return match.slice(1,match.length-1)})}}();dateFormat.masks={default:"ddd mmm dd yyyy HH:MM:ss",shortDate:"m/d/yy",paddedShortDate:"mm/dd/yyyy",mediumDate:"mmm d, yyyy",longDate:"mmmm d, yyyy",fullDate:"dddd, mmmm d, yyyy",shortTime:"h:MM TT",mediumTime:"h:MM:ss TT",longTime:"h:MM:ss TT Z",isoDate:"yyyy-mm-dd",isoTime:"HH:MM:ss",isoDateTime:"yyyy-mm-dd'T'HH:MM:sso",isoUtcDateTime:"UTC:yyyy-mm-dd'T'HH:MM:ss'Z'",expiresHeaderFormat:"ddd, dd mmm yyyy HH:MM:ss Z"};dateFormat.i18n={dayNames:["Sun","Mon","Tue","Wed","Thu","Fri","Sat","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],monthNames:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","January","February","March","April","May","June","July","August","September","October","November","December"],timeNames:["a","p","am","pm","A","P","AM","PM"]};var pad=function pad(val,len){val=String(val);len=len||2;while(val.length<len){val="0"+val}return val};var getDayName=function getDayName(_ref){var y=_ref.y,m=_ref.m,d=_ref.d,_=_ref._,dayName=_ref.dayName,_ref$short=_ref["short"],_short=_ref$short===void 0?false:_ref$short;var today=new Date;var yesterday=new Date;yesterday.setDate(yesterday[_+"Date"]()-1);var tomorrow=new Date;tomorrow.setDate(tomorrow[_+"Date"]()+1);var today_d=function today_d(){return today[_+"Date"]()};var today_m=function today_m(){return today[_+"Month"]()};var today_y=function today_y(){return today[_+"FullYear"]()};var yesterday_d=function yesterday_d(){return yesterday[_+"Date"]()};var yesterday_m=function yesterday_m(){return yesterday[_+"Month"]()};var yesterday_y=function yesterday_y(){return yesterday[_+"FullYear"]()};var tomorrow_d=function tomorrow_d(){return tomorrow[_+"Date"]()};var tomorrow_m=function tomorrow_m(){return tomorrow[_+"Month"]()};var tomorrow_y=function tomorrow_y(){return tomorrow[_+"FullYear"]()};if(today_y()===y&&today_m()===m&&today_d()===d){return _short?"Tdy":"Today"}else if(yesterday_y()===y&&yesterday_m()===m&&yesterday_d()===d){return _short?"Ysd":"Yesterday"}else if(tomorrow_y()===y&&tomorrow_m()===m&&tomorrow_d()===d){return _short?"Tmw":"Tomorrow"}return dayName};var getWeek=function getWeek(date){var targetThursday=new Date(date.getFullYear(),date.getMonth(),date.getDate());targetThursday.setDate(targetThursday.getDate()-(targetThursday.getDay()+6)%7+3);var firstThursday=new Date(targetThursday.getFullYear(),0,4);firstThursday.setDate(firstThursday.getDate()-(firstThursday.getDay()+6)%7+3);var ds=targetThursday.getTimezoneOffset()-firstThursday.getTimezoneOffset();targetThursday.setHours(targetThursday.getHours()-ds);var weekDiff=(targetThursday-firstThursday)/(864e5*7);return 1+Math.floor(weekDiff)};var getDayOfWeek=function getDayOfWeek(date){var dow=date.getDay();if(dow===0){dow=7}return dow};var kindOf=function kindOf(val){if(val===null){return"null"}if(val===undefined){return"undefined"}if(_typeof(val)!=="object"){return _typeof(val)}if(Array.isArray(val)){return"array"}return{}.toString.call(val).slice(8,-1).toLowerCase()};if(typeof define==="function"&&define.amd){define(function(){return dateFormat})}else if(( false?0:_typeof(exports))==="object"){module.exports=dateFormat}else{global.dateFormat=dateFormat}})(void 0);
+
+/***/ }),
+
+/***/ 8087:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /*!
@@ -6792,7 +9038,7 @@ function DeprecationError (namespace, message, stack) {
 
 /***/ }),
 
-/***/ 8849:
+/***/ 7918:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7009,7 +9255,7 @@ function onOpenClose () {
 
 /***/ }),
 
-/***/ 8477:
+/***/ 1148:
 /***/ ((module) => {
 
 "use strict";
@@ -7112,7 +9358,7 @@ function listener(event, done) {
 
 /***/ }),
 
-/***/ 514:
+/***/ 9976:
 /***/ ((module) => {
 
 "use strict";
@@ -7180,7 +9426,7 @@ function encodeUrl (url) {
 
 /***/ }),
 
-/***/ 7349:
+/***/ 5862:
 /***/ ((module) => {
 
 "use strict";
@@ -7266,7 +9512,7 @@ function escapeHtml(string) {
 
 /***/ }),
 
-/***/ 8418:
+/***/ 2038:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7405,7 +9651,7 @@ function stattag (stat) {
 
 /***/ }),
 
-/***/ 7086:
+/***/ 4682:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7419,12 +9665,12 @@ function stattag (stat) {
 
 
 
-module.exports = __nccwpck_require__(2099);
+module.exports = __nccwpck_require__(5294);
 
 
 /***/ }),
 
-/***/ 12:
+/***/ 5119:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7443,22 +9689,22 @@ module.exports = __nccwpck_require__(2099);
  * @private
  */
 
-var finalhandler = __nccwpck_require__(8858);
-var Router = __nccwpck_require__(9965);
-var methods = __nccwpck_require__(3707);
-var middleware = __nccwpck_require__(6811);
-var query = __nccwpck_require__(9473);
-var debug = __nccwpck_require__(4437)('express:application');
-var View = __nccwpck_require__(584);
+var finalhandler = __nccwpck_require__(4257);
+var Router = __nccwpck_require__(3904);
+var methods = __nccwpck_require__(3128);
+var middleware = __nccwpck_require__(8569);
+var query = __nccwpck_require__(2621);
+var debug = __nccwpck_require__(6714)('express:application');
+var View = __nccwpck_require__(9059);
 var http = __nccwpck_require__(3685);
-var compileETag = (__nccwpck_require__(7425).compileETag);
-var compileQueryParser = (__nccwpck_require__(7425).compileQueryParser);
-var compileTrust = (__nccwpck_require__(7425).compileTrust);
-var deprecate = __nccwpck_require__(6192)('express');
-var flatten = __nccwpck_require__(5712);
-var merge = __nccwpck_require__(722);
+var compileETag = (__nccwpck_require__(7419).compileETag);
+var compileQueryParser = (__nccwpck_require__(7419).compileQueryParser);
+var compileTrust = (__nccwpck_require__(7419).compileTrust);
+var deprecate = __nccwpck_require__(8087)('express');
+var flatten = __nccwpck_require__(8732);
+var merge = __nccwpck_require__(6602);
 var resolve = (__nccwpck_require__(1017).resolve);
-var setPrototypeOf = __nccwpck_require__(2199)
+var setPrototypeOf = __nccwpck_require__(2170)
 
 /**
  * Module variables.
@@ -8093,7 +10339,7 @@ function tryRender(view, options, callback) {
 
 /***/ }),
 
-/***/ 2099:
+/***/ 5294:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8111,14 +10357,14 @@ function tryRender(view, options, callback) {
  * Module dependencies.
  */
 
-var bodyParser = __nccwpck_require__(951)
+var bodyParser = __nccwpck_require__(6517)
 var EventEmitter = (__nccwpck_require__(2361).EventEmitter);
-var mixin = __nccwpck_require__(9028);
-var proto = __nccwpck_require__(12);
-var Route = __nccwpck_require__(2570);
-var Router = __nccwpck_require__(9965);
-var req = __nccwpck_require__(4671);
-var res = __nccwpck_require__(3249);
+var mixin = __nccwpck_require__(5023);
+var proto = __nccwpck_require__(5119);
+var Route = __nccwpck_require__(6719);
+var Router = __nccwpck_require__(3904);
+var req = __nccwpck_require__(6909);
+var res = __nccwpck_require__(864);
 
 /**
  * Expose `createApplication()`.
@@ -8175,9 +10421,9 @@ exports.Router = Router;
  */
 
 exports.json = bodyParser.json
-exports.query = __nccwpck_require__(9473);
+exports.query = __nccwpck_require__(2621);
 exports.raw = bodyParser.raw
-exports["static"] = __nccwpck_require__(2884);
+exports["static"] = __nccwpck_require__(7658);
 exports.text = bodyParser.text
 exports.urlencoded = bodyParser.urlencoded
 
@@ -8217,7 +10463,7 @@ removedMiddlewares.forEach(function (name) {
 
 /***/ }),
 
-/***/ 6811:
+/***/ 8569:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8236,7 +10482,7 @@ removedMiddlewares.forEach(function (name) {
  * @private
  */
 
-var setPrototypeOf = __nccwpck_require__(2199)
+var setPrototypeOf = __nccwpck_require__(2170)
 
 /**
  * Initialization middleware, exposing the
@@ -8268,7 +10514,7 @@ exports.init = function(app){
 
 /***/ }),
 
-/***/ 9473:
+/***/ 2621:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8286,9 +10532,9 @@ exports.init = function(app){
  * Module dependencies.
  */
 
-var merge = __nccwpck_require__(722)
-var parseUrl = __nccwpck_require__(1977);
-var qs = __nccwpck_require__(5638);
+var merge = __nccwpck_require__(6602)
+var parseUrl = __nccwpck_require__(6931);
+var qs = __nccwpck_require__(5553);
 
 /**
  * @param {Object} options
@@ -8323,7 +10569,7 @@ module.exports = function query(options) {
 
 /***/ }),
 
-/***/ 4671:
+/***/ 6909:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8342,15 +10588,15 @@ module.exports = function query(options) {
  * @private
  */
 
-var accepts = __nccwpck_require__(9993);
-var deprecate = __nccwpck_require__(6192)('express');
+var accepts = __nccwpck_require__(5905);
+var deprecate = __nccwpck_require__(8087)('express');
 var isIP = (__nccwpck_require__(1808).isIP);
-var typeis = __nccwpck_require__(7138);
+var typeis = __nccwpck_require__(8177);
 var http = __nccwpck_require__(3685);
-var fresh = __nccwpck_require__(3652);
-var parseRange = __nccwpck_require__(1672);
-var parse = __nccwpck_require__(1977);
-var proxyaddr = __nccwpck_require__(5492);
+var fresh = __nccwpck_require__(5326);
+var parseRange = __nccwpck_require__(1688);
+var parse = __nccwpck_require__(6931);
+var proxyaddr = __nccwpck_require__(6265);
 
 /**
  * Request prototype.
@@ -8856,7 +11102,7 @@ function defineGetter(obj, name, getter) {
 
 /***/ }),
 
-/***/ 3249:
+/***/ 864:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8874,28 +11120,28 @@ function defineGetter(obj, name, getter) {
  * @private
  */
 
-var Buffer = (__nccwpck_require__(4168).Buffer)
-var contentDisposition = __nccwpck_require__(8423);
-var createError = __nccwpck_require__(3086)
-var deprecate = __nccwpck_require__(6192)('express');
-var encodeUrl = __nccwpck_require__(514);
-var escapeHtml = __nccwpck_require__(7349);
+var Buffer = (__nccwpck_require__(7839).Buffer)
+var contentDisposition = __nccwpck_require__(3072);
+var createError = __nccwpck_require__(9257)
+var deprecate = __nccwpck_require__(8087)('express');
+var encodeUrl = __nccwpck_require__(9976);
+var escapeHtml = __nccwpck_require__(5862);
 var http = __nccwpck_require__(3685);
-var isAbsolute = (__nccwpck_require__(7425).isAbsolute);
-var onFinished = __nccwpck_require__(6990);
+var isAbsolute = (__nccwpck_require__(7419).isAbsolute);
+var onFinished = __nccwpck_require__(7703);
 var path = __nccwpck_require__(1017);
-var statuses = __nccwpck_require__(63)
-var merge = __nccwpck_require__(722);
-var sign = (__nccwpck_require__(2038).sign);
-var normalizeType = (__nccwpck_require__(7425).normalizeType);
-var normalizeTypes = (__nccwpck_require__(7425).normalizeTypes);
-var setCharset = (__nccwpck_require__(7425).setCharset);
-var cookie = __nccwpck_require__(8002);
-var send = __nccwpck_require__(7269);
+var statuses = __nccwpck_require__(2851)
+var merge = __nccwpck_require__(6602);
+var sign = (__nccwpck_require__(7333).sign);
+var normalizeType = (__nccwpck_require__(7419).normalizeType);
+var normalizeTypes = (__nccwpck_require__(7419).normalizeTypes);
+var setCharset = (__nccwpck_require__(7419).setCharset);
+var cookie = __nccwpck_require__(3991);
+var send = __nccwpck_require__(2891);
 var extname = path.extname;
 var mime = send.mime;
 var resolve = path.resolve;
-var vary = __nccwpck_require__(6830);
+var vary = __nccwpck_require__(9391);
 
 /**
  * Response prototype.
@@ -10033,7 +12279,7 @@ function stringify (value, replacer, spaces, escape) {
 
 /***/ }),
 
-/***/ 9965:
+/***/ 3904:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -10052,15 +12298,15 @@ function stringify (value, replacer, spaces, escape) {
  * @private
  */
 
-var Route = __nccwpck_require__(2570);
-var Layer = __nccwpck_require__(8386);
-var methods = __nccwpck_require__(3707);
-var mixin = __nccwpck_require__(722);
-var debug = __nccwpck_require__(4437)('express:router');
-var deprecate = __nccwpck_require__(6192)('express');
-var flatten = __nccwpck_require__(5712);
-var parseUrl = __nccwpck_require__(1977);
-var setPrototypeOf = __nccwpck_require__(2199)
+var Route = __nccwpck_require__(6719);
+var Layer = __nccwpck_require__(1031);
+var methods = __nccwpck_require__(3128);
+var mixin = __nccwpck_require__(6602);
+var debug = __nccwpck_require__(6714)('express:router');
+var deprecate = __nccwpck_require__(8087)('express');
+var flatten = __nccwpck_require__(8732);
+var parseUrl = __nccwpck_require__(6931);
+var setPrototypeOf = __nccwpck_require__(2170)
 
 /**
  * Module variables.
@@ -10714,7 +12960,7 @@ function wrap(old, fn) {
 
 /***/ }),
 
-/***/ 8386:
+/***/ 1031:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -10733,8 +12979,8 @@ function wrap(old, fn) {
  * @private
  */
 
-var pathRegexp = __nccwpck_require__(6196);
-var debug = __nccwpck_require__(4437)('express:router:layer');
+var pathRegexp = __nccwpck_require__(4420);
+var debug = __nccwpck_require__(6714)('express:router:layer');
 
 /**
  * Module variables.
@@ -10903,7 +13149,7 @@ function decode_param(val) {
 
 /***/ }),
 
-/***/ 2570:
+/***/ 6719:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -10922,10 +13168,10 @@ function decode_param(val) {
  * @private
  */
 
-var debug = __nccwpck_require__(4437)('express:router:route');
-var flatten = __nccwpck_require__(5712);
-var Layer = __nccwpck_require__(8386);
-var methods = __nccwpck_require__(3707);
+var debug = __nccwpck_require__(6714)('express:router:route');
+var flatten = __nccwpck_require__(8732);
+var Layer = __nccwpck_require__(1031);
+var methods = __nccwpck_require__(3128);
 
 /**
  * Module variables.
@@ -11136,7 +13382,7 @@ methods.forEach(function(method){
 
 /***/ }),
 
-/***/ 7425:
+/***/ 7419:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -11154,15 +13400,15 @@ methods.forEach(function(method){
  * @api private
  */
 
-var Buffer = (__nccwpck_require__(4168).Buffer)
-var contentDisposition = __nccwpck_require__(8423);
-var contentType = __nccwpck_require__(8220);
-var deprecate = __nccwpck_require__(6192)('express');
-var flatten = __nccwpck_require__(5712);
-var mime = (__nccwpck_require__(7269).mime);
-var etag = __nccwpck_require__(8418);
-var proxyaddr = __nccwpck_require__(5492);
-var qs = __nccwpck_require__(5638);
+var Buffer = (__nccwpck_require__(7839).Buffer)
+var contentDisposition = __nccwpck_require__(3072);
+var contentType = __nccwpck_require__(3855);
+var deprecate = __nccwpck_require__(8087)('express');
+var flatten = __nccwpck_require__(8732);
+var mime = (__nccwpck_require__(2891).mime);
+var etag = __nccwpck_require__(2038);
+var proxyaddr = __nccwpck_require__(6265);
+var qs = __nccwpck_require__(5553);
 var querystring = __nccwpck_require__(3477);
 
 /**
@@ -11448,7 +13694,7 @@ function newObject() {
 
 /***/ }),
 
-/***/ 584:
+/***/ 9059:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -11467,7 +13713,7 @@ function newObject() {
  * @private
  */
 
-var debug = __nccwpck_require__(4437)('express:view');
+var debug = __nccwpck_require__(6714)('express:view');
 var path = __nccwpck_require__(1017);
 var fs = __nccwpck_require__(7147);
 
@@ -11638,7 +13884,7 @@ function tryStat(path) {
 
 /***/ }),
 
-/***/ 6002:
+/***/ 46:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -11647,7 +13893,7 @@ function tryStat(path) {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(7118);
+exports = module.exports = __nccwpck_require__(5961);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -11830,7 +14076,7 @@ function localstorage() {
 
 /***/ }),
 
-/***/ 7118:
+/***/ 5961:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 
@@ -11846,7 +14092,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = __nccwpck_require__(3612);
+exports.humanize = __nccwpck_require__(6821);
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -12039,7 +14285,7 @@ function coerce(val) {
 
 /***/ }),
 
-/***/ 4437:
+/***/ 6714:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -12048,15 +14294,15 @@ function coerce(val) {
  */
 
 if (typeof process !== 'undefined' && process.type === 'renderer') {
-  module.exports = __nccwpck_require__(6002);
+  module.exports = __nccwpck_require__(46);
 } else {
-  module.exports = __nccwpck_require__(4890);
+  module.exports = __nccwpck_require__(8773);
 }
 
 
 /***/ }),
 
-/***/ 4890:
+/***/ 8773:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -12072,7 +14318,7 @@ var util = __nccwpck_require__(3837);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(7118);
+exports = module.exports = __nccwpck_require__(5961);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -12311,7 +14557,7 @@ exports.enable(load());
 
 /***/ }),
 
-/***/ 3612:
+/***/ 6821:
 /***/ ((module) => {
 
 /**
@@ -12470,7 +14716,7 @@ function plural(ms, n, name) {
 
 /***/ }),
 
-/***/ 4168:
+/***/ 7839:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -12542,7 +14788,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 /***/ }),
 
-/***/ 8858:
+/***/ 4257:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -12559,13 +14805,13 @@ SafeBuffer.allocUnsafeSlow = function (size) {
  * @private
  */
 
-var debug = __nccwpck_require__(9285)('finalhandler')
-var encodeUrl = __nccwpck_require__(514)
-var escapeHtml = __nccwpck_require__(7349)
-var onFinished = __nccwpck_require__(6990)
-var parseUrl = __nccwpck_require__(1977)
-var statuses = __nccwpck_require__(63)
-var unpipe = __nccwpck_require__(1913)
+var debug = __nccwpck_require__(7007)('finalhandler')
+var encodeUrl = __nccwpck_require__(9976)
+var escapeHtml = __nccwpck_require__(5862)
+var onFinished = __nccwpck_require__(7703)
+var parseUrl = __nccwpck_require__(6931)
+var statuses = __nccwpck_require__(2851)
+var unpipe = __nccwpck_require__(1224)
 
 /**
  * Module variables.
@@ -12886,7 +15132,7 @@ function setHeaders (res, headers) {
 
 /***/ }),
 
-/***/ 6431:
+/***/ 4339:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -12895,7 +15141,7 @@ function setHeaders (res, headers) {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(2308);
+exports = module.exports = __nccwpck_require__(7123);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -13078,7 +15324,7 @@ function localstorage() {
 
 /***/ }),
 
-/***/ 2308:
+/***/ 7123:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 
@@ -13094,7 +15340,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = __nccwpck_require__(7127);
+exports.humanize = __nccwpck_require__(4983);
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -13287,7 +15533,7 @@ function coerce(val) {
 
 /***/ }),
 
-/***/ 9285:
+/***/ 7007:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -13296,15 +15542,15 @@ function coerce(val) {
  */
 
 if (typeof process !== 'undefined' && process.type === 'renderer') {
-  module.exports = __nccwpck_require__(6431);
+  module.exports = __nccwpck_require__(4339);
 } else {
-  module.exports = __nccwpck_require__(5101);
+  module.exports = __nccwpck_require__(5088);
 }
 
 
 /***/ }),
 
-/***/ 5101:
+/***/ 5088:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -13320,7 +15566,7 @@ var util = __nccwpck_require__(3837);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(2308);
+exports = module.exports = __nccwpck_require__(7123);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -13559,7 +15805,7 @@ exports.enable(load());
 
 /***/ }),
 
-/***/ 7127:
+/***/ 4983:
 /***/ ((module) => {
 
 /**
@@ -13718,7 +15964,7 @@ function plural(ms, n, name) {
 
 /***/ }),
 
-/***/ 5304:
+/***/ 7883:
 /***/ ((module) => {
 
 "use strict";
@@ -13816,7 +16062,7 @@ function parse (header) {
 
 /***/ }),
 
-/***/ 3652:
+/***/ 5326:
 /***/ ((module) => {
 
 "use strict";
@@ -13961,7 +16207,7 @@ function parseTokenList (str) {
 
 /***/ }),
 
-/***/ 8993:
+/***/ 5289:
 /***/ ((module) => {
 
 "use strict";
@@ -14021,20 +16267,20 @@ module.exports = function bind(that) {
 
 /***/ }),
 
-/***/ 353:
+/***/ 2144:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var implementation = __nccwpck_require__(8993);
+var implementation = __nccwpck_require__(5289);
 
 module.exports = Function.prototype.bind || implementation;
 
 
 /***/ }),
 
-/***/ 4527:
+/***/ 1658:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -14082,7 +16328,7 @@ var ThrowTypeError = $gOPD
 	}())
 	: throwTypeError;
 
-var hasSymbols = __nccwpck_require__(5972)();
+var hasSymbols = __nccwpck_require__(9272)();
 
 var getProto = Object.getPrototypeOf || function (x) { return x.__proto__; }; // eslint-disable-line no-proto
 
@@ -14236,8 +16482,8 @@ var LEGACY_ALIASES = {
 	'%WeakSetPrototype%': ['WeakSet', 'prototype']
 };
 
-var bind = __nccwpck_require__(353);
-var hasOwn = __nccwpck_require__(8428);
+var bind = __nccwpck_require__(2144);
+var hasOwn = __nccwpck_require__(4697);
 var $concat = bind.call(Function.call, Array.prototype.concat);
 var $spliceApply = bind.call(Function.apply, Array.prototype.splice);
 var $replace = bind.call(Function.call, String.prototype.replace);
@@ -14376,14 +16622,14 @@ module.exports = function GetIntrinsic(name, allowMissing) {
 
 /***/ }),
 
-/***/ 5972:
+/***/ 9272:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
 var origSymbol = typeof Symbol !== 'undefined' && Symbol;
-var hasSymbolSham = __nccwpck_require__(2682);
+var hasSymbolSham = __nccwpck_require__(7282);
 
 module.exports = function hasNativeSymbols() {
 	if (typeof origSymbol !== 'function') { return false; }
@@ -14397,7 +16643,7 @@ module.exports = function hasNativeSymbols() {
 
 /***/ }),
 
-/***/ 2682:
+/***/ 7282:
 /***/ ((module) => {
 
 "use strict";
@@ -14447,20 +16693,20 @@ module.exports = function hasSymbols() {
 
 /***/ }),
 
-/***/ 8428:
+/***/ 4697:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var bind = __nccwpck_require__(353);
+var bind = __nccwpck_require__(2144);
 
 module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
 
 
 /***/ }),
 
-/***/ 3086:
+/***/ 9257:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -14478,11 +16724,11 @@ module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
  * @private
  */
 
-var deprecate = __nccwpck_require__(6192)('http-errors')
-var setPrototypeOf = __nccwpck_require__(2199)
-var statuses = __nccwpck_require__(63)
-var inherits = __nccwpck_require__(4870)
-var toIdentifier = __nccwpck_require__(3646)
+var deprecate = __nccwpck_require__(8087)('http-errors')
+var setPrototypeOf = __nccwpck_require__(2170)
+var statuses = __nccwpck_require__(2851)
+var inherits = __nccwpck_require__(3393)
+var toIdentifier = __nccwpck_require__(6503)
 
 /**
  * Module exports.
@@ -14757,12 +17003,12 @@ function toClassName (name) {
 
 /***/ }),
 
-/***/ 2455:
+/***/ 5308:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var Buffer = (__nccwpck_require__(5562).Buffer);
+var Buffer = (__nccwpck_require__(1490).Buffer);
 
 // Multibyte codec. In this scheme, a character is represented by 1 or more bytes.
 // Our codec supports UTF-16 surrogates, extensions for GB18030 and unicode sequences.
@@ -15320,7 +17566,7 @@ function findIdx(table, val) {
 
 /***/ }),
 
-/***/ 1038:
+/***/ 7643:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -15504,7 +17750,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 7694:
+/***/ 5276:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -15513,14 +17759,14 @@ module.exports = {
 // Update this array if you add/rename/remove files in this directory.
 // We support Browserify by skipping automatic module discovery and requiring modules directly.
 var modules = [
-    __nccwpck_require__(7077),
-    __nccwpck_require__(8992),
-    __nccwpck_require__(526),
-    __nccwpck_require__(35),
-    __nccwpck_require__(3592),
-    __nccwpck_require__(7827),
-    __nccwpck_require__(2455),
-    __nccwpck_require__(1038),
+    __nccwpck_require__(8105),
+    __nccwpck_require__(9512),
+    __nccwpck_require__(4923),
+    __nccwpck_require__(9954),
+    __nccwpck_require__(2202),
+    __nccwpck_require__(2574),
+    __nccwpck_require__(5308),
+    __nccwpck_require__(7643),
 ];
 
 // Put all encoding/alias/codec definitions to single object and export it. 
@@ -15534,12 +17780,12 @@ for (var i = 0; i < modules.length; i++) {
 
 /***/ }),
 
-/***/ 7077:
+/***/ 8105:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
-var Buffer = (__nccwpck_require__(5562).Buffer);
+var Buffer = (__nccwpck_require__(1490).Buffer);
 
 // Export Node.js internal encodings.
 
@@ -15730,12 +17976,12 @@ InternalDecoderCesu8.prototype.end = function() {
 
 /***/ }),
 
-/***/ 35:
+/***/ 9954:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var Buffer = (__nccwpck_require__(5562).Buffer);
+var Buffer = (__nccwpck_require__(1490).Buffer);
 
 // Single-byte codec. Needs a 'chars' string parameter that contains 256 or 128 chars that
 // correspond to encoded bytes (if 128 - then lower half is ASCII). 
@@ -15810,7 +18056,7 @@ SBCSDecoder.prototype.end = function() {
 
 /***/ }),
 
-/***/ 7827:
+/***/ 2574:
 /***/ ((module) => {
 
 "use strict";
@@ -16268,7 +18514,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 3592:
+/***/ 2202:
 /***/ ((module) => {
 
 "use strict";
@@ -16450,12 +18696,12 @@ module.exports = {
 
 /***/ }),
 
-/***/ 8992:
+/***/ 9512:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var Buffer = (__nccwpck_require__(5562).Buffer);
+var Buffer = (__nccwpck_require__(1490).Buffer);
 
 // Note: UTF16-LE (or UCS2) codec is Node.js native. See encodings/internal.js
 
@@ -16635,12 +18881,12 @@ function detectEncoding(buf, defaultEncoding) {
 
 /***/ }),
 
-/***/ 526:
+/***/ 4923:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var Buffer = (__nccwpck_require__(5562).Buffer);
+var Buffer = (__nccwpck_require__(1490).Buffer);
 
 // UTF-7 codec, according to https://tools.ietf.org/html/rfc2152
 // See also below a UTF-7-IMAP codec, according to http://tools.ietf.org/html/rfc3501#section-5.1.3
@@ -16933,7 +19179,7 @@ Utf7IMAPDecoder.prototype.end = function() {
 
 /***/ }),
 
-/***/ 4801:
+/***/ 2057:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -16993,7 +19239,7 @@ StripBOMWrapper.prototype.end = function() {
 
 /***/ }),
 
-/***/ 7813:
+/***/ 3543:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -17218,7 +19464,7 @@ module.exports = function (iconv) {
 
 /***/ }),
 
-/***/ 6411:
+/***/ 1670:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -17226,9 +19472,9 @@ module.exports = function (iconv) {
 
 // Some environments don't have global Buffer (e.g. React Native).
 // Solution would be installing npm modules "buffer" and "stream" explicitly.
-var Buffer = (__nccwpck_require__(5562).Buffer);
+var Buffer = (__nccwpck_require__(1490).Buffer);
 
-var bomHandling = __nccwpck_require__(4801),
+var bomHandling = __nccwpck_require__(2057),
     iconv = module.exports;
 
 // All codecs and aliases are kept here, keyed by encoding name/alias.
@@ -17286,7 +19532,7 @@ iconv.fromEncoding = iconv.decode;
 iconv._codecDataCache = {};
 iconv.getCodec = function getCodec(encoding) {
     if (!iconv.encodings)
-        iconv.encodings = __nccwpck_require__(7694); // Lazy load all encoding definitions.
+        iconv.encodings = __nccwpck_require__(5276); // Lazy load all encoding definitions.
     
     // Canonicalize encoding name: strip all non-alphanumeric chars and appended year.
     var enc = iconv._canonicalizeEncoding(encoding);
@@ -17365,11 +19611,11 @@ if (nodeVer) {
     // Load streaming support in Node v0.10+
     var nodeVerArr = nodeVer.split(".").map(Number);
     if (nodeVerArr[0] > 0 || nodeVerArr[1] >= 10) {
-        __nccwpck_require__(9094)(iconv);
+        __nccwpck_require__(6080)(iconv);
     }
 
     // Load Node primitive extensions.
-    __nccwpck_require__(7813)(iconv);
+    __nccwpck_require__(3543)(iconv);
 }
 
 if (false) {}
@@ -17377,7 +19623,7 @@ if (false) {}
 
 /***/ }),
 
-/***/ 9094:
+/***/ 6080:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -17506,7 +19752,7 @@ IconvLiteDecoderStream.prototype.collect = function(cb) {
 
 /***/ }),
 
-/***/ 4870:
+/***/ 3393:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 try {
@@ -17516,13 +19762,13 @@ try {
   module.exports = util.inherits;
 } catch (e) {
   /* istanbul ignore next */
-  module.exports = __nccwpck_require__(961);
+  module.exports = __nccwpck_require__(346);
 }
 
 
 /***/ }),
 
-/***/ 961:
+/***/ 346:
 /***/ ((module) => {
 
 if (typeof Object.create === 'function') {
@@ -17556,7 +19802,7 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
-/***/ 8031:
+/***/ 5097:
 /***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
 
 /* module decorator */ module = __nccwpck_require__.nmd(module);
@@ -18237,7 +20483,7 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
-/***/ 3519:
+/***/ 5392:
 /***/ ((__unused_webpack_module, exports) => {
 
 /*!
@@ -18514,7 +20760,7 @@ function splitType(string) {
 
 /***/ }),
 
-/***/ 9028:
+/***/ 5023:
 /***/ ((module) => {
 
 "use strict";
@@ -18582,7 +20828,7 @@ function merge(dest, src, redefine) {
 
 /***/ }),
 
-/***/ 3707:
+/***/ 3128:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -18659,7 +20905,7 @@ function getBasicNodeMethods() {
 
 /***/ }),
 
-/***/ 9416:
+/***/ 5455:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /*!
@@ -18678,7 +20924,7 @@ module.exports = __nccwpck_require__(3765)
 
 /***/ }),
 
-/***/ 2277:
+/***/ 5160:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -18696,7 +20942,7 @@ module.exports = __nccwpck_require__(3765)
  * @private
  */
 
-var db = __nccwpck_require__(9416)
+var db = __nccwpck_require__(5455)
 var extname = (__nccwpck_require__(1017).extname)
 
 /**
@@ -18874,7 +21120,7 @@ function populateMaps (extensions, types) {
 
 /***/ }),
 
-/***/ 4121:
+/***/ 6995:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var path = __nccwpck_require__(1017);
@@ -18989,7 +21235,7 @@ module.exports = mime;
 
 /***/ }),
 
-/***/ 4024:
+/***/ 9474:
 /***/ ((module) => {
 
 /**
@@ -19063,7 +21309,7 @@ module.exports = function (random, alphabet, size) {
 
 /***/ }),
 
-/***/ 7607:
+/***/ 3962:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var crypto = __nccwpck_require__(6113)
@@ -19089,7 +21335,7 @@ if (crypto.randomFillSync) {
 
 /***/ }),
 
-/***/ 4522:
+/***/ 7090:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -19103,10 +21349,10 @@ if (crypto.randomFillSync) {
 
 
 
-var preferredCharsets = __nccwpck_require__(8768)
-var preferredEncodings = __nccwpck_require__(9985)
-var preferredLanguages = __nccwpck_require__(4714)
-var preferredMediaTypes = __nccwpck_require__(3296)
+var preferredCharsets = __nccwpck_require__(7783)
+var preferredEncodings = __nccwpck_require__(1259)
+var preferredLanguages = __nccwpck_require__(5078)
+var preferredMediaTypes = __nccwpck_require__(683)
 
 /**
  * Module exports.
@@ -19179,7 +21425,7 @@ Negotiator.prototype.preferredMediaTypes = Negotiator.prototype.mediaTypes;
 
 /***/ }),
 
-/***/ 8768:
+/***/ 7783:
 /***/ ((module) => {
 
 "use strict";
@@ -19356,7 +21602,7 @@ function isQuality(spec) {
 
 /***/ }),
 
-/***/ 9985:
+/***/ 1259:
 /***/ ((module) => {
 
 "use strict";
@@ -19548,7 +21794,7 @@ function isQuality(spec) {
 
 /***/ }),
 
-/***/ 4714:
+/***/ 5078:
 /***/ ((module) => {
 
 "use strict";
@@ -19735,7 +21981,7 @@ function isQuality(spec) {
 
 /***/ }),
 
-/***/ 3296:
+/***/ 683:
 /***/ ((module) => {
 
 "use strict";
@@ -20037,7 +22283,7 @@ function splitParameters(str) {
 
 /***/ }),
 
-/***/ 4376:
+/***/ 2971:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var hasMap = typeof Map === 'function' && Map.prototype;
@@ -20107,7 +22353,7 @@ function addNumericSeparator(num, str) {
     return $replace.call(str, sepRegex, '$&_');
 }
 
-var utilInspect = __nccwpck_require__(9913);
+var utilInspect = __nccwpck_require__(7935);
 var inspectCustom = utilInspect.custom;
 var inspectSymbol = isSymbol(inspectCustom) ? inspectCustom : null;
 
@@ -20556,7 +22802,7 @@ function arrObjKeys(obj, inspect) {
 
 /***/ }),
 
-/***/ 9913:
+/***/ 7935:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 module.exports = __nccwpck_require__(3837).inspect;
@@ -20564,7 +22810,7 @@ module.exports = __nccwpck_require__(3837).inspect;
 
 /***/ }),
 
-/***/ 6990:
+/***/ 7703:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -20591,7 +22837,7 @@ module.exports.isFinished = isFinished
  */
 
 var asyncHooks = tryRequireAsyncHooks()
-var first = __nccwpck_require__(8477)
+var first = __nccwpck_require__(1148)
 
 /**
  * Variables.
@@ -20806,7 +23052,7 @@ function wrap (fn) {
 
 /***/ }),
 
-/***/ 1977:
+/***/ 6931:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -20972,7 +23218,7 @@ function fresh (url, parsedUrl) {
 
 /***/ }),
 
-/***/ 6196:
+/***/ 4420:
 /***/ ((module) => {
 
 /**
@@ -21108,7 +23354,7 @@ function pathtoRegexp(path, keys, options) {
 
 /***/ }),
 
-/***/ 5492:
+/***/ 6265:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -21134,8 +23380,8 @@ module.exports.compile = compile
  * @private
  */
 
-var forwarded = __nccwpck_require__(5304)
-var ipaddr = __nccwpck_require__(8031)
+var forwarded = __nccwpck_require__(7883)
+var ipaddr = __nccwpck_require__(5097)
 
 /**
  * Variables.
@@ -21443,7 +23689,7 @@ function trustSingle (subnet) {
 
 /***/ }),
 
-/***/ 5000:
+/***/ 6009:
 /***/ ((module) => {
 
 "use strict";
@@ -21474,15 +23720,15 @@ module.exports = {
 
 /***/ }),
 
-/***/ 5638:
+/***/ 5553:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var stringify = __nccwpck_require__(1921);
-var parse = __nccwpck_require__(4708);
-var formats = __nccwpck_require__(5000);
+var stringify = __nccwpck_require__(7834);
+var parse = __nccwpck_require__(2946);
+var formats = __nccwpck_require__(6009);
 
 module.exports = {
     formats: formats,
@@ -21493,13 +23739,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4708:
+/***/ 2946:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var utils = __nccwpck_require__(6977);
+var utils = __nccwpck_require__(8257);
 
 var has = Object.prototype.hasOwnProperty;
 var isArray = Array.isArray;
@@ -21764,15 +24010,15 @@ module.exports = function (str, opts) {
 
 /***/ }),
 
-/***/ 1921:
+/***/ 7834:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var getSideChannel = __nccwpck_require__(1552);
-var utils = __nccwpck_require__(6977);
-var formats = __nccwpck_require__(5000);
+var getSideChannel = __nccwpck_require__(7484);
+var utils = __nccwpck_require__(8257);
+var formats = __nccwpck_require__(6009);
 var has = Object.prototype.hasOwnProperty;
 
 var arrayPrefixGenerators = {
@@ -22089,13 +24335,13 @@ module.exports = function (object, opts) {
 
 /***/ }),
 
-/***/ 6977:
+/***/ 8257:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var formats = __nccwpck_require__(5000);
+var formats = __nccwpck_require__(6009);
 
 var has = Object.prototype.hasOwnProperty;
 var isArray = Array.isArray;
@@ -22349,7 +24595,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1672:
+/***/ 1688:
 /***/ ((module) => {
 
 "use strict";
@@ -22519,7 +24765,7 @@ function sortByRangeStart (a, b) {
 
 /***/ }),
 
-/***/ 653:
+/***/ 4331:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -22538,10 +24784,10 @@ function sortByRangeStart (a, b) {
  */
 
 var asyncHooks = tryRequireAsyncHooks()
-var bytes = __nccwpck_require__(1856)
-var createError = __nccwpck_require__(3086)
-var iconv = __nccwpck_require__(6411)
-var unpipe = __nccwpck_require__(1913)
+var bytes = __nccwpck_require__(8100)
+var createError = __nccwpck_require__(9257)
+var iconv = __nccwpck_require__(1670)
+var unpipe = __nccwpck_require__(1224)
 
 /**
  * Module exports.
@@ -22856,7 +25102,7 @@ function wrap (fn) {
 
 /***/ }),
 
-/***/ 5562:
+/***/ 1490:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -22941,7 +25187,7 @@ module.exports = safer
 
 /***/ }),
 
-/***/ 7269:
+/***/ 2891:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -22959,21 +25205,21 @@ module.exports = safer
  * @private
  */
 
-var createError = __nccwpck_require__(3086)
-var debug = __nccwpck_require__(2838)('send')
-var deprecate = __nccwpck_require__(6192)('send')
-var destroy = __nccwpck_require__(8849)
-var encodeUrl = __nccwpck_require__(514)
-var escapeHtml = __nccwpck_require__(7349)
-var etag = __nccwpck_require__(8418)
-var fresh = __nccwpck_require__(3652)
+var createError = __nccwpck_require__(9257)
+var debug = __nccwpck_require__(9959)('send')
+var deprecate = __nccwpck_require__(8087)('send')
+var destroy = __nccwpck_require__(7918)
+var encodeUrl = __nccwpck_require__(9976)
+var escapeHtml = __nccwpck_require__(5862)
+var etag = __nccwpck_require__(2038)
+var fresh = __nccwpck_require__(5326)
 var fs = __nccwpck_require__(7147)
-var mime = __nccwpck_require__(4121)
-var ms = __nccwpck_require__(8329)
-var onFinished = __nccwpck_require__(6990)
-var parseRange = __nccwpck_require__(1672)
+var mime = __nccwpck_require__(6995)
+var ms = __nccwpck_require__(1649)
+var onFinished = __nccwpck_require__(7703)
+var parseRange = __nccwpck_require__(1688)
 var path = __nccwpck_require__(1017)
-var statuses = __nccwpck_require__(63)
+var statuses = __nccwpck_require__(2851)
 var Stream = __nccwpck_require__(2781)
 var util = __nccwpck_require__(3837)
 
@@ -24092,7 +26338,7 @@ function setHeaders (res, headers) {
 
 /***/ }),
 
-/***/ 9930:
+/***/ 8063:
 /***/ ((module) => {
 
 /**
@@ -24251,7 +26497,7 @@ function plural(ms, n, name) {
 
 /***/ }),
 
-/***/ 910:
+/***/ 5951:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -24260,7 +26506,7 @@ function plural(ms, n, name) {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(6763);
+exports = module.exports = __nccwpck_require__(9303);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -24443,7 +26689,7 @@ function localstorage() {
 
 /***/ }),
 
-/***/ 6763:
+/***/ 9303:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 
@@ -24459,7 +26705,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = __nccwpck_require__(9930);
+exports.humanize = __nccwpck_require__(8063);
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -24652,7 +26898,7 @@ function coerce(val) {
 
 /***/ }),
 
-/***/ 2838:
+/***/ 9959:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -24661,15 +26907,15 @@ function coerce(val) {
  */
 
 if (typeof process !== 'undefined' && process.type === 'renderer') {
-  module.exports = __nccwpck_require__(910);
+  module.exports = __nccwpck_require__(5951);
 } else {
-  module.exports = __nccwpck_require__(873);
+  module.exports = __nccwpck_require__(9998);
 }
 
 
 /***/ }),
 
-/***/ 873:
+/***/ 9998:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -24685,7 +26931,7 @@ var util = __nccwpck_require__(3837);
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __nccwpck_require__(6763);
+exports = module.exports = __nccwpck_require__(9303);
 exports.init = init;
 exports.log = log;
 exports.formatArgs = formatArgs;
@@ -24924,7 +27170,7 @@ exports.enable(load());
 
 /***/ }),
 
-/***/ 8329:
+/***/ 1649:
 /***/ ((module) => {
 
 /**
@@ -25093,7 +27339,7 @@ function plural(ms, msAbs, n, name) {
 
 /***/ }),
 
-/***/ 2884:
+/***/ 7658:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -25112,11 +27358,11 @@ function plural(ms, msAbs, n, name) {
  * @private
  */
 
-var encodeUrl = __nccwpck_require__(514)
-var escapeHtml = __nccwpck_require__(7349)
-var parseUrl = __nccwpck_require__(1977)
+var encodeUrl = __nccwpck_require__(9976)
+var escapeHtml = __nccwpck_require__(5862)
+var parseUrl = __nccwpck_require__(6931)
 var resolve = (__nccwpck_require__(1017).resolve)
-var send = __nccwpck_require__(7269)
+var send = __nccwpck_require__(2891)
 var url = __nccwpck_require__(7310)
 
 /**
@@ -25311,7 +27557,7 @@ function createRedirectDirectoryListener () {
 
 /***/ }),
 
-/***/ 2199:
+/***/ 2170:
 /***/ ((module) => {
 
 "use strict";
@@ -25336,23 +27582,23 @@ function mixinProperties (obj, proto) {
 
 /***/ }),
 
-/***/ 8777:
+/***/ 8453:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
-module.exports = __nccwpck_require__(3427);
+module.exports = __nccwpck_require__(8887);
 
 
 /***/ }),
 
-/***/ 6593:
+/***/ 8321:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var randomFromSeed = __nccwpck_require__(1785);
+var randomFromSeed = __nccwpck_require__(6072);
 
 var ORIGINAL = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
 var alphabet;
@@ -25457,14 +27703,14 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4242:
+/***/ 7544:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var generate = __nccwpck_require__(7201);
-var alphabet = __nccwpck_require__(6593);
+var generate = __nccwpck_require__(7076);
+var alphabet = __nccwpck_require__(8321);
 
 // Ignore all milliseconds before a certain time to reduce the size of the date entropy without sacrificing uniqueness.
 // This number should be updated every year or so to keep the generated id short.
@@ -25511,15 +27757,15 @@ module.exports = build;
 
 /***/ }),
 
-/***/ 7201:
+/***/ 7076:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var alphabet = __nccwpck_require__(6593);
-var random = __nccwpck_require__(1283);
-var format = __nccwpck_require__(4024);
+var alphabet = __nccwpck_require__(8321);
+var random = __nccwpck_require__(4073);
+var format = __nccwpck_require__(9474);
 
 function generate(number) {
     var loopCounter = 0;
@@ -25540,21 +27786,21 @@ module.exports = generate;
 
 /***/ }),
 
-/***/ 3427:
+/***/ 8887:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var alphabet = __nccwpck_require__(6593);
-var build = __nccwpck_require__(4242);
-var isValid = __nccwpck_require__(3820);
+var alphabet = __nccwpck_require__(8321);
+var build = __nccwpck_require__(7544);
+var isValid = __nccwpck_require__(9165);
 
 // if you are using cluster or multiple servers use this to make each instance
 // has a unique value for worker
 // Note: I don't know if this is automatically set when using third
 // party cluster solutions such as pm2.
-var clusterWorkerId = __nccwpck_require__(3175) || 0;
+var clusterWorkerId = __nccwpck_require__(5245) || 0;
 
 /**
  * Set the seed.
@@ -25610,12 +27856,12 @@ module.exports.isValid = isValid;
 
 /***/ }),
 
-/***/ 3820:
+/***/ 9165:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
-var alphabet = __nccwpck_require__(6593);
+var alphabet = __nccwpck_require__(8321);
 
 function isShortId(id) {
     if (!id || typeof id !== 'string' || id.length < 6 ) {
@@ -25633,15 +27879,15 @@ module.exports = isShortId;
 
 /***/ }),
 
-/***/ 1283:
+/***/ 4073:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = __nccwpck_require__(7607);
+module.exports = __nccwpck_require__(3962);
 
 
 /***/ }),
 
-/***/ 1785:
+/***/ 6072:
 /***/ ((module) => {
 
 "use strict";
@@ -25674,7 +27920,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 3175:
+/***/ 5245:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -25691,15 +27937,15 @@ module.exports = parseInt(process.env.NODE_UNIQUE_ID || clusterId, 10);
 
 /***/ }),
 
-/***/ 1552:
+/***/ 7484:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var GetIntrinsic = __nccwpck_require__(4527);
-var callBound = __nccwpck_require__(8396);
-var inspect = __nccwpck_require__(4376);
+var GetIntrinsic = __nccwpck_require__(1658);
+var callBound = __nccwpck_require__(9307);
+var inspect = __nccwpck_require__(2971);
 
 var $TypeError = GetIntrinsic('%TypeError%');
 var $WeakMap = GetIntrinsic('%WeakMap%', true);
@@ -25823,7 +28069,7 @@ module.exports = function getSideChannel() {
 
 /***/ }),
 
-/***/ 63:
+/***/ 2851:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -25977,7 +28223,7 @@ function status (code) {
 
 /***/ }),
 
-/***/ 4187:
+/***/ 5581:
 /***/ ((module) => {
 
 "use strict";
@@ -26252,7 +28498,7 @@ module.exports = SBMH;
 
 /***/ }),
 
-/***/ 3646:
+/***/ 6503:
 /***/ ((module) => {
 
 "use strict";
@@ -26292,7 +28538,7 @@ function toIdentifier (str) {
 
 /***/ }),
 
-/***/ 7138:
+/***/ 8177:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -26310,8 +28556,8 @@ function toIdentifier (str) {
  * @private
  */
 
-var typer = __nccwpck_require__(3519)
-var mime = __nccwpck_require__(2277)
+var typer = __nccwpck_require__(5392)
+var mime = __nccwpck_require__(5160)
 
 /**
  * Module exports.
@@ -26566,7 +28812,7 @@ function tryNormalizeType (value) {
 
 /***/ }),
 
-/***/ 1913:
+/***/ 1224:
 /***/ ((module) => {
 
 "use strict";
@@ -26643,7 +28889,7 @@ function unpipe(stream) {
 
 /***/ }),
 
-/***/ 722:
+/***/ 6602:
 /***/ ((module, exports) => {
 
 /**
@@ -26673,7 +28919,7 @@ exports = module.exports = function(a, b){
 
 /***/ }),
 
-/***/ 6830:
+/***/ 9391:
 /***/ ((module) => {
 
 "use strict";
@@ -26830,13 +29076,13 @@ function vary (res, field) {
 
 /***/ }),
 
-/***/ 6207:
+/***/ 9824:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateCameraConfig = exports.switchToAP = exports.switchToP2P = exports.updateFirmware = exports.configureOnBoot = exports.TMP_FILE_PATH = exports.NETWORK_CONFIG_PATH = exports.NETWORK_BOOT_CONFIG_PATH = exports.UPLOAD_PATH = exports.IMAGER_BRIDGE_PATH = exports.IMAGER_CONFIG_PATH = exports.IMAGER_EMMC_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
+exports.updateCameraConfig = exports.switchToAP = exports.switchToP2P = exports.updateFirmware = exports.configureOnBoot = exports.TMP_FILE_PATH = exports.NETWORK_CONFIG_PATH = exports.NETWORK_BOOT_CONFIG_PATH = exports.UPLOAD_PATH = exports.IMAGER_BRIDGE_PATH = exports.IMAGER_CONFIG_PATH = exports.IMAGER_EMMC_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.WEBSERVER_LOG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 const fs_1 = __nccwpck_require__(7147);
 exports.PORT = 5000;
@@ -26846,6 +29092,7 @@ exports.GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
 exports.IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
 exports.LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
 exports.BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
+exports.WEBSERVER_LOG_PATH = __dirname + '/../../../mnt/data/camera-node.log';
 exports.LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 exports.IMAGER_EMMC_CONFIG_PATH = __dirname + '/../../../opt/dashcam/bin/emmc_config.json';
 exports.IMAGER_CONFIG_PATH = __dirname + '/../../../opt/dashcam/bin/config.json';
@@ -26962,11 +29209,11 @@ const updateCameraConfig = (replaceLine, path) => {
     }
 };
 exports.updateCameraConfig = updateCameraConfig;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvY29uZmlnL2hkYy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBOEQ7QUFFOUQsMkJBQStCO0FBRWxCLFFBQUEsSUFBSSxHQUFHLElBQUksQ0FBQztBQUNaLFFBQUEsYUFBYSxHQUFHLFNBQVMsR0FBRyxvQkFBb0IsQ0FBQztBQUNqRCxRQUFBLGtCQUFrQixHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUMxRCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDdkQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsZ0JBQWdCLEdBQUcsU0FBUyxHQUFHLHlCQUF5QixDQUFDO0FBQ3pELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw0QkFBNEIsQ0FBQztBQUMzRCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDdkQsUUFBQSx1QkFBdUIsR0FDbEMsU0FBUyxHQUFHLDRDQUE0QyxDQUFDO0FBQzlDLFFBQUEsa0JBQWtCLEdBQzdCLFNBQVMsR0FBRyx1Q0FBdUMsQ0FBQztBQUN6QyxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxXQUFXLEdBQUcsU0FBUyxHQUFHLGdCQUFnQixDQUFDO0FBQzNDLFFBQUEsd0JBQXdCLEdBQ25DLFNBQVMsR0FBRyxxQ0FBcUMsQ0FBQztBQUN2QyxRQUFBLG1CQUFtQixHQUFHLFNBQVMsR0FBRyxzQkFBc0IsQ0FBQztBQUN6RCxRQUFBLGFBQWEsR0FBRyxtQkFBbUIsQ0FBQztBQUUxQyxNQUFNLGVBQWUsR0FBRyxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ25FLElBQUk7UUFDRiwyQ0FB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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9EOi9Qcm9qZWN0cy9ITS9vZGMtYXBpL3NyYy9jb25maWcvaGRjLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUE4RDtBQUU5RCwyQkFBK0I7QUFFbEIsUUFBQSxJQUFJLEdBQUcsSUFBSSxDQUFDO0FBQ1osUUFBQSxhQUFhLEdBQUcsU0FBUyxHQUFHLG9CQUFvQixDQUFDO0FBQ2pELFFBQUEsa0JBQWtCLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQzFELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDdkQsUUFBQSxnQkFBZ0IsR0FBRyxTQUFTLEdBQUcseUJBQXlCLENBQUM7QUFDekQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLDRCQUE0QixDQUFDO0FBQzNELFFBQUEsa0JBQWtCLEdBQUcsU0FBUyxHQUFHLG9DQUFvQyxDQUFDO0FBQ3RFLFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLHVCQUF1QixHQUNsQyxTQUFTLEdBQUcsNENBQTRDLENBQUM7QUFDOUMsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLHVDQUF1QyxDQUFDO0FBQ3pDLFFBQUEsa0JBQWtCLEdBQzdCLFNBQVMsR0FBRyxxQ0FBcUMsQ0FBQztBQUN2QyxRQUFBLFdBQVcsR0FBRyxTQUFTLEdBQUcsZ0JBQWdCLENBQUM7QUFDM0MsUUFBQSx3QkFBd0IsR0FDbkMsU0FBUyxHQUFHLHFDQUFxQyxDQUFDO0FBQ3ZDLFFBQUEsbUJBQW1CLEdBQUcsU0FBUyxHQUFHLHNCQUFzQixDQUFDO0FBQ3pELFFBQUEsYUFBYSxHQUFHLG1CQUFtQixDQUFDO0FBRTFDLE1BQU0sZUFBZSxHQUFHLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7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
 
 /***/ }),
 
-/***/ 6039:
+/***/ 773:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -26987,13 +29234,13 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.API_VERSION = void 0;
-__exportStar(__nccwpck_require__(6207), exports);
-exports.API_VERSION = '0.9.8';
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9jb25maWcvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSx3Q0FBc0I7QUFDVCxRQUFBLFdBQVcsR0FBRyxPQUFPLENBQUMifQ==
+__exportStar(__nccwpck_require__(9824), exports);
+exports.API_VERSION = '0.9.9';
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL0Q6L1Byb2plY3RzL0hNL29kYy1hcGkvc3JjL2NvbmZpZy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7OztBQUFBLHdDQUFzQjtBQUNULFFBQUEsV0FBVyxHQUFHLE9BQU8sQ0FBQyJ9
 
 /***/ }),
 
-/***/ 6754:
+/***/ 4670:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -27001,12 +29248,13 @@ exports.API_VERSION = '0.9.8';
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HeartBeatService = exports.switchToFirmwareUpdate = exports.setMostRecentPing = void 0;
 const child_process_1 = __nccwpck_require__(2081);
-const lock_1 = __nccwpck_require__(5609);
+const lock_1 = __nccwpck_require__(5765);
 // import { isPairing, repairNetworking } from 'util/network';
-const led_1 = __nccwpck_require__(4011);
+const led_1 = __nccwpck_require__(4008);
 let previousCameraResponse = '';
 let mostRecentPing = 0;
 let isFirmwareUpdate = false;
+let wasGpsGood = false;
 const setMostRecentPing = (_mostRecentPing) => {
     mostRecentPing = _mostRecentPing;
 };
@@ -27038,9 +29286,19 @@ exports.HeartBeatService = {
                             gpsLED = led_1.COLORS.GREEN;
                             (0, lock_1.setLockTime)();
                             (0, lock_1.setCameraTime)();
+                            if (!wasGpsGood) {
+                                console.log('Got 3d Fix');
+                            }
+                            wasGpsGood = true;
                         }
-                        else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
-                            gpsLED = led_1.COLORS.YELLOW;
+                        else {
+                            if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
+                                gpsLED = led_1.COLORS.YELLOW;
+                            }
+                            if (wasGpsGood) {
+                                console.log('Lost 3d Fix');
+                            }
+                            wasGpsGood = false;
                         }
                         const imgLED = cameraResponse.indexOf('active') === 0
                             ? cameraResponse !== previousCameraResponse
@@ -27074,11 +29332,11 @@ exports.HeartBeatService = {
     },
     interval: 7000,
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGVhcnRCZWF0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvaGVhcnRCZWF0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFvRDtBQUVwRCxvQ0FBdUQ7QUFDdkQsOERBQThEO0FBQzlELHFDQUFnRDtBQUVoRCxJQUFJLHNCQUFzQixHQUFHLEVBQUUsQ0FBQztBQUNoQyxJQUFJLGNBQWMsR0FBRyxDQUFDLENBQUM7QUFDdkIsSUFBSSxnQkFBZ0IsR0FBRyxLQUFLLENBQUM7QUFFdEIsTUFBTSxpQkFBaUIsR0FBRyxDQUFDLGVBQXVCLEVBQUUsRUFBRTtJQUMzRCxjQUFjLEdBQUcsZUFBZSxDQUFDO0FBQ25DLENBQUMsQ0FBQztBQUZXLFFBQUEsaUJBQWlCLHFCQUU1QjtBQUVLLE1BQU0sc0JBQXNCLEdBQUcsQ0FBQyxLQUFjLEVBQUUsRUFBRTtJQUN2RCxnQkFBZ0IsR0FBRyxLQUFLLENBQUM7QUFDM0IsQ0FBQyxDQUFDO0FBRlcsUUFBQSxzQkFBc0IsMEJBRWpDO0FBRVcsUUFBQSxnQkFBZ0IsR0FBYTtJQUN4QyxPQUFPLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEIsSUFBSTtZQUNGLElBQUksZ0JBQWdCLEVBQUU7Z0JBQ3BCLElBQUEsZUFBUyxFQUFDLFlBQU0sQ0FBQyxNQUFNLEVBQUUsWUFBTSxDQUFDLE1BQU0sRUFBRSxZQUFNLENBQUMsTUFBTSxDQUFDLENBQUM7Z0JBQ3ZELE9BQU87YUFDUjtZQUNELGdDQUFnQztZQUNoQyw2RUFBNkU7WUFDN0UsSUFBQSxvQkFBSSxFQUNGLCtCQUErQixFQUMvQjtnQkFDRSxRQUFRLEVBQUUsT0FBTzthQUNsQixFQUNELENBQUMsS0FBMkIsRUFBRSxNQUFjLEVBQUUsRUFBRTtnQkFDOUMsTUFBTSxhQUFhLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQztnQkFFMUMsSUFBQSxvQkFBSSxFQUNGLGtFQUFrRSxFQUNsRTtvQkFDRSxRQUFRLEVBQUUsT0FBTztpQkFDbEIsRUFDRCxDQUFDLEtBQTJCLEVBQUUsTUFBYyxFQUFFLEVBQUU7b0JBQzlDLE1BQU0sY0FBYyxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxNQUFNLENBQUM7b0JBRTNDLElBQUk7d0JBQ0YsSUFBSSxNQUFNLEdBQUcsWUFBTSxDQUFDLEdBQUcsQ0FBQzt3QkFDeEIsSUFBSSxhQUFhLENBQUMsT0FBTyxDQUFDLFdBQVcsQ0FBQyxLQUFLLENBQUMsQ0FBQyxFQUFFOzRCQUM3QyxNQUFNLEdBQUcsWUFBTSxDQUFDLEtBQUssQ0FBQzs0QkFDdEIsSUFBQSxrQkFBVyxHQUFFLENBQUM7NEJBQ2QsSUFBQSxvQkFBYSxHQUFFLENBQUM7eUJBQ2pCOzZCQUFNLElBQUksYUFBYSxDQUFDLE9BQU8sQ0FBQyxXQUFXLENBQUMsS0FBSyxDQUFDLENBQUMsRUFBRTs0QkFDcEQsTUFBTSxHQUFHLFlBQU0sQ0FBQyxNQUFNLENBQUM7eUJBQ3hCO3dCQUVELE1BQU0sTUFBTSxHQUNWLGNBQWMsQ0FBQyxPQUFPLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQzs0QkFDcEMsQ0FBQyxDQUFDLGNBQWMsS0FBSyxzQkFBc0I7Z0NBQ3pDLENBQUMsQ0FBQyxzQkFBc0I7b0NBQ3RCLENBQUMsQ0FBQyxZQUFNLENBQUMsS0FBSztvQ0FDZCxDQUFDLENBQUMsWUFBTSxDQUFDLE1BQU07Z0NBQ2pCLENBQUMsQ0FBQyxZQUFNLENBQUMsTUFBTTs0QkFDakIsQ0FBQyxDQUFDLFlBQU0sQ0FBQyxHQUFHLENBQUM7d0JBQ2pCLHNCQUFzQixHQUFHLGNBQWMsQ0FBQzt3QkFFeEMsTUFBTSxzQkFBc0IsR0FBRyxjQUFjOzRCQUMzQyxDQUFDLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsR0FBRyxFQUFFLEdBQUcsY0FBYyxDQUFDOzRCQUN2QyxDQUFDLENBQUMsS0FBSyxDQUFDO3dCQUVWLElBQUksTUFBTSxHQUFHLFlBQU0sQ0FBQyxHQUFHLENBQUM7d0JBQ3hCLElBQUksc0JBQXNCLEdBQUcsS0FBSyxFQUFFOzRCQUNsQyxNQUFNLEdBQUcsWUFBTSxDQUFDLEtBQUssQ0FBQzt5QkFDdkI7NkJBQU07NEJBQ0wsTUFBTSxHQUFHLFlBQU0sQ0FBQyxNQUFNLENBQUM7eUJBQ3hCO3dCQUNELElBQUEsZUFBUyxFQUFDLE1BQU0sRUFBRSxNQUFNLEVBQUUsTUFBTSxDQUFDLENBQUM7cUJBQ25DO29CQUFDLE9BQU8sQ0FBVSxFQUFFO3dCQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO3FCQUNoQjtnQkFDSCxDQUFDLENBQ0YsQ0FBQztZQUNKLENBQUMsQ0FDRixDQUFDO1NBQ0g7UUFBQyxPQUFPLENBQVUsRUFBRTtZQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLCtCQUErQixFQUFFLENBQUMsQ0FBQyxDQUFDO1NBQ2pEO0lBQ0gsQ0FBQztJQUNELFFBQVEsRUFBRSxJQUFJO0NBQ2YsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGVhcnRCZWF0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9EOi9Qcm9qZWN0cy9ITS9vZGMtYXBpL3NyYy9zZXJ2aWNlcy9oZWFydEJlYXQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQW9EO0FBRXBELG9DQUF1RDtBQUN2RCw4REFBOEQ7QUFDOUQscUNBQWdEO0FBRWhELElBQUksc0JBQXNCLEdBQUcsRUFBRSxDQUFDO0FBQ2hDLElBQUksY0FBYyxHQUFHLENBQUMsQ0FBQztBQUN2QixJQUFJLGdCQUFnQixHQUFHLEtBQUssQ0FBQztBQUM3QixJQUFJLFVBQVUsR0FBRyxLQUFLLENBQUM7QUFFaEIsTUFBTSxpQkFBaUIsR0FBRyxDQUFDLGVBQXVCLEVBQUUsRUFBRTtJQUMzRCxjQUFjLEdBQUcsZUFBZSxDQUFDO0FBQ25DLENBQUMsQ0FBQztBQUZXLFFBQUEsaUJBQWlCLHFCQUU1QjtBQUVLLE1BQU0sc0JBQXNCLEdBQUcsQ0FBQyxLQUFjLEVBQUUsRUFBRTtJQUN2RCxnQkFBZ0IsR0FBRyxLQUFLLENBQUM7QUFDM0IsQ0FBQyxDQUFDO0FBRlcsUUFBQSxzQkFBc0IsMEJBRWpDO0FBRVcsUUFBQSxnQkFBZ0IsR0FBYTtJQUN4QyxPQUFPLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEIsSUFBSTtZQUNGLElBQUksZ0JBQWdCLEVBQUU7Z0JBQ3BCLElBQUEsZUFBUyxFQUFDLFlBQU0sQ0FBQyxNQUFNLEVBQUUsWUFBTSxDQUFDLE1BQU0sRUFBRSxZQUFNLENBQUMsTUFBTSxDQUFDLENBQUM7Z0JBQ3ZELE9BQU87YUFDUjtZQUNELGdDQUFnQztZQUNoQyw2RUFBNkU7WUFDN0UsSUFBQSxvQkFBSSxFQUNGLCtCQUErQixFQUMvQjtnQkFDRSxRQUFRLEVBQUUsT0FBTzthQUNsQixFQUNELENBQUMsS0FBMkIsRUFBRSxNQUFjLEVBQUUsRUFBRTtnQkFDOUMsTUFBTSxhQUFhLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FB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
 
 /***/ }),
 
-/***/ 1242:
+/***/ 721:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -27086,7 +29344,7 @@ exports.HeartBeatService = {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ImageRotationService = void 0;
 const child_process_1 = __nccwpck_require__(2081);
-const config_1 = __nccwpck_require__(6039);
+const config_1 = __nccwpck_require__(773);
 const fs_1 = __nccwpck_require__(7147);
 exports.ImageRotationService = {
     execute: async () => {
@@ -27109,7 +29367,7 @@ exports.ImageRotationService = {
                                 console.log('Set rotation to 180');
                             }
                             try {
-                                (0, fs_1.writeFile)(config_1.IMAGER_EMMC_CONFIG_PATH, JSON.stringify(config), {
+                                (0, fs_1.writeFile)(config_1.IMAGER_CONFIG_PATH, JSON.stringify(config), {
                                     encoding: 'utf-8',
                                 }, () => {
                                     (0, child_process_1.exec)('systemctl start camera-bridge');
@@ -27139,11 +29397,11 @@ exports.ImageRotationService = {
     },
     delay: 4000,
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW1hZ2VSb3RhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3NlcnZpY2VzL2ltYWdlUm90YXRpb24udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQW9EO0FBQ3BELG1DQUFxRTtBQUNyRSwyQkFBeUM7QUFHNUIsUUFBQSxvQkFBb0IsR0FBYTtJQUM1QyxPQUFPLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbEIsSUFBSTtZQUNGLElBQUEsb0JBQUksRUFDRiw4QkFBOEIsRUFDOUI7Z0JBQ0UsUUFBUSxFQUFFLE9BQU87YUFDbEIsRUFDRCxDQUFDLEtBQTJCLEVBQUUsRUFBRTtnQkFDOUIsSUFBSSxDQUFDLEtBQUssRUFBRTtvQkFDVixJQUFJO3dCQUNGLElBQUEsYUFBUSxFQUNOLDJCQUFrQixFQUNsQjs0QkFDRSxRQUFRLEVBQUUsT0FBTzt5QkFDbEIsRUFDRCxDQUFDLEdBQWlDLEVBQUUsSUFBWSxFQUFFLEVBQUU7NEJBQ2xELElBQUksTUFBTSxHQUFRLEVBQUUsQ0FBQzs0QkFDckIsSUFBSSxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUU7Z0NBQ2hCLE1BQU0sR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDOzZCQUMzQjs0QkFFRCxJQUNFLE1BQU0sRUFBRSxNQUFNLEVBQUUsVUFBVTtnQ0FDMUIsQ0FBQyxNQUFNLEVBQUUsTUFBTSxFQUFFLFVBQVUsQ0FBQyxRQUFRLEVBQ3BDO2dDQUNBLE1BQU0sQ0FBQyxNQUFNLENBQUMsVUFBVSxDQUFDLFFBQVEsR0FBRyxHQUFHLENBQUM7Z0NBQ3hDLE9BQU8sQ0FBQyxHQUFHLENBQUMscUJBQXFCLENBQUMsQ0FBQzs2QkFDcEM7NEJBRUQsSUFBSTtnQ0FDRixJQUFBLGNBQVMsRUFDUCxnQ0FBdUIsRUFDdkIsSUFBSSxDQUFDLFNBQVMsQ0FBQyxNQUFNLENBQUMsRUFDdEI7b0NBQ0UsUUFBUSxFQUFFLE9BQU87aUNBQ2xCLEVBQ0QsR0FBRyxFQUFFO29DQUNILElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDO29DQUN0QyxPQUFPLENBQUMsR0FBRyxDQUFDLG1DQUFtQyxDQUFDLENBQUM7Z0NBQ25ELENBQUMsQ0FDRixDQUFDOzZCQUNIOzRCQUFDLE9BQU8sQ0FBVSxFQUFFO2dDQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO2dDQUNmLElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDOzZCQUN2Qzt3QkFDSCxDQUFDLENBQ0YsQ0FBQztxQkFDSDtvQkFBQyxPQUFPLENBQVUsRUFBRTt3QkFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQzt3QkFDZixJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztxQkFDdkM7aUJBQ0Y7cUJBQU07b0JBQ0wsSUFBQSxvQkFBSSxFQUFDLCtCQUErQixDQUFDLENBQUM7aUJBQ3ZDO1lBQ0gsQ0FBQyxDQUNGLENBQUM7U0FDSDtRQUFDLE9BQU8sQ0FBVSxFQUFFO1lBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsMENBQTBDLEVBQUUsQ0FBQyxDQUFDLENBQUM7WUFDM0QsSUFBQSxvQkFBSSxFQUFDLCtCQUErQixDQUFDLENBQUM7U0FDdkM7SUFDSCxDQUFDO0lBQ0QsS0FBSyxFQUFFLElBQUk7Q0FDWixDQUFDIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW1hZ2VSb3RhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vRDovUHJvamVjdHMvSE0vb2RjLWFwaS9zcmMvc2VydmljZXMvaW1hZ2VSb3RhdGlvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBb0Q7QUFDcEQsbUNBQXFFO0FBQ3JFLDJCQUF5QztBQUc1QixRQUFBLG9CQUFvQixHQUFhO0lBQzVDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixJQUFJO1lBQ0YsSUFBQSxvQkFBSSxFQUNGLDhCQUE4QixFQUM5QjtnQkFDRSxRQUFRLEVBQUUsT0FBTzthQUNsQixFQUNELENBQUMsS0FBMkIsRUFBRSxFQUFFO2dCQUM5QixJQUFJLENBQUMsS0FBSyxFQUFFO29CQUNWLElBQUk7d0JBQ0YsSUFBQSxhQUFRLEVBQ04sMkJBQWtCLEVBQ2xCOzRCQUNFLFFBQVEsRUFBRSxPQUFPO3lCQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTs0QkFDbEQsSUFBSSxNQUFNLEdBQVEsRUFBRSxDQUFDOzRCQUNyQixJQUFJLElBQUksSUFBSSxDQUFDLEdBQUcsRUFBRTtnQ0FDaEIsTUFBTSxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUM7NkJBQzNCOzRCQUVELElBQ0UsTUFBTSxFQUFFLE1BQU0sRUFBRSxVQUFVO2dDQUMxQixDQUFDLE1BQU0sRUFBRSxNQUFNLEVBQUUsVUFBVSxDQUFDLFFBQVEsRUFDcEM7Z0NBQ0EsTUFBTSxDQUFDLE1BQU0sQ0FBQyxVQUFVLENBQUMsUUFBUSxHQUFHLEdBQUcsQ0FBQztnQ0FDeEMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxDQUFDOzZCQUNwQzs0QkFFRCxJQUFJO2dDQUNGLElBQUEsY0FBUyxFQUNQLDJCQUFrQixFQUNsQixJQUFJLENBQUMsU0FBUyxDQUFDLE1BQU0sQ0FBQyxFQUN0QjtvQ0FDRSxRQUFRLEVBQUUsT0FBTztpQ0FDbEIsRUFDRCxHQUFHLEVBQUU7b0NBQ0gsSUFBQSxvQkFBSSxFQUFDLCtCQUErQixDQUFDLENBQUM7b0NBQ3RDLE9BQU8sQ0FBQyxHQUFHLENBQUMsbUNBQW1DLENBQUMsQ0FBQztnQ0FDbkQsQ0FBQyxDQUNGLENBQUM7NkJBQ0g7NEJBQUMsT0FBTyxDQUFVLEVBQUU7Z0NBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7Z0NBQ2YsSUFBQSxvQkFBSSxFQUFDLCtCQUErQixDQUFDLENBQUM7NkJBQ3ZDO3dCQUNILENBQUMsQ0FDRixDQUFDO3FCQUNIO29CQUFDLE9BQU8sQ0FBVSxFQUFFO3dCQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO3dCQUNmLElBQUEsb0JBQUksRUFBQywrQkFBK0IsQ0FBQyxDQUFDO3FCQUN2QztpQkFDRjtxQkFBTTtvQkFDTCxJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztpQkFDdkM7WUFDSCxDQUFDLENBQ0YsQ0FBQztTQUNIO1FBQUMsT0FBTyxDQUFVLEVBQUU7WUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQywwQ0FBMEMsRUFBRSxDQUFDLENBQUMsQ0FBQztZQUMzRCxJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztTQUN2QztJQUNILENBQUM7SUFDRCxLQUFLLEVBQUUsSUFBSTtDQUNaLENBQUMifQ==
 
 /***/ }),
 
-/***/ 669:
+/***/ 225:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -27184,18 +29442,18 @@ class ServiceRunner {
     }
 }
 exports.serviceRunner = new ServiceRunner();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9zZXJ2aWNlcy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFFQSxNQUFNLGFBQWE7SUFBbkI7UUFDRSxhQUFRLEdBQWUsRUFBRSxDQUFDO0lBMEI1QixDQUFDO0lBekJDLEdBQUcsQ0FBQyxPQUFpQjtRQUNuQixJQUFJLENBQUMsUUFBUSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQztJQUM5QixDQUFDO0lBQ0QsR0FBRztRQUNELElBQUksQ0FBQyxRQUFRLENBQUMsR0FBRyxDQUFDLENBQUMsT0FBaUIsRUFBRSxFQUFFO1lBQ3RDLElBQUksT0FBTyxDQUFDLFFBQVEsSUFBSSxPQUFPLENBQUMsS0FBSyxFQUFFO2dCQUNyQyxNQUFNLFFBQVEsR0FBRyxXQUFXLENBQUMsR0FBRyxFQUFFO29CQUNoQyxJQUFJO3dCQUNGLE9BQU8sQ0FBQyxPQUFPLEVBQUUsQ0FBQzt3QkFDbEIsSUFBSSxPQUFPLENBQUMsS0FBSyxFQUFFOzRCQUNqQixhQUFhLENBQUMsUUFBUSxDQUFDLENBQUM7eUJBQ3pCO3FCQUNGO29CQUFDLE9BQU8sQ0FBVSxFQUFFO3dCQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLGVBQWUsRUFBRSxDQUFDLENBQUMsQ0FBQztxQkFDakM7Z0JBQ0gsQ0FBQyxFQUFFLE9BQU8sQ0FBQyxRQUFRLElBQUksT0FBTyxDQUFDLEtBQUssQ0FBQyxDQUFDO2FBQ3ZDO2lCQUFNO2dCQUNMLElBQUk7b0JBQ0YsT0FBTyxDQUFDLE9BQU8sRUFBRSxDQUFDO2lCQUNuQjtnQkFBQyxPQUFPLENBQVUsRUFBRTtvQkFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyw0QkFBNEIsRUFBRSxDQUFDLENBQUMsQ0FBQztpQkFDOUM7YUFDRjtRQUNILENBQUMsQ0FBQyxDQUFDO0lBQ0wsQ0FBQztDQUNGO0FBRVksUUFBQSxhQUFhLEdBQUcsSUFBSSxhQUFhLEVBQUUsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL0Q6L1Byb2plY3RzL0hNL29kYy1hcGkvc3JjL3NlcnZpY2VzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUVBLE1BQU0sYUFBYTtJQUFuQjtRQUNFLGFBQVEsR0FBZSxFQUFFLENBQUM7SUEwQjVCLENBQUM7SUF6QkMsR0FBRyxDQUFDLE9BQWlCO1FBQ25CLElBQUksQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxDQUFDO0lBQzlCLENBQUM7SUFDRCxHQUFHO1FBQ0QsSUFBSSxDQUFDLFFBQVEsQ0FBQyxHQUFHLENBQUMsQ0FBQyxPQUFpQixFQUFFLEVBQUU7WUFDdEMsSUFBSSxPQUFPLENBQUMsUUFBUSxJQUFJLE9BQU8sQ0FBQyxLQUFLLEVBQUU7Z0JBQ3JDLE1BQU0sUUFBUSxHQUFHLFdBQVcsQ0FBQyxHQUFHLEVBQUU7b0JBQ2hDLElBQUk7d0JBQ0YsT0FBTyxDQUFDLE9BQU8sRUFBRSxDQUFDO3dCQUNsQixJQUFJLE9BQU8sQ0FBQyxLQUFLLEVBQUU7NEJBQ2pCLGFBQWEsQ0FBQyxRQUFRLENBQUMsQ0FBQzt5QkFDekI7cUJBQ0Y7b0JBQUMsT0FBTyxDQUFVLEVBQUU7d0JBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsZUFBZSxFQUFFLENBQUMsQ0FBQyxDQUFDO3FCQUNqQztnQkFDSCxDQUFDLEVBQUUsT0FBTyxDQUFDLFFBQVEsSUFBSSxPQUFPLENBQUMsS0FBSyxDQUFDLENBQUM7YUFDdkM7aUJBQU07Z0JBQ0wsSUFBSTtvQkFDRixPQUFPLENBQUMsT0FBTyxFQUFFLENBQUM7aUJBQ25CO2dCQUFDLE9BQU8sQ0FBVSxFQUFFO29CQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLDRCQUE0QixFQUFFLENBQUMsQ0FBQyxDQUFDO2lCQUM5QzthQUNGO1FBQ0gsQ0FBQyxDQUFDLENBQUM7SUFDTCxDQUFDO0NBQ0Y7QUFFWSxRQUFBLGFBQWEsR0FBRyxJQUFJLGFBQWEsRUFBRSxDQUFDIn0=
 
 /***/ }),
 
-/***/ 5896:
+/***/ 5042:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.checkIfUpsideDown = exports.filterBySinceUntil = exports.getSessionId = exports.setSessionId = exports.getDateFromUnicodeTimastamp = exports.getDateFromFilename = void 0;
-const shortid_1 = __nccwpck_require__(8777);
+const shortid_1 = __nccwpck_require__(8453);
 let sessionId;
 const getDateFromFilename = (filename) => {
     try {
@@ -27245,18 +29503,18 @@ const checkIfUpsideDown = (imu) => {
     return imu?.accel.y < -0.8;
 };
 exports.checkIfUpsideDown = checkIfUpsideDown;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy91dGlsL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUVBLHFDQUFtQztBQUVuQyxJQUFJLFNBQWlCLENBQUM7QUFFZixNQUFNLG1CQUFtQixHQUFHLENBQUMsUUFBZ0IsRUFBRSxFQUFFO0lBQ3RELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxRQUFRLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ2xDLE1BQU0sSUFBSSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUMsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNwRCxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7UUFDWCxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsSUFBSSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUMxQixPQUFPLElBQUksSUFBSSxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQztLQUNsQztJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsT0FBTyxJQUFJLElBQUksRUFBRSxDQUFDO0tBQ25CO0FBQ0gsQ0FBQyxDQUFDO0FBVlcsUUFBQSxtQkFBbUIsdUJBVTlCO0FBRUssTUFBTSwyQkFBMkIsR0FBRyxDQUFDLFFBQWdCLEVBQUUsRUFBRTtJQUM5RCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsUUFBUSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNsQyxPQUFPLElBQUksSUFBSSxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQzlEO0lBQUMsT0FBTyxDQUFDLEVBQUU7UUFDVixPQUFPLElBQUksSUFBSSxFQUFFLENBQUM7S0FDbkI7QUFDSCxDQUFDLENBQUM7QUFQVyxRQUFBLDJCQUEyQiwrQkFPdEM7QUFFSyxNQUFNLFlBQVksR0FBRyxHQUFHLEVBQUU7SUFDL0IsU0FBUyxHQUFHLElBQUEsa0JBQVEsR0FBRSxDQUFDO0FBQ3pCLENBQUMsQ0FBQztBQUZXLFFBQUEsWUFBWSxnQkFFdkI7QUFFSyxNQUFNLFlBQVksR0FBRyxHQUFHLEVBQUU7SUFDL0IsT0FBTyxTQUFTLENBQUM7QUFDbkIsQ0FBQyxDQUFDO0FBRlcsUUFBQSxZQUFZLGdCQUV2QjtBQUVLLE1BQU0sa0JBQWtCLEdBQUcsQ0FBQyxLQUFvQixFQUFFLEdBQVksRUFBRSxFQUFFO0lBQ3ZFLElBQUksR0FBRyxDQUFDLEtBQUssQ0FBQyxLQUFLLElBQUksR0FBRyxDQUFDLEtBQUssQ0FBQyxLQUFLLEVBQUU7UUFDdEMsTUFBTSxLQUFLLEdBQUcsTUFBTSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsS0FBSyxDQUFDLENBQUM7UUFDdEMsTUFBTSxLQUFLLEdBQUcsTUFBTSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsS0FBSyxDQUFDLENBQUM7UUFDdEMsT0FBTyxLQUFLLENBQUMsTUFBTSxDQUFDLENBQUMsSUFBaUIsRUFBRSxFQUFFO1lBQ3hDLE9BQU8sQ0FBQyxDQUFDLENBQUMsS0FBSyxJQUFJLElBQUksQ0FBQyxJQUFJLEdBQUcsS0FBSyxDQUFDLElBQUksQ0FBQyxLQUFLLElBQUksSUFBSSxDQUFDLElBQUksR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDO1FBQ3pFLENBQUMsQ0FBQyxDQUFDO0tBQ0o7U0FBTTtRQUNMLE9BQU8sS0FBSyxDQUFDO0tBQ2Q7QUFDSCxDQUFDLENBQUM7QUFWVyxRQUFBLGtCQUFrQixzQkFVN0I7QUFFSyxNQUFNLGlCQUFpQixHQUFHLENBQUMsR0FBUSxFQUFFLEVBQUU7SUFDNUMsT0FBTyxHQUFHLEVBQUUsS0FBSyxDQUFDLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQztBQUM3QixDQUFDLENBQUM7QUFGVyxRQUFBLGlCQUFpQixxQkFFNUIifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL0Q6L1Byb2plY3RzL0hNL29kYy1hcGkvc3JjL3V0aWwvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBRUEscUNBQW1DO0FBRW5DLElBQUksU0FBaUIsQ0FBQztBQUVmLE1BQU0sbUJBQW1CLEdBQUcsQ0FBQyxRQUFnQixFQUFFLEVBQUU7SUFDdEQsSUFBSTtRQUNGLE1BQU0sS0FBSyxHQUFHLFFBQVEsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDbEMsTUFBTSxJQUFJLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxJQUFJLEVBQUUsR0FBRyxDQUFDLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ3BELElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztRQUNYLEtBQUssQ0FBQyxDQUFDLENBQUMsR0FBRyxJQUFJLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQzFCLE9BQU8sSUFBSSxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO0tBQ2xDO0lBQUMsT0FBTyxDQUFDLEVBQUU7UUFDVixPQUFPLElBQUksSUFBSSxFQUFFLENBQUM7S0FDbkI7QUFDSCxDQUFDLENBQUM7QUFWVyxRQUFBLG1CQUFtQix1QkFVOUI7QUFFSyxNQUFNLDJCQUEyQixHQUFHLENBQUMsUUFBZ0IsRUFBRSxFQUFFO0lBQzlELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxRQUFRLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ2xDLE9BQU8sSUFBSSxJQUFJLENBQUMsTUFBTSxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsU0FBUyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUM7S0FDOUQ7SUFBQyxPQUFPLENBQUMsRUFBRTtRQUNWLE9BQU8sSUFBSSxJQUFJLEVBQUUsQ0FBQztLQUNuQjtBQUNILENBQUMsQ0FBQztBQVBXLFFBQUEsMkJBQTJCLCtCQU90QztBQUVLLE1BQU0sWUFBWSxHQUFHLEdBQUcsRUFBRTtJQUMvQixTQUFTLEdBQUcsSUFBQSxrQkFBUSxHQUFFLENBQUM7QUFDekIsQ0FBQyxDQUFDO0FBRlcsUUFBQSxZQUFZLGdCQUV2QjtBQUVLLE1BQU0sWUFBWSxHQUFHLEdBQUcsRUFBRTtJQUMvQixPQUFPLFNBQVMsQ0FBQztBQUNuQixDQUFDLENBQUM7QUFGVyxRQUFBLFlBQVksZ0JBRXZCO0FBRUssTUFBTSxrQkFBa0IsR0FBRyxDQUFDLEtBQW9CLEVBQUUsR0FBWSxFQUFFLEVBQUU7SUFDdkUsSUFBSSxHQUFHLENBQUMsS0FBSyxDQUFDLEtBQUssSUFBSSxHQUFHLENBQUMsS0FBSyxDQUFDLEtBQUssRUFBRTtRQUN0QyxNQUFNLEtBQUssR0FBRyxNQUFNLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxLQUFLLENBQUMsQ0FBQztRQUN0QyxNQUFNLEtBQUssR0FBRyxNQUFNLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxLQUFLLENBQUMsQ0FBQztRQUN0QyxPQUFPLEtBQUssQ0FBQyxNQUFNLENBQUMsQ0FBQyxJQUFpQixFQUFFLEVBQUU7WUFDeEMsT0FBTyxDQUFDLENBQUMsQ0FBQyxLQUFLLElBQUksSUFBSSxDQUFDLElBQUksR0FBRyxLQUFLLENBQUMsSUFBSSxDQUFDLEtBQUssSUFBSSxJQUFJLENBQUMsSUFBSSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUM7UUFDekUsQ0FBQyxDQUFDLENBQUM7S0FDSjtTQUFNO1FBQ0wsT0FBTyxLQUFLLENBQUM7S0FDZDtBQUNILENBQUMsQ0FBQztBQVZXLFFBQUEsa0JBQWtCLHNCQVU3QjtBQUVLLE1BQU0saUJBQWlCLEdBQUcsQ0FBQyxHQUFRLEVBQUUsRUFBRTtJQUM1QyxPQUFPLEdBQUcsRUFBRSxLQUFLLENBQUMsQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDO0FBQzdCLENBQUMsQ0FBQztBQUZXLFFBQUEsaUJBQWlCLHFCQUU1QiJ9
 
 /***/ }),
 
-/***/ 4011:
+/***/ 4008:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.updateLED = exports.COLORS = void 0;
-const config_1 = __nccwpck_require__(6039);
+const config_1 = __nccwpck_require__(773);
 const fs_1 = __nccwpck_require__(7147);
 exports.COLORS = {
     RED: {
@@ -27329,11 +29587,11 @@ const updateLED = async (framesLED, gpsLED, appLED) => {
     }
 };
 exports.updateLED = updateLED;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGVkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvdXRpbC9sZWQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsbUNBQXlDO0FBRXpDLDJCQUF5QztBQUU1QixRQUFBLE1BQU0sR0FBRztJQUNwQixHQUFHLEVBQUU7UUFDSCxHQUFHLEVBQUUsRUFBRTtRQUNQLElBQUksRUFBRSxDQUFDO1FBQ1AsS0FBSyxFQUFFLENBQUM7UUFDUixFQUFFLEVBQUUsSUFBSTtLQUNUO0lBQ0QsTUFBTSxFQUFFO1FBQ04sR0FBRyxFQUFFLEVBQUU7UUFDUCxJQUFJLEVBQUUsQ0FBQztRQUNQLEtBQUssRUFBRSxDQUFDO1FBQ1IsRUFBRSxFQUFFLElBQUk7S0FDVDtJQUNELEtBQUssRUFBRTtRQUNMLEdBQUcsRUFBRSxDQUFDO1FBQ04sSUFBSSxFQUFFLENBQUM7UUFDUCxLQUFLLEVBQUUsRUFBRTtRQUNULEVBQUUsRUFBRSxJQUFJO0tBQ1Q7SUFDRCxNQUFNLEVBQUU7UUFDTixHQUFHLEVBQUUsRUFBRTtRQUNQLElBQUksRUFBRSxFQUFFO1FBQ1IsS0FBSyxFQUFFLENBQUM7UUFDUixFQUFFLEVBQUUsSUFBSTtLQUNUO0lBQ0QsSUFBSSxFQUFFO1FBQ0osR0FBRyxFQUFFLENBQUM7UUFDTixJQUFJLEVBQUUsRUFBRTtRQUNSLEtBQUssRUFBRSxDQUFDO1FBQ1IsRUFBRSxFQUFFLElBQUk7S0FDVDtJQUNELElBQUksRUFBRTtRQUNKLEdBQUcsRUFBRSxFQUFFO1FBQ1AsSUFBSSxFQUFFLEVBQUU7UUFDUixLQUFLLEVBQUUsQ0FBQztRQUNSLEVBQUUsRUFBRSxJQUFJO0tBQ1Q7Q0FDRixDQUFDO0FBRUssTUFBTSxTQUFTLEdBQUcsS0FBSyxFQUM1QixTQUFlLEVBQ2YsTUFBWSxFQUNaLE1BQVksRUFDWixFQUFFO0lBQ0YsSUFBSTtRQUNGLElBQUksSUFBSSxHQUFXO1lBQ2pCLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxHQUFHLGNBQU0sQ0FBQyxHQUFHLEVBQUU7WUFDM0IsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsY0FBTSxDQUFDLEdBQUcsRUFBRTtZQUMzQixFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxjQUFNLENBQUMsR0FBRyxFQUFFO1NBQzVCLENBQUM7UUFDRixJQUFJO1lBQ0YsSUFBQSxhQUFRLEVBQ04sd0JBQWUsRUFDZjtnQkFDRSxRQUFRLEVBQUUsT0FBTzthQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTtnQkFDbEQsSUFBSSxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUU7b0JBQ2hCLElBQUksR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDLElBQUksQ0FBQztpQkFDOUI7Z0JBRUQsTUFBTSxNQUFNLEdBQUcsU0FBUyxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsU0FBUyxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFDbEUsTUFBTSxHQUFHLEdBQUcsTUFBTSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsTUFBTSxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFDekQsTUFBTSxHQUFHLEdBQUcsTUFBTSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsQ0FBQyxFQUFFLEdBQUcsTUFBTSxFQUFFLENBQUMsQ0FBQyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFFekQsSUFBQSxjQUFTLEVBQ1Asd0JBQWUsRUFDZixJQUFJLENBQUMsU0FBUyxDQUFDO29CQUNiLElBQUksRUFBRSxDQUFDLE1BQU0sRUFBRSxHQUFHLEVBQUUsR0FBRyxDQUFDO2lCQUN6QixDQUFDLEVBQ0Y7b0JBQ0UsUUFBUSxFQUFFLE9BQU87aUJBQ2xCLEVBQ0QsR0FBRyxFQUFFLEdBQUUsQ0FBQyxDQUNULENBQUM7WUFDSixDQUFDLENBQ0YsQ0FBQztTQUNIO1FBQUMsT0FBTyxDQUFDLEVBQUU7WUFDVixPQUFPLENBQUMsR0FBRyxDQUFDLCtCQUErQixDQUFDLENBQUM7U0FDOUM7S0FDRjtJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsT0FBTyxDQUFDLEdBQUcsQ0FBQyxxQkFBcUIsRUFBRSxDQUFDLENBQUMsQ0FBQztLQUN2QztBQUNILENBQUMsQ0FBQztBQTVDVyxRQUFBLFNBQVMsYUE0Q3BCIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGVkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9EOi9Qcm9qZWN0cy9ITS9vZGMtYXBpL3NyYy91dGlsL2xlZC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxtQ0FBeUM7QUFFekMsMkJBQXlDO0FBRTVCLFFBQUEsTUFBTSxHQUFHO0lBQ3BCLEdBQUcsRUFBRTtRQUNILEdBQUcsRUFBRSxFQUFFO1FBQ1AsSUFBSSxFQUFFLENBQUM7UUFDUCxLQUFLLEVBQUUsQ0FBQztRQUNSLEVBQUUsRUFBRSxJQUFJO0tBQ1Q7SUFDRCxNQUFNLEVBQUU7UUFDTixHQUFHLEVBQUUsRUFBRTtRQUNQLElBQUksRUFBRSxDQUFDO1FBQ1AsS0FBSyxFQUFFLENBQUM7UUFDUixFQUFFLEVBQUUsSUFBSTtLQUNUO0lBQ0QsS0FBSyxFQUFFO1FBQ0wsR0FBRyxFQUFFLENBQUM7UUFDTixJQUFJLEVBQUUsQ0FBQztRQUNQLEtBQUssRUFBRSxFQUFFO1FBQ1QsRUFBRSxFQUFFLElBQUk7S0FDVDtJQUNELE1BQU0sRUFBRTtRQUNOLEdBQUcsRUFBRSxFQUFFO1FBQ1AsSUFBSSxFQUFFLEVBQUU7UUFDUixLQUFLLEVBQUUsQ0FBQztRQUNSLEVBQUUsRUFBRSxJQUFJO0tBQ1Q7SUFDRCxJQUFJLEVBQUU7UUFDSixHQUFHLEVBQUUsQ0FBQztRQUNOLElBQUksRUFBRSxFQUFFO1FBQ1IsS0FBSyxFQUFFLENBQUM7UUFDUixFQUFFLEVBQUUsSUFBSTtLQUNUO0lBQ0QsSUFBSSxFQUFFO1FBQ0osR0FBRyxFQUFFLEVBQUU7UUFDUCxJQUFJLEVBQUUsRUFBRTtRQUNSLEtBQUssRUFBRSxDQUFDO1FBQ1IsRUFBRSxFQUFFLElBQUk7S0FDVDtDQUNGLENBQUM7QUFFSyxNQUFNLFNBQVMsR0FBRyxLQUFLLEVBQzVCLFNBQWUsRUFDZixNQUFZLEVBQ1osTUFBWSxFQUNaLEVBQUU7SUFDRixJQUFJO1FBQ0YsSUFBSSxJQUFJLEdBQVc7WUFDakIsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsY0FBTSxDQUFDLEdBQUcsRUFBRTtZQUMzQixFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxjQUFNLENBQUMsR0FBRyxFQUFFO1lBQzNCLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxHQUFHLGNBQU0sQ0FBQyxHQUFHLEVBQUU7U0FDNUIsQ0FBQztRQUNGLElBQUk7WUFDRixJQUFBLGFBQVEsRUFDTix3QkFBZSxFQUNmO2dCQUNFLFFBQVEsRUFBRSxPQUFPO2FBQ2xCLEVBQ0QsQ0FBQyxHQUFpQyxFQUFFLElBQVksRUFBRSxFQUFFO2dCQUNsRCxJQUFJLElBQUksSUFBSSxDQUFDLEdBQUcsRUFBRTtvQkFDaEIsSUFBSSxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUMsSUFBSSxDQUFDO2lCQUM5QjtnQkFFRCxNQUFNLE1BQU0sR0FBRyxTQUFTLENBQUMsQ0FBQyxDQUFDLEVBQUUsR0FBRyxJQUFJLENBQUMsQ0FBQyxDQUFDLEVBQUUsR0FBRyxTQUFTLEVBQUUsQ0FBQyxDQUFDLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDO2dCQUNsRSxNQUFNLEdBQUcsR0FBRyxNQUFNLENBQUMsQ0FBQyxDQUFDLEVBQUUsR0FBRyxJQUFJLENBQUMsQ0FBQyxDQUFDLEVBQUUsR0FBRyxNQUFNLEVBQUUsQ0FBQyxDQUFDLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDO2dCQUN6RCxNQUFNLEdBQUcsR0FBRyxNQUFNLENBQUMsQ0FBQyxDQUFDLEVBQUUsR0FBRyxJQUFJLENBQUMsQ0FBQyxDQUFDLEVBQUUsR0FBRyxNQUFNLEVBQUUsQ0FBQyxDQUFDLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDO2dCQUV6RCxJQUFBLGNBQVMsRUFDUCx3QkFBZSxFQUNmLElBQUksQ0FBQyxTQUFTLENBQUM7b0JBQ2IsSUFBSSxFQUFFLENBQUMsTUFBTSxFQUFFLEdBQUcsRUFBRSxHQUFHLENBQUM7aUJBQ3pCLENBQUMsRUFDRjtvQkFDRSxRQUFRLEVBQUUsT0FBTztpQkFDbEIsRUFDRCxHQUFHLEVBQUUsR0FBRSxDQUFDLENBQ1QsQ0FBQztZQUNKLENBQUMsQ0FDRixDQUFDO1NBQ0g7UUFBQyxPQUFPLENBQUMsRUFBRTtZQUNWLE9BQU8sQ0FBQyxHQUFHLENBQUMsK0JBQStCLENBQUMsQ0FBQztTQUM5QztLQUNGO0lBQUMsT0FBTyxDQUFDLEVBQUU7UUFDVixPQUFPLENBQUMsR0FBRyxDQUFDLHFCQUFxQixFQUFFLENBQUMsQ0FBQyxDQUFDO0tBQ3ZDO0FBQ0gsQ0FBQyxDQUFDO0FBNUNXLFFBQUEsU0FBUyxhQTRDcEIifQ==
 
 /***/ }),
 
-/***/ 5609:
+/***/ 5765:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -27341,7 +29599,7 @@ exports.updateLED = updateLED;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getLockTime = exports.setCameraTime = exports.setLockTime = void 0;
 const child_process_1 = __nccwpck_require__(2081);
-const config_1 = __nccwpck_require__(6039);
+const config_1 = __nccwpck_require__(773);
 let lockTime = 0;
 let msss = 0;
 let gnssIds = [];
@@ -27378,6 +29636,7 @@ const setLockTime = () => {
                                     }
                                 });
                                 lockTime = Number(ttff);
+                                console.log('Set ttff: ' + ttff);
                                 isLockTimeInProgress = false;
                             });
                         }
@@ -27430,6 +29689,7 @@ const setCameraTime = () => {
                                             (0, child_process_1.exec)(`touch ${config_1.TMP_FILE_PATH}`, () => {
                                                 (0, child_process_1.exec)(`find /mnt/data/pic/ -maxdepth 1 -type f -newer ${config_1.TMP_FILE_PATH} -exec rm -rf {} \\;`);
                                                 (0, child_process_1.exec)('systemctl start camera-bridge');
+                                                console.log('Camera restarted');
                                             });
                                         });
                                     });
@@ -27469,7 +29729,7 @@ const getLockTime = () => {
     };
 };
 exports.getLockTime = getLockTime;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibG9jay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvbG9jay50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBb0Q7QUFDcEQsbUNBQXVDO0FBRXZDLElBQUksUUFBUSxHQUFHLENBQUMsQ0FBQztBQUNqQixJQUFJLElBQUksR0FBRyxDQUFDLENBQUM7QUFDYixJQUFJLE9BQU8sR0FBYSxFQUFFLENBQUM7QUFDM0IsSUFBSSxTQUFTLEdBQUcsS0FBSyxDQUFDO0FBQ3RCLElBQUksc0JBQXNCLEdBQUcsS0FBSyxDQUFDO0FBQ25DLElBQUksb0JBQW9CLEdBQUcsS0FBSyxDQUFDO0FBRTFCLE1BQU0sV0FBVyxHQUFHLEdBQUcsRUFBRTtJQUM5QixJQUFJLENBQUMsb0JBQW9CLElBQUksQ0FBQyxRQUFRLEVBQUU7UUFDdEMsb0JBQW9CLEdBQUcsSUFBSSxDQUFDO1FBQzVCLElBQUk7WUFDRixJQUFBLG9CQUFJLEVBQ0YsbUNBQW1DLEVBQ25DLEVBQUUsUUFBUSxFQUFFLE9BQU8sRUFBRSxFQUNyQixDQUFDLEtBQTJCLEVBQUUsTUFBYyxFQUFFLEVBQUU7Z0JBQzlDLElBQUksTUFBTSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxNQUFNLENBQUM7Z0JBQ2pDLE1BQU0sS0FBSyxHQUFHLE1BQU0sQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7Z0JBQ2hDLElBQUksS0FBSyxDQUFDLE1BQU0sSUFBSSxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsT0FBTyxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyxFQUFFO29CQUNuRCxNQUFNLElBQUksR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDLEdBQUcsRUFBRSxDQUFDO29CQUN2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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibG9jay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vRDovUHJvamVjdHMvSE0vb2RjLWFwaS9zcmMvdXRpbC9sb2NrLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFvRDtBQUNwRCxtQ0FBdUM7QUFFdkMsSUFBSSxRQUFRLEdBQUcsQ0FBQyxDQUFDO0FBQ2pCLElBQUksSUFBSSxHQUFHLENBQUMsQ0FBQztBQUNiLElBQUksT0FBTyxHQUFhLEVBQUUsQ0FBQztBQUMzQixJQUFJLFNBQVMsR0FBRyxLQUFLLENBQUM7QUFDdEIsSUFBSSxzQkFBc0IsR0FBRyxLQUFLLENBQUM7QUFDbkMsSUFBSSxvQkFBb0IsR0FBRyxLQUFLLENBQUM7QUFFMUIsTUFBTSxXQUFXLEdBQUcsR0FBRyxFQUFFO0lBQzlCLElBQUksQ0FBQyxvQkFBb0IsSUFBSSxDQUFDLFFBQVEsRUFBRTtRQUN0QyxvQkFBb0IsR0FBRyxJQUFJLENBQUM7UUFDNUIsSUFBSTtZQUNGLElBQUEsb0JBQUksRUFDRixtQ0FBbUMsRUFDbkMsRUFBRSxRQUFRLEVBQUUsT0FBTyxFQUFFLEVBQ3JCLENBQUMsS0FBMkIsRUFBRSxNQUFjLEVBQUUsRUFBRTtnQkFDOUMsSUFBSSxNQUFNLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQztnQkFDakMsTUFBTSxLQUFLLEdBQUcsTUFBTSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztnQkFDaEMsSUFBSSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUMsTUFBTSxDQUFDLEtBQUssQ0FBQyxDQUFDLEVBQUU7b0JBQ25ELE1BQU0sSUFBSSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUMsR0FBRyxFQUFFLENBQUM7b0JBQ3ZDLElBQUksSUFBSSxFQUFFO3dCQUNSLElBQUksS0FBSyxDQUFDLENBQUMsQ0FBQyxFQUFFOzRCQUNaLE1BQU0sRUFBRSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUMsR0FBRyxFQUFFLENBQUM7NEJBQ3JDLElBQUksR0FBRyxNQUFNLENBQUMsRUFBRSxDQUFDLENBQUM7eUJBQ25CO3dCQUNELElBQUk7NEJBQ0YsSUFBQSxvQkFBSSxFQUNGLGtDQUFrQyxFQUNsQyxFQUFFLFFBQVEsRUFBRSxPQUFPLEVBQUUsRUFDckIsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO2dDQUM5QyxNQUFNLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQztnQ0FDN0IsZ0JBQWdCO2dDQUNoQixPQUFPLEdBQUcsRUFBRSxDQUFDO2dDQUNiLE1BQU0sQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxFQUFFO29DQUMzQixNQUFNLEtBQUssR0FBRyxHQUFHLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO29DQUM3QixNQUFNLFNBQVMsR0FBRyxLQUFLLENBQUMsU0FBUyxDQUMvQixJQUFJLENBQUMsRUFBRSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQ3RDLENBQUM7b0NBQ0YsSUFBSSxTQUFTLEtBQUssQ0FBQyxDQUFDLEVBQUU7d0NBQ3BCLE1BQU0sU0FBUyxHQUFHLE1BQU0sQ0FBQyxLQUFLLENBQUMsU0FBUyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7d0NBQy9DLElBQUksT0FBTyxDQUFDLE9BQU8sQ0FBQyxTQUFTLENBQUMsS0FBSyxDQUFDLENBQUMsRUFBRTs0Q0FDckMsT0FBTyxDQUFDLElBQUksQ0FBQyxTQUFTLENBQUMsQ0FBQzt5Q0FDekI7cUNBQ0Y7Z0NBQ0gsQ0FBQyxDQUFDLENBQUM7Z0NBQ0gsUUFBUSxHQUFHLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQztnQ0FDeEIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxZQUFZLEdBQUcsSUFBSSxDQUFDLENBQUM7Z0NBQ2pDLG9CQUFvQixHQUFHLEtBQUssQ0FBQzs0QkFDL0IsQ0FBQyxDQUNGLENBQUM7eUJBQ0g7d0JBQUMsT0FBTyxDQUFVLEVBQUU7NEJBQ25CLG9CQUFvQixHQUFHLEtBQUssQ0FBQzs0QkFDN0IsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQzt5QkFDaEI7cUJBQ0Y7aUJBQ0Y7Z0JBQ0Qsb0JBQW9CLEdBQUcsS0FBSyxDQUFDO1lBQy9CLENBQUMsQ0FDRixDQUFDO1NBQ0g7UUFBQyxPQUFPLENBQVUsRUFBRTtZQUNuQixvQkFBb0IsR0FBRyxLQUFLLENBQUM7WUFDN0IsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztTQUNoQjtLQUNGO0FBQ0gsQ0FBQyxDQUFDO0FBeERXLFFBQUEsV0FBVyxlQXdEdEI7QUFFSyxNQUFNLGFBQWEsR0FBRyxHQUFHLEVBQUU7SUFDaEMsSUFBSSxDQUFDLHNCQUFzQixJQUFJLENBQUMsU0FBUyxFQUFFO1FBQ3pDLHNCQUFzQixHQUFHLElBQUksQ0FBQztRQUU5QixJQUFJO1lBQ0YsSUFBQSxvQkFBSSxFQUNGLGdDQUFnQyxFQUNoQztnQkFDRSxRQUFRLEVBQUUsT0FBTzthQUNsQixFQUNELENBQUMsS0FBMkIsRUFBRSxNQUFjLEVBQUUsRUFBRTtnQkFDOUMsTUFBTSxNQUFNLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQztnQkFDbkMsTUFBTSxLQUFLLEdBQUcsTUFBTSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztnQkFDaEMsSUFBSSxRQUFRLEdBQUcsS0FBSyxDQUFDLEdBQUcsRUFBRSxDQUFDO2dCQUMzQixJQUFJLFFBQVEsSUFBSSxRQUFRLENBQUMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsRUFBRTtvQkFDM0MsUUFBUSxHQUFHLFFBQVEsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUM7b0JBQzdCLE1BQU0sYUFBYSxHQUFHLFFBQVEsQ0FBQyxRQUFRLEVBQUUsRUFBRSxDQUFDO3lCQUN6QyxRQUFRLENBQUMsQ0FBQyxDQUFDO3lCQUNYLFFBQVEsQ0FBQyxDQUFDLEVBQUUsR0FBRyxDQUFDO3lCQUNoQixLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQztvQkFDYixJQUFJLGFBQWEsS0FBSyxNQUFNLElBQUksYUFBYSxLQUFLLE1BQU0sRUFBRTt3QkFDeEQsS0FBSyxDQUFDLEdBQUcsRUFBRSxDQUFDO3dCQUNaLE1BQU0sSUFBSSxHQUFHLEtBQUssQ0FBQyxHQUFHLEVBQUUsQ0FBQzt3QkFDekIsTUFBTSxJQUFJLEdBQUcsS0FBSyxDQUFDLEdBQUcsRUFBRSxFQUFFLE9BQU8sQ0FBQyxLQUFLLEVBQUUsR0FBRyxDQUFDLENBQUM7d0JBQzlDLElBQUksSUFBSSxJQUFJLElBQUksSUFBSSxDQUFDLFNBQVMsRUFBRTs0QkFDOUIsSUFBSTtnQ0FDRixJQUFBLG9CQUFJLEVBQUMsdUJBQXVCLEVBQUUsR0FBRyxFQUFFO29DQUNqQyxJQUFBLG9CQUFJLEVBQUMseUJBQXlCLElBQUksSUFBSSxJQUFJLEdBQUcsRUFBRSxHQUFHLEVBQUU7d0NBQ2xELHNCQUFzQixHQUFHLEtBQUssQ0FBQzt3Q0FDL0IsU0FBUyxHQUFHLElBQUksQ0FBQzt3Q0FDakIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxxQkFBcUIsR0FBRyxJQUFJLEdBQUcsR0FBRyxHQUFHLElBQUksQ0FBQyxDQUFDO3dDQUN2RCxnRkFBZ0Y7d0NBQ2hGLHNGQUFzRjt3Q0FDdEYsSUFBQSxvQkFBSSxFQUFDLDhCQUE4QixFQUFFLEdBQUcsRUFBRTs0Q0FDeEMsSUFBQSxvQkFBSSxFQUFDLFNBQVMsc0JBQWEsRUFBRSxFQUFFLEdBQUcsRUFBRTtnREFDbEMsSUFBQSxvQkFBSSxFQUNGLGtEQUFrRCxzQkFBYSxzQkFBc0IsQ0FDdEYsQ0FBQztnREFDRixJQUFBLG9CQUFJLEVBQUMsK0JBQStCLENBQUMsQ0FBQztnREFDdEMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxrQkFBa0IsQ0FBQyxDQUFBOzRDQUNqQyxDQUFDLENBQUMsQ0FBQzt3Q0FDTCxDQUFDLENBQUMsQ0FBQztvQ0FDTCxDQUFDLENBQUMsQ0FBQztnQ0FDTCxDQUFDLENBQUMsQ0FBQzs2QkFDSjs0QkFBQyxPQUFPLENBQVUsRUFBRTtnQ0FDbkIsc0JBQXNCLEdBQUcsS0FBSyxDQUFDO2dDQUMvQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDOzZCQUNoQjt5QkFDRjs2QkFBTTs0QkFDTCxzQkFBc0IsR0FBRyxLQUFLLENBQUM7eUJBQ2hDO3FCQUNGO3lCQUFNO3dCQUNMLHNCQUFzQixHQUFHLEtBQUssQ0FBQztxQkFDaEM7aUJBQ0Y7cUJBQU07b0JBQ0wsc0JBQXNCLEdBQUcsS0FBSyxDQUFDO2lCQUNoQztnQkFDRCxzQkFBc0IsR0FBRyxLQUFLLENBQUM7WUFDakMsQ0FBQyxDQUNGLENBQUM7U0FDSDtRQUFDLE9BQU8sQ0FBVSxFQUFFO1lBQ25CLHNCQUFzQixHQUFHLEtBQUssQ0FBQztTQUNoQztRQUNELHNCQUFzQixHQUFHLEtBQUssQ0FBQztLQUNoQztBQUNILENBQUMsQ0FBQztBQWpFVyxRQUFBLGFBQWEsaUJBaUV4QjtBQUVLLE1BQU0sV0FBVyxHQUFHLEdBQUcsRUFBRTtJQUM5QixPQUFPO1FBQ0wsUUFBUTtRQUNSLElBQUk7UUFDSixNQUFNLEVBQUUsT0FBTyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUM7S0FDMUIsQ0FBQztBQUNKLENBQUMsQ0FBQztBQU5XLFFBQUEsV0FBVyxlQU10QiJ9
 
 /***/ }),
 
@@ -27542,6 +29802,14 @@ module.exports = require("http");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 2037:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("os");
 
 /***/ }),
 
@@ -27751,7 +30019,7 @@ module.exports = JSON.parse('{"100":"Continue","101":"Switching Protocols","102"
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(647);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(6599);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

@@ -1,8 +1,8 @@
 import { Request, Response, Router } from 'express';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { exec, execSync } from 'child_process';
 
-import { API_VERSION, BUILD_INFO_PATH, configureOnBoot } from '../config';
+import { API_VERSION, BUILD_INFO_PATH, configureOnBoot, WEBSERVER_LOG_PATH } from '../config';
 import framesRouter from './frames';
 import gpsRouter from './gps';
 import imuRouter from './imu';
@@ -68,6 +68,25 @@ router.get('/time', (req, res) => {
   res.json(Date.now());
 });
 
+router.get('/log', async (req: Request, res: Response) => {
+  let log = '';
+  try {
+    log = readFileSync(WEBSERVER_LOG_PATH, {
+      encoding: 'utf-8',
+    });
+    if (log) {
+      writeFileSync(WEBSERVER_LOG_PATH, '', {
+        encoding: 'utf-8',
+      });
+    }
+  } catch (error) {
+    console.log('Webserver Log file is missing');
+  }
+  res.json({
+    log
+  });
+});
+
 router.post('/cmd', async (req, res) => {
   try {
     exec(
@@ -77,8 +96,10 @@ router.post('/cmd', async (req, res) => {
       },
       (error, stdout, stderr) => {
         if (error) {
+          console.log(error);
           res.json({ error: stdout || stderr });
         } else {
+          console.log(stdout);
           res.json({
             output: stdout,
           });
@@ -95,6 +116,7 @@ router.post('/cmd/sync', async (req, res) => {
     const output = execSync(req.body.cmd, {
       encoding: 'utf-8',
     });
+    console.log(output);
     res.json({
       output,
     });

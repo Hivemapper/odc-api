@@ -46,6 +46,7 @@ export const setLockTime = () => {
                       }
                     });
                     lockTime = Number(ttff);
+                    console.log('Set ttff: ' + ttff);
                     isLockTimeInProgress = false;
                   },
                 );
@@ -104,6 +105,7 @@ export const setCameraTime = () => {
                             `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
                           );
                           exec('systemctl start camera-bridge');
+                          console.log('Camera restarted')
                         });
                       });
                     });

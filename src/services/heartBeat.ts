@@ -7,6 +7,7 @@ import { COLORS, updateLED } from '../util/led';
 let previousCameraResponse = '';
 let mostRecentPing = 0;
 let isFirmwareUpdate = false;
+let wasGpsGood = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -43,12 +44,23 @@ export const HeartBeatService: IService = {
 
               try {
                 let gpsLED = COLORS.RED;
+                
                 if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
                   gpsLED = COLORS.GREEN;
                   setLockTime();
                   setCameraTime();
-                } else if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
-                  gpsLED = COLORS.YELLOW;
+                  if (!wasGpsGood) {
+                    console.log('Got 3d Fix');
+                  }
+                  wasGpsGood = true;
+                } else {
+                  if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
+                    gpsLED = COLORS.YELLOW;
+                  }
+                  if (wasGpsGood) {
+                    console.log('Lost 3d Fix');
+                  }
+                  wasGpsGood = false;
                 }
 
                 const imgLED =

@@ -9,6 +9,7 @@ export const GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
 export const LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
+export const WEBSERVER_LOG_PATH = __dirname + '/../../../mnt/data/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const IMAGER_EMMC_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/emmc_config.json';
