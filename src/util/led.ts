@@ -2,7 +2,7 @@ import { LED_CONFIG_PATH } from 'config';
 import { ILED } from '../types';
 import { readFile, writeFile } from 'fs';
 
-export const COLORS = {
+export const COLORS: { [key: string]: ILED } = {
   RED: {
     red: 25,
     blue: 0,
@@ -41,6 +41,32 @@ export const COLORS = {
   },
 };
 
+let currentLEDs = {
+  framesLED: 'RED',
+  gpsLED: 'RED',
+  appLED: 'RED',
+};
+
+export const getCurrentLEDs = () => {
+  return currentLEDs;
+};
+
+const getColorByLed = (LED: ILED) => {
+  let result = 'RED';
+  Object.keys(COLORS).map((color: string) => {
+    if (
+      COLORS[color] &&
+      LED &&
+      COLORS[color].red === LED.red &&
+      COLORS[color].blue === LED.blue &&
+      COLORS[color].green === COLORS[color].green
+    ) {
+      result = color;
+    }
+  });
+  return result;
+};
+
 export const updateLED = async (
   framesLED: ILED,
   gpsLED: ILED,
@@ -75,7 +101,13 @@ export const updateLED = async (
             {
               encoding: 'utf-8',
             },
-            () => {},
+            () => {
+              currentLEDs = {
+                framesLED: getColorByLed(frames),
+                gpsLED: getColorByLed(gps),
+                appLED: getColorByLed(app),
+              };
+            },
           );
         },
       );

@@ -16,6 +16,7 @@ import utilRouter from './util';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
+import { getCurrentLEDs } from 'util/led';
 
 const router = Router();
 
@@ -55,6 +56,7 @@ router.get('/ping', (req, res) => {
   res.json({
     healthy: true,
     cameraTime: Date.now(),
+    leds: getCurrentLEDs(),
     sessionId: getSessionId(),
     ...getLockTime(),
   });

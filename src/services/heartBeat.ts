@@ -44,7 +44,7 @@ export const HeartBeatService: IService = {
 
               try {
                 let gpsLED = COLORS.RED;
-                
+
                 if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
                   gpsLED = COLORS.GREEN;
                   setLockTime();
