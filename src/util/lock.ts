@@ -8,6 +8,10 @@ let isTimeSet = false;
 let isCameraTimeInProgress = false;
 let isLockTimeInProgress = false;
 
+export const ifTimeSet = () => {
+  return isTimeSet;
+};
+
 export const setLockTime = () => {
   if (!isLockTimeInProgress && !lockTime) {
     isLockTimeInProgress = true;
@@ -105,7 +109,7 @@ export const setCameraTime = () => {
                             `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
                           );
                           exec('systemctl start camera-bridge');
-                          console.log('Camera restarted')
+                          console.log('Camera restarted');
                         });
                       });
                     });
