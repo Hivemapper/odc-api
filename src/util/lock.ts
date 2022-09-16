@@ -135,16 +135,17 @@ export const setCameraTime = () => {
                     isCameraTimeInProgress = false;
                     isTimeSet = true;
 
-                    // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-                    // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
                     exec('systemctl stop camera-bridge', () => {
-                      exec(`touch ${TMP_FILE_PATH}`, () => {
-                        exec(
-                          `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
-                        );
-                        exec('systemctl start camera-bridge');
-                        console.log('Camera restarted')
-                      });
+                      setTimeout(() => {
+                        exec('systemctl start camera-bridge', (error: ExecException | null) => {
+                          if (!error) {
+                            console.log('Camera restarted');
+                          } else {
+                            exec('systemctl start camera-bridge');
+                            console.log('Camera restarted after second attempt.');
+                          }
+                        });
+                      }, 2000);
                     });
                   });
                 } catch (e: unknown) {
