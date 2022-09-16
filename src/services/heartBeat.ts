@@ -1,6 +1,6 @@
 import { exec, ExecException } from 'child_process';
 import { IService } from 'types';
-import { setLockTime, setCameraTime } from 'util/lock';
+import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 // import { isPairing, repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
@@ -43,6 +43,16 @@ export const HeartBeatService: IService = {
               const cameraResponse = error ? '' : stdout;
 
               try {
+                const imgLED =
+                  cameraResponse.indexOf('active') === 0
+                    ? cameraResponse !== previousCameraResponse
+                      ? previousCameraResponse
+                        ? COLORS.GREEN
+                        : COLORS.YELLOW
+                      : COLORS.YELLOW
+                    : COLORS.RED;
+                previousCameraResponse = cameraResponse;
+
                 let gpsLED = COLORS.RED;
 
                 if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
@@ -61,17 +71,14 @@ export const HeartBeatService: IService = {
                     console.log('Lost 3d Fix');
                   }
                   wasGpsGood = false;
-                }
 
-                const imgLED =
-                  cameraResponse.indexOf('active') === 0
-                    ? cameraResponse !== previousCameraResponse
-                      ? previousCameraResponse
-                        ? COLORS.GREEN
-                        : COLORS.YELLOW
-                      : COLORS.YELLOW
-                    : COLORS.RED;
-                previousCameraResponse = cameraResponse;
+                  if (cameraResponse.indexOf('active') === 0 && !ifTimeSet()) {
+                    exec('systemctl stop camera-bridge');
+                    console.log(
+                      'Camera intentionally stopped cause Lock is not there yet',
+                    );
+                  }
+                }
 
                 const appDisconnectionPeriod = mostRecentPing
                   ? Math.abs(Date.now() - mostRecentPing)

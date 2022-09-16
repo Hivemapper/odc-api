@@ -18,6 +18,9 @@ class ServiceRunner {
             console.log('Service error', e);
           }
         }, service.interval || service.delay);
+        if (!service.delay) {
+          service.execute();
+        }
       } else {
         try {
           service.execute();
