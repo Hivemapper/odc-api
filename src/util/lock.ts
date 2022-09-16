@@ -70,6 +70,37 @@ export const setLockTime = () => {
   }
 };
 
+const setSystemTime = (timeToSetMs: number, now: number, successCallback: () => void) => {
+
+  console.log('Setting time...');
+
+  exec('timedatectl set-ntp 0', () => {
+    setTimeout(() => {
+      // DelayDiff is very important - if operation of setting the time takes time itself,
+      // we need to take this delay into account
+      const delayDiff = Date.now() - now;
+      const finalDate = new Date(timeToSetMs + delayDiff);
+      const timeToSet = finalDate.toISOString()
+        .replace(/T/, ' ')
+        .replace(/\..+/, '')
+        .split(' ');
+
+      exec(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`, (error: ExecException | null) => {
+        console.log(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`);
+        // 60000ms is a sanity check, of course the diff should be much smaller
+        // but if now the diff with time is smaller than a minute, meaning we're for sure switched from Jan 18
+        if (!error && Math.abs(Date.now() - finalDate.getTime()) < 60000) {
+          console.log('Successfully set');
+          successCallback();
+        } else {
+          console.log('Not set... Retrying.');
+          setSystemTime(timeToSetMs, now, successCallback);
+        }
+      });
+    }, 2000);
+  });
+}
+
 export const setCameraTime = () => {
   if (!isCameraTimeInProgress && !isTimeSet) {
     isCameraTimeInProgress = true;
@@ -96,21 +127,23 @@ export const setCameraTime = () => {
               const date = elems.pop()?.replace(/\//g, '-');
               if (time && date && !isTimeSet) {
                 try {
-                  exec('timedatectl set-ntp 0', () => {
-                    exec(`timedatectl set-time '${date} ${time}'`, () => {
-                      isCameraTimeInProgress = false;
-                      isTimeSet = true;
-                      console.log('System time set to ' + date + ' ' + time);
-                      // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-                      // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
-                      exec('systemctl stop camera-bridge', () => {
-                        exec(`touch ${TMP_FILE_PATH}`, () => {
-                          exec(
-                            `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
-                          );
-                          exec('systemctl start camera-bridge');
-                          console.log('Camera restarted');
-                        });
+                  const d = date.split('-').map(Number);
+                  const t = time.split(':').map(Number);
+                  const currentMs = Date.UTC(d[0], d[1]-1, d[2], t[0], t[1], t[2]);
+
+                  setSystemTime(currentMs, Date.now(), () => {
+                    isCameraTimeInProgress = false;
+                    isTimeSet = true;
+
+                    // TODO: Temp solution for restarting the camera to catch the freshest timestamp
+                    // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
+                    exec('systemctl stop camera-bridge', () => {
+                      exec(`touch ${TMP_FILE_PATH}`, () => {
+                        exec(
+                          `find /mnt/data/pic/ -maxdepth 1 -type f -newer ${TMP_FILE_PATH} -exec rm -rf {} \\;`,
+                        );
+                        exec('systemctl start camera-bridge');
+                        console.log('Camera restarted')
                       });
                     });
                   });
@@ -127,7 +160,6 @@ export const setCameraTime = () => {
           } else {
             isCameraTimeInProgress = false;
           }
-          isCameraTimeInProgress = false;
         },
       );
     } catch (e: unknown) {
