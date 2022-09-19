@@ -1,5 +1,4 @@
 import { exec, ExecException } from 'child_process';
-import { TMP_FILE_PATH } from 'config';
 
 let lockTime = 0;
 let msss = 0;
@@ -70,8 +69,11 @@ export const setLockTime = () => {
   }
 };
 
-const setSystemTime = (timeToSetMs: number, now: number, successCallback: () => void) => {
-
+const setSystemTime = (
+  timeToSetMs: number,
+  now: number,
+  successCallback: () => void,
+) => {
   console.log('Setting time...');
 
   exec('timedatectl set-ntp 0', () => {
@@ -80,26 +82,30 @@ const setSystemTime = (timeToSetMs: number, now: number, successCallback: () => 
       // we need to take this delay into account
       const delayDiff = Date.now() - now;
       const finalDate = new Date(timeToSetMs + delayDiff);
-      const timeToSet = finalDate.toISOString()
+      const timeToSet = finalDate
+        .toISOString()
         .replace(/T/, ' ')
         .replace(/\..+/, '')
         .split(' ');
 
-      exec(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`, (error: ExecException | null) => {
-        console.log(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`);
-        // 60000ms is a sanity check, of course the diff should be much smaller
-        // but if now the diff with time is smaller than a minute, meaning we're for sure switched from Jan 18
-        if (!error && Math.abs(Date.now() - finalDate.getTime()) < 60000) {
-          console.log('Successfully set');
-          successCallback();
-        } else {
-          console.log('Not set... Retrying.');
-          setSystemTime(timeToSetMs, now, successCallback);
-        }
-      });
+      exec(
+        `timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`,
+        (error: ExecException | null) => {
+          console.log(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`);
+          // 60000ms is a sanity check, of course the diff should be much smaller
+          // but if now the diff with time is smaller than a minute, meaning we're for sure switched from Jan 18
+          if (!error && Math.abs(Date.now() - finalDate.getTime()) < 60000) {
+            console.log('Successfully set');
+            successCallback();
+          } else {
+            console.log('Not set... Retrying.');
+            setSystemTime(timeToSetMs, now, successCallback);
+          }
+        },
+      );
     }, 2000);
   });
-}
+};
 
 export const setCameraTime = () => {
   if (!isCameraTimeInProgress && !isTimeSet) {
@@ -129,7 +135,14 @@ export const setCameraTime = () => {
                 try {
                   const d = date.split('-').map(Number);
                   const t = time.split(':').map(Number);
-                  const currentMs = Date.UTC(d[0], d[1]-1, d[2], t[0], t[1], t[2]);
+                  const currentMs = Date.UTC(
+                    d[0],
+                    d[1] - 1,
+                    d[2],
+                    t[0],
+                    t[1],
+                    t[2],
+                  );
 
                   setSystemTime(currentMs, Date.now(), () => {
                     isCameraTimeInProgress = false;
@@ -137,14 +150,19 @@ export const setCameraTime = () => {
 
                     exec('systemctl stop camera-bridge', () => {
                       setTimeout(() => {
-                        exec('systemctl start camera-bridge', (error: ExecException | null) => {
-                          if (!error) {
-                            console.log('Camera restarted');
-                          } else {
-                            exec('systemctl start camera-bridge');
-                            console.log('Camera restarted after second attempt.');
-                          }
-                        });
+                        exec(
+                          'systemctl start camera-bridge',
+                          (error: ExecException | null) => {
+                            if (!error) {
+                              console.log('Camera restarted');
+                            } else {
+                              exec('systemctl start camera-bridge');
+                              console.log(
+                                'Camera restarted after second attempt.',
+                              );
+                            }
+                          },
+                        );
                       }, 2000);
                     });
                   });

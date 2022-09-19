@@ -4,7 +4,7 @@ const router = Router();
 
 router.post('/camera', async (req: Request, res: Response) => {
   try {
-    updateCameraConfig(req.body.replace, req.body.path);
+    // updateCameraConfig(req.body.replace, req.body.path);
     res.json({
       output: 'in progress',
     });

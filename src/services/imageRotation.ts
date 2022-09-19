@@ -1,5 +1,5 @@
-import { exec, ExecException } from 'child_process';
-import { IMAGER_CONFIG_PATH, IMAGER_EMMC_CONFIG_PATH } from 'config';
+import { exec } from 'child_process';
+import { IMAGER_CONFIG_PATH } from 'config';
 import { readFile, writeFile } from 'fs';
 import { IService } from 'types';
 import { ifTimeSet } from 'util/lock';

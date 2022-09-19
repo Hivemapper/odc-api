@@ -3,16 +3,16 @@ import { Request, Response } from 'express';
 import { writeFile } from 'fs';
 
 export const PORT = 5000;
+
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
 export const LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
-export const WEBSERVER_LOG_PATH = __dirname + '/../../../mnt/data/camera-node.log';
+export const WEBSERVER_LOG_PATH =
+  __dirname + '/../../../mnt/data/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
-export const IMAGER_EMMC_CONFIG_PATH =
-  __dirname + '/../../../opt/dashcam/bin/emmc_config.json';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
 export const IMAGER_BRIDGE_PATH =
@@ -21,7 +21,6 @@ export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 export const NETWORK_BOOT_CONFIG_PATH =
   __dirname + '/../../../mnt/data/network_mode.txt';
 export const NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
-export const TMP_FILE_PATH = '/mnt/data/now.txt';
 
 export const configureOnBoot = async (req: Request, res: Response) => {
   try {

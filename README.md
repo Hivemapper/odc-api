@@ -45,7 +45,7 @@ make sure you have ncc installed:
 
 and then execute:
 
-`npm run compile`
+`npm run compile --camera=<camera name>`
 
 Server will get compiled into single file with bunch of fixtures next to it, and located in `compiled/` folder
 
