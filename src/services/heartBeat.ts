@@ -1,4 +1,5 @@
 import { exec, ExecException } from 'child_process';
+import { getStopCameraCommand } from 'config';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 // import { isPairing, repairNetworking } from 'util/network';
@@ -73,7 +74,7 @@ export const HeartBeatService: IService = {
                   wasGpsGood = false;
 
                   if (cameraResponse.indexOf('active') === 0 && !ifTimeSet()) {
-                    exec('systemctl stop camera-bridge');
+                    exec(getStopCameraCommand());
                     console.log(
                       'Camera intentionally stopped cause Lock is not there yet',
                     );

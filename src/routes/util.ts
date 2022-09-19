@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { exec } from 'child_process';
+import { getStartCameraCommand, getStopCameraCommand } from 'config';
 
 const router = Router();
 
@@ -7,7 +8,7 @@ router.post('/camera/stop', (req, res) => {
   // TBD, done via App for now
   try {
     exec(
-      'systemctl stop camera-bridge',
+      getStopCameraCommand(),
       {
         encoding: 'utf-8',
       },
@@ -30,7 +31,7 @@ router.post('/camera/start', (req, res) => {
   // TBD, done via App for now
   try {
     exec(
-      'systemctl start camera-bridge',
+      getStartCameraCommand(),
       {
         encoding: 'utf-8',
       },

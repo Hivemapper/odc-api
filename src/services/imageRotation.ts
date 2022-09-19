@@ -1,5 +1,9 @@
 import { exec } from 'child_process';
-import { IMAGER_CONFIG_PATH } from 'config';
+import {
+  getStartCameraCommand,
+  getStopCameraCommand,
+  IMAGER_CONFIG_PATH,
+} from 'config';
 import { readFile, writeFile } from 'fs';
 import { IService } from 'types';
 import { ifTimeSet } from 'util/lock';
@@ -35,8 +39,8 @@ export const ImageRotationService: IService = {
               },
               () => {
                 if (ifTimeSet()) {
-                  exec('systemctl stop camera-bridge', () => {
-                    exec('systemctl start camera-bridge', () => {
+                  exec(getStopCameraCommand(), () => {
+                    exec(getStartCameraCommand(), () => {
                       console.log('Successfully restarted the camera');
                     });
                   });

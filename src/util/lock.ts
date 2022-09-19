@@ -1,4 +1,5 @@
 import { exec, ExecException } from 'child_process';
+import { getStartCameraCommand, getStopCameraCommand } from 'config';
 
 let lockTime = 0;
 let msss = 0;
@@ -148,15 +149,15 @@ export const setCameraTime = () => {
                     isCameraTimeInProgress = false;
                     isTimeSet = true;
 
-                    exec('systemctl stop camera-bridge', () => {
+                    exec(getStopCameraCommand(), () => {
                       setTimeout(() => {
                         exec(
-                          'systemctl start camera-bridge',
+                          getStartCameraCommand(),
                           (error: ExecException | null) => {
                             if (!error) {
                               console.log('Camera restarted');
                             } else {
-                              exec('systemctl start camera-bridge');
+                              exec(getStartCameraCommand());
                               console.log(
                                 'Camera restarted after second attempt.',
                               );

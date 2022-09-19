@@ -22,6 +22,14 @@ export const NETWORK_BOOT_CONFIG_PATH =
   __dirname + '/../../../mnt/data/network_mode.txt';
 export const NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
 
+export const getStopCameraCommand = () => {
+  return 'systemctl stop camera-bridge';
+};
+
+export const getStartCameraCommand = () => {
+  return 'systemctl start camera-bridge';
+};
+
 export const configureOnBoot = async (req: Request, res: Response) => {
   try {
     // const realTime = Number(req.query.time);
@@ -101,7 +109,7 @@ export const switchToAP = async (req: Request, res: Response) => {
 export const updateCameraConfig = (replaceLine: string, path: string) => {
   try {
     exec(
-      'systemctl stop camera-bridge',
+      getStopCameraCommand(),
       {
         encoding: 'utf-8',
       },
@@ -115,18 +123,18 @@ export const updateCameraConfig = (replaceLine: string, path: string) => {
               },
               () => {
                 console.log('Successfully restarted the camera');
-                exec('systemctl start camera-bridge');
+                exec(getStartCameraCommand());
               },
             );
           } catch (e: unknown) {
-            exec('systemctl start camera-bridge');
+            exec(getStartCameraCommand());
           }
         } else {
-          exec('systemctl start camera-bridge');
+          exec(getStartCameraCommand());
         }
       },
     );
   } catch (e: unknown) {
-    exec('systemctl start camera-bridge');
+    exec(getStartCameraCommand());
   }
 };

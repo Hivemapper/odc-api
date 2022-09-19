@@ -18,12 +18,12 @@ export const IMAGER_CONFIG_PATH =
 // Path that will be used by the App to upload the new firmware image
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 
-export const stopCamera = () => {
-  exec('command to stop the camera recordings');
+export const getStopCameraCommand = () => {
+  return 'command to stop the camera recordings';
 };
 
-export const startCamera = () => {
-  exec('command to start the camera');
+export const getStartCameraCommand = () => {
+  return 'command to stop the camera recordings';
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {
