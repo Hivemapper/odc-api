@@ -20,7 +20,7 @@ To make it up-n-running, it's as simple as
 
 1. Make sure you have NodeJS installed on your device
 2. Copy `/compiled` folder to some cozy place on your device (better lib/opt folders, /tmp is not a good idea)
-3. Run the ODC API single-file service: `node dashcam-api.js`
+3. Run the ODC API single-file service: `node odc-api-<camera name>.js`
 4. Check if it's working: `http://<YOUR_DEVICE_IP>:5000/api/1/info` should return readable JSON to you
 5. Enjoy!
 
