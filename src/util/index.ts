@@ -48,3 +48,9 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
 export const checkIfUpsideDown = (imu: IMU) => {
   return imu?.accel.y < -0.8;
 };
+
+export const sleep = async (ms: number) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+};

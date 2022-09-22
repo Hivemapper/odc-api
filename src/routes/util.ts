@@ -59,6 +59,9 @@ router.post('/time/set', (req, res) => {
     .split(' ');
 
   try {
+    // TBD
+    // Delay needed for every step, otherwise it can error out
+    // Thankfully not used yet
     exec(
       `timedatectl set-ntp 0 && timedatectl set-time ${timeToSet[0]} && timedatectl set-time ${timeToSet[1]}`,
       {

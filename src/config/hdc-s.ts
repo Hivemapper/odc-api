@@ -26,6 +26,20 @@ export const getStartCameraCommand = () => {
   return 'command to stop the camera recordings';
 };
 
+export const getStartPreviewCommand = () => {
+  return 'command to start the preview service';
+};
+
+export const getStopPreviewCommand = () => {
+  return 'command to stop the preview service';
+};
+
+export const getImageQuality = () => {
+  // TBD
+  // Return number between 0 to 100 that is used for configuring the imager quality
+  return 70;
+};
+
 export const configureOnBoot = async (req: Request, res: Response) => {
   // If anything needs to be done on load for HDC-S
   // Placeholder
@@ -58,6 +72,6 @@ export const switchToAP = async (req: Request, res: Response) => {
   // Placeholder
 };
 
-export const updateCameraConfig = () => {
+export const updateCameraConfig = (param: string, path: string) => {
   // Placeholder
 };

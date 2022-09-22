@@ -30,6 +30,14 @@ export const getStartCameraCommand = () => {
   return 'systemctl start camera-bridge';
 };
 
+export const getStartPreviewCommand = () => {
+  return 'systemctl start camera-preview';
+};
+
+export const getStopPreviewCommand = () => {
+  return 'systemctl stop camera-preview';
+};
+
 export const configureOnBoot = async (req: Request, res: Response) => {
   try {
     // const realTime = Number(req.query.time);

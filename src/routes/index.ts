@@ -2,8 +2,13 @@ import { Request, Response, Router } from 'express';
 import { readFileSync, writeFileSync } from 'fs';
 import { exec, execSync } from 'child_process';
 
-import { API_VERSION, BUILD_INFO_PATH, configureOnBoot, WEBSERVER_LOG_PATH } from '../config';
-import framesRouter from './frames';
+import {
+  API_VERSION,
+  BUILD_INFO_PATH,
+  configureOnBoot,
+  WEBSERVER_LOG_PATH,
+} from '../config';
+import recordingsRouter from './recordings';
 import gpsRouter from './gps';
 import imuRouter from './imu';
 import loraRouter from './lora';
@@ -13,6 +18,7 @@ import networkRouter from './network';
 import configRouter from './config';
 import kpiRouter from './kpi';
 import utilRouter from './util';
+import previewRouter from './preview';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
@@ -21,7 +27,7 @@ import { getCurrentLEDs } from 'util/led';
 const router = Router();
 
 router.use('/api/1', router);
-router.use('/recordings', framesRouter);
+router.use('/recordings', recordingsRouter);
 router.use('/gps', gpsRouter);
 router.use('/imu', imuRouter);
 router.use('/lora', loraRouter);
@@ -31,6 +37,7 @@ router.use('/network', networkRouter);
 router.use('/config', configRouter);
 router.use('/kpi', kpiRouter);
 router.use('/util', utilRouter);
+router.use('/preview', previewRouter);
 
 router.get('/init', configureOnBoot);
 
@@ -85,7 +92,7 @@ router.get('/log', async (req: Request, res: Response) => {
     console.log('Webserver Log file is missing');
   }
   res.json({
-    log
+    log,
   });
 });
 

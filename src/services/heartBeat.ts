@@ -1,5 +1,5 @@
 import { exec, ExecException } from 'child_process';
-import { getStopCameraCommand } from 'config';
+import { FRAMES_ROOT_FOLDER, getStopCameraCommand } from 'config';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 // import { isPairing, repairNetworking } from 'util/network';
@@ -8,6 +8,7 @@ import { COLORS, updateLED } from '../util/led';
 let previousCameraResponse = '';
 let mostRecentPing = 0;
 let isFirmwareUpdate = false;
+let isPreviewInProgress = false;
 let wasGpsGood = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
@@ -16,6 +17,10 @@ export const setMostRecentPing = (_mostRecentPing: number) => {
 
 export const switchToFirmwareUpdate = (state: boolean) => {
   isFirmwareUpdate = state;
+};
+
+export const setPreviewStatus = (state: boolean) => {
+  isPreviewInProgress = state;
 };
 
 export const HeartBeatService: IService = {
@@ -36,7 +41,7 @@ export const HeartBeatService: IService = {
           const ubxtoolOutput = error ? '' : stdout;
 
           exec(
-            `systemctl is-active camera-bridge && ls /mnt/data/pic/ | tail -1`,
+            `systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1`,
             {
               encoding: 'utf-8',
             },
@@ -44,14 +49,20 @@ export const HeartBeatService: IService = {
               const cameraResponse = error ? '' : stdout;
 
               try {
-                const imgLED =
-                  cameraResponse.indexOf('active') === 0
-                    ? cameraResponse !== previousCameraResponse
-                      ? previousCameraResponse
-                        ? COLORS.GREEN
+                let imgLED;
+                if (isPreviewInProgress) {
+                  imgLED = COLORS.BLUE;
+                } else {
+                  imgLED =
+                    cameraResponse.indexOf('active') === 0
+                      ? cameraResponse !== previousCameraResponse
+                        ? previousCameraResponse
+                          ? COLORS.GREEN
+                          : COLORS.YELLOW
                         : COLORS.YELLOW
-                      : COLORS.YELLOW
-                    : COLORS.RED;
+                      : COLORS.RED;
+                }
+
                 previousCameraResponse = cameraResponse;
 
                 let gpsLED = COLORS.RED;
@@ -73,7 +84,11 @@ export const HeartBeatService: IService = {
                   }
                   wasGpsGood = false;
 
-                  if (cameraResponse.indexOf('active') === 0 && !ifTimeSet()) {
+                  if (
+                    cameraResponse.indexOf('active') === 0 &&
+                    !ifTimeSet() &&
+                    !isPreviewInProgress
+                  ) {
                     exec(getStopCameraCommand());
                     console.log(
                       'Camera intentionally stopped cause Lock is not there yet',
