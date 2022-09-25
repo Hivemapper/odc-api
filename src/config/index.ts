@@ -1,2 +1,2 @@
 export * from './hdc';
-export const API_VERSION = '0.10.2';
+export const API_VERSION = '0.10.3';

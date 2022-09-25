@@ -5,6 +5,7 @@ import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { ImageRotationService } from 'services/imageRotation';
+import { FixEmmcService } from 'services/fixEmmc';
 // import { StopCameraOnBootService } from 'services/stopCameraOnBoot';
 import { setSessionId } from 'util/index';
 import console_stamp from 'console-stamp';
@@ -45,6 +46,7 @@ export async function initAppServer() {
     // serviceRunner.add(StopCameraOnBootService);
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(ImageRotationService);
+    serviceRunner.add(FixEmmcService);
     // serviceRunner.add(BootNetworkService);
     // serviceRunner.add(AssistNowService);
     serviceRunner.run();

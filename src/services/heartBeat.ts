@@ -10,6 +10,7 @@ let mostRecentPing = 0;
 let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
 let wasGpsGood = false;
+let got3dOnce = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -75,6 +76,7 @@ export const HeartBeatService: IService = {
                     console.log('Got 3d Fix');
                   }
                   wasGpsGood = true;
+                  got3dOnce = true;
                 } else {
                   if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
                     gpsLED = COLORS.YELLOW;
@@ -87,6 +89,7 @@ export const HeartBeatService: IService = {
                   if (
                     cameraResponse.indexOf('active') === 0 &&
                     !ifTimeSet() &&
+                    !got3dOnce &&
                     !isPreviewInProgress
                   ) {
                     exec(getStopCameraCommand());

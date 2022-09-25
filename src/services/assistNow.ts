@@ -1,8 +1,8 @@
 import { existsSync, writeFileSync } from 'fs';
 import { submitOfflineAlmanac } from 'ubx/almanac';
 import { IService } from '../types';
-const ALMANAC_CONFIG = './almanac.json';
-const ASSISTNOW_ERROR_LOG = './assistnow_error.log';
+const ALMANAC_CONFIG = '/mnt/data/almanac.log';
+const ASSISTNOW_ERROR_LOG = '/mnt/data/almanac_error.log';
 
 export const AssistNowService: IService = {
   execute: async () => {

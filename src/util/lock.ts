@@ -122,6 +122,7 @@ export const setCameraTime = () => {
           const output = error ? '' : stdout;
           const elems = output.split(' ');
           let validHex = elems.pop();
+          const respTime = Date.now();
           if (validHex && validHex.indexOf('x') === 0) {
             validHex = validHex.slice(1);
             const timeDateBytes = parseInt(validHex, 16)
@@ -145,9 +146,12 @@ export const setCameraTime = () => {
                     t[2],
                   );
 
-                  setSystemTime(currentMs, Date.now(), () => {
+                  setSystemTime(currentMs, respTime, () => {
                     isCameraTimeInProgress = false;
                     isTimeSet = true;
+
+                    // Here you can check the delta between last gps timestamp record
+                    // and system time
 
                     exec(getStopCameraCommand(), () => {
                       setTimeout(() => {
