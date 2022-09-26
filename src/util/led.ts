@@ -59,7 +59,7 @@ const getColorByLed = (LED: ILED) => {
       LED &&
       COLORS[color].red === LED.red &&
       COLORS[color].blue === LED.blue &&
-      COLORS[color].green === COLORS[color].green
+      COLORS[color].green === LED.green
     ) {
       result = color;
     }
