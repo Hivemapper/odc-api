@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync, openSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { exec } from 'child_process';
 import { IService } from '../types';
 const EMMC_FIXED_LOG = '/mnt/data/emmc_fixed';
@@ -11,7 +11,7 @@ export const FixEmmcService: IService = {
         // making sure we perform this operation only once, even if it failed.
         // otherwise device can get into the retry loop
         writeFileSync(EMMC_FIXED_LOG, '');
-        console.log('Executing script to fix EMMC writing performance2');
+        console.log('Executing script to fix EMMC writing performance');
         exec('/opt/dashcam/bin/fix_emmc.sh');
 
         // const out = openSync('./out.log', 'a');
@@ -31,4 +31,5 @@ export const FixEmmcService: IService = {
       }
     }
   },
+  delay: 10000,
 };
