@@ -70,6 +70,7 @@ And double-check if it's healthy:
 
 - [List Files](#list-of-gps-files)
 - [Get single file](#single-gps-single)
+- [Get GPS sample](#get-gps-sample)
 
 ### IMU
 
@@ -80,6 +81,11 @@ And double-check if it's healthy:
 
 - [List Files](#list-of-frames)
 - [Get single Frame](#single-frame)
+
+### Live Stream
+
+- [Start Live Stream](#start-live-stream)
+- [Stop Live Stream](#stop-live-stream)
 
 ### Networking
 
@@ -161,6 +167,21 @@ Request to get the contents of particular GPS file
 $ curl --GET http://192.168.0.10:5000/public/gps/2022-08-30T00:10:07.455Z.json
 ```
 
+### Get GPS sample
+
+**GET /gps/sample**
+
+Request to get the contents of particular GPS file
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/gps/sample
+
+{
+  "fix":"3D",
+  "timestamp": ...
+},
+```
+
 ## IMU
 
 ### List of IMU files
@@ -223,6 +244,45 @@ Request to get the particular frame by its filename.
 
 ```javascript
 $ curl --GET http://192.168.0.10:5000/public/pic/1661867302_878800.jpg
+```
+
+## Live Stream
+
+### Start Live Stream
+
+**GET /preview/start**
+
+Method to start the process of streaming live video from camera.
+To access a live stream, once it successfully started, hit the following URL:
+
+`http://192.168.0.10:9001/?action=stream`
+
+**Obvious note:** your current connection with the camera is going to be terminated
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/preview/start
+
+{
+  "status": "started"
+}
+
+```
+
+### Stop Live Stream
+
+**GET /preview/stop**
+
+Method to tear down current P2P interface on camera, and make Wi-Fi Access Point up & running.
+
+**Important note:** your current connection with the camera is going to be terminated
+
+```javascript
+$ curl --GET http://192.168.0.10:5000/api/1/preview/stop
+
+{
+  "status": "stopped"
+}
+
 ```
 
 ## Networking
