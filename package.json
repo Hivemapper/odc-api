@@ -37,6 +37,7 @@
     "build": "rm -rf dist && tsc",
     "compile": "rm -rf dist && sed -i '' \"s/hdc'/$npm_config_camera'/g\" src/config/index.ts && tsc && rm -rf compiled/odc-api-$npm_config_camera.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/odc-api-$npm_config_camera.js && copyfiles -u 2 src/fixtures/* compiled/fixtures && sed -i '' \"s/$npm_config_camera'/hdc'/g\" src/config/index.ts",
     "compile-dev": "rm -rf dist && sed -i '' \"s/hdc'/$npm_config_camera'/g\" src/config/index.ts && tsc && rm -rf compiled/dashcam-api.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/dashcam-api.js && copyfiles -u 2 src/fixtures/* compiled/fixtures && sed -i '' \"s/$npm_config_camera'/hdc'/g\" src/config/index.ts",
+    "compile-win": "rm -rf dist && tsc && rm -rf compiled/dashcam-api.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/dashcam-api.js && copyfiles -u 2 src/fixtures/* compiled/fixtures",
     "start-compiled": "node compiled/dashcam-api.js",
     "prestart": "npm run build",
     "start": "node dist/index.js",

@@ -1,5 +1,6 @@
 import { exec, ExecException } from 'child_process';
-import { FRAMES_ROOT_FOLDER, getStopCameraCommand } from 'config';
+import { FRAMES_ROOT_FOLDER, getStopCameraCommand, GPS_LATEST_SAMPLE } from 'config';
+import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 // import { isPairing, repairNetworking } from 'util/network';
@@ -31,44 +32,45 @@ export const HeartBeatService: IService = {
         updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
         return;
       }
-      // ubxtool -p NAV-PVT | grep fix
-      // grep fix ${GPS_ROOT_FOLDER}/"$(ls ${GPS_ROOT_FOLDER} | tail -1)" | tail -1
       exec(
-        'ubxtool -p NAV-PVT | grep fix',
+        `systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1`,
         {
           encoding: 'utf-8',
         },
         (error: ExecException | null, stdout: string) => {
-          const ubxtoolOutput = error ? '' : stdout;
+          const cameraResponse = error ? '' : stdout;
 
-          exec(
-            `systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1`,
-            {
-              encoding: 'utf-8',
-            },
-            (error: ExecException | null, stdout: string) => {
-              const cameraResponse = error ? '' : stdout;
+          let imgLED: any;
+          if (isPreviewInProgress) {
+            imgLED = COLORS.BLUE;
+          } else {
+            imgLED =
+              cameraResponse.indexOf('active') === 0
+                ? cameraResponse !== previousCameraResponse
+                  ? previousCameraResponse
+                    ? COLORS.GREEN
+                    : COLORS.YELLOW
+                  : COLORS.YELLOW
+                : COLORS.RED;
+          }
 
-              try {
-                let imgLED;
-                if (isPreviewInProgress) {
-                  imgLED = COLORS.BLUE;
-                } else {
-                  imgLED =
-                    cameraResponse.indexOf('active') === 0
-                      ? cameraResponse !== previousCameraResponse
-                        ? previousCameraResponse
-                          ? COLORS.GREEN
-                          : COLORS.YELLOW
-                        : COLORS.YELLOW
-                      : COLORS.RED;
-                }
+          previousCameraResponse = cameraResponse;
 
-                previousCameraResponse = cameraResponse;
+          let gpsLED = COLORS.RED;
 
-                let gpsLED = COLORS.RED;
-
-                if (ubxtoolOutput.indexOf('fixType 3') !== -1) {
+          try {
+            readFile(
+              GPS_LATEST_SAMPLE,
+              {
+                encoding: 'utf-8',
+              },
+              (err: NodeJS.ErrnoException | null, data: string) => {
+                let gpsSample: any = {};
+                if (data && !err) {
+                  gpsSample = JSON.parse(data) || {};
+                } 
+        
+                if (gpsSample?.fix === '3d') {
                   gpsLED = COLORS.GREEN;
                   setLockTime();
                   setCameraTime();
@@ -78,14 +80,14 @@ export const HeartBeatService: IService = {
                   wasGpsGood = true;
                   got3dOnce = true;
                 } else {
-                  if (ubxtoolOutput.indexOf('fixType 2') !== -1) {
+                  if (gpsSample?.fix === '2d') {
                     gpsLED = COLORS.YELLOW;
                   }
                   if (wasGpsGood) {
                     console.log('Lost 3d Fix');
                   }
                   wasGpsGood = false;
-
+    
                   if (
                     cameraResponse.indexOf('active') === 0 &&
                     !ifTimeSet() &&
@@ -98,11 +100,11 @@ export const HeartBeatService: IService = {
                     );
                   }
                 }
-
+    
                 const appDisconnectionPeriod = mostRecentPing
                   ? Math.abs(Date.now() - mostRecentPing)
                   : 30000;
-
+    
                 let appLED = COLORS.RED;
                 if (appDisconnectionPeriod < 15000) {
                   appLED = COLORS.GREEN;
@@ -110,11 +112,11 @@ export const HeartBeatService: IService = {
                   appLED = COLORS.YELLOW;
                 }
                 updateLED(imgLED, gpsLED, appLED);
-              } catch (e: unknown) {
-                console.log(e);
-              }
-            },
-          );
+              },
+            );
+          } catch (e: unknown) {
+            console.log(e);
+          }
         },
       );
     } catch (e: unknown) {
