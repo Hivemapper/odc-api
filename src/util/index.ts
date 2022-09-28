@@ -54,3 +54,53 @@ export const sleep = async (ms: number) => {
     setTimeout(resolve, ms);
   });
 };
+
+export const getPreviewConfig = () => {
+  return {
+    recording: {
+      directory: {
+        prefix: '',
+        output: '/tmp/recording/preview/',
+        minfreespace: 64000000,
+      },
+    },
+    camera: {
+      encoding: {
+        fps: 24,
+        width: 1080,
+        height: 720,
+        codec: 'mjpeg',
+      },
+      adjustment: {
+        hflip: false,
+        vflip: false,
+        rotation: 180,
+      },
+    },
+  };
+};
+
+export const getCameraConfig = () => {
+  return {
+    recording: {
+      directory: {
+        prefix: '',
+        output: '/mnt/data/pic/',
+        minfreespace: 64000000,
+      },
+    },
+    camera: {
+      encoding: {
+        fps: 10,
+        width: 4056,
+        height: 2160,
+        codec: 'mjpeg',
+      },
+      adjustment: {
+        hflip: false,
+        vflip: false,
+        rotation: 180,
+      },
+    },
+  };
+};

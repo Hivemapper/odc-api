@@ -1,12 +1,14 @@
 import { exec, execSync } from 'child_process';
+import { writeFileSync } from 'fs';
 import {
   getStartCameraCommand,
   getStartPreviewCommand,
   getStopCameraCommand,
   getStopPreviewCommand,
+  IMAGER_CONFIG_PATH,
 } from 'config';
 import { setPreviewStatus } from 'services/heartBeat';
-import { sleep } from 'util/index';
+import { getCameraConfig, getPreviewConfig, sleep } from 'util/index';
 
 let timer: any = undefined;
 
@@ -24,12 +26,13 @@ export const startPreview = async () => {
     console.log(e);
   }
 
-  await execSync(
-    `sed -i "s/mnt\\/data\\/pic/tmp\\/recording\\/pic/g" /opt/dashcam/bin/config.json`,
-    {
+  try {
+    writeFileSync(IMAGER_CONFIG_PATH, JSON.stringify(getPreviewConfig()), {
       encoding: 'utf-8',
-    },
-  );
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
   await execSync(getStopCameraCommand(), {
     encoding: 'utf-8',
   });
@@ -51,12 +54,13 @@ export const stopPreview = async () => {
   await execSync(getStopPreviewCommand(), {
     encoding: 'utf-8',
   });
-  await execSync(
-    `sed -i "s/tmp\\/recording\\/pic/mnt\\/data\\/pic/g" /opt/dashcam/bin/config.json`,
-    {
+  try {
+    writeFileSync(IMAGER_CONFIG_PATH, JSON.stringify(getCameraConfig()), {
       encoding: 'utf-8',
-    },
-  );
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
   await execSync(getStopCameraCommand(), {
     encoding: 'utf-8',
   });

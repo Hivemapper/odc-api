@@ -13,18 +13,6 @@ export const FixEmmcService: IService = {
         writeFileSync(EMMC_FIXED_LOG, '');
         console.log('Executing script to fix EMMC writing performance');
         exec('/opt/dashcam/bin/fix_emmc.sh');
-
-        // const out = openSync('./out.log', 'a');
-        // const err = openSync('./out.log', 'a');
-        // const subprocess = spawn('./fix_emmc.sh', {
-        //   detached: true,
-        //   stdio: ['ignore', out, err],
-        // });
-
-        // subprocess.unref();
-
-        // BE CAREFUL
-        // This code is unreachable. Cause fix_emmc stops the ODC API.
       } catch (e: unknown) {
         console.log(e);
         writeFileSync(EMMC_FIXED_LOG, JSON.stringify(e));
