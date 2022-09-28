@@ -1,5 +1,9 @@
 import { exec, ExecException } from 'child_process';
-import { FRAMES_ROOT_FOLDER, getStopCameraCommand, GPS_LATEST_SAMPLE } from 'config';
+import {
+  FRAMES_ROOT_FOLDER,
+  getStopCameraCommand,
+  GPS_LATEST_SAMPLE,
+} from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
@@ -42,7 +46,7 @@ export const HeartBeatService: IService = {
 
           let imgLED: any;
           if (isPreviewInProgress) {
-            imgLED = COLORS.BLUE;
+            imgLED = COLORS.WHITE;
           } else {
             imgLED =
               cameraResponse.indexOf('active') === 0
@@ -57,7 +61,6 @@ export const HeartBeatService: IService = {
           previousCameraResponse = cameraResponse;
 
           let gpsLED = COLORS.RED;
-
           try {
             readFile(
               GPS_LATEST_SAMPLE,
@@ -66,11 +69,15 @@ export const HeartBeatService: IService = {
               },
               (err: NodeJS.ErrnoException | null, data: string) => {
                 let gpsSample: any = {};
-                if (data && !err) {
-                  gpsSample = JSON.parse(data) || {};
-                } 
-        
-                if (gpsSample?.fix === '3d') {
+                if (data) {
+                  try {
+                    gpsSample = JSON.parse(data) || {};
+                  } catch (e: unknown) {
+                    console.log(e);
+                  }
+                }
+
+                if (gpsSample?.fix === '3D') {
                   gpsLED = COLORS.GREEN;
                   setLockTime();
                   setCameraTime();
@@ -80,14 +87,14 @@ export const HeartBeatService: IService = {
                   wasGpsGood = true;
                   got3dOnce = true;
                 } else {
-                  if (gpsSample?.fix === '2d') {
+                  if (gpsSample?.fix === '2D') {
                     gpsLED = COLORS.YELLOW;
                   }
                   if (wasGpsGood) {
                     console.log('Lost 3d Fix');
                   }
                   wasGpsGood = false;
-    
+
                   if (
                     cameraResponse.indexOf('active') === 0 &&
                     !ifTimeSet() &&
@@ -100,11 +107,11 @@ export const HeartBeatService: IService = {
                     );
                   }
                 }
-    
+
                 const appDisconnectionPeriod = mostRecentPing
                   ? Math.abs(Date.now() - mostRecentPing)
                   : 30000;
-    
+
                 let appLED = COLORS.RED;
                 if (appDisconnectionPeriod < 15000) {
                   appLED = COLORS.GREEN;

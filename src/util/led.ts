@@ -39,6 +39,12 @@ export const COLORS: { [key: string]: ILED } = {
     green: 0,
     on: true,
   },
+  WHITE: {
+    red: 25,
+    blue: 25,
+    green: 25,
+    on: true,
+  },
 };
 
 let currentLEDs = {
