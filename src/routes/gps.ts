@@ -5,14 +5,15 @@ import { readdirSync, readFile } from 'fs';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
-import { consoleTestResultHandler } from 'tslint/lib/test';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(GPS_ROOT_FOLDER);
+    let files = readdirSync(GPS_ROOT_FOLDER);
     if (files.length) {
+      // Filter out latest.log
+      files = files.filter((filename: string) => filename !== 'latest.log');
       // Last GPS file is not finished yet
       files.pop();
     }
@@ -47,7 +48,7 @@ router.get('/sample', async (req: Request, res: Response) => {
         let sample = {};
         if (data && !err) {
           sample = JSON.parse(data);
-        } 
+        }
 
         res.json(sample);
       },
