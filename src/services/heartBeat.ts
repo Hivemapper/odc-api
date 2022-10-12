@@ -64,7 +64,7 @@ export const HeartBeatService: IService = {
 
           previousCameraResponse = cameraResponse;
 
-          let gpsLED = COLORS.RED;
+          let gpsLED = COLORS.GREEN;
           try {
             readFile(
               GPS_LATEST_SAMPLE,
@@ -94,7 +94,7 @@ export const HeartBeatService: IService = {
                 } else {
                   const gpsLostPeriod = lastSuccessfulFix
                     ? Math.abs(Date.now() - lastSuccessfulFix)
-                    : 30000;
+                    : 70000;
                   if (gpsLostPeriod > 60000) {
                     gpsLED = COLORS.RED;
                   }
