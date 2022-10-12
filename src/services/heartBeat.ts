@@ -3,6 +3,7 @@ import {
   FRAMES_ROOT_FOLDER,
   getStopCameraCommand,
   GPS_LATEST_SAMPLE,
+  isDev,
 } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
@@ -12,6 +13,7 @@ import { COLORS, updateLED } from '../util/led';
 
 let previousCameraResponse = '';
 let mostRecentPing = 0;
+let lastSuccessfulFix = 0;
 let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
 let wasGpsGood = false;
@@ -45,16 +47,18 @@ export const HeartBeatService: IService = {
           const cameraResponse = error ? '' : stdout;
 
           let imgLED: any;
-          if (isPreviewInProgress) {
+          if (isPreviewInProgress && isDev()) {
             imgLED = COLORS.WHITE;
           } else {
+            const activeButOutdatedColor = isDev() ? COLORS.YELLOW : COLORS.RED;
+
             imgLED =
               cameraResponse.indexOf('active') === 0
                 ? cameraResponse !== previousCameraResponse
                   ? previousCameraResponse
                     ? COLORS.GREEN
-                    : COLORS.YELLOW
-                  : COLORS.YELLOW
+                    : activeButOutdatedColor
+                  : activeButOutdatedColor
                 : COLORS.RED;
           }
 
@@ -79,6 +83,7 @@ export const HeartBeatService: IService = {
 
                 if (gpsSample?.fix === '3D') {
                   gpsLED = COLORS.GREEN;
+                  lastSuccessfulFix = Date.now();
                   setLockTime();
                   setCameraTime();
                   if (!wasGpsGood) {
@@ -87,9 +92,13 @@ export const HeartBeatService: IService = {
                   wasGpsGood = true;
                   got3dOnce = true;
                 } else {
-                  if (gpsSample?.fix === '2D') {
-                    gpsLED = COLORS.YELLOW;
+                  const gpsLostPeriod = lastSuccessfulFix
+                    ? Math.abs(Date.now() - lastSuccessfulFix)
+                    : 30000;
+                  if (gpsLostPeriod > 60000) {
+                    gpsLED = COLORS.RED;
                   }
+
                   if (wasGpsGood) {
                     console.log('Lost 3d Fix');
                   }
@@ -115,8 +124,6 @@ export const HeartBeatService: IService = {
                 let appLED = COLORS.RED;
                 if (appDisconnectionPeriod < 15000) {
                   appLED = COLORS.GREEN;
-                } else {
-                  appLED = COLORS.YELLOW;
                 }
                 updateLED(imgLED, gpsLED, appLED);
               },
