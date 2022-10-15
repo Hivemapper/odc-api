@@ -1,4 +1,4 @@
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from '../config';
+import { FRAMEKM_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
 import { existsSync, readdirSync, rmSync } from 'fs';
 import { concatFrames } from 'util/framekm';
@@ -16,8 +16,8 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/:name', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(FRAMES_ROOT_FOLDER);
-    const bytesPacked = await concatFrames(files, req.params.name);
+    const frames = req.body?.frames;
+    const bytesPacked = await concatFrames(frames, req.params.name);
     res.json({
       frames: bytesPacked,
     });
