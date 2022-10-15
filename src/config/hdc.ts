@@ -6,8 +6,10 @@ export const PORT = 5000;
 
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
+export const FRAMEKM_ROOT_FOLDER = __dirname + '/../../../mnt/data/framekm';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
-export const GPS_LATEST_SAMPLE = __dirname + '/../../../mnt/data/gps/latest.log';
+export const GPS_LATEST_SAMPLE =
+  __dirname + '/../../../mnt/data/gps/latest.log';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
 export const LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';

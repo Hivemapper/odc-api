@@ -17,6 +17,7 @@ import otaRouter from './ota';
 import networkRouter from './network';
 import configRouter from './config';
 import kpiRouter from './kpi';
+import framekmRouter from './framekm';
 import utilRouter from './util';
 import previewRouter from './preview';
 import { setMostRecentPing } from 'services/heartBeat';
@@ -36,6 +37,7 @@ router.use('/ota', otaRouter);
 router.use('/network', networkRouter);
 router.use('/config', configRouter);
 router.use('/kpi', kpiRouter);
+router.use('/framekm', framekmRouter);
 router.use('/util', utilRouter);
 router.use('/preview', previewRouter);
 
