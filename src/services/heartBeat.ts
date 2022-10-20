@@ -1,17 +1,12 @@
 import { exec, ExecException } from 'child_process';
-import {
-  FRAMES_ROOT_FOLDER,
-  getStopCameraCommand,
-  GPS_LATEST_SAMPLE,
-  isDev,
-} from 'config';
+import { getStopCameraCommand, GPS_LATEST_SAMPLE, isDev } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 // import { isPairing, repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
-let previousCameraResponse = '';
+// let previousCameraResponse = '';
 let mostRecentPing = 0;
 let lastSuccessfulFix = 0;
 let isFirmwareUpdate = false;
@@ -38,8 +33,9 @@ export const HeartBeatService: IService = {
         updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
         return;
       }
+      // systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1
       exec(
-        `systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1`,
+        `systemctl is-active camera-bridge`,
         {
           encoding: 'utf-8',
         },
@@ -50,19 +46,15 @@ export const HeartBeatService: IService = {
           if (isPreviewInProgress && isDev()) {
             imgLED = COLORS.WHITE;
           } else {
-            const activeButOutdatedColor = isDev() ? COLORS.YELLOW : COLORS.RED;
+            // const activeButOutdatedColor = isDev() ? COLORS.YELLOW : COLORS.RED;
 
             imgLED =
               cameraResponse.indexOf('active') === 0
-                ? cameraResponse !== previousCameraResponse
-                  ? previousCameraResponse
-                    ? COLORS.GREEN
-                    : activeButOutdatedColor
-                  : activeButOutdatedColor
+                ? COLORS.GREEN
                 : COLORS.RED;
           }
 
-          previousCameraResponse = cameraResponse;
+          // previousCameraResponse = cameraResponse;
 
           let gpsLED = COLORS.GREEN;
           try {
