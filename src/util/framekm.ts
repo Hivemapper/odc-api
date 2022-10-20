@@ -1,4 +1,3 @@
-import { exec } from 'child_process';
 import { filter, map, eachSeries } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import {

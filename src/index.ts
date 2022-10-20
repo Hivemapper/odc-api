@@ -45,7 +45,7 @@ export async function initAppServer() {
   try {
     // serviceRunner.add(StopCameraOnBootService);
     serviceRunner.add(HeartBeatService);
-    serviceRunner.add(ImageRotationService);
+    // serviceRunner.add(ImageRotationService);
     // serviceRunner.add(FixEmmcService);
     // serviceRunner.add(BootNetworkService);
     // serviceRunner.add(AssistNowService);

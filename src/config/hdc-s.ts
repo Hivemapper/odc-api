@@ -14,7 +14,7 @@ export const IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
 export const LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const WEBSERVER_LOG_PATH =
-  __dirname + '/../../../mnt/data/camera-node.log';
+  __dirname + '/../../../tmp/recording/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 // File containing the camera configuration
 export const IMAGER_CONFIG_PATH =
