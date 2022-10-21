@@ -87,6 +87,8 @@ export const getCameraConfig = () => {
         prefix: '',
         output: '/mnt/data/pic/',
         minfreespace: 64000000,
+        output2: '/media/usb0/recording/',
+        minfreespace2: 32000000,
       },
     },
     camera: {
