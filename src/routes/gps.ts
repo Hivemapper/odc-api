@@ -59,4 +59,15 @@ router.get('/sample', async (req: Request, res: Response) => {
   }
 });
 
+router.get("/jamInd", async (req: Request, res: Response) => {
+  let jamInd = undefined
+  try {
+    jamInd = getJamInd()
+    res.json({ jamInd: jamInd, date: new Date()})
+  } catch (e) {
+    console.log(e);
+    res.json({});
+  }
+});
+
 export default router;
