@@ -61,7 +61,6 @@ router.get('/sample', async (req: Request, res: Response) => {
 });
 
 router.get('/jamind', async (req: Request, res: Response) => {
-  let jamInd = undefined
   try {
     exec(
       'ubxtool -p MON-RF | grep jamInd',
@@ -79,7 +78,7 @@ router.get('/jamind', async (req: Request, res: Response) => {
           elem => elem.indexOf("jamInd") !== -1,
         );
         if (jamIndIndex !== -1) {
-          jamInd = parts[jamIndIndex + 1]
+          const jamInd = parseInt(parts[jamIndIndex + 1])
           res.json({ jamInd: jamInd, date: new Date() })
         }
       }
