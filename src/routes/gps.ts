@@ -5,7 +5,7 @@ import { readdirSync, readFile } from 'fs';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getJamInd } from 'ubx/interference'
+import { exec, ExecException } from 'child_process';
 
 const router = Router();
 
@@ -63,8 +63,34 @@ router.get('/sample', async (req: Request, res: Response) => {
 router.get('/jamind', async (req: Request, res: Response) => {
   let jamInd = undefined
   try {
-    jamInd = getJamInd()
-    res.json({ jamInd: jamInd, date: new Date()})
+    exec(
+      'ubxtool -p MON-RF | grep jamInd',
+      { encoding: 'utf-8' },
+      (error: ExecException | null, stdout: string) => {
+        let output = error ? '' : stdout;
+        output = ` noisePerMS 89 agcCnt 4212 jamInd 9 ofsI 19 magI 177 ofsQ 14 magQ 173`
+        console.log('output', output)
+        // get jamInd 
+        const line = output.split("\n").shift() // we should only get one in the output
+        console.log('line', line)
+        if (!line) {
+          console.log("jamInd not found")
+          return
+        }
+        console.log(line)
+        const parts = line.split(" ")
+        console.log(parts)
+        const jamIndIndex = parts.findIndex(
+          elem => elem.indexOf("jamInd") !== -1,
+        );
+        console.log('jamInd Index', jamIndIndex)
+        if (jamIndIndex !== -1) {
+          jamInd = parts[jamIndIndex + 1]
+          console.log("during jamInd existence check", jamInd)
+          res.json({ jamInd: jamInd, date: new Date() })
+        }
+      }
+    )
   } catch (e) {
     console.log(e);
     res.json({});
