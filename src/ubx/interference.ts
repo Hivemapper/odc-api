@@ -1,6 +1,6 @@
 import { exec, ExecException } from 'child_process';
 
-function getJamInd() {
+export function getJamInd() {
   var jamInd = undefined;
   try {
     exec(
@@ -11,7 +11,7 @@ function getJamInd() {
         // get jamInd 
         const line = output.split("\n").shift() // we should only get one in the output
         if (!line) {
-          throw new error("jamInd not found")
+          throw new Error("jamInd not found")
         }
         const parts = line.split(" ")
         const jamIndIndex = parts.findIndex(

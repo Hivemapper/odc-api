@@ -5,6 +5,7 @@ import { readdirSync, readFile } from 'fs';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
+import { getJamInd } from 'ubx/interference'
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.get('/sample', async (req: Request, res: Response) => {
   }
 });
 
-router.get("/jamInd", async (req: Request, res: Response) => {
+router.get('/jamind', async (req: Request, res: Response) => {
   let jamInd = undefined
   try {
     jamInd = getJamInd()
