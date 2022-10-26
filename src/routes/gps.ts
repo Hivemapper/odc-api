@@ -5,6 +5,7 @@ import { readdirSync, readFile } from 'fs';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
+import { exec, ExecException } from 'child_process';
 
 const router = Router();
 
