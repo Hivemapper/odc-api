@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { readFileSync, writeFileSync } from 'fs';
-import { exec, execSync } from 'child_process';
+import { exec, ExecException, execSync } from 'child_process';
 
 import {
   API_VERSION,
@@ -166,29 +166,24 @@ router.get('/jamind', async (req: Request, res: Response) => {
 });
 
 router.get('/spoofdetstate', async (req: Request, res: Response) => {
-  console.log("calling spoofdetstate")
   try {
     exec(
       'ubxtool -p NAV-STATUS -v 2 | grep spoofDetState',
       { encoding: 'utf-8' },
       (error: ExecException | null, stdout: string) => {
         let output = error ? '' : stdout;
-        console.log("output", output)
         //get spoofDetState
         const line = output.split("\n").shift() // hopefully there should be one only
-        console.log("line", line)
         if (!line) {
           res.json({})
           return
         }
         const parts = line.split(" ")
-        console.log("parts", parts)
         const spoofDetStateIndex = parts.findIndex(
           elem => elem.indexOf("spoofDetState") !== -1,
         );
         if (spoofDetStateIndex !== -1) {
           const spoofDetState = parseInt(parts[spoofDetStateIndex + 1])
-          console.log("spoofDetState", spoofDetState)
           res.json({ spoofDetState: spoofDetState, date: new Date() })
           return
         }
