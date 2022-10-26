@@ -93,7 +93,7 @@ router.get('/spoofdetstate', async(req: Request, res: Response) => {
   console.log("calling spoofdetstate")
   try{
     exec(
-      'ubxtool -c 0x01,0x03 | grep spoofDetState',
+      'ubxtool -p NAV-STATUS -v 2 | grep spoofDetState',
       {encoding: 'utf-8'},
       (error: ExecException | null, stdout: string) => {
         let output = error? '': stdout;
