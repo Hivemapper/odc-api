@@ -101,7 +101,7 @@ export const getCameraConfig = () => {
       adjustment: {
         hflip: false,
         vflip: false,
-        rotation: 180,
+        rotation: 0,
       },
     },
   };
