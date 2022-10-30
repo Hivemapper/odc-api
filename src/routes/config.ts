@@ -1,12 +1,12 @@
-import { updateCameraConfig } from '../config';
 import { Router, Request, Response } from 'express';
+import { setCameraConfig } from 'util/index';
 const router = Router();
 
-router.post('/camera', async (req: Request, res: Response) => {
+router.post('/cameraconfig', async (req: Request, res: Response) => {
   try {
-    updateCameraConfig(req.body.replace, req.body.path);
+    setCameraConfig(req.body.config);
     res.json({
-      output: 'in progress',
+      output: 'done',
     });
   } catch (error: any) {
     res.json({ error });

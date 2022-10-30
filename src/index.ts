@@ -4,8 +4,8 @@ import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
-import { ImageRotationService } from 'services/imageRotation';
-import { FixEmmcService } from 'services/fixEmmc';
+import { UpdateCameraConfigService } from 'services/updateCameraConfig';
+import { DeviceInfoService } from 'services/deviceInfo';
 // import { StopCameraOnBootService } from 'services/stopCameraOnBoot';
 import { setSessionId } from 'util/index';
 import console_stamp from 'console-stamp';
@@ -43,12 +43,10 @@ export async function initAppServer() {
   }
 
   try {
-    // serviceRunner.add(StopCameraOnBootService);
     serviceRunner.add(HeartBeatService);
-    serviceRunner.add(ImageRotationService);
-    // serviceRunner.add(FixEmmcService);
-    // serviceRunner.add(BootNetworkService);
-    // serviceRunner.add(AssistNowService);
+    serviceRunner.add(UpdateCameraConfigService);
+    serviceRunner.add(DeviceInfoService);
+
     serviceRunner.run();
     setSessionId();
   } catch (e: unknown) {

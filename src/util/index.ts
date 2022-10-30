@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
+import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 
 let sessionId: string;
 
@@ -80,29 +81,36 @@ export const getPreviewConfig = () => {
   };
 };
 
+let cameraConfig: any = {
+  recording: {
+    directory: {
+      prefix: '',
+      output: '/mnt/data/pic/',
+      minfreespace: 64000000,
+      output2: '/media/usb0/recording/',
+      minfreespace2: 32000000,
+    },
+  },
+  camera: {
+    encoding: {
+      fps: 10,
+      width: 4056,
+      height: 2160,
+      codec: 'mjpeg',
+    },
+    adjustment: {
+      hflip: false,
+      vflip: false,
+      rotation: 180,
+    },
+  },
+};
+
 export const getCameraConfig = () => {
-  return {
-    recording: {
-      directory: {
-        prefix: '',
-        output: '/mnt/data/pic/',
-        minfreespace: 64000000,
-        output2: '/media/usb0/recording/',
-        minfreespace2: 32000000,
-      },
-    },
-    camera: {
-      encoding: {
-        fps: 10,
-        width: 4056,
-        height: 2160,
-        codec: 'mjpeg',
-      },
-      adjustment: {
-        hflip: false,
-        vflip: false,
-        rotation: 180,
-      },
-    },
-  };
+  return cameraConfig;
+};
+
+export const setCameraConfig = (newCameraConfig: any) => {
+  cameraConfig = newCameraConfig;
+  UpdateCameraConfigService.execute();
 };

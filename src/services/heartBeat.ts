@@ -69,7 +69,7 @@ export const HeartBeatService: IService = {
                   try {
                     gpsSample = JSON.parse(data) || {};
                   } catch (e: unknown) {
-                    console.log(e);
+                    console.log('Latest.log Parse Error:', e);
                   }
                 }
 

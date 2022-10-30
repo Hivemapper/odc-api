@@ -21,6 +21,7 @@ export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
 // Path that will be used by the App to upload the new firmware image
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
+export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 
 export const getStopCameraCommand = () => {
   return 'command to stop the camera recordings';

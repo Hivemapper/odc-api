@@ -24,6 +24,7 @@ import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
+import { getDeviceInfo } from 'services/deviceInfo';
 
 const router = Router();
 
@@ -54,8 +55,10 @@ router.get('/info', async (req: Request, res: Response) => {
   } catch (error) {
     console.log('Build Info file is missing');
   }
+  const deviceInfo = getDeviceInfo();
   res.json({
     ...versionInfo,
+    ...deviceInfo,
     api_version: API_VERSION,
   });
 });

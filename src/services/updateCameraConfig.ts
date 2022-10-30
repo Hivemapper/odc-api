@@ -9,9 +9,9 @@ import { IService } from 'types';
 import { getCameraConfig } from 'util/index';
 import { ifTimeSet } from 'util/lock';
 
-export const ImageRotationService: IService = {
+export const UpdateCameraConfigService: IService = {
   execute: async () => {
-    console.log('Set rotation to 180');
+    console.log('Updating camera config');
 
     try {
       writeFile(
@@ -34,8 +34,8 @@ export const ImageRotationService: IService = {
         },
       );
     } catch (e: unknown) {
-      console.log('Image Rotation service failed with error', e);
+      console.log('Camera Config service failed with error', e);
     }
   },
-  delay: 4000,
+  delay: 200,
 };

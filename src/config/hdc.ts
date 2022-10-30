@@ -24,6 +24,7 @@ export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 export const NETWORK_BOOT_CONFIG_PATH =
   __dirname + '/../../../mnt/data/network_mode.txt';
 export const NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
+export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 
 export const getStopCameraCommand = () => {
   return 'systemctl stop camera-bridge';

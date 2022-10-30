@@ -18,6 +18,12 @@ export interface IService {
   delay?: number;
 }
 
+export interface DeviceInfo {
+  serial: string;
+  boardConfig: string;
+  ssid: string;
+}
+
 export interface GNSS {
   timestamp: string;
   longitude: number;

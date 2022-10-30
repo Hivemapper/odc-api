@@ -1,7 +1,7 @@
 import { GPS_LATEST_SAMPLE, GPS_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
 import { readdirSync, readFile } from 'fs';
-
+import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
@@ -55,6 +55,64 @@ router.get('/sample', async (req: Request, res: Response) => {
     );
   } catch (e) {
     console.log(e);
+    res.json({});
+  }
+});
+
+router.get('/jamind', async (req: Request, res: Response) => {
+  try {
+    exec(
+      'ubxtool -p MON-RF | grep jamInd',
+      { encoding: 'utf-8' },
+      (error: ExecException | null, stdout: string) => {
+        const output = error ? '' : stdout;
+        // get jamInd
+        const line = output.split('\n').shift(); // we should only get one in the output
+        if (!line) {
+          res.json({});
+          return;
+        }
+        const parts = line.split(' ');
+        const jamIndIndex = parts.findIndex(
+          elem => elem.indexOf('jamInd') !== -1,
+        );
+        if (jamIndIndex !== -1) {
+          const jamInd = parseInt(parts[jamIndIndex + 1]);
+          res.json({ jamInd: jamInd, date: new Date() });
+          return;
+        }
+      },
+    );
+  } catch (e) {
+    res.json({});
+  }
+});
+
+router.get('/spoofdetstate', async (req: Request, res: Response) => {
+  try {
+    exec(
+      'ubxtool -p NAV-STATUS -v 2 | grep spoofDetState',
+      { encoding: 'utf-8' },
+      (error: ExecException | null, stdout: string) => {
+        const output = error ? '' : stdout;
+        //get spoofDetState
+        const line = output.split('\n').shift(); // hopefully there should be one only
+        if (!line) {
+          res.json({});
+          return;
+        }
+        const parts = line.split(' ');
+        const spoofDetStateIndex = parts.findIndex(
+          elem => elem.indexOf('spoofDetState') !== -1,
+        );
+        if (spoofDetStateIndex !== -1) {
+          const spoofDetState = parseInt(parts[spoofDetStateIndex + 1]);
+          res.json({ spoofDetState: spoofDetState, date: new Date() });
+          return;
+        }
+      },
+    );
+  } catch (e) {
     res.json({});
   }
 });
