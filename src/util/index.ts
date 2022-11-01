@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
+import { access, constants, stat } from 'fs';
 
 let sessionId: string;
 
@@ -113,4 +114,20 @@ export const getCameraConfig = () => {
 export const setCameraConfig = (newCameraConfig: any) => {
   cameraConfig = newCameraConfig;
   UpdateCameraConfigService.execute();
+};
+
+export const getStats = (filePath: string, callback: any) => {
+  stat(filePath, function (err, stat) {
+    if (err) {
+      return callback(err);
+    }
+    const name = filePath.split('/').pop() || '';
+    callback(null, { ...stat, name });
+  });
+};
+
+export const fileExists = (file: string, callback: any) => {
+  access(file, constants.F_OK, err => {
+    callback?.(null, !err);
+  });
 };

@@ -1,11 +1,12 @@
 import { Request, Response, Router } from 'express';
-import { readFileSync, writeFileSync } from 'fs';
+import { mkdir, readFileSync, writeFileSync } from 'fs';
 import { exec, execSync } from 'child_process';
 
 import {
   API_VERSION,
   BUILD_INFO_PATH,
   configureOnBoot,
+  FRAMEKM_ROOT_FOLDER,
   WEBSERVER_LOG_PATH,
 } from '../config';
 import recordingsRouter from './recordings';
@@ -61,6 +62,14 @@ router.get('/info', async (req: Request, res: Response) => {
     ...deviceInfo,
     api_version: API_VERSION,
   });
+
+  try {
+    await new Promise(resolve => {
+      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
 });
 
 router.get('/ping', (req, res) => {
