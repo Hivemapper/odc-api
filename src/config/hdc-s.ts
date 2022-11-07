@@ -23,20 +23,13 @@ export const IMAGER_CONFIG_PATH =
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 
-export const getStopCameraCommand = () => {
-  return 'command to stop the camera recordings';
-};
-
-export const getStartCameraCommand = () => {
-  return 'command to stop the camera recordings';
-};
-
-export const getStartPreviewCommand = () => {
-  return 'command to start the preview service';
-};
-
-export const getStopPreviewCommand = () => {
-  return 'command to stop the preview service';
+export const CMD = {
+  START_CAMERA: 'systemctl start camera-bridge',
+  STOP_CAMERA: 'systemctl stop camera-bridge',
+  START_PREVIEW: 'systemctl start camera-preview',
+  STOP_PREVIEW: 'systemctl stop camera-preview',
+  READ_DEVICE_INFO:
+    'sh /opt/dashcam/bin/eeprom_access.sh -r -f /tmp/dump.bin -o 0 -ba 0 -s',
 };
 
 export const getImageQuality = () => {
@@ -46,7 +39,7 @@ export const getImageQuality = () => {
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {
-  // If anything needs to be done on load for HDC-S
+  // If anything needs to be done on boot for HDC-S
   // Placeholder
   res.json({
     output: 'done',
@@ -65,18 +58,4 @@ export const updateFirmware = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.json({ error: error.stdout || error.stderr });
   }
-};
-
-export const switchToP2P = async (req: Request, res: Response) => {
-  // execute command on camera to switch to P2P mode
-  // Placeholder
-};
-
-export const switchToAP = async (req: Request, res: Response) => {
-  // execute command on camera to switch to AP mode
-  // Placeholder
-};
-
-export const updateCameraConfig = (param: string, path: string) => {
-  // Placeholder
 };

@@ -1,5 +1,5 @@
 import { exec, ExecException } from 'child_process';
-import { getStartCameraCommand, getStopCameraCommand } from 'config';
+import { CMD } from 'config';
 
 let lockTime = 0;
 let msss = 0;
@@ -153,15 +153,15 @@ export const setCameraTime = () => {
                     // Here you can check the delta between last gps timestamp record
                     // and system time
 
-                    exec(getStopCameraCommand(), () => {
+                    exec(CMD.STOP_CAMERA, () => {
                       setTimeout(() => {
                         exec(
-                          getStartCameraCommand(),
+                          CMD.START_CAMERA,
                           (error: ExecException | null) => {
                             if (!error) {
                               console.log('Camera restarted');
                             } else {
-                              exec(getStartCameraCommand());
+                              exec(CMD.START_CAMERA);
                               console.log(
                                 'Camera restarted after second attempt.',
                               );

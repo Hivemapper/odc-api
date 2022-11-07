@@ -2,7 +2,7 @@ import { existsSync, readFile, rmSync } from 'fs';
 import { execSync } from 'child_process';
 import { DeviceInfo, IService } from '../types';
 import { sleep } from 'util/index';
-import { DEVICE_INFO_LOG_FILE } from 'config';
+import { DEVICE_INFO_LOG_FILE, CMD } from 'config';
 
 let deviceInfo: DeviceInfo = {
   serial: '',
@@ -19,9 +19,7 @@ export const DeviceInfoService: IService = {
       if (existsSync(DEVICE_INFO_LOG_FILE)) {
         rmSync(DEVICE_INFO_LOG_FILE);
       }
-      execSync(
-        'sh /opt/dashcam/bin/eeprom_access.sh -r -f /tmp/dump.bin -o 0 -ba 0 -s',
-      );
+      execSync(CMD.READ_DEVICE_INFO);
       await sleep(3000);
       if (existsSync(DEVICE_INFO_LOG_FILE)) {
         readFile(
