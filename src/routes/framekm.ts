@@ -17,7 +17,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/:name', async (req: Request, res: Response) => {
   try {
-    const frames = req.body?.frames;
+    const frames = req.body && req.body.frames ? req.body.frames : [];
     const bytesPacked = await concatFrames(frames, req.params.name);
     res.json({
       frames: bytesPacked,

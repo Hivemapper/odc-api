@@ -132,7 +132,10 @@ export const setCameraTime = () => {
             if (timeDateBytes === '1111' || timeDateBytes === '0111') {
               elems.pop();
               const time = elems.pop();
-              const date = elems.pop()?.replace(/\//g, '-');
+              let date = elems.pop();
+              if (date) {
+                date = date.replace(/\//g, '-');
+              }
               if (time && date && !isTimeSet) {
                 try {
                   const d = date.split('-').map(Number);

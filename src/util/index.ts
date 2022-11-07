@@ -48,7 +48,7 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
 };
 
 export const checkIfUpsideDown = (imu: IMU) => {
-  return imu?.accel.y < -0.8;
+  return imu && imu.accel.y < -0.8;
 };
 
 export const sleep = async (ms: number) => {
@@ -128,6 +128,6 @@ export const getStats = (filePath: string, callback: any) => {
 
 export const fileExists = (file: string, callback: any) => {
   access(file, constants.F_OK, err => {
-    callback?.(null, !err);
+    callback && callback(null, !err);
   });
 };
