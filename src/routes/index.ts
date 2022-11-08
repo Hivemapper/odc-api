@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { mkdir, readFileSync, writeFileSync } from 'fs';
+import { mkdir, readFileSync, stat, Stats, writeFileSync } from 'fs';
 import { exec, execSync } from 'child_process';
 
 import {
@@ -92,7 +92,7 @@ router.get('/time', (req, res) => {
 
 router.post('/cron', (req, res) => {
   try {
-    scheduleCronJobs(req.body?.jobs);
+    scheduleCronJobs(req.body?.config || []);
     res.json({
       output: 'done',
     });
@@ -107,16 +107,24 @@ router.get('/log', async (req: Request, res: Response) => {
     log = readFileSync(WEBSERVER_LOG_PATH, {
       encoding: 'utf-8',
     });
-    if (log) {
-      writeFileSync(WEBSERVER_LOG_PATH, '', {
-        encoding: 'utf-8',
-      });
-    }
   } catch (error) {
     console.log('Webserver Log file is missing');
   }
   res.json({
     log,
+  });
+});
+
+router.delete('/log', async (req: Request, res: Response) => {
+  try {
+    writeFileSync(WEBSERVER_LOG_PATH, '', {
+      encoding: 'utf-8',
+    });
+  } catch (error) {
+    console.log('Webserver Log file is missing');
+  }
+  res.json({
+    output: 'done',
   });
 });
 

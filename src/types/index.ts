@@ -66,9 +66,16 @@ export interface ICronJobFrequency {
   executeOnce?: boolean;
 }
 
+export type ICronConditionMethod =
+  | 'contains'
+  | 'equals'
+  | 'startsWith'
+  | 'greaterThan'
+  | 'lessThan';
+
 export interface ICronJobCondition {
   cmd: string;
-  method: 'contains' | 'equals' | 'startsWith' | 'greaterThan' | 'lessThan';
+  method: ICronConditionMethod;
   value: string | number;
   and?: ICronJobCondition;
   or?: ICronJobCondition;
@@ -79,6 +86,7 @@ export interface ICronJobConfig {
   cmd: string;
   if: ICronJobCondition;
   frequency: ICronJobFrequency;
+  log: boolean;
 }
 
 export interface ICronJob {
