@@ -126,8 +126,10 @@ export const getStats = (filePath: string, callback: any) => {
   });
 };
 
-export const fileExists = (file: string, callback: any) => {
-  access(file, constants.F_OK, err => {
-    callback && callback(null, !err);
+export const fileExists = (filepath: string) => {
+  return new Promise((resolve, reject) => {
+    access(filepath, constants.F_OK, error => {
+      resolve(!error);
+    });
   });
 };

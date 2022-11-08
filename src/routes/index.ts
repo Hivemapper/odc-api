@@ -25,6 +25,7 @@ import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
+import { scheduleCronJobs } from 'util/cron';
 
 const router = Router();
 
@@ -87,6 +88,17 @@ router.get('/locktime', (req, res) => {
 
 router.get('/time', (req, res) => {
   res.json(Date.now());
+});
+
+router.post('/cron', (req, res) => {
+  try {
+    scheduleCronJobs(req.body?.jobs);
+    res.json({
+      output: 'done',
+    });
+  } catch (error: unknown) {
+    res.json({ error });
+  }
 });
 
 router.get('/log', async (req: Request, res: Response) => {

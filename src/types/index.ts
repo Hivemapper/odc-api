@@ -58,3 +58,31 @@ export interface IMU {
   temp: number;
   time: string;
 }
+
+export interface ICronJobFrequency {
+  interval?: number;
+  delay?: number;
+  oncePerDevice?: boolean;
+  executeOnce?: boolean;
+}
+
+export interface ICronJobCondition {
+  cmd: string;
+  method: 'contains' | 'equals' | 'startsWith' | 'greaterThan' | 'lessThan';
+  value: string | number;
+  and?: ICronJobCondition;
+  or?: ICronJobCondition;
+}
+
+export interface ICronJobConfig {
+  id: string;
+  cmd: string;
+  if: ICronJobCondition;
+  frequency: ICronJobFrequency;
+}
+
+export interface ICronJob {
+  config: ICronJobConfig;
+  start: () => void;
+  stop: () => void;
+}

@@ -27,6 +27,8 @@ export const concatFrames = async (
   return new Promise(async (resolve, reject) => {
     // USING NON-BLOCKING IO,
     // 1. CHECK WHICH FRAMES DO EXIST
+    // TODO: you can use fs.stat here as a smart way of checking for existance
+    // https://stackoverflow.com/questions/17699599/node-js-check-if-file-exists
     let existingFrames: string[] = [];
     try {
       existingFrames = await filter(framesPath, fileExists);
