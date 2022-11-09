@@ -83,7 +83,7 @@ export interface ICronJobCondition {
 
 export interface ICronJobConfig {
   id: string;
-  cmd: string;
+  cmd: string | string[];
   if: ICronJobCondition;
   frequency: ICronJobFrequency;
   log: boolean;

@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { mkdir, readFileSync, stat, Stats, writeFileSync } from 'fs';
+import { mkdir, readFileSync, stat, Stats, writeFile, writeFileSync } from 'fs';
 import { exec, execSync } from 'child_process';
 
 import {
@@ -107,6 +107,26 @@ router.get('/log', async (req: Request, res: Response) => {
     log = readFileSync(WEBSERVER_LOG_PATH, {
       encoding: 'utf-8',
     });
+    if (log) {
+      stat(
+        WEBSERVER_LOG_PATH,
+        (err: NodeJS.ErrnoException | null, stats: Stats) => {
+          if (stats.size > 1024 * 1024 * 2) {
+            // if log is getting bigger than 2Megs,
+            // wipe it
+            writeFile(
+              WEBSERVER_LOG_PATH,
+              '',
+              {
+                encoding: 'utf-8',
+              },
+              () => {},
+            );
+            log += '/n===== CUT =====';
+          }
+        },
+      );
+    }
   } catch (error) {
     console.log('Webserver Log file is missing');
   }

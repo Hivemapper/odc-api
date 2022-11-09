@@ -119,7 +119,7 @@ export const setCameraConfig = (newCameraConfig: any) => {
 export const getStats = (filePath: string, callback: any) => {
   stat(filePath, function (err, stat) {
     if (err) {
-      return callback(err);
+      return callback(null);
     }
     const name = filePath.split('/').pop() || '';
     callback(null, { ...stat, name });

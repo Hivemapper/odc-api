@@ -7,7 +7,7 @@ import {
   ICronJobConfig,
 } from 'types';
 export const CRON_CONFIG = '/mnt/data/cron_config';
-const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
+export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;
@@ -43,6 +43,13 @@ export const scheduleCronJobs = (cronJobsConfig: ICronJobConfig[]) => {
       }
       currentCronJobs = jobsToKeep;
 
+      const commandsExecutedOncePerDevice = execSync(
+        'cat ' + CRON_EXECUTED_TASKS_PATH,
+        {
+          encoding: 'utf-8',
+        },
+      );
+
       // create new cron jobs
       for (const cronJobConf of cronJobsConfig) {
         if (
@@ -50,9 +57,15 @@ export const scheduleCronJobs = (cronJobsConfig: ICronJobConfig[]) => {
             (job: ICronJob) => cronJobConf.id === job.config.id,
           )
         ) {
-          const job = createCronJob(cronJobConf);
-          job.start();
-          currentCronJobs.push(job);
+          if (commandsExecutedOncePerDevice.indexOf(cronJobConf.id) !== -1) {
+            console.log(
+              'Cron ' + cronJobConf.id + ' was executed already. Ignored',
+            );
+          } else {
+            const job = createCronJob(cronJobConf);
+            job.start();
+            currentCronJobs.push(job);
+          }
         }
       }
       writeFile(
@@ -80,18 +93,10 @@ export const createCronJob = (config: ICronJobConfig) => {
   return {
     config,
     start: () => {
-      if (config.frequency.oncePerDevice) {
-        // Check if it was executed on this device already
-        const executedOnce = execSync('cat ' + CRON_EXECUTED_TASKS_PATH, {
-          encoding: 'utf-8',
-        });
-        if (executedOnce.indexOf(config.id) !== -1) {
-          console.log('Cron ' + config.id + ' was executed already. Ignored');
-          return;
-        }
-      }
       const executor = createCronJobExecutor(config);
+
       console.log('Cron scheduled: ' + config.id);
+
       if (config.frequency.interval) {
         interval = setInterval(
           () => executor(interval),
@@ -134,6 +139,7 @@ export const conditionMatches = (
 
 export const resolveCondition = async (
   condition: ICronJobCondition,
+  log: boolean,
   _resolve?: (value: boolean | PromiseLike<boolean>) => void,
 ): Promise<boolean> => {
   return new Promise(resolve => {
@@ -141,75 +147,111 @@ export const resolveCondition = async (
       resolve = _resolve;
     }
     if (condition.cmd) {
-      exec(
-        condition.cmd,
-        {
-          encoding: 'utf-8',
-        },
-        (error, stdout) => {
-          if (
-            stdout &&
-            conditionMatches(stdout, condition.method, condition.value)
-          ) {
-            if (condition.and) {
-              resolveCondition(condition.and, resolve);
-            } else {
-              resolve(true);
+      try {
+        exec(
+          condition.cmd,
+          {
+            encoding: 'utf-8',
+          },
+          (error, stdout) => {
+            if (log) {
+              console.log(condition.cmd);
+              console.log(stdout || error);
             }
-          } else {
-            if (condition.or) {
-              resolveCondition(condition.or, resolve);
+            if (
+              stdout &&
+              conditionMatches(stdout, condition.method, condition.value)
+            ) {
+              if (condition.and) {
+                resolveCondition(condition.and, log, resolve);
+              } else {
+                resolve(true);
+              }
             } else {
-              resolve(false);
+              if (condition.or) {
+                resolveCondition(condition.or, log, resolve);
+              } else {
+                resolve(false);
+              }
             }
-          }
-        },
-      );
+          },
+        );
+      } catch (e: unknown) {
+        console.log('Failed executing command', e);
+      }
     } else {
       return resolve(true);
     }
   });
 };
 
+export const cacheExecutionForDevice = (id: string) => {
+  try {
+    appendFile(
+      CRON_EXECUTED_TASKS_PATH,
+      id + '\n',
+      {
+        encoding: 'utf-8',
+      },
+      () => {},
+    );
+  } catch (e: unknown) {
+    console.log('Error appending to cache file', e);
+  }
+};
+
 export const createCronJobExecutor = (
   config: ICronJobConfig,
 ): ((interval?: any) => void) => {
   let isRunning = false;
-  const execute = async (interval?: any) => {
+
+  const executeOneOrMany = (command: string | string[]) => {
+    const cmd = Array.isArray(command) ? command.shift() : command;
+
+    if (cmd === 'reboot') {
+      cacheExecutionForDevice(config.id);
+    }
+    try {
+      exec(
+        cmd as string,
+        {
+          encoding: 'utf-8',
+        },
+        (error, stdout) => {
+          if (config.log) {
+            console.log(cmd);
+            console.log(stdout);
+          }
+          if (config.frequency.oncePerDevice) {
+            cacheExecutionForDevice(config.id);
+          }
+          if (Array.isArray(command) && command.length) {
+            executeOneOrMany(command);
+          } else {
+            isRunning = false;
+          }
+        },
+      );
+    } catch (e: unknown) {
+      console.log('Failed executing command', e);
+    }
+  };
+
+  const executor = async (interval?: any) => {
     if (isRunning) return;
     isRunning = true;
 
     try {
       let isValid = true;
       if (config.if) {
-        isValid = await resolveCondition(config.if);
+        isValid = await resolveCondition(config.if, config.log);
       }
       if (isValid) {
         if (config.frequency.executeOnce && interval) {
           clearInterval(interval);
         }
-        exec(
-          config.cmd,
-          {
-            encoding: 'utf-8',
-          },
-          (error, stdout) => {
-            console.log('Cron executed: ' + config.id);
-            if (config.log) {
-              console.log(error || stdout);
-            }
-            isRunning = false;
-            if (config.frequency.oncePerDevice) {
-              appendFile(
-                CRON_EXECUTED_TASKS_PATH,
-                config.id + '\n',
-                {
-                  encoding: 'utf-8',
-                },
-                () => {},
-              );
-            }
-          },
+        executeOneOrMany(
+          Array.isArray(config.cmd) ? [...config.cmd] : config.cmd,
         );
       } else {
         isRunning = false;
@@ -222,5 +264,6 @@ export const createCronJobExecutor = (
       isRunning = false;
     }
   };
-  return execute;
+
+  return executor;
 };
