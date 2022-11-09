@@ -1,9 +1,8 @@
 import { exec, ExecException } from 'child_process';
-import { getStopCameraCommand, GPS_LATEST_SAMPLE, isDev } from 'config';
+import { CMD, GPS_LATEST_SAMPLE, isDev } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
-// import { isPairing, repairNetworking } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
 // let previousCameraResponse = '';
@@ -73,7 +72,7 @@ export const HeartBeatService: IService = {
                   }
                 }
 
-                if (gpsSample?.fix === '3D') {
+                if (gpsSample && gpsSample.fix === '3D') {
                   gpsLED = COLORS.GREEN;
                   lastSuccessfulFix = Date.now();
                   setLockTime();
@@ -102,7 +101,7 @@ export const HeartBeatService: IService = {
                     !got3dOnce &&
                     !isPreviewInProgress
                   ) {
-                    exec(getStopCameraCommand());
+                    exec(CMD.STOP_CAMERA);
                     console.log(
                       'Camera intentionally stopped cause Lock is not there yet',
                     );

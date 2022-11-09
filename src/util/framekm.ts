@@ -1,7 +1,7 @@
-import { filter, map, eachSeries } from 'async';
+import { map, eachSeries } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import { writeFile, readFile, appendFile, Stats, mkdir } from 'fs';
-import { fileExists, getStats, sleep } from 'util/index';
+import { getStats, sleep } from 'util/index';
 
 const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -10,6 +10,7 @@ export const concatFrames = async (
   frames: string[],
   framekmName: string,
 ): Promise<any> => {
+  // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
     await new Promise(resolve => {
       mkdir(FRAMEKM_ROOT_FOLDER, resolve);
@@ -26,32 +27,23 @@ export const concatFrames = async (
 
   return new Promise(async (resolve, reject) => {
     // USING NON-BLOCKING IO,
-    // 1. CHECK WHICH FRAMES DO EXIST
-    let existingFrames: string[] = [];
-    try {
-      existingFrames = await filter(framesPath, fileExists);
-    } catch (e: unknown) {
-      reject(e);
-      console.log(e);
-      return;
-    }
-
-    // 2. GET SIZES FOR EACH FRAME
+    // 1. GET SIZE FOR EACH FRAME, AND FILTER OUT ALL INEXISTANT
     let fileStats: any[] = [];
     try {
-      fileStats = await map(existingFrames, getStats);
+      fileStats = await map(framesPath, getStats);
     } catch (e: unknown) {
       reject(e);
       console.log(e);
       return;
     }
 
-    // 3. PACK IT ALL TOGETHER INTO A SINGLE CHUNK USING NON-BLOCKING IO FUNCTION
+    // 2. PACK IT ALTOGETHER INTO A SINGLE CHUNK USING NON-BLOCKING I/O FUNCTION
     try {
       eachSeries(
         fileStats as Stats[],
         function (fileStat: any, callback) {
           if (
+            fileStat &&
             fileStat.size > MIN_PER_FRAME_BYTES &&
             fileStat.size < MAX_PER_FRAME_BYTES
           ) {

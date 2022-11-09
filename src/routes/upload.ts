@@ -9,7 +9,7 @@ router.post('/', (req, res) => {
     req.pipe(req.busboy); // Pipe it trough busboy
 
     req.busboy.on('file', (fieldname, file, data) => {
-      const filename = data?.filename || 'upload.raucb';
+      const filename = data && data.filename ? data.filename : 'upload.raucb';
       console.log(`Upload of '${filename}' started`);
       // Create a write stream of the new file
       try {

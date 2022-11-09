@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { mkdir, readFileSync, writeFileSync } from 'fs';
+import { mkdir, readFileSync, stat, Stats, writeFile, writeFileSync } from 'fs';
 import { exec, execSync } from 'child_process';
 
 import {
@@ -15,7 +15,6 @@ import imuRouter from './imu';
 import loraRouter from './lora';
 import uploadRouter from './upload';
 import otaRouter from './ota';
-import networkRouter from './network';
 import configRouter from './config';
 import kpiRouter from './kpi';
 import framekmRouter from './framekm';
@@ -26,6 +25,7 @@ import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
+import { scheduleCronJobs } from 'util/cron';
 
 const router = Router();
 
@@ -36,7 +36,6 @@ router.use('/imu', imuRouter);
 router.use('/lora', loraRouter);
 router.use('/upload', uploadRouter);
 router.use('/ota', otaRouter);
-router.use('/network', networkRouter);
 router.use('/config', configRouter);
 router.use('/kpi', kpiRouter);
 router.use('/framekm', framekmRouter);
@@ -91,6 +90,17 @@ router.get('/time', (req, res) => {
   res.json(Date.now());
 });
 
+router.post('/cron', (req, res) => {
+  try {
+    scheduleCronJobs(req.body?.config || []);
+    res.json({
+      output: 'done',
+    });
+  } catch (error: unknown) {
+    res.json({ error });
+  }
+});
+
 router.get('/log', async (req: Request, res: Response) => {
   let log = '';
   try {
@@ -98,15 +108,43 @@ router.get('/log', async (req: Request, res: Response) => {
       encoding: 'utf-8',
     });
     if (log) {
-      writeFileSync(WEBSERVER_LOG_PATH, '', {
-        encoding: 'utf-8',
-      });
+      stat(
+        WEBSERVER_LOG_PATH,
+        (err: NodeJS.ErrnoException | null, stats: Stats) => {
+          if (stats.size > 1024 * 1024 * 2) {
+            // if log is getting bigger than 2Megs,
+            // wipe it
+            writeFile(
+              WEBSERVER_LOG_PATH,
+              '',
+              {
+                encoding: 'utf-8',
+              },
+              () => {},
+            );
+            log += '/n===== CUT =====';
+          }
+        },
+      );
     }
   } catch (error) {
     console.log('Webserver Log file is missing');
   }
   res.json({
     log,
+  });
+});
+
+router.delete('/log', async (req: Request, res: Response) => {
+  try {
+    writeFileSync(WEBSERVER_LOG_PATH, '', {
+      encoding: 'utf-8',
+    });
+  } catch (error) {
+    console.log('Webserver Log file is missing');
+  }
+  res.json({
+    output: 'done',
   });
 });
 

@@ -1,12 +1,6 @@
 import { exec, execSync } from 'child_process';
 import { writeFileSync } from 'fs';
-import {
-  getStartCameraCommand,
-  getStartPreviewCommand,
-  getStopCameraCommand,
-  getStopPreviewCommand,
-  IMAGER_CONFIG_PATH,
-} from 'config';
+import { IMAGER_CONFIG_PATH, CMD } from 'config';
 import { setPreviewStatus } from 'services/heartBeat';
 import { getCameraConfig, getPreviewConfig, sleep } from 'util/index';
 
@@ -33,15 +27,15 @@ export const startPreview = async () => {
   } catch (e: unknown) {
     console.log(e);
   }
-  await execSync(getStopCameraCommand(), {
+  await execSync(CMD.STOP_CAMERA, {
     encoding: 'utf-8',
   });
   await sleep(1000);
-  await execSync(getStartCameraCommand(), {
+  await execSync(CMD.START_CAMERA, {
     encoding: 'utf-8',
   });
   await sleep(500);
-  await execSync(getStartPreviewCommand(), {
+  await execSync(CMD.START_PREVIEW, {
     encoding: 'utf-8',
   });
 };
@@ -51,7 +45,7 @@ export const stopPreview = async () => {
     clearTimeout(timer);
   }
   setPreviewStatus(false);
-  await execSync(getStopPreviewCommand(), {
+  await execSync(CMD.STOP_PREVIEW, {
     encoding: 'utf-8',
   });
   try {
@@ -61,11 +55,11 @@ export const stopPreview = async () => {
   } catch (e: unknown) {
     console.log(e);
   }
-  await execSync(getStopCameraCommand(), {
+  await execSync(CMD.STOP_CAMERA, {
     encoding: 'utf-8',
   });
   await sleep(1000);
-  await execSync(getStartCameraCommand(), {
+  await execSync(CMD.START_CAMERA, {
     encoding: 'utf-8',
   });
 

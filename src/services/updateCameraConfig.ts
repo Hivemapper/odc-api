@@ -1,9 +1,5 @@
 import { exec } from 'child_process';
-import {
-  getStartCameraCommand,
-  getStopCameraCommand,
-  IMAGER_CONFIG_PATH,
-} from 'config';
+import { CMD, IMAGER_CONFIG_PATH } from 'config';
 import { writeFile } from 'fs';
 import { IService } from 'types';
 import { getCameraConfig } from 'util/index';
@@ -22,8 +18,8 @@ export const UpdateCameraConfigService: IService = {
         },
         () => {
           if (ifTimeSet()) {
-            exec(getStopCameraCommand(), () => {
-              exec(getStartCameraCommand(), () => {
+            exec(CMD.STOP_CAMERA, () => {
+              exec(CMD.START_CAMERA, () => {
                 console.log('Successfully restarted the camera');
               });
             });

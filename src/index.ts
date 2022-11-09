@@ -4,10 +4,10 @@ import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
+import { InitCronService } from 'services/initCron';
 import { GnssHealthCheck } from 'services/gnssHealthCheck';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
-// import { StopCameraOnBootService } from 'services/stopCameraOnBoot';
 import { setSessionId } from 'util/index';
 import console_stamp from 'console-stamp';
 
@@ -48,6 +48,7 @@ export async function initAppServer() {
     serviceRunner.add(UpdateCameraConfigService);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(GnssHealthCheck);
+    serviceRunner.add(InitCronService);
 
     serviceRunner.run();
     setSessionId();
