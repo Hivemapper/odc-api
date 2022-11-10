@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 import { readdir, readFile } from 'fs';
 
 import { filterBySinceUntil, getDateFromUnicodeTimastamp } from '../util';
-import { ICameraFile } from '../types';
+import { CameraType, ICameraFile } from '../types';
 import { exec, ExecException } from 'child_process';
 
 const router = Router();
@@ -60,6 +60,10 @@ router.get('/last', async (req: Request, res: Response) => {
 
 router.get('/quality', async (req: Request, res: Response) => {
   try {
+    if (CameraType.HdcS) {
+      // TODO: placeholder
+      return res.json({ quality: 70 });
+    }
     readFile(
       IMAGER_BRIDGE_PATH,
       {

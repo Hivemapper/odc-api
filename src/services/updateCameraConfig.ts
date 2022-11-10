@@ -1,12 +1,15 @@
 import { exec } from 'child_process';
-import { CMD, IMAGER_CONFIG_PATH } from 'config';
+import { CAMERA_TYPE, CMD, IMAGER_CONFIG_PATH } from 'config';
 import { writeFile } from 'fs';
-import { IService } from 'types';
+import { CameraType, IService } from 'types';
 import { getCameraConfig } from 'util/index';
 import { ifTimeSet } from 'util/lock';
 
 export const UpdateCameraConfigService: IService = {
   execute: async () => {
+    if (CAMERA_TYPE !== CameraType.Hdc) {
+      return;
+    }
     console.log('Updating camera config');
 
     try {

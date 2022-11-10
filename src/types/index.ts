@@ -1,3 +1,8 @@
+export enum CameraType {
+  Hdc = 'hdc',
+  HdcS = 'hdc-s',
+}
+
 export interface ICameraFile {
   path: string;
   date: number;

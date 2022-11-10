@@ -1,4 +1,5 @@
 import { exec, execSync } from 'child_process';
+import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 import { appendFile, writeFile } from 'fs';
 import {
   ICronConditionMethod,
@@ -6,8 +7,6 @@ import {
   ICronJobCondition,
   ICronJobConfig,
 } from 'types';
-export const CRON_CONFIG = '/mnt/data/cron_config';
-export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;

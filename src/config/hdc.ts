@@ -1,6 +1,7 @@
 import { exec, execSync, ExecException } from 'child_process';
 import { Request, Response } from 'express';
 import { writeFile } from 'fs';
+import { CameraType } from 'types';
 
 export const PORT = 5000;
 
@@ -23,8 +24,10 @@ export const IMAGER_BRIDGE_PATH =
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 export const NETWORK_BOOT_CONFIG_PATH =
   __dirname + '/../../../mnt/data/network_mode.txt';
-export const NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
+export const CRON_CONFIG = '/mnt/data/cron_config';
+export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
+export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 
 export const CMD = {
   START_CAMERA: 'systemctl start camera-bridge',

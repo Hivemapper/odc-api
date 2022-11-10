@@ -1,76 +1,52 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 1546:
+/***/ 5474:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateCameraConfig = exports.switchToAP = exports.switchToP2P = exports.updateFirmware = exports.configureOnBoot = exports.getStopPreviewCommand = exports.getStartPreviewCommand = exports.getStartCameraCommand = exports.getStopCameraCommand = exports.NETWORK_CONFIG_PATH = exports.NETWORK_BOOT_CONFIG_PATH = exports.UPLOAD_PATH = exports.IMAGER_BRIDGE_PATH = exports.IMAGER_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.WEBSERVER_LOG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_LATEST_SAMPLE = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
+exports.updateFirmware = exports.configureOnBoot = exports.CMD = exports.CAMERA_TYPE = exports.IMAGER_BRIDGE_PATH = exports.CRON_EXECUTED_TASKS_PATH = exports.CRON_CONFIG = exports.DEVICE_INFO_LOG_FILE = exports.UPLOAD_PATH = exports.IMAGER_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.WEBSERVER_LOG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_LATEST_SAMPLE = exports.GPS_ROOT_FOLDER = exports.FRAMEKM_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
 const child_process_1 = __nccwpck_require__(2081);
-const fs_1 = __nccwpck_require__(7147);
+const types_1 = __nccwpck_require__(3372);
 exports.PORT = 5000;
-exports.PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
-exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
-exports.GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
-exports.GPS_LATEST_SAMPLE = __dirname + '/../../../mnt/data/gps/latest.log';
-exports.IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
-exports.LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
+exports.PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
+exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording/pic';
+exports.FRAMEKM_ROOT_FOLDER = __dirname + '/../../../tmp/recording/framekm';
+exports.GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
+exports.GPS_LATEST_SAMPLE = __dirname + '/../../../tmp/recording/gps/latest.log';
+exports.IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
+exports.LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
 exports.BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
-exports.WEBSERVER_LOG_PATH = __dirname + '/../../../mnt/data/camera-node.log';
+exports.WEBSERVER_LOG_PATH = __dirname + '/../../../home/root/camera-node.log';
 exports.LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
-exports.IMAGER_CONFIG_PATH = __dirname + '/../../../opt/dashcam/bin/config.json';
+// File containing the camera configuration
+exports.IMAGER_CONFIG_PATH = __dirname + '/../../../opt/camera-bridge/config.json';
+// Path that will be used by the App to upload the new firmware image
+exports.UPLOAD_PATH = __dirname + '/../../../data/';
+exports.DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
+exports.CRON_CONFIG = '/home/root/cron_config';
+exports.CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 exports.IMAGER_BRIDGE_PATH = __dirname + '/../../../opt/dashcam/bin/bridge.sh';
-exports.UPLOAD_PATH = __dirname + '/../../../tmp/';
-exports.NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../mnt/data/network_mode.txt';
-exports.NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
-const getStopCameraCommand = () => {
-    return 'systemctl stop camera-bridge';
+exports.CAMERA_TYPE = types_1.CameraType.HdcS;
+exports.CMD = {
+    START_CAMERA: 'systemctl start camera-bridge',
+    STOP_CAMERA: 'systemctl stop camera-bridge',
+    START_PREVIEW: 'systemctl start camera-preview',
+    STOP_PREVIEW: 'systemctl stop camera-preview',
+    READ_DEVICE_INFO: 'sh /opt/dashcam/bin/eeprom_access.sh -r -f /tmp/dump.bin -o 0 -ba 0 -s',
 };
-exports.getStopCameraCommand = getStopCameraCommand;
-const getStartCameraCommand = () => {
-    return 'systemctl start camera-bridge';
-};
-exports.getStartCameraCommand = getStartCameraCommand;
-const getStartPreviewCommand = () => {
-    return 'systemctl start camera-preview';
-};
-exports.getStartPreviewCommand = getStartPreviewCommand;
-const getStopPreviewCommand = () => {
-    return 'systemctl stop camera-preview';
-};
-exports.getStopPreviewCommand = getStopPreviewCommand;
 const configureOnBoot = async (req, res) => {
-    try {
-        // const realTime = Number(req.query.time);
-        // const timeToSet = new Date(realTime)
-        //   .toISOString()
-        //   .replace(/T/, ' ')
-        //   .replace(/\..+/, '')
-        //   .split(' ');
-        // // setting up initial time for camera
-        // exec('timedatectl set-ntp 0', () => {
-        //   exec(`timedatectl set-time ${timeToSet[0]}`, () => {
-        //     exec(`timedatectl set-time ${timeToSet[1]}`, () => {
-        //       // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-        //       // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
-        //       exec('systemctl stop camera-bridge', () => {
-        //         exec('systemctl start camera-bridge');
-        //       });
-        //     });
-        //   });
-        // });
-        res.json({
-            output: 'done',
-        });
-    }
-    catch (error) {
-        res.json({ error });
-    }
+    // If anything needs to be done on boot for HDC-S
+    // Placeholder
+    res.json({
+        output: 'done',
+    });
 };
 exports.configureOnBoot = configureOnBoot;
 const updateFirmware = async (req, res) => {
+    // Execute utility to update the firmware using the image file that was uploaded to /tmp/<new firmware image file>
     try {
         const output = (0, child_process_1.execSync)('rauc install /tmp/' + req.query.filename, {
             encoding: 'utf-8',
@@ -84,72 +60,7 @@ const updateFirmware = async (req, res) => {
     }
 };
 exports.updateFirmware = updateFirmware;
-const switchToP2P = async (req, res) => {
-    try {
-        // No need to wait for response — it's tearing down current Network method, so it will kill the connection anyways
-        (0, child_process_1.exec)(__dirname + '/network/test_P2Pconnect_any.sh');
-        try {
-            (0, fs_1.writeFile)(exports.NETWORK_BOOT_CONFIG_PATH, 'P2P', null, () => { });
-        }
-        catch (e) {
-            console.log(e);
-        }
-        res.json({
-            output: 'done',
-        });
-    }
-    catch (error) {
-        res.json({ error: error.stdout || error.stderr });
-    }
-};
-exports.switchToP2P = switchToP2P;
-const switchToAP = async (req, res) => {
-    try {
-        (0, child_process_1.exec)(__dirname + '/network/wifi_switch_AP.sh');
-        try {
-            (0, fs_1.writeFile)(exports.NETWORK_BOOT_CONFIG_PATH, 'AP', null, () => { });
-        }
-        catch (e) {
-            console.log(e);
-        }
-        res.json({
-            output: 'done',
-        });
-    }
-    catch (error) {
-        res.json({ error: error.stdout || error.stderr });
-    }
-};
-exports.switchToAP = switchToAP;
-const updateCameraConfig = (replaceLine, path) => {
-    try {
-        (0, child_process_1.exec)((0, exports.getStopCameraCommand)(), {
-            encoding: 'utf-8',
-        }, (error) => {
-            if (!error) {
-                try {
-                    (0, child_process_1.exec)(`sed -i 's/${replaceLine}/g' ${path}`, {
-                        encoding: 'utf-8',
-                    }, () => {
-                        console.log('Successfully restarted the camera');
-                        (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-                    });
-                }
-                catch (e) {
-                    (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-                }
-            }
-            else {
-                (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-            }
-        });
-    }
-    catch (e) {
-        (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-    }
-};
-exports.updateCameraConfig = updateCameraConfig;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2NvbmZpZy9oZGMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQThEO0FBRTlELDJCQUErQjtBQUVsQixRQUFBLElBQUksR0FBRyxJQUFJLENBQUM7QUFFWixRQUFBLGFBQWEsR0FBRyxTQUFTLEdBQUcsb0JBQW9CLENBQUM7QUFDakQsUUFBQSxrQkFBa0IsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDMUQsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsaUJBQWlCLEdBQUcsU0FBUyxHQUFHLG1DQUFtQyxDQUFDO0FBQ3BFLFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLGdCQUFnQixHQUFHLFNBQVMsR0FBRyx5QkFBeUIsQ0FBQztBQUN6RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNEJBQTRCLENBQUM7QUFDM0QsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLG9DQUFvQyxDQUFDO0FBQ3RDLFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUN2RCxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcsdUNBQXVDLENBQUM7QUFDekMsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLHFDQUFxQyxDQUFDO0FBQ3ZDLFFBQUEsV0FBVyxHQUFHLFNBQVMsR0FBRyxnQkFBZ0IsQ0FBQztBQUMzQyxRQUFBLHdCQUF3QixHQUNuQyxTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxtQkFBbUIsR0FBRyxTQUFTLEdBQUcsc0JBQXNCLENBQUM7QUFFL0QsTUFBTSxvQkFBb0IsR0FBRyxHQUFHLEVBQUU7SUFDdkMsT0FBTyw4QkFBOEIsQ0FBQztBQUN4QyxDQUFDLENBQUM7QUFGVyxRQUFBLG9CQUFvQix3QkFFL0I7QUFFSyxNQUFNLHFCQUFxQixH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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZmlnL2hkYy1zLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUF5QztBQUV6QyxpQ0FBbUM7QUFFdEIsUUFBQSxJQUFJLEdBQUcsSUFBSSxDQUFDO0FBRVosUUFBQSxhQUFhLEdBQUcsU0FBUyxHQUFHLHlCQUF5QixDQUFDO0FBQ3RELFFBQUEsa0JBQWtCLEdBQUcsU0FBUyxHQUFHLDZCQUE2QixDQUFDO0FBQy9ELFFBQUEsbUJBQW1CLEdBQzlCLFNBQVMsR0FBRyxpQ0FBaUMsQ0FBQztBQUNuQyxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNkJBQTZCLENBQUM7QUFDNUQsUUFBQSxpQkFBaUIsR0FDNUIsU0FBUyxHQUFHLHdDQUF3QyxDQUFDO0FBQzFDLFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw2QkFBNkIsQ0FBQztBQUM1RCxRQUFBLGdCQUFnQixHQUFHLFNBQVMsR0FBRyw4QkFBOEIsQ0FBQztBQUM5RCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsNEJBQTRCLENBQUM7QUFDM0QsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLHFDQUFxQyxDQUFDO0FBQ3ZDLFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUNwRSwyQ0FBMkM7QUFDOUIsUUFBQSxrQkFBa0IsR0FDN0IsU0FBUyxHQUFHLHlDQUF5QyxDQUFDO0FBQ3hELHFFQUFxRTtBQUN4RCxRQUFBLFdBQVcsR0FBRyxTQUFTLEdBQUcsaUJBQWlCLENBQUM7QUFDNUMsUUFBQSxvQkFBb0IsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDNUQsUUFBQSxXQUFXLEdBQUcsd0JBQXdCLENBQUM7QUFDdkMsUUFBQSx3QkFBd0IsR0FBRywwQkFBMEIsQ0FBQztBQUN0RCxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxXQUFXLEdBQWUsa0JBQVUsQ0FBQyxJQUFJLENBQUM7QUFFMUMsUUFBQSxHQUFHLEdBQUc7SUFDakIsWUFBWSxFQUFFLCtCQUErQjtJQUM3QyxXQUFXLEVBQUUsOEJBQThCO0lBQzNDLGFBQWEsRUFBRSxnQ0FBZ0M7SUFDL0MsWUFBWSxFQUFFLCtCQUErQjtJQUM3QyxnQkFBZ0IsRUFDZCx3RUFBd0U7Q0FDM0UsQ0FBQztBQUVLLE1BQU0sZUFBZSxHQUFHLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDbkUsaURBQWlEO0lBQ2pELGNBQWM7SUFDZCxHQUFHLENBQUMsSUFBSSxDQUFDO1FBQ1AsTUFBTSxFQUFFLE1BQU07S0FDZixDQUFDLENBQUM7QUFDTCxDQUFDLENBQUM7QUFOVyxRQUFBLGVBQWUsbUJBTTFCO0FBRUssTUFBTSxjQUFjLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNsRSxrSEFBa0g7SUFDbEgsSUFBSTtRQUNGLE1BQU0sTUFBTSxHQUFHLElBQUEsd0JBQVEsRUFBQyxvQkFBb0IsR0FBRyxHQUFHLENBQUMsS0FBSyxDQUFDLFFBQVEsRUFBRTtZQUNqRSxRQUFRLEVBQUUsT0FBTztTQUNsQixDQUFDLENBQUM7UUFDSCxHQUFHLENBQUMsSUFBSSxDQUFDO1lBQ1AsTUFBTTtTQUNQLENBQUMsQ0FBQztLQUNKO0lBQUMsT0FBTyxLQUFVLEVBQUU7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO0tBQ25EO0FBQ0gsQ0FBQyxDQUFDO0FBWlcsUUFBQSxjQUFjLGtCQVl6QiJ9
 
 /***/ }),
 
@@ -173,10 +84,14 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.API_VERSION = void 0;
-__exportStar(__nccwpck_require__(1546), exports);
-exports.API_VERSION = '0.10.5';
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZmlnL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsd0NBQXNCO0FBQ1QsUUFBQSxXQUFXLEdBQUcsUUFBUSxDQUFDIn0=
+exports.isDev = exports.API_VERSION = void 0;
+__exportStar(__nccwpck_require__(5474), exports);
+exports.API_VERSION = '0.11.3';
+const isDev = () => {
+    return false;
+};
+exports.isDev = isDev;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZmlnL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsMENBQXdCO0FBQ1gsUUFBQSxXQUFXLEdBQUcsUUFBUSxDQUFDO0FBRTdCLE1BQU0sS0FBSyxHQUFHLEdBQUcsRUFBRTtJQUN4QixPQUFPLEtBQUssQ0FBQztBQUNmLENBQUMsQ0FBQztBQUZXLFFBQUEsS0FBSyxTQUVoQiJ9
 
 /***/ }),
 
@@ -196,8 +111,10 @@ const connect_busboy_1 = __importDefault(__nccwpck_require__(4570));
 const config_1 = __nccwpck_require__(1806);
 const services_1 = __nccwpck_require__(669);
 const heartBeat_1 = __nccwpck_require__(6754);
-const imageRotation_1 = __nccwpck_require__(1242);
-// import { StopCameraOnBootService } from 'services/stopCameraOnBoot';
+const initCron_1 = __nccwpck_require__(8173);
+const gnssHealthCheck_1 = __nccwpck_require__(491);
+const updateCameraConfig_1 = __nccwpck_require__(3894);
+const deviceInfo_1 = __nccwpck_require__(6);
 const index_1 = __nccwpck_require__(5896);
 const console_stamp_1 = __importDefault(__nccwpck_require__(5200));
 //import { BootNetworkService } from 'services/bootNetwork';
@@ -224,12 +141,11 @@ async function initAppServer() {
         console.log(e);
     }
     try {
-        // serviceRunner.add(StopCameraOnBootService);
         services_1.serviceRunner.add(heartBeat_1.HeartBeatService);
-        services_1.serviceRunner.add(imageRotation_1.ImageRotationService);
-        // serviceRunner.add(FixEmmcService);
-        // serviceRunner.add(BootNetworkService);
-        // serviceRunner.add(AssistNowService);
+        services_1.serviceRunner.add(updateCameraConfig_1.UpdateCameraConfigService);
+        services_1.serviceRunner.add(deviceInfo_1.DeviceInfoService);
+        services_1.serviceRunner.add(gnssHealthCheck_1.GnssHealthCheck);
+        services_1.serviceRunner.add(initCron_1.InitCronService);
         services_1.serviceRunner.run();
         (0, index_1.setSessionId)();
     }
@@ -239,7 +155,7 @@ async function initAppServer() {
 }
 exports.initAppServer = initAppServer;
 initAppServer();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7O0FBQUEsc0RBQThCO0FBQzlCLHNEQUE4QjtBQUM5QixvRUFBb0M7QUFDcEMscUNBQStDO0FBQy9DLHVDQUF5QztBQUN6QyxrREFBc0Q7QUFDdEQsMERBQThEO0FBRTlELHVFQUF1RTtBQUN2RSxzQ0FBMEM7QUFDMUMsa0VBQTBDO0FBRTFDLDREQUE0RDtBQUM1RCx5REFBeUQ7QUFFbEQsS0FBSyxVQUFVLGFBQWE7SUFDakMsTUFBTSxHQUFHLEdBQUcsSUFBQSxpQkFBTyxHQUFFLENBQUM7SUFFdEIsdURBQXVEO0lBQ3ZELEdBQUcsQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLGlCQUFPLENBQUMsTUFBTSxDQUFDLHNCQUFhLENBQUMsQ0FBQyxDQUFDO0lBQ2xELEdBQUcsQ0FBQyxHQUFHLENBQ0wsSUFBQSx3QkFBTSxFQUFDO1FBQ0wsYUFBYSxFQUFFLENBQUMsR0FBRyxJQUFJLEdBQUcsSUFBSSxFQUFFLGtCQUFrQjtLQUNuRCxDQUFDLENBQ0gsQ0FBQyxDQUFDLCtDQUErQztJQUNsRCxHQUFHLENBQUMsR0FBRyxDQUFDLGlCQUFPLENBQUMsSUFBSSxFQUFFLENBQUMsQ0FBQztJQUN4QixHQUFHLENBQUMsR0FBRyxDQUFDLGlCQUFPLENBQUMsVUFBVSxDQUFDLEVBQUUsUUFBUSxFQUFFLElBQUksRUFBRSxDQUFDLENBQUMsQ0FBQztJQUVoRCxHQUFHLENBQUMsR0FBRyxDQUFDLGdCQUFNLENBQUMsQ0FBQztJQUVoQixNQUFNLElBQUksT0FBTyxDQUFPLENBQUMsT0FBTyxFQUFFLE1BQU0sRUFBRSxFQUFFO1FBQzFDLEdBQUcsQ0FBQyxNQUFNLENBQUMsYUFBSSxFQUFFLE9BQU8sQ0FBQyxDQUFDO0lBQzVCLENBQUMsQ0FBQyxDQUFDO0lBQ0gsT0FBTyxDQUFDLEdBQUcsQ0FDVCx3QkFBd0IsT0FBTyxDQUFDLEdBQUcsOEJBQThCLGFBQUksRUFBRSxDQUN4RSxDQUFDO0lBRUYsSUFBSTtRQUNGLG9CQUFvQjtRQUNwQixJQUFBLHVCQUFhLEVBQUMsT0FBTyxDQUFDLENBQUM7S0FDeEI7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQ2hCO0lBRUQsSUFBSTtRQUNGLDhDQUE4QztRQUM5Qyx3QkFBYSxDQUFDLEdBQUcsQ0FBQyw0QkFBZ0IsQ0FBQyxDQUFDO1FBQ3BDLHdCQUFhLENBQUMsR0FBRyxDQUFDLG9DQUFvQixDQUFDLENBQUM7UUFDeEMscUNBQXFDO1FBQ3JDLHlDQUF5QztRQUN6Qyx1Q0FBdUM7UUFDdkMsd0JBQWEsQ0FBQyxHQUFHLEVBQUUsQ0FBQztRQUNwQixJQUFBLG9CQUFZLEdBQUUsQ0FBQztLQUNoQjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMseUJBQXlCLEVBQUUsQ0FBQyxDQUFDLENBQUM7S0FDM0M7QUFDSCxDQUFDO0FBekNELHNDQXlDQztBQUVELGFBQWEsRUFBRSxDQUFDIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7O0FBQUEsc0RBQThCO0FBQzlCLHNEQUE4QjtBQUM5QixvRUFBb0M7QUFDcEMscUNBQStDO0FBQy9DLHVDQUF5QztBQUN6QyxrREFBc0Q7QUFDdEQsZ0RBQW9EO0FBQ3BELDhEQUEyRDtBQUMzRCxvRUFBd0U7QUFDeEUsb0RBQXdEO0FBQ3hELHNDQUEwQztBQUMxQyxrRUFBMEM7QUFFMUMsNERBQTREO0FBQzVELHlEQUF5RDtBQUVsRCxLQUFLLFVBQVUsYUFBYTtJQUNqQyxNQUFNLEdBQUcsR0FBRyxJQUFBLGlCQUFPLEdBQUUsQ0FBQztJQUV0Qix1REFBdUQ7SUFDdkQsR0FBRyxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsaUJBQU8sQ0FBQyxNQUFNLENBQUMsc0JBQWEsQ0FBQyxDQUFDLENBQUM7SUFDbEQsR0FBRyxDQUFDLEdBQUcsQ0FDTCxJQUFBLHdCQUFNLEVBQUM7UUFDTCxhQUFhLEVBQUUsQ0FBQyxHQUFHLElBQUksR0FBRyxJQUFJLEVBQUUsa0JBQWtCO0tBQ25ELENBQUMsQ0FDSCxDQUFDLENBQUMsK0NBQStDO0lBQ2xELEdBQUcsQ0FBQyxHQUFHLENBQUMsaUJBQU8sQ0FBQyxJQUFJLEVBQUUsQ0FBQyxDQUFDO0lBQ3hCLEdBQUcsQ0FBQyxHQUFHLENBQUMsaUJBQU8sQ0FBQyxVQUFVLENBQUMsRUFBRSxRQUFRLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBRWhELEdBQUcsQ0FBQyxHQUFHLENBQUMsZ0JBQU0sQ0FBQyxDQUFDO0lBRWhCLE1BQU0sSUFBSSxPQUFPLENBQU8sQ0FBQyxPQUFPLEVBQUUsTUFBTSxFQUFFLEVBQUU7UUFDMUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxhQUFJLEVBQUUsT0FBTyxDQUFDLENBQUM7SUFDNUIsQ0FBQyxDQUFDLENBQUM7SUFDSCxPQUFPLENBQUMsR0FBRyxDQUNULHdCQUF3QixPQUFPLENBQUMsR0FBRyw4QkFBOEIsYUFBSSxFQUFFLENBQ3hFLENBQUM7SUFFRixJQUFJO1FBQ0Ysb0JBQW9CO1FBQ3BCLElBQUEsdUJBQWEsRUFBQyxPQUFPLENBQUMsQ0FBQztLQUN4QjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7S0FDaEI7SUFFRCxJQUFJO1FBQ0Ysd0JBQWEsQ0FBQyxHQUFHLENBQUMsNEJBQWdCLENBQUMsQ0FBQztRQUNwQyx3QkFBYSxDQUFDLEdBQUcsQ0FBQyw4Q0FBeUIsQ0FBQyxDQUFDO1FBQzdDLHdCQUFhLENBQUMsR0FBRyxDQUFDLDhCQUFpQixDQUFDLENBQUM7UUFDckMsd0JBQWEsQ0FBQyxHQUFHLENBQUMsaUNBQWUsQ0FBQyxDQUFDO1FBQ25DLHdCQUFhLENBQUMsR0FBRyxDQUFDLDBCQUFlLENBQUMsQ0FBQztRQUVuQyx3QkFBYSxDQUFDLEdBQUcsRUFBRSxDQUFDO1FBQ3BCLElBQUEsb0JBQVksR0FBRSxDQUFDO0tBQ2hCO0lBQUMsT0FBTyxDQUFVLEVBQUU7UUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyx5QkFBeUIsRUFBRSxDQUFDLENBQUMsQ0FBQztLQUMzQztBQUNILENBQUM7QUF6Q0Qsc0NBeUNDO0FBRUQsYUFBYSxFQUFFLENBQUMifQ==
 
 /***/ }),
 
@@ -249,14 +165,14 @@ initAppServer();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
 const express_1 = __nccwpck_require__(7086);
+const index_1 = __nccwpck_require__(5896);
 const router = (0, express_1.Router)();
-router.post('/camera', async (req, res) => {
+router.post('/cameraconfig', async (req, res) => {
     try {
-        (0, config_1.updateCameraConfig)(req.body.replace, req.body.path);
+        (0, index_1.setCameraConfig)(req.body.config);
         res.json({
-            output: 'in progress',
+            output: 'done',
         });
     }
     catch (error) {
@@ -264,7 +180,78 @@ router.post('/camera', async (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uZmlnLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9jb25maWcudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBK0M7QUFDL0MscUNBQW9EO0FBQ3BELE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxJQUFJLENBQUMsU0FBUyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDM0QsSUFBSTtRQUNGLElBQUEsMkJBQWtCLEVBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsQ0FBQztRQUNwRCxHQUFHLENBQUMsSUFBSSxDQUFDO1lBQ1AsTUFBTSxFQUFFLGFBQWE7U0FDdEIsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLEtBQVUsRUFBRTtRQUNuQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQztLQUNyQjtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uZmlnLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9jb25maWcudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxxQ0FBb0Q7QUFDcEQsc0NBQTZDO0FBQzdDLE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxJQUFJLENBQUMsZUFBZSxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDakUsSUFBSTtRQUNGLElBQUEsdUJBQWUsRUFBQyxHQUFHLENBQUMsSUFBSSxDQUFDLE1BQU0sQ0FBQyxDQUFDO1FBQ2pDLEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxNQUFNLEVBQUUsTUFBTTtTQUNmLENBQUMsQ0FBQztLQUNKO0lBQUMsT0FBTyxLQUFVLEVBQUU7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7S0FDckI7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILGtCQUFlLE1BQU0sQ0FBQyJ9
+
+/***/ }),
+
+/***/ 3729:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const config_1 = __nccwpck_require__(1806);
+const express_1 = __nccwpck_require__(7086);
+const fs_1 = __nccwpck_require__(7147);
+const framekm_1 = __nccwpck_require__(885);
+const async_1 = __nccwpck_require__(9256);
+const router = (0, express_1.Router)();
+router.get('/', async (req, res) => {
+    try {
+        const files = (0, fs_1.readdirSync)(config_1.FRAMEKM_ROOT_FOLDER);
+        res.json(files);
+    }
+    catch (error) {
+        res.json([]);
+    }
+});
+router.post('/:name', async (req, res) => {
+    try {
+        const frames = req.body && req.body.frames ? req.body.frames : [];
+        const bytesPacked = await (0, framekm_1.concatFrames)(frames, req.params.name);
+        res.json({
+            frames: bytesPacked,
+        });
+    }
+    catch (error) {
+        res.json({ error });
+    }
+});
+router.get('/total', async (req, res) => {
+    try {
+        const files = (0, fs_1.readdirSync)(config_1.FRAMEKM_ROOT_FOLDER);
+        let total = 0;
+        const fileStats = await (0, async_1.map)(files.map((frame) => config_1.FRAMEKM_ROOT_FOLDER + '/' + frame), fs_1.stat);
+        for (const stat of fileStats) {
+            total += stat.size;
+        }
+        res.json({
+            total,
+        });
+    }
+    catch (error) {
+        console.log(error);
+        res.json({
+            total: 0,
+        });
+    }
+});
+router.delete('/:name', async (req, res) => {
+    try {
+        const name = req.params.name;
+        if ((0, fs_1.existsSync)(config_1.FRAMEKM_ROOT_FOLDER + '/' + name)) {
+            (0, fs_1.rmSync)(config_1.FRAMEKM_ROOT_FOLDER + '/' + name);
+        }
+        res.json({
+            deleted: true,
+        });
+    }
+    catch (error) {
+        res.json({ error });
+    }
+});
+exports["default"] = router;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZnJhbWVrbS5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvZnJhbWVrbS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHNDQUFnRDtBQUNoRCxxQ0FBb0Q7QUFDcEQsMkJBQTJEO0FBQzNELDBDQUE0QztBQUM1QyxpQ0FBNEI7QUFFNUIsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNwRCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsSUFBQSxnQkFBVyxFQUFDLDRCQUFtQixDQUFDLENBQUM7UUFDL0MsR0FBRyxDQUFDLElBQUksQ0FBQyxLQUFLLENBQUMsQ0FBQztLQUNqQjtJQUFDLE9BQU8sS0FBSyxFQUFFO1FBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsQ0FBQztLQUNkO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsSUFBSSxDQUFDLFFBQVEsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQzFELElBQUk7UUFDRixNQUFNLE1BQU0sR0FBRyxHQUFHLENBQUMsSUFBSSxJQUFJLEdBQUcsQ0FBQyxJQUFJLENBQUMsTUFBTSxDQUFDLENBQUMsQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLE1BQU0sQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFDO1FBQ2xFLE1BQU0sV0FBVyxHQUFHLE1BQU0sSUFBQSxzQkFBWSxFQUFDLE1BQU0sRUFBRSxHQUFHLENBQUMsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDO1FBQ2hFLEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxNQUFNLEVBQUUsV0FBVztTQUNwQixDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sS0FBSyxFQUFFO1FBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7S0FDckI7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILE1BQU0sQ0FBQyxHQUFHLENBQUMsUUFBUSxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDekQsSUFBSTtRQUNGLE1BQU0sS0FBSyxHQUFHLElBQUEsZ0JBQVcsRUFBQyw0QkFBbUIsQ0FBQyxDQUFDO1FBQy9DLElBQUksS0FBSyxHQUFHLENBQUMsQ0FBQztRQUNkLE1BQU0sU0FBUyxHQUFVLE1BQU0sSUFBQSxXQUFHLEVBQ2hDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQyxLQUFhLEVBQUUsRUFBRSxDQUFDLDRCQUFtQixHQUFHLEdBQUcsR0FBRyxLQUFLLENBQUMsRUFDL0QsU0FBSSxDQUNMLENBQUM7UUFDRixLQUFLLE1BQU0sSUFBSSxJQUFJLFNBQVMsRUFBRTtZQUM1QixLQUFLLElBQUksSUFBSSxDQUFDLElBQUksQ0FBQztTQUNwQjtRQUNELEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxLQUFLO1NBQ04sQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLE9BQU8sQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLENBQUM7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQztZQUNQLEtBQUssRUFBRSxDQUFDO1NBQ1QsQ0FBQyxDQUFDO0tBQ0o7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILE1BQU0sQ0FBQyxNQUFNLENBQUMsUUFBUSxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDNUQsSUFBSTtRQUNGLE1BQU0sSUFBSSxHQUFHLEdBQUcsQ0FBQyxNQUFNLENBQUMsSUFBSSxDQUFDO1FBQzdCLElBQUksSUFBQSxlQUFVLEVBQUMsNEJBQW1CLEdBQUcsR0FBRyxHQUFHLElBQUksQ0FBQyxFQUFFO1lBQ2hELElBQUEsV0FBTSxFQUFDLDRCQUFtQixHQUFHLEdBQUcsR0FBRyxJQUFJLENBQUMsQ0FBQztTQUMxQztRQUNELEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxPQUFPLEVBQUUsSUFBSTtTQUNkLENBQUMsQ0FBQztLQUNKO0lBQUMsT0FBTyxLQUFLLEVBQUU7UUFDZCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQztLQUNyQjtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
 
 /***/ }),
 
@@ -277,6 +264,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const config_1 = __nccwpck_require__(1806);
 const express_1 = __nccwpck_require__(7086);
 const fs_1 = __nccwpck_require__(7147);
+const child_process_1 = __nccwpck_require__(2081);
 const util_1 = __nccwpck_require__(5960);
 const heartBeat_1 = __nccwpck_require__(6754);
 const router = (0, express_1.Router)();
@@ -324,8 +312,54 @@ router.get('/sample', async (req, res) => {
         res.json({});
     }
 });
+router.get('/jamind', async (req, res) => {
+    try {
+        (0, child_process_1.exec)('ubxtool -p MON-RF | grep jamInd', { encoding: 'utf-8' }, (error, stdout) => {
+            const output = error ? '' : stdout;
+            // get jamInd
+            const line = output.split('\n').shift(); // we should only get one in the output
+            if (!line) {
+                res.json({});
+                return;
+            }
+            const parts = line.split(' ');
+            const jamIndIndex = parts.findIndex(elem => elem.indexOf('jamInd') !== -1);
+            if (jamIndIndex !== -1) {
+                const jamInd = parseInt(parts[jamIndIndex + 1]);
+                res.json({ jamInd: jamInd, date: new Date() });
+                return;
+            }
+        });
+    }
+    catch (e) {
+        res.json({});
+    }
+});
+router.get('/spoofdetstate', async (req, res) => {
+    try {
+        (0, child_process_1.exec)('ubxtool -p NAV-STATUS -v 2 | grep spoofDetState', { encoding: 'utf-8' }, (error, stdout) => {
+            const output = error ? '' : stdout;
+            //get spoofDetState
+            const line = output.split('\n').shift(); // hopefully there should be one only
+            if (!line) {
+                res.json({});
+                return;
+            }
+            const parts = line.split(' ');
+            const spoofDetStateIndex = parts.findIndex(elem => elem.indexOf('spoofDetState') !== -1);
+            if (spoofDetStateIndex !== -1) {
+                const spoofDetState = parseInt(parts[spoofDetStateIndex + 1]);
+                res.json({ spoofDetState: spoofDetState, date: new Date() });
+                return;
+            }
+        });
+    }
+    catch (e) {
+        res.json({});
+    }
+});
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ3BzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9ncHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBK0Q7QUFDL0QscUNBQW9EO0FBQ3BELDJCQUEyQztBQUUzQyxrQ0FBa0U7QUFFbEUsa0RBQXVEO0FBRXZELE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDcEQsSUFBSTtRQUNGLElBQUksS0FBSyxHQUFHLElBQUEsZ0JBQVcsRUFBQyx3QkFBZSxDQUFDLENBQUM7UUFDekMsSUFBSSxLQUFLLENBQUMsTUFBTSxFQUFFO1lBQ2hCLHdCQUF3QjtZQUN4QixLQUFLLEdBQUcsS0FBSyxDQUFDLE1BQU0sQ0FBQyxDQUFDLFFBQWdCLEVBQUUsRUFBRSxDQUFDLFFBQVEsS0FBSyxZQUFZLENBQUMsQ0FBQztZQUN0RSxvQ0FBb0M7WUFDcEMsS0FBSyxDQUFDLEdBQUcsRUFBRSxDQUFDO1NBQ2I7UUFFRCxNQUFNLFFBQVEsR0FBa0IsS0FBSzthQUNsQyxNQUFNLENBQUMsQ0FBQyxRQUFnQixFQUFFLEVBQUUsQ0FBQyxRQUFRLENBQUMsT0FBTyxDQUFDLE9BQU8sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDO2FBQzlELEdBQUcsQ0FBQyxRQUFRLENBQUMsRUFBRTtZQUNkLE9BQU87Z0JBQ0wsSUFBSSxFQUFFLFFBQVE7Z0JBQ2QsSUFBSSxFQUFFLElBQUEsMEJBQW1CLEVBQUMsUUFBUSxDQUFDLENBQUMsT0FBTyxFQUFFO2FBQzlDLENBQUM7UUFDSixDQUFDLENBQUMsQ0FBQztRQUVMLEdBQUcsQ0FBQyxJQUFJLENBQUMsSUFBQSx5QkFBa0IsRUFBQyxRQUFRLEVBQUUsR0FBRyxDQUFDLENBQUMsQ0FBQztRQUM1QyxJQUFBLDZCQUFpQixFQUFDLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQyxDQUFDO0tBQy9CO0lBQUMsT0FBTyxLQUFLLEVBQUU7UUFDZCxxRUFBcUU7UUFDckUsZ0RBQWdEO1FBQ2hELEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDLENBQUM7S0FDZDtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsT0FBTztBQUNQLE1BQU0sQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDMUQsSUFBSTtRQUNGLElBQUEsYUFBUSxFQUNOLDBCQUFpQixFQUNqQjtZQUNFLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLEVBQ0QsQ0FBQyxHQUFpQyxFQUFFLElBQVksRUFBRSxFQUFFO1lBQ2xELElBQUksTUFBTSxHQUFHLEVBQUUsQ0FBQztZQUNoQixJQUFJLElBQUksSUFBSSxDQUFDLEdBQUcsRUFBRTtnQkFDaEIsTUFBTSxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUM7YUFDM0I7WUFFRCxHQUFHLENBQUMsSUFBSSxDQUFDLE1BQU0sQ0FBQyxDQUFDO1FBQ25CLENBQUMsQ0FDRixDQUFDO0tBQ0g7SUFBQyxPQUFPLENBQUMsRUFBRTtRQUNWLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFDZixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQyxDQUFDO0tBQ2Q7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILGtCQUFlLE1BQU0sQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ3BzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy9ncHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBK0Q7QUFDL0QscUNBQW9EO0FBQ3BELDJCQUEyQztBQUMzQyxpREFBb0Q7QUFDcEQsa0NBQWtFO0FBRWxFLGtEQUF1RDtBQUV2RCxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsR0FBRyxDQUFDLEdBQUcsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ3BELElBQUk7UUFDRixJQUFJLEtBQUssR0FBRyxJQUFBLGdCQUFXLEVBQUMsd0JBQWUsQ0FBQyxDQUFDO1FBQ3pDLElBQUksS0FBSyxDQUFDLE1BQU0sRUFBRTtZQUNoQix3QkFBd0I7WUFDeEIsS0FBSyxHQUFHLEtBQUssQ0FBQyxNQUFNLENBQUMsQ0FBQyxRQUFnQixFQUFFLEVBQUUsQ0FBQyxRQUFRLEtBQUssWUFBWSxDQUFDLENBQUM7WUFDdEUsb0NBQW9DO1lBQ3BDLEtBQUssQ0FBQyxHQUFHLEVBQUUsQ0FBQztTQUNiO1FBRUQsTUFBTSxRQUFRLEdBQWtCLEtBQUs7YUFDbEMsTUFBTSxDQUFDLENBQUMsUUFBZ0IsRUFBRSxFQUFFLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQzthQUM5RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7WUFDZCxPQUFPO2dCQUNMLElBQUksRUFBRSxRQUFRO2dCQUNkLElBQUksRUFBRSxJQUFBLDBCQUFtQixFQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sRUFBRTthQUM5QyxDQUFDO1FBQ0osQ0FBQyxDQUFDLENBQUM7UUFFTCxHQUFHLENBQUMsSUFBSSxDQUFDLElBQUEseUJBQWtCLEVBQUMsUUFBUSxFQUFFLEdBQUcsQ0FBQyxDQUFDLENBQUM7UUFDNUMsSUFBQSw2QkFBaUIsRUFBQyxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUMsQ0FBQztLQUMvQjtJQUFDLE9BQU8sS0FBSyxFQUFFO1FBQ2QscUVBQXFFO1FBQ3JFLGdEQUFnRDtRQUNoRCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQyxDQUFDO0tBQ2Q7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILE9BQU87QUFDUCxNQUFNLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQzFELElBQUk7UUFDRixJQUFBLGFBQVEsRUFDTiwwQkFBaUIsRUFDakI7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTtZQUNsRCxJQUFJLE1BQU0sR0FBRyxFQUFFLENBQUM7WUFDaEIsSUFBSSxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUU7Z0JBQ2hCLE1BQU0sR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDO2FBQzNCO1lBRUQsR0FBRyxDQUFDLElBQUksQ0FBQyxNQUFNLENBQUMsQ0FBQztRQUNuQixDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxDQUFDLEVBQUU7UUFDVixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO1FBQ2YsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsQ0FBQztLQUNkO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQzFELElBQUk7UUFDRixJQUFBLG9CQUFJLEVBQ0YsaUNBQWlDLEVBQ2pDLEVBQUUsUUFBUSxFQUFFLE9BQU8sRUFBRSxFQUNyQixDQUFDLEtBQTJCLEVBQUUsTUFBYyxFQUFFLEVBQUU7WUFDOUMsTUFBTSxNQUFNLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQztZQUNuQyxhQUFhO1lBQ2IsTUFBTSxJQUFJLEdBQUcsTUFBTSxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsQ0FBQyxLQUFLLEVBQUUsQ0FBQyxDQUFDLHVDQUF1QztZQUNoRixJQUFJLENBQUMsSUFBSSxFQUFFO2dCQUNULEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDLENBQUM7Z0JBQ2IsT0FBTzthQUNSO1lBQ0QsTUFBTSxLQUFLLEdBQUcsSUFBSSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztZQUM5QixNQUFNLFdBQVcsR0FBRyxLQUFLLENBQUMsU0FBUyxDQUNqQyxJQUFJLENBQUMsRUFBRSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQ3RDLENBQUM7WUFDRixJQUFJLFdBQVcsS0FBSyxDQUFDLENBQUMsRUFBRTtnQkFDdEIsTUFBTSxNQUFNLEdBQUcsUUFBUSxDQUFDLEtBQUssQ0FBQyxXQUFXLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFDaEQsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsSUFBSSxFQUFFLElBQUksSUFBSSxFQUFFLEVBQUUsQ0FBQyxDQUFDO2dCQUMvQyxPQUFPO2FBQ1I7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxDQUFDLEVBQUU7UUFDVixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQyxDQUFDO0tBQ2Q7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILE1BQU0sQ0FBQyxHQUFHLENBQUMsZ0JBQWdCLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNqRSxJQUFJO1FBQ0YsSUFBQSxvQkFBSSxFQUNGLGlEQUFpRCxFQUNqRCxFQUFFLFFBQVEsRUFBRSxPQUFPLEVBQUUsRUFDckIsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO1lBQzlDLE1BQU0sTUFBTSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxNQUFNLENBQUM7WUFDbkMsbUJBQW1CO1lBQ25CLE1BQU0sSUFBSSxHQUFHLE1BQU0sQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUMsS0FBSyxFQUFFLENBQUMsQ0FBQyxxQ0FBcUM7WUFDOUUsSUFBSSxDQUFDLElBQUksRUFBRTtnQkFDVCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQyxDQUFDO2dCQUNiLE9BQU87YUFDUjtZQUNELE1BQU0sS0FBSyxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7WUFDOUIsTUFBTSxrQkFBa0IsR0FBRyxLQUFLLENBQUMsU0FBUyxDQUN4QyxJQUFJLENBQUMsRUFBRSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsZUFBZSxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQzdDLENBQUM7WUFDRixJQUFJLGtCQUFrQixLQUFLLENBQUMsQ0FBQyxFQUFFO2dCQUM3QixNQUFNLGFBQWEsR0FBRyxRQUFRLENBQUMsS0FBSyxDQUFDLGtCQUFrQixHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7Z0JBQzlELEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxhQUFhLEVBQUUsYUFBYSxFQUFFLElBQUksRUFBRSxJQUFJLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQztnQkFDN0QsT0FBTzthQUNSO1FBQ0gsQ0FBQyxDQUNGLENBQUM7S0FDSDtJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsQ0FBQztLQUNkO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
 
 /***/ }),
 
@@ -447,15 +481,17 @@ const imu_1 = __importDefault(__nccwpck_require__(608));
 const lora_1 = __importDefault(__nccwpck_require__(8956));
 const upload_1 = __importDefault(__nccwpck_require__(5408));
 const ota_1 = __importDefault(__nccwpck_require__(2122));
-const network_1 = __importDefault(__nccwpck_require__(6873));
 const config_2 = __importDefault(__nccwpck_require__(4059));
 const kpi_1 = __importDefault(__nccwpck_require__(4583));
+const framekm_1 = __importDefault(__nccwpck_require__(3729));
 const util_1 = __importDefault(__nccwpck_require__(8466));
 const preview_1 = __importDefault(__nccwpck_require__(3514));
 const heartBeat_1 = __nccwpck_require__(6754);
 const lock_1 = __nccwpck_require__(5609);
 const index_1 = __nccwpck_require__(5896);
 const led_1 = __nccwpck_require__(4011);
+const deviceInfo_1 = __nccwpck_require__(6);
+const cron_1 = __nccwpck_require__(5740);
 const router = (0, express_1.Router)();
 router.use('/api/1', router);
 router.use('/recordings', recordings_1.default);
@@ -464,9 +500,9 @@ router.use('/imu', imu_1.default);
 router.use('/lora', lora_1.default);
 router.use('/upload', upload_1.default);
 router.use('/ota', ota_1.default);
-router.use('/network', network_1.default);
 router.use('/config', config_2.default);
 router.use('/kpi', kpi_1.default);
+router.use('/framekm', framekm_1.default);
 router.use('/util', util_1.default);
 router.use('/preview', preview_1.default);
 router.get('/init', config_1.configureOnBoot);
@@ -482,10 +518,21 @@ router.get('/info', async (req, res) => {
     catch (error) {
         console.log('Build Info file is missing');
     }
+    const deviceInfo = (0, deviceInfo_1.getDeviceInfo)();
     res.json({
         ...versionInfo,
+        ...deviceInfo,
+        dashcam: config_1.CAMERA_TYPE,
         api_version: config_1.API_VERSION,
     });
+    try {
+        await new Promise(resolve => {
+            (0, fs_1.mkdir)(config_1.FRAMEKM_ROOT_FOLDER, resolve);
+        });
+    }
+    catch (e) {
+        console.log(e);
+    }
 });
 router.get('/ping', (req, res) => {
     (0, heartBeat_1.setMostRecentPing)(Date.now());
@@ -493,6 +540,7 @@ router.get('/ping', (req, res) => {
         healthy: true,
         cameraTime: Date.now(),
         leds: (0, led_1.getCurrentLEDs)(),
+        dashcam: config_1.CAMERA_TYPE,
         sessionId: (0, index_1.getSessionId)(),
         ...(0, lock_1.getLockTime)(),
     });
@@ -503,6 +551,17 @@ router.get('/locktime', (req, res) => {
 router.get('/time', (req, res) => {
     res.json(Date.now());
 });
+router.post('/cron', (req, res) => {
+    try {
+        (0, cron_1.scheduleCronJobs)(req.body?.config || []);
+        res.json({
+            output: 'done',
+        });
+    }
+    catch (error) {
+        res.json({ error });
+    }
+});
 router.get('/log', async (req, res) => {
     let log = '';
     try {
@@ -510,8 +569,15 @@ router.get('/log', async (req, res) => {
             encoding: 'utf-8',
         });
         if (log) {
-            (0, fs_1.writeFileSync)(config_1.WEBSERVER_LOG_PATH, '', {
-                encoding: 'utf-8',
+            (0, fs_1.stat)(config_1.WEBSERVER_LOG_PATH, (err, stats) => {
+                if (stats.size > 1024 * 1024 * 2) {
+                    // if log is getting bigger than 2Megs,
+                    // wipe it
+                    (0, fs_1.writeFile)(config_1.WEBSERVER_LOG_PATH, '', {
+                        encoding: 'utf-8',
+                    }, () => { });
+                    log += '/n===== CUT =====';
+                }
             });
         }
     }
@@ -520,6 +586,19 @@ router.get('/log', async (req, res) => {
     }
     res.json({
         log,
+    });
+});
+router.delete('/log', async (req, res) => {
+    try {
+        (0, fs_1.writeFileSync)(config_1.WEBSERVER_LOG_PATH, '', {
+            encoding: 'utf-8',
+        });
+    }
+    catch (error) {
+        console.log('Webserver Log file is missing');
+    }
+    res.json({
+        output: 'done',
     });
 });
 router.post('/cmd', async (req, res) => {
@@ -558,7 +637,7 @@ router.post('/cmd/sync', async (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvcm91dGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscUNBQW9EO0FBQ3BELDJCQUFpRDtBQUNqRCxpREFBK0M7QUFFL0Msc0NBS21CO0FBQ25CLDhEQUE0QztBQUM1QyxnREFBOEI7QUFDOUIsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLHdEQUFzQztBQUN0QyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyx3REFBc0M7QUFDdEMsa0RBQXVEO0FBQ3ZELG9DQUF3QztBQUN4QyxzQ0FBMEM7QUFDMUMsa0NBQTBDO0FBRTFDLE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxHQUFHLENBQUMsUUFBUSxFQUFFLE1BQU0sQ0FBQyxDQUFDO0FBQzdCLE1BQU0sQ0FBQyxHQUFHLENBQUMsYUFBYSxFQUFFLG9CQUFnQixDQUFDLENBQUM7QUFDNUMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsY0FBVSxDQUFDLENBQUM7QUFDaEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsZ0JBQVksQ0FBQyxDQUFDO0FBQ3BDLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxFQUFFLGFBQVMsQ0FBQyxDQUFDO0FBQzlCLE1BQU0sQ0FBQyxHQUFHLENBQUMsVUFBVSxFQUFFLGlCQUFhLENBQUMsQ0FBQztBQUN0QyxNQUFNLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDcEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVB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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvcm91dGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O0FBQUEscUNBQW9EO0FBQ3BELDJCQUFnRjtBQUNoRixpREFBK0M7QUFFL0Msc0NBT21CO0FBQ25CLDhEQUE0QztBQUM1QyxnREFBOEI7QUFDOUIsZ0RBQThCO0FBQzlCLGtEQUFnQztBQUNoQyxzREFBb0M7QUFDcEMsZ0RBQThCO0FBQzlCLHNEQUFvQztBQUNwQyxnREFBOEI7QUFDOUIsd0RBQXNDO0FBQ3RDLGtEQUFnQztBQUNoQyx3REFBc0M7QUFDdEMsa0RBQXVEO0FBQ3ZELG9DQUF3QztBQUN4QyxzQ0FBMEM7QUFDMUMsa0NBQTBDO0FBQzFDLG9EQUFvRDtBQUNwRCxvQ0FBNkM7QUFFN0MsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxRQUFRLEVBQUUsTUFBTSxDQUFDLENBQUM7QUFDN0IsTUFBTSxDQUFDLEdBQUcsQ0FBQyxhQUFhLEVBQUUsb0JBQWdCLENBQUMsQ0FBQztBQUM1QyxNQUFNLENBQUMsR0FBRyxDQUFDLE1BQU0sRUFBRSxhQUFTLENBQUMsQ0FBQztBQUM5QixNQUFNLENBQUMsR0FBRyxDQUFDLE1BQU0sRUFBRSxhQUFTLENBQUMsQ0FBQztBQUM5QixNQUFNLENBQUMsR0FBRyxDQUFDLE9BQU8sRUFBRSxjQUFVLENBQUMsQ0FBQztBQUNoQyxNQUFNLENBQUMsR0FBRyxDQUFDLFNBQVMsRUFBRSxnQkFBWSxDQUFDLENBQUM7QUFDcEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsYUFBUyxDQUFDLENBQUM7QUFDOUIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsZ0JBQVksQ0FBQyxDQUFDO0FBQ3BDLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxFQUFFLGFBQVMsQ0FBQyxDQUFDO0FBQzlCLE1B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
 
 /***/ }),
 
@@ -625,22 +704,6 @@ router.get('/sample', async (req, res) => {
 });
 exports["default"] = router;
 //# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibG9yYS5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvbG9yYS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHNDQUE2QztBQUM3QyxxQ0FBb0Q7QUFDcEQsMkJBQWlDO0FBQ2pDLGtDQUFrRTtBQUdsRSxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsR0FBRyxDQUFDLEdBQUcsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ3BELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxJQUFBLGdCQUFXLEVBQUMseUJBQWdCLENBQUMsQ0FBQztRQUM1QyxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUU7WUFDaEIsb0NBQW9DO1lBQ3BDLEtBQUssQ0FBQyxHQUFHLEVBQUUsQ0FBQztTQUNiO1FBRUQsTUFBTSxTQUFTLEdBQWtCLEtBQUs7YUFDbkMsTUFBTSxDQUFDLENBQUMsUUFBZ0IsRUFBRSxFQUFFLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQzthQUM5RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7WUFDZCxPQUFPO2dCQUNMLElBQUksRUFBRSxRQUFRO2dCQUNkLElBQUksRUFBRSxJQUFBLDBCQUFtQixFQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sRUFBRTthQUM5QyxDQUFDO1FBQ0osQ0FBQyxDQUFDLENBQUM7UUFFTCxHQUFHLENBQUMsSUFBSSxDQUFDLElBQUEseUJBQWtCLEVBQUMsU0FBUyxFQUFFLEdBQUcsQ0FBQyxDQUFDLENBQUM7S0FDOUM7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxPQUFPO0FBQ1AsTUFBTSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUMxRCxHQUFHLENBQUMsSUFBSSxDQUFDO1FBQ1AsR0FBRyxFQUFFLEdBQUc7UUFDUixXQUFXLEVBQUUsT0FBTztRQUNwQixXQUFXLEVBQUUsVUFBVTtRQUN2QixhQUFhLEVBQUUsQ0FBQyxDQUFDLGNBQWMsRUFBRSxjQUFjLEVBQUUsV0FBVyxDQUFDO1FBQzdELFNBQVMsRUFBRSxDQUFDLENBQUMsWUFBWSxFQUFFLENBQUMsVUFBVSxFQUFFLGFBQWEsQ0FBQztLQUN2RCxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQztBQUVILGtCQUFlLE1BQU0sQ0FBQyJ9
-
-/***/ }),
-
-/***/ 6873:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const config_1 = __nccwpck_require__(1806);
-const express_1 = __nccwpck_require__(7086);
-const router = (0, express_1.Router)();
-router.get('/p2p', config_1.switchToP2P);
-router.get('/ap', config_1.switchToAP);
-exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibmV0d29yay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvbmV0d29yay50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHNDQUFvRDtBQUNwRCxxQ0FBaUM7QUFDakMsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxNQUFNLEVBQUUsb0JBQVcsQ0FBQyxDQUFDO0FBQ2hDLE1BQU0sQ0FBQyxHQUFHLENBQUMsS0FBSyxFQUFFLG1CQUFVLENBQUMsQ0FBQztBQUU5QixrQkFBZSxNQUFNLENBQUMifQ==
 
 /***/ }),
 
@@ -722,6 +785,7 @@ const config_1 = __nccwpck_require__(1806);
 const express_1 = __nccwpck_require__(7086);
 const fs_1 = __nccwpck_require__(7147);
 const util_1 = __nccwpck_require__(5960);
+const types_1 = __nccwpck_require__(7281);
 const child_process_1 = __nccwpck_require__(2081);
 const router = (0, express_1.Router)();
 router.get('/', async (req, res) => {
@@ -770,6 +834,10 @@ router.get('/last', async (req, res) => {
 });
 router.get('/quality', async (req, res) => {
     try {
+        if (types_1.CameraType.HdcS) {
+            // TODO: placeholder
+            return res.json({ quality: 70 });
+        }
         (0, fs_1.readFile)(config_1.IMAGER_BRIDGE_PATH, {
             encoding: 'utf-8',
         }, (err, data) => {
@@ -797,7 +865,7 @@ router.get('/quality', async (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmVjb3JkaW5ncy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvcmVjb3JkaW5ncy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHNDQUFtRTtBQUNuRSxxQ0FBb0Q7QUFDcEQsMkJBQXVDO0FBRXZDLGtDQUEwRTtBQUUxRSxpREFBb0Q7QUFFcEQsTUFBTSxNQUFNLEdBQUcsSUFBQSxnQkFBTSxHQUFFLENBQUM7QUFFeEIsTUFBTSxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNwRCxJQUFJO1FBQ0YsSUFBQSxZQUFPLEVBQ0wsMkJBQWtCLEVBQ2xCLENBQUMsR0FBaUMsRUFBRSxLQUFlLEVBQUUsRUFBRTtZQUNyRCxJQUFJO2dCQUNGLE1BQU0sUUFBUSxHQUFrQixLQUFLO3FCQUNsQyxNQUFNLENBQUMsQ0FBQyxRQUFnQixFQUFFLEVBQUUsQ0FBQyxRQUFRLENBQUMsT0FBTyxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDO3FCQUM3RCxHQUFHLENBQUMsUUFBUSxDQUFDLEVBQUU7b0JBQ2QsT0FBTzt3QkFDTCxJQUFJLEVBQUUsUUFBUTt3QkFDZCxJQUFJLEVBQUUsSUFBQSxrQ0FBMkIsRUFBQyxRQUFRLENBQUMsQ0FBQyxPQUFPLEVBQUU7cUJBQ3RELENBQUM7Z0JBQ0osQ0FBQyxDQUFDLENBQUM7Z0JBRUwsR0FBRyxDQUFDLElBQUksQ0FBQyxJQUFBLHlCQUFrQixFQUFDLFFBQVEsRUFBRSxHQUFHLENBQUMsQ0FBQyxDQUFDO2FBQzdDO1lBQUMsT0FBTyxLQUFLLEVBQUU7Z0JBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7YUFDckI7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFLLEVBQUU7UUFDZCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQztLQUNyQjtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUN4RCxJQUFJO1FBQ0YsSUFBQSxvQkFBSSxFQUNGLE1BQU0sMkJBQWtCLFlBQVksRUFDcEM7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsS0FBMkIsRUFBRSxNQUFjLEVBQUUsRUFBRTtZQUM5QyxJQUFJLENBQUMsS0FBSyxFQUFFO2dCQUNWLE1BQU0sUUFBUSxHQUFHLE1BQU0sQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUM7Z0JBQ3ZDLEdBQUcsQ0FBQyxJQUFJLENBQUM7b0JBQ1AsSUFBSSxFQUFFLFFBQVE7b0JBQ2QsSUFBSSxFQUFFLElBQUEsa0NBQTJCLEVBQUMsUUFBUSxDQUFDLENBQUMsT0FBTyxFQUFFO2lCQUN0RCxDQUFDLENBQUM7YUFDSjtpQkFBTTtnQkFDTCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQzthQUNyQjtRQUNILENBQUMsQ0FDRixDQUFDO0tBQ0g7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsR0FBRyxDQUFDLFVBQVUsRUFBRSxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQzNELElBQUk7UUFDRixJQUFBLGFBQVEsRUFDTiwyQkFBa0IsRUFDbEI7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTtZQUNsRCxJQUFJLEdBQUcsRUFBRTtnQkFDUCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLEdBQUcsRUFBRSxDQUFDLENBQUM7Z0JBQ3pCLE9BQU87YUFDUjtZQUNELElBQUksSUFBSSxFQUFFO2dCQUNSLE1BQU0sS0FBSyxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7Z0JBQzlCLE1BQU0sVUFBVSxHQUFHLEtBQUssQ0FBQyxPQUFPLENBQUMsV0FBVyxDQUFDLENBQUM7Z0JBRTlDLElBQUksVUFBVSxLQUFLLENBQUMsQ0FBQyxFQUFFO29CQUNyQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsT0FBTyxFQUFFLE1BQU0sQ0FBQyxLQUFLLENBQUMsVUFBVSxHQUFHLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDO2lCQUN0RDtxQkFBTTtvQkFDTCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLHNCQUFzQixFQUFFLENBQUMsQ0FBQztpQkFDN0M7YUFDRjtpQkFBTTtnQkFDTCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLG9CQUFvQixFQUFFLENBQUMsQ0FBQzthQUMzQztRQUNILENBQUMsQ0FDRixDQUFDO0tBQ0g7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmVjb3JkaW5ncy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvcmVjb3JkaW5ncy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHNDQUFtRTtBQUNuRSxxQ0FBb0Q7QUFDcEQsMkJBQXVDO0FBRXZDLGtDQUEwRTtBQUMxRSxvQ0FBbUQ7QUFDbkQsaURBQW9EO0FBRXBELE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDcEQsSUFBSTtRQUNGLElBQUEsWUFBTyxFQUNMLDJCQUFrQixFQUNsQixDQUFDLEdBQWlDLEVBQUUsS0FBZSxFQUFFLEVBQUU7WUFDckQsSUFBSTtnQkFDRixNQUFNLFFBQVEsR0FBa0IsS0FBSztxQkFDbEMsTUFBTSxDQUFDLENBQUMsUUFBZ0IsRUFBRSxFQUFFLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQztxQkFDN0QsR0FBRyxDQUFDLFFBQVEsQ0FBQyxFQUFFO29CQUNkLE9BQU87d0JBQ0wsSUFBSSxFQUFFLFFBQVE7d0JBQ2QsSUFBSSxFQUFFLElBQUEsa0NBQTJCLEVBQUMsUUFBUSxDQUFDLENBQUMsT0FBTyxFQUFFO3FCQUN0RCxDQUFDO2dCQUNKLENBQUMsQ0FBQyxDQUFDO2dCQUVMLEdBQUcsQ0FBQyxJQUFJLENBQUMsSUFBQSx5QkFBa0IsRUFBQyxRQUFRLEVBQUUsR0FBRyxDQUFDLENBQUMsQ0FBQzthQUM3QztZQUFDLE9BQU8sS0FBSyxFQUFFO2dCQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO2FBQ3JCO1FBQ0gsQ0FBQyxDQUNGLENBQUM7S0FDSDtJQUFDLE9BQU8sS0FBSyxFQUFFO1FBQ2QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7S0FDckI7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILE1BQU0sQ0FBQyxHQUFHLENBQUMsT0FBTyxFQUFFLEtBQUssRUFBRSxHQUFZLEVBQUUsR0FBYSxFQUFFLEVBQUU7SUFDeEQsSUFBSTtRQUNGLElBQUEsb0JBQUksRUFDRixNQUFNLDJCQUFrQixZQUFZLEVBQ3BDO1lBQ0UsUUFBUSxFQUFFLE9BQU87U0FDbEIsRUFDRCxDQUFDLEtBQTJCLEVBQUUsTUFBYyxFQUFFLEVBQUU7WUFDOUMsSUFBSSxDQUFDLEtBQUssRUFBRTtnQkFDVixNQUFNLFFBQVEsR0FBRyxNQUFNLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO2dCQUN2QyxHQUFHLENBQUMsSUFBSSxDQUFDO29CQUNQLElBQUksRUFBRSxRQUFRO29CQUNkLElBQUksRUFBRSxJQUFBLGtDQUEyQixFQUFDLFFBQVEsQ0FBQyxDQUFDLE9BQU8sRUFBRTtpQkFDdEQsQ0FBQyxDQUFDO2FBQ0o7aUJBQU07Z0JBQ0wsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLENBQUM7YUFDckI7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFLLEVBQUU7UUFDZCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQztLQUNyQjtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsTUFBTSxDQUFDLEdBQUcsQ0FBQyxVQUFVLEVBQUUsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUMzRCxJQUFJO1FBQ0YsSUFBSSxrQkFBVSxDQUFDLElBQUksRUFBRTtZQUNuQixvQkFBb0I7WUFDcEIsT0FBTyxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsT0FBTyxFQUFFLEVBQUUsRUFBRSxDQUFDLENBQUM7U0FDbEM7UUFDRCxJQUFBLGFBQVEsRUFDTiwyQkFBa0IsRUFDbEI7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsR0FBaUMsRUFBRSxJQUFZLEVBQUUsRUFBRTtZQUNsRCxJQUFJLEdBQUcsRUFBRTtnQkFDUCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLEdBQUcsRUFBRSxDQUFDLENBQUM7Z0JBQ3pCLE9BQU87YUFDUjtZQUNELElBQUksSUFBSSxFQUFFO2dCQUNSLE1BQU0sS0FBSyxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7Z0JBQzlCLE1BQU0sVUFBVSxHQUFHLEtBQUssQ0FBQyxPQUFPLENBQUMsV0FBVyxDQUFDLENBQUM7Z0JBRTlDLElBQUksVUFBVSxLQUFLLENBQUMsQ0FBQyxFQUFFO29CQUNyQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsT0FBTyxFQUFFLE1BQU0sQ0FBQyxLQUFLLENBQUMsVUFBVSxHQUFHLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDO2lCQUN0RDtxQkFBTTtvQkFDTCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLHNCQUFzQixFQUFFLENBQUMsQ0FBQztpQkFDN0M7YUFDRjtpQkFBTTtnQkFDTCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLG9CQUFvQixFQUFFLENBQUMsQ0FBQzthQUMzQztRQUNILENBQUMsQ0FDRixDQUFDO0tBQ0g7SUFBQyxPQUFPLEtBQUssRUFBRTtRQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFDO0tBQ3JCO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
 
 /***/ }),
 
@@ -815,7 +883,7 @@ router.post('/', (req, res) => {
     try {
         req.pipe(req.busboy); // Pipe it trough busboy
         req.busboy.on('file', (fieldname, file, data) => {
-            const filename = data?.filename || 'upload.raucb';
+            const filename = data && data.filename ? data.filename : 'upload.raucb';
             console.log(`Upload of '${filename}' started`);
             // Create a write stream of the new file
             try {
@@ -846,7 +914,7 @@ router.post('/', (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXBsb2FkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy91cGxvYWQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBd0M7QUFDeEMscUNBQWlDO0FBQ2pDLDJCQUF1QztBQUV2QyxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDLEdBQUcsRUFBRSxHQUFHLEVBQUUsRUFBRTtJQUM1QixJQUFJO1FBQ0YsR0FBRyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLENBQUMsQ0FBQyx3QkFBd0I7UUFFOUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxFQUFFLENBQUMsTUFBTSxFQUFFLENBQUMsU0FBUyxFQUFFLElBQUksRUFBRSxJQUFJLEVBQUUsRUFBRTtZQUM5QyxNQUFNLFFBQVEsR0FBRyxJQUFJLEVBQUUsUUFBUSxJQUFJLGNBQWMsQ0FBQztZQUNsRCxPQUFPLENBQUMsR0FBRyxDQUFDLGNBQWMsUUFBUSxXQUFXLENBQUMsQ0FBQztZQUMvQyx3Q0FBd0M7WUFDeEMsSUFBSTtnQkFDRixNQUFNLE9BQU8sR0FBRyxJQUFBLHNCQUFpQixFQUFDLG9CQUFXLEdBQUcsUUFBUSxDQUFDLENBQUM7Z0JBQzFELGlCQUFpQjtnQkFDakIsSUFBSSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQztnQkFFbkIsMEJBQTBCO2dCQUMxQixPQUFPLENBQUMsRUFBRSxDQUFDLE9BQU8sRUFBRSxHQUFHLEVBQUU7b0JBQ3ZCLE9BQU8sQ0FBQyxHQUFHLENBQUMsY0FBYyxRQUFRLFlBQVksQ0FBQyxDQUFDO29CQUNoRCxHQUFHLENBQUMsSUFBSSxDQUFDO3dCQUNQLE1BQU0sRUFBRSxNQUFNO3FCQUNmLENBQUMsQ0FBQztnQkFDTCxDQUFDLENBQUMsQ0FBQzthQUNKO1lBQUMsT0FBTyxDQUFVLEVBQUU7Z0JBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7Z0JBQ2YsR0FBRyxDQUFDLElBQUksQ0FBQztvQkFDUCxLQUFLLEVBQUUsQ0FBQztpQkFDVCxDQUFDLENBQUM7YUFDSjtRQUNILENBQUMsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO1FBQ2YsR0FBRyxDQUFDLElBQUksQ0FBQztZQUNQLEtBQUssRUFBRSxDQUFDO1NBQ1QsQ0FBQyxDQUFDO0tBQ0o7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILGtCQUFlLE1BQU0sQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXBsb2FkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL3JvdXRlcy91cGxvYWQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxzQ0FBd0M7QUFDeEMscUNBQWlDO0FBQ2pDLDJCQUF1QztBQUV2QyxNQUFNLE1BQU0sR0FBRyxJQUFBLGdCQUFNLEdBQUUsQ0FBQztBQUV4QixNQUFNLENBQUMsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDLEdBQUcsRUFBRSxHQUFHLEVBQUUsRUFBRTtJQUM1QixJQUFJO1FBQ0YsR0FBRyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLENBQUMsQ0FBQyx3QkFBd0I7UUFFOUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxFQUFFLENBQUMsTUFBTSxFQUFFLENBQUMsU0FBUyxFQUFFLElBQUksRUFBRSxJQUFJLEVBQUUsRUFBRTtZQUM5QyxNQUFNLFFBQVEsR0FBRyxJQUFJLElBQUksSUFBSSxDQUFDLFFBQVEsQ0FBQyxDQUFDLENBQUMsSUFBSSxDQUFDLFFBQVEsQ0FBQyxDQUFDLENBQUMsY0FBYyxDQUFDO1lBQ3hFLE9BQU8sQ0FBQyxHQUFHLENBQUMsY0FBYyxRQUFRLFdBQVcsQ0FBQyxDQUFDO1lBQy9DLHdDQUF3QztZQUN4QyxJQUFJO2dCQUNGLE1BQU0sT0FBTyxHQUFHLElBQUEsc0JBQWlCLEVBQUMsb0JBQVcsR0FBRyxRQUFRLENBQUMsQ0FBQztnQkFDMUQsaUJBQWlCO2dCQUNqQixJQUFJLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxDQUFDO2dCQUVuQiwwQkFBMEI7Z0JBQzFCLE9BQU8sQ0FBQyxFQUFFLENBQUMsT0FBTyxFQUFFLEdBQUcsRUFBRTtvQkFDdkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxjQUFjLFFBQVEsWUFBWSxDQUFDLENBQUM7b0JBQ2hELEdBQUcsQ0FBQyxJQUFJLENBQUM7d0JBQ1AsTUFBTSxFQUFFLE1BQU07cUJBQ2YsQ0FBQyxDQUFDO2dCQUNMLENBQUMsQ0FBQyxDQUFDO2FBQ0o7WUFBQyxPQUFPLENBQVUsRUFBRTtnQkFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztnQkFDZixHQUFHLENBQUMsSUFBSSxDQUFDO29CQUNQLEtBQUssRUFBRSxDQUFDO2lCQUNULENBQUMsQ0FBQzthQUNKO1FBQ0gsQ0FBQyxDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFDZixHQUFHLENBQUMsSUFBSSxDQUFDO1lBQ1AsS0FBSyxFQUFFLENBQUM7U0FDVCxDQUFDLENBQUM7S0FDSjtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsa0JBQWUsTUFBTSxDQUFDIn0=
 
 /***/ }),
 
@@ -863,7 +931,7 @@ const router = (0, express_1.Router)();
 router.post('/camera/stop', (req, res) => {
     // TBD, done via App for now
     try {
-        (0, child_process_1.exec)((0, config_1.getStopCameraCommand)(), {
+        (0, child_process_1.exec)(config_1.CMD.STOP_CAMERA, {
             encoding: 'utf-8',
         }, (error, stdout, stderr) => {
             if (error) {
@@ -883,7 +951,7 @@ router.post('/camera/stop', (req, res) => {
 router.post('/camera/start', (req, res) => {
     // TBD, done via App for now
     try {
-        (0, child_process_1.exec)((0, config_1.getStartCameraCommand)(), {
+        (0, child_process_1.exec)(config_1.CMD.START_CAMERA, {
             encoding: 'utf-8',
         }, (error, stdout, stderr) => {
             if (error) {
@@ -929,7 +997,23 @@ router.post('/time/set', (req, res) => {
     }
 });
 exports["default"] = router;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXRpbC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvdXRpbC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHFDQUFpQztBQUNqQyxpREFBcUM7QUFDckMsbUNBQXFFO0FBRXJFLE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxJQUFJLENBQUMsY0FBYyxFQUFFLENBQUMsR0FBRyxFQUFFLEdBQUcsRUFBRSxFQUFFO0lBQ3ZDLDRCQUE0QjtJQUM1QixJQUFJO1FBQ0YsSUFBQSxvQkFBSSxFQUNGLElBQUEsNkJBQW9CLEdBQUUsRUFDdEI7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsS0FBSyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsRUFBRTtZQUN4QixJQUFJLEtBQUssRUFBRTtnQkFDVCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLE1BQU0sSUFBSSxNQUFNLEVBQUUsQ0FBQyxDQUFDO2FBQ3ZDO2lCQUFNO2dCQUNMLEdBQUcsQ0FBQyxJQUFJLENBQUM7b0JBQ1AsTUFBTSxFQUFFLE1BQU07aUJBQ2YsQ0FBQyxDQUFDO2FBQ0o7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFVLEVBQUU7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO0tBQ25EO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsSUFBSSxDQUFDLGVBQWUsRUFBRSxDQUFDLEdBQUcsRUFBRSxHQUFHLEVBQUUsRUFBRTtJQUN4Qyw0QkFBNEI7SUFDNUIsSUFBSTtRQUNGLElBQUEsb0JBQUksRUFDRixJQUFBLDhCQUFxQixHQUFFLEVBQ3ZCO1lBQ0UsUUFBUSxFQUFFLE9BQU87U0FDbEIsRUFDRCxDQUFDLEtBQUssRUFBRSxNQUFNLEVBQUUsTUFBTSxFQUFFLEVBQUU7WUFDeEIsSUFBSSxLQUFLLEVBQUU7Z0JBQ1QsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxNQUFNLElBQUksTUFBTSxFQUFFLENBQUMsQ0FBQzthQUN2QztpQkFBTTtnQkFDTCxHQUFHLENBQUMsSUFBSSxDQUFDO29CQUNQLE1BQU0sRUFBRSxNQUFNO2lCQUNmLENBQUMsQ0FBQzthQUNKO1FBQ0gsQ0FBQyxDQUNGLENBQUM7S0FDSDtJQUFDLE9BQU8sS0FBVSxFQUFFO1FBQ25CLEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsS0FBSyxDQUFDLE1BQU0sSUFBSSxLQUFLLENBQUMsTUFBTSxFQUFFLENBQUMsQ0FBQztLQUNuRDtBQUNILENBQUMsQ0FBQyxDQUFDO0FBRUgsTUFBTSxDQUFDLElBQUksQ0FBQyxXQUFXLEVBQUUsQ0FBQyxHQUFHLEVBQUUsR0FBRyxFQUFFLEVBQUU7SUFDcEMsTUFBTSxRQUFRLEdBQUcsTUFBTSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsRUFBRSxDQUFDLENBQUM7SUFDdEMsTUFBTSxTQUFTLEdBQUcsSUFBSSxJQUFJLENBQUMsUUFBUSxDQUFDO1NBQ2pDLFdBQVcsRUFBRTtTQUNiLE9BQU8sQ0FBQyxHQUFHLEVBQUUsR0FBRyxDQUFDO1NBQ2pCLE9BQU8sQ0FBQyxNQUFNLEVBQUUsRUFBRSxDQUFDO1NBQ25CLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztJQUVkLElBQUk7UUFDRixNQUFNO1FBQ04sMERBQTBEO1FBQzFELDBCQUEwQjtRQUMxQixJQUFBLG9CQUFJLEVBQ0YsaURBQWlELFNBQVMsQ0FBQyxDQUFDLENBQUMsNEJBQTRCLFNBQVMsQ0FBQyxDQUFDLENBQUMsRUFBRSxFQUN2RztZQUNFLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLEVBQ0QsQ0FBQyxLQUFLLEVBQUUsTUFBTSxFQUFFLE1BQU0sRUFBRSxFQUFFO1lBQ3hCLElBQUksS0FBSyxFQUFFO2dCQUNULEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsTUFBTSxJQUFJLE1BQU0sRUFBRSxDQUFDLENBQUM7YUFDdkM7aUJBQU07Z0JBQ0wsR0FBRyxDQUFDLElBQUksQ0FBQztvQkFDUCxNQUFNLEVBQUUsTUFBTTtpQkFDZixDQUFDLENBQUM7YUFDSjtRQUNILENBQUMsQ0FDRixDQUFDO0tBQ0g7SUFBQyxPQUFPLEtBQVUsRUFBRTtRQUNuQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLEtBQUssQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQUM7S0FDbkQ7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILGtCQUFlLE1BQU0sQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXRpbC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9yb3V0ZXMvdXRpbC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHFDQUFpQztBQUNqQyxpREFBcUM7QUFDckMsbUNBQTZCO0FBRTdCLE1BQU0sTUFBTSxHQUFHLElBQUEsZ0JBQU0sR0FBRSxDQUFDO0FBRXhCLE1BQU0sQ0FBQyxJQUFJLENBQUMsY0FBYyxFQUFFLENBQUMsR0FBRyxFQUFFLEdBQUcsRUFBRSxFQUFFO0lBQ3ZDLDRCQUE0QjtJQUM1QixJQUFJO1FBQ0YsSUFBQSxvQkFBSSxFQUNGLFlBQUcsQ0FBQyxXQUFXLEVBQ2Y7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsS0FBSyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsRUFBRTtZQUN4QixJQUFJLEtBQUssRUFBRTtnQkFDVCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLE1BQU0sSUFBSSxNQUFNLEVBQUUsQ0FBQyxDQUFDO2FBQ3ZDO2lCQUFNO2dCQUNMLEdBQUcsQ0FBQyxJQUFJLENBQUM7b0JBQ1AsTUFBTSxFQUFFLE1BQU07aUJBQ2YsQ0FBQyxDQUFDO2FBQ0o7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFVLEVBQUU7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO0tBQ25EO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsSUFBSSxDQUFDLGVBQWUsRUFBRSxDQUFDLEdBQUcsRUFBRSxHQUFHLEVBQUUsRUFBRTtJQUN4Qyw0QkFBNEI7SUFDNUIsSUFBSTtRQUNGLElBQUEsb0JBQUksRUFDRixZQUFHLENBQUMsWUFBWSxFQUNoQjtZQUNFLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLEVBQ0QsQ0FBQyxLQUFLLEVBQUUsTUFBTSxFQUFFLE1BQU0sRUFBRSxFQUFFO1lBQ3hCLElBQUksS0FBSyxFQUFFO2dCQUNULEdBQUcsQ0FBQyxJQUFJLENBQUMsRUFBRSxLQUFLLEVBQUUsTUFBTSxJQUFJLE1BQU0sRUFBRSxDQUFDLENBQUM7YUFDdkM7aUJBQU07Z0JBQ0wsR0FBRyxDQUFDLElBQUksQ0FBQztvQkFDUCxNQUFNLEVBQUUsTUFBTTtpQkFDZixDQUFDLENBQUM7YUFDSjtRQUNILENBQUMsQ0FDRixDQUFDO0tBQ0g7SUFBQyxPQUFPLEtBQVUsRUFBRTtRQUNuQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLEtBQUssQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQUM7S0FDbkQ7QUFDSCxDQUFDLENBQUMsQ0FBQztBQUVILE1BQU0sQ0FBQyxJQUFJLENBQUMsV0FBVyxFQUFFLENBQUMsR0FBRyxFQUFFLEdBQUcsRUFBRSxFQUFFO0lBQ3BDLE1BQU0sUUFBUSxHQUFHLE1BQU0sQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLEVBQUUsQ0FBQyxDQUFDO0lBQ3RDLE1BQU0sU0FBUyxHQUFHLElBQUksSUFBSSxDQUFDLFFBQVEsQ0FBQztTQUNqQyxXQUFXLEVBQUU7U0FDYixPQUFPLENBQUMsR0FBRyxFQUFFLEdBQUcsQ0FBQztTQUNqQixPQUFPLENBQUMsTUFBTSxFQUFFLEVBQUUsQ0FBQztTQUNuQixLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7SUFFZCxJQUFJO1FBQ0YsTUFBTTtRQUNOLDBEQUEwRDtRQUMxRCwwQkFBMEI7UUFDMUIsSUFBQSxvQkFBSSxFQUNGLGlEQUFpRCxTQUFTLENBQUMsQ0FBQyxDQUFDLDRCQUE0QixTQUFTLENBQUMsQ0FBQyxDQUFDLEVBQUUsRUFDdkc7WUFDRSxRQUFRLEVBQUUsT0FBTztTQUNsQixFQUNELENBQUMsS0FBSyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsRUFBRTtZQUN4QixJQUFJLEtBQUssRUFBRTtnQkFDVCxHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLE1BQU0sSUFBSSxNQUFNLEVBQUUsQ0FBQyxDQUFDO2FBQ3ZDO2lCQUFNO2dCQUNMLEdBQUcsQ0FBQyxJQUFJLENBQUM7b0JBQ1AsTUFBTSxFQUFFLE1BQU07aUJBQ2YsQ0FBQyxDQUFDO2FBQ0o7UUFDSCxDQUFDLENBQ0YsQ0FBQztLQUNIO0lBQUMsT0FBTyxLQUFVLEVBQUU7UUFDbkIsR0FBRyxDQUFDLElBQUksQ0FBQyxFQUFFLEtBQUssRUFBRSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO0tBQ25EO0FBQ0gsQ0FBQyxDQUFDLENBQUM7QUFFSCxrQkFBZSxNQUFNLENBQUMifQ==
+
+/***/ }),
+
+/***/ 7281:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CameraType = void 0;
+var CameraType;
+(function (CameraType) {
+    CameraType["Hdc"] = "hdc";
+    CameraType["HdcS"] = "hdc-s";
+})(CameraType = exports.CameraType || (exports.CameraType = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvdHlwZXMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsSUFBWSxVQUdYO0FBSEQsV0FBWSxVQUFVO0lBQ3BCLHlCQUFXLENBQUE7SUFDWCw0QkFBYyxDQUFBO0FBQ2hCLENBQUMsRUFIVyxVQUFVLEdBQVYsa0JBQVUsS0FBVixrQkFBVSxRQUdyQiJ9
 
 /***/ }),
 
@@ -939,8 +1023,10 @@ exports["default"] = router;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getCameraConfig = exports.getPreviewConfig = exports.sleep = exports.checkIfUpsideDown = exports.filterBySinceUntil = exports.getSessionId = exports.setSessionId = exports.getDateFromUnicodeTimastamp = exports.getDateFromFilename = void 0;
+exports.fileExists = exports.getStats = exports.setCameraConfig = exports.getCameraConfig = exports.getPreviewConfig = exports.sleep = exports.checkIfUpsideDown = exports.filterBySinceUntil = exports.getSessionId = exports.setSessionId = exports.getDateFromUnicodeTimastamp = exports.getDateFromFilename = void 0;
 const shortid_1 = __nccwpck_require__(8777);
+const updateCameraConfig_1 = __nccwpck_require__(3894);
+const fs_1 = __nccwpck_require__(7147);
 let sessionId;
 const getDateFromFilename = (filename) => {
     try {
@@ -987,7 +1073,7 @@ const filterBySinceUntil = (files, req) => {
 };
 exports.filterBySinceUntil = filterBySinceUntil;
 const checkIfUpsideDown = (imu) => {
-    return imu?.accel.y < -0.8;
+    return imu && imu.accel.y < -0.8;
 };
 exports.checkIfUpsideDown = checkIfUpsideDown;
 const sleep = async (ms) => {
@@ -1021,32 +1107,58 @@ const getPreviewConfig = () => {
     };
 };
 exports.getPreviewConfig = getPreviewConfig;
+let cameraConfig = {
+    recording: {
+        directory: {
+            prefix: '',
+            output: '/mnt/data/pic/',
+            minfreespace: 64000000,
+            output2: '/media/usb0/recording/',
+            minfreespace2: 32000000,
+        },
+    },
+    camera: {
+        encoding: {
+            fps: 10,
+            width: 4056,
+            height: 2160,
+            codec: 'mjpeg',
+        },
+        adjustment: {
+            hflip: false,
+            vflip: false,
+            rotation: 180,
+        },
+    },
+};
 const getCameraConfig = () => {
-    return {
-        recording: {
-            directory: {
-                prefix: '',
-                output: '/mnt/data/pic/',
-                minfreespace: 64000000,
-            },
-        },
-        camera: {
-            encoding: {
-                fps: 10,
-                width: 4056,
-                height: 2160,
-                codec: 'mjpeg',
-            },
-            adjustment: {
-                hflip: false,
-                vflip: false,
-                rotation: 180,
-            },
-        },
-    };
+    return cameraConfig;
 };
 exports.getCameraConfig = getCameraConfig;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvdXRpbC9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFFQSxxQ0FBbUM7QUFFbkMsSUFBSSxTQUFpQixDQUFDO0FBRWYsTUFBTSxtQkFBbUIsR0FBRyxDQUFDLFFBQWdCLEVBQUUsRUFBRTtJQUN0RCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsUUFBUSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNsQyxNQUFNLElBQUksR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsT0FBTyxDQUFDLElBQUksRUFBRSxHQUFHLENBQUMsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDcEQsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDO1FBQ1gsS0FBSyxDQUFDLENBQUMsQ0FBQyxHQUFHLElBQUksQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDMUIsT0FBTyxJQUFJLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUM7S0FDbEM7SUFBQyxPQUFPLENBQUMsRUFBRTtRQUNWLE9BQU8sSUFBSSxJQUFJLEVBQUUsQ0FBQztLQUNuQjtBQUNILENBQUMsQ0FBQztBQVZXLFFBQUEsbUJBQW1CLHVCQVU5QjtBQUVLLE1BQU0sMkJBQTJCLEdBQUcsQ0FBQyxRQUFnQixFQUFFLEVBQUU7SUFDOUQsSUFBSTtRQUNGLE1BQU0sS0FBSyxHQUFHLFFBQVEsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDbEMsT0FBTyxJQUFJLElBQUksQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxTQUFTLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQztLQUM5RDtJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsT0FBTyxJ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
+const setCameraConfig = (newCameraConfig) => {
+    cameraConfig = newCameraConfig;
+    updateCameraConfig_1.UpdateCameraConfigService.execute();
+};
+exports.setCameraConfig = setCameraConfig;
+const getStats = (filePath, callback) => {
+    (0, fs_1.stat)(filePath, function (err, stat) {
+        if (err) {
+            return callback(null);
+        }
+        const name = filePath.split('/').pop() || '';
+        callback(null, { ...stat, name });
+    });
+};
+exports.getStats = getStats;
+const fileExists = (filepath) => {
+    return new Promise((resolve, reject) => {
+        (0, fs_1.access)(filepath, fs_1.constants.F_OK, error => {
+            resolve(!error);
+        });
+    });
+};
+exports.fileExists = fileExists;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvdXRpbC9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFFQSxxQ0FBbUM7QUFDbkMsb0VBQXdFO0FBQ3hFLDJCQUE2QztBQUU3QyxJQUFJLFNBQWlCLENBQUM7QUFFZixNQUFNLG1CQUFtQixHQUFHLENBQUMsUUFBZ0IsRUFBRSxFQUFFO0lBQ3RELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxRQUFRLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ2xDLE1BQU0sSUFBSSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUMsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNwRCxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7UUFDWCxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsSUFBSSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUMxQixPQUFPLElBQUksSUFBSSxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQztLQUNsQztJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsT0FBTyxJQUFJLElBQUksRUFBRSxDQUFDO0tBQ25CO0FBQ0gsQ0FBQyxDQUFDO0FBVlcsUUFBQSxtQkFBbUIsdUJBVTlCO0FBRUssTUFBTSwyQkFBMkIsR0FBRyxDQUFDLFFBQWdCLEVBQUUsRUFBRTtJQUM5RCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsUUFBUSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNsQyxPQUFPLElBQUksSUFBSSxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQzlEO0lBQUMs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
 
 /***/ }),
 
@@ -1364,6 +1476,6071 @@ function arrayFlatten (array, depth) {
 
   return flattenWithDepth(array, [], depth)
 }
+
+
+/***/ }),
+
+/***/ 9256:
+/***/ (function(__unused_webpack_module, exports) {
+
+(function (global, factory) {
+     true ? factory(exports) :
+    0;
+}(this, (function (exports) { 'use strict';
+
+    /**
+     * Creates a continuation function with some arguments already applied.
+     *
+     * Useful as a shorthand when combined with other control flow functions. Any
+     * arguments passed to the returned function are added to the arguments
+     * originally passed to apply.
+     *
+     * @name apply
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {Function} fn - The function you want to eventually apply all
+     * arguments to. Invokes with (arguments...).
+     * @param {...*} arguments... - Any number of arguments to automatically apply
+     * when the continuation is called.
+     * @returns {Function} the partially-applied function
+     * @example
+     *
+     * // using apply
+     * async.parallel([
+     *     async.apply(fs.writeFile, 'testfile1', 'test1'),
+     *     async.apply(fs.writeFile, 'testfile2', 'test2')
+     * ]);
+     *
+     *
+     * // the same process without using apply
+     * async.parallel([
+     *     function(callback) {
+     *         fs.writeFile('testfile1', 'test1', callback);
+     *     },
+     *     function(callback) {
+     *         fs.writeFile('testfile2', 'test2', callback);
+     *     }
+     * ]);
+     *
+     * // It's possible to pass any number of additional arguments when calling the
+     * // continuation:
+     *
+     * node> var fn = async.apply(sys.puts, 'one');
+     * node> fn('two', 'three');
+     * one
+     * two
+     * three
+     */
+    function apply(fn, ...args) {
+        return (...callArgs) => fn(...args,...callArgs);
+    }
+
+    function initialParams (fn) {
+        return function (...args/*, callback*/) {
+            var callback = args.pop();
+            return fn.call(this, args, callback);
+        };
+    }
+
+    /* istanbul ignore file */
+
+    var hasQueueMicrotask = typeof queueMicrotask === 'function' && queueMicrotask;
+    var hasSetImmediate = typeof setImmediate === 'function' && setImmediate;
+    var hasNextTick = typeof process === 'object' && typeof process.nextTick === 'function';
+
+    function fallback(fn) {
+        setTimeout(fn, 0);
+    }
+
+    function wrap(defer) {
+        return (fn, ...args) => defer(() => fn(...args));
+    }
+
+    var _defer;
+
+    if (hasQueueMicrotask) {
+        _defer = queueMicrotask;
+    } else if (hasSetImmediate) {
+        _defer = setImmediate;
+    } else if (hasNextTick) {
+        _defer = process.nextTick;
+    } else {
+        _defer = fallback;
+    }
+
+    var setImmediate$1 = wrap(_defer);
+
+    /**
+     * Take a sync function and make it async, passing its return value to a
+     * callback. This is useful for plugging sync functions into a waterfall,
+     * series, or other async functions. Any arguments passed to the generated
+     * function will be passed to the wrapped function (except for the final
+     * callback argument). Errors thrown will be passed to the callback.
+     *
+     * If the function passed to `asyncify` returns a Promise, that promises's
+     * resolved/rejected state will be used to call the callback, rather than simply
+     * the synchronous return value.
+     *
+     * This also means you can asyncify ES2017 `async` functions.
+     *
+     * @name asyncify
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @alias wrapSync
+     * @category Util
+     * @param {Function} func - The synchronous function, or Promise-returning
+     * function to convert to an {@link AsyncFunction}.
+     * @returns {AsyncFunction} An asynchronous wrapper of the `func`. To be
+     * invoked with `(args..., callback)`.
+     * @example
+     *
+     * // passing a regular synchronous function
+     * async.waterfall([
+     *     async.apply(fs.readFile, filename, "utf8"),
+     *     async.asyncify(JSON.parse),
+     *     function (data, next) {
+     *         // data is the result of parsing the text.
+     *         // If there was a parsing error, it would have been caught.
+     *     }
+     * ], callback);
+     *
+     * // passing a function returning a promise
+     * async.waterfall([
+     *     async.apply(fs.readFile, filename, "utf8"),
+     *     async.asyncify(function (contents) {
+     *         return db.model.create(contents);
+     *     }),
+     *     function (model, next) {
+     *         // `model` is the instantiated model object.
+     *         // If there was an error, this function would be skipped.
+     *     }
+     * ], callback);
+     *
+     * // es2017 example, though `asyncify` is not needed if your JS environment
+     * // supports async functions out of the box
+     * var q = async.queue(async.asyncify(async function(file) {
+     *     var intermediateStep = await processFile(file);
+     *     return await somePromise(intermediateStep)
+     * }));
+     *
+     * q.push(files);
+     */
+    function asyncify(func) {
+        if (isAsync(func)) {
+            return function (...args/*, callback*/) {
+                const callback = args.pop();
+                const promise = func.apply(this, args);
+                return handlePromise(promise, callback)
+            }
+        }
+
+        return initialParams(function (args, callback) {
+            var result;
+            try {
+                result = func.apply(this, args);
+            } catch (e) {
+                return callback(e);
+            }
+            // if result is Promise object
+            if (result && typeof result.then === 'function') {
+                return handlePromise(result, callback)
+            } else {
+                callback(null, result);
+            }
+        });
+    }
+
+    function handlePromise(promise, callback) {
+        return promise.then(value => {
+            invokeCallback(callback, null, value);
+        }, err => {
+            invokeCallback(callback, err && err.message ? err : new Error(err));
+        });
+    }
+
+    function invokeCallback(callback, error, value) {
+        try {
+            callback(error, value);
+        } catch (err) {
+            setImmediate$1(e => { throw e }, err);
+        }
+    }
+
+    function isAsync(fn) {
+        return fn[Symbol.toStringTag] === 'AsyncFunction';
+    }
+
+    function isAsyncGenerator(fn) {
+        return fn[Symbol.toStringTag] === 'AsyncGenerator';
+    }
+
+    function isAsyncIterable(obj) {
+        return typeof obj[Symbol.asyncIterator] === 'function';
+    }
+
+    function wrapAsync(asyncFn) {
+        if (typeof asyncFn !== 'function') throw new Error('expected a function')
+        return isAsync(asyncFn) ? asyncify(asyncFn) : asyncFn;
+    }
+
+    // conditionally promisify a function.
+    // only return a promise if a callback is omitted
+    function awaitify (asyncFn, arity = asyncFn.length) {
+        if (!arity) throw new Error('arity is undefined')
+        function awaitable (...args) {
+            if (typeof args[arity - 1] === 'function') {
+                return asyncFn.apply(this, args)
+            }
+
+            return new Promise((resolve, reject) => {
+                args[arity - 1] = (err, ...cbArgs) => {
+                    if (err) return reject(err)
+                    resolve(cbArgs.length > 1 ? cbArgs : cbArgs[0]);
+                };
+                asyncFn.apply(this, args);
+            })
+        }
+
+        return awaitable
+    }
+
+    function applyEach (eachfn) {
+        return function applyEach(fns, ...callArgs) {
+            const go = awaitify(function (callback) {
+                var that = this;
+                return eachfn(fns, (fn, cb) => {
+                    wrapAsync(fn).apply(that, callArgs.concat(cb));
+                }, callback);
+            });
+            return go;
+        };
+    }
+
+    function _asyncMap(eachfn, arr, iteratee, callback) {
+        arr = arr || [];
+        var results = [];
+        var counter = 0;
+        var _iteratee = wrapAsync(iteratee);
+
+        return eachfn(arr, (value, _, iterCb) => {
+            var index = counter++;
+            _iteratee(value, (err, v) => {
+                results[index] = v;
+                iterCb(err);
+            });
+        }, err => {
+            callback(err, results);
+        });
+    }
+
+    function isArrayLike(value) {
+        return value &&
+            typeof value.length === 'number' &&
+            value.length >= 0 &&
+            value.length % 1 === 0;
+    }
+
+    // A temporary value used to identify if the loop should be broken.
+    // See #1064, #1293
+    const breakLoop = {};
+
+    function once(fn) {
+        function wrapper (...args) {
+            if (fn === null) return;
+            var callFn = fn;
+            fn = null;
+            callFn.apply(this, args);
+        }
+        Object.assign(wrapper, fn);
+        return wrapper
+    }
+
+    function getIterator (coll) {
+        return coll[Symbol.iterator] && coll[Symbol.iterator]();
+    }
+
+    function createArrayIterator(coll) {
+        var i = -1;
+        var len = coll.length;
+        return function next() {
+            return ++i < len ? {value: coll[i], key: i} : null;
+        }
+    }
+
+    function createES2015Iterator(iterator) {
+        var i = -1;
+        return function next() {
+            var item = iterator.next();
+            if (item.done)
+                return null;
+            i++;
+            return {value: item.value, key: i};
+        }
+    }
+
+    function createObjectIterator(obj) {
+        var okeys = obj ? Object.keys(obj) : [];
+        var i = -1;
+        var len = okeys.length;
+        return function next() {
+            var key = okeys[++i];
+            if (key === '__proto__') {
+                return next();
+            }
+            return i < len ? {value: obj[key], key} : null;
+        };
+    }
+
+    function createIterator(coll) {
+        if (isArrayLike(coll)) {
+            return createArrayIterator(coll);
+        }
+
+        var iterator = getIterator(coll);
+        return iterator ? createES2015Iterator(iterator) : createObjectIterator(coll);
+    }
+
+    function onlyOnce(fn) {
+        return function (...args) {
+            if (fn === null) throw new Error("Callback was already called.");
+            var callFn = fn;
+            fn = null;
+            callFn.apply(this, args);
+        };
+    }
+
+    // for async generators
+    function asyncEachOfLimit(generator, limit, iteratee, callback) {
+        let done = false;
+        let canceled = false;
+        let awaiting = false;
+        let running = 0;
+        let idx = 0;
+
+        function replenish() {
+            //console.log('replenish')
+            if (running >= limit || awaiting || done) return
+            //console.log('replenish awaiting')
+            awaiting = true;
+            generator.next().then(({value, done: iterDone}) => {
+                //console.log('got value', value)
+                if (canceled || done) return
+                awaiting = false;
+                if (iterDone) {
+                    done = true;
+                    if (running <= 0) {
+                        //console.log('done nextCb')
+                        callback(null);
+                    }
+                    return;
+                }
+                running++;
+                iteratee(value, idx, iterateeCallback);
+                idx++;
+                replenish();
+            }).catch(handleError);
+        }
+
+        function iterateeCallback(err, result) {
+            //console.log('iterateeCallback')
+            running -= 1;
+            if (canceled) return
+            if (err) return handleError(err)
+
+            if (err === false) {
+                done = true;
+                canceled = true;
+                return
+            }
+
+            if (result === breakLoop || (done && running <= 0)) {
+                done = true;
+                //console.log('done iterCb')
+                return callback(null);
+            }
+            replenish();
+        }
+
+        function handleError(err) {
+            if (canceled) return
+            awaiting = false;
+            done = true;
+            callback(err);
+        }
+
+        replenish();
+    }
+
+    var eachOfLimit = (limit) => {
+        return (obj, iteratee, callback) => {
+            callback = once(callback);
+            if (limit <= 0) {
+                throw new RangeError('concurrency limit cannot be less than 1')
+            }
+            if (!obj) {
+                return callback(null);
+            }
+            if (isAsyncGenerator(obj)) {
+                return asyncEachOfLimit(obj, limit, iteratee, callback)
+            }
+            if (isAsyncIterable(obj)) {
+                return asyncEachOfLimit(obj[Symbol.asyncIterator](), limit, iteratee, callback)
+            }
+            var nextElem = createIterator(obj);
+            var done = false;
+            var canceled = false;
+            var running = 0;
+            var looping = false;
+
+            function iterateeCallback(err, value) {
+                if (canceled) return
+                running -= 1;
+                if (err) {
+                    done = true;
+                    callback(err);
+                }
+                else if (err === false) {
+                    done = true;
+                    canceled = true;
+                }
+                else if (value === breakLoop || (done && running <= 0)) {
+                    done = true;
+                    return callback(null);
+                }
+                else if (!looping) {
+                    replenish();
+                }
+            }
+
+            function replenish () {
+                looping = true;
+                while (running < limit && !done) {
+                    var elem = nextElem();
+                    if (elem === null) {
+                        done = true;
+                        if (running <= 0) {
+                            callback(null);
+                        }
+                        return;
+                    }
+                    running += 1;
+                    iteratee(elem.value, elem.key, onlyOnce(iterateeCallback));
+                }
+                looping = false;
+            }
+
+            replenish();
+        };
+    };
+
+    /**
+     * The same as [`eachOf`]{@link module:Collections.eachOf} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name eachOfLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.eachOf]{@link module:Collections.eachOf}
+     * @alias forEachOfLimit
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - An async function to apply to each
+     * item in `coll`. The `key` is the item's key, or index in the case of an
+     * array.
+     * Invoked with (item, key, callback).
+     * @param {Function} [callback] - A callback which is called when all
+     * `iteratee` functions have finished, or an error occurs. Invoked with (err).
+     * @returns {Promise} a promise, if a callback is omitted
+     */
+    function eachOfLimit$1(coll, limit, iteratee, callback) {
+        return eachOfLimit(limit)(coll, wrapAsync(iteratee), callback);
+    }
+
+    var eachOfLimit$2 = awaitify(eachOfLimit$1, 4);
+
+    // eachOf implementation optimized for array-likes
+    function eachOfArrayLike(coll, iteratee, callback) {
+        callback = once(callback);
+        var index = 0,
+            completed = 0,
+            {length} = coll,
+            canceled = false;
+        if (length === 0) {
+            callback(null);
+        }
+
+        function iteratorCallback(err, value) {
+            if (err === false) {
+                canceled = true;
+            }
+            if (canceled === true) return
+            if (err) {
+                callback(err);
+            } else if ((++completed === length) || value === breakLoop) {
+                callback(null);
+            }
+        }
+
+        for (; index < length; index++) {
+            iteratee(coll[index], index, onlyOnce(iteratorCallback));
+        }
+    }
+
+    // a generic version of eachOf which can handle array, object, and iterator cases.
+    function eachOfGeneric (coll, iteratee, callback) {
+        return eachOfLimit$2(coll, Infinity, iteratee, callback);
+    }
+
+    /**
+     * Like [`each`]{@link module:Collections.each}, except that it passes the key (or index) as the second argument
+     * to the iteratee.
+     *
+     * @name eachOf
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias forEachOf
+     * @category Collection
+     * @see [async.each]{@link module:Collections.each}
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A function to apply to each
+     * item in `coll`.
+     * The `key` is the item's key, or index in the case of an array.
+     * Invoked with (item, key, callback).
+     * @param {Function} [callback] - A callback which is called when all
+     * `iteratee` functions have finished, or an error occurs. Invoked with (err).
+     * @returns {Promise} a promise, if a callback is omitted
+     * @example
+     *
+     * // dev.json is a file containing a valid json object config for dev environment
+     * // dev.json is a file containing a valid json object config for test environment
+     * // prod.json is a file containing a valid json object config for prod environment
+     * // invalid.json is a file with a malformed json object
+     *
+     * let configs = {}; //global variable
+     * let validConfigFileMap = {dev: 'dev.json', test: 'test.json', prod: 'prod.json'};
+     * let invalidConfigFileMap = {dev: 'dev.json', test: 'test.json', invalid: 'invalid.json'};
+     *
+     * // asynchronous function that reads a json file and parses the contents as json object
+     * function parseFile(file, key, callback) {
+     *     fs.readFile(file, "utf8", function(err, data) {
+     *         if (err) return calback(err);
+     *         try {
+     *             configs[key] = JSON.parse(data);
+     *         } catch (e) {
+     *             return callback(e);
+     *         }
+     *         callback();
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.forEachOf(validConfigFileMap, parseFile, function (err) {
+     *     if (err) {
+     *         console.error(err);
+     *     } else {
+     *         console.log(configs);
+     *         // configs is now a map of JSON data, e.g.
+     *         // { dev: //parsed dev.json, test: //parsed test.json, prod: //parsed prod.json}
+     *     }
+     * });
+     *
+     * //Error handing
+     * async.forEachOf(invalidConfigFileMap, parseFile, function (err) {
+     *     if (err) {
+     *         console.error(err);
+     *         // JSON parse error exception
+     *     } else {
+     *         console.log(configs);
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.forEachOf(validConfigFileMap, parseFile)
+     * .then( () => {
+     *     console.log(configs);
+     *     // configs is now a map of JSON data, e.g.
+     *     // { dev: //parsed dev.json, test: //parsed test.json, prod: //parsed prod.json}
+     * }).catch( err => {
+     *     console.error(err);
+     * });
+     *
+     * //Error handing
+     * async.forEachOf(invalidConfigFileMap, parseFile)
+     * .then( () => {
+     *     console.log(configs);
+     * }).catch( err => {
+     *     console.error(err);
+     *     // JSON parse error exception
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.forEachOf(validConfigFileMap, parseFile);
+     *         console.log(configs);
+     *         // configs is now a map of JSON data, e.g.
+     *         // { dev: //parsed dev.json, test: //parsed test.json, prod: //parsed prod.json}
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * //Error handing
+     * async () => {
+     *     try {
+     *         let result = await async.forEachOf(invalidConfigFileMap, parseFile);
+     *         console.log(configs);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *         // JSON parse error exception
+     *     }
+     * }
+     *
+     */
+    function eachOf(coll, iteratee, callback) {
+        var eachOfImplementation = isArrayLike(coll) ? eachOfArrayLike : eachOfGeneric;
+        return eachOfImplementation(coll, wrapAsync(iteratee), callback);
+    }
+
+    var eachOf$1 = awaitify(eachOf, 3);
+
+    /**
+     * Produces a new collection of values by mapping each value in `coll` through
+     * the `iteratee` function. The `iteratee` is called with an item from `coll`
+     * and a callback for when it has finished processing. Each of these callbacks
+     * takes 2 arguments: an `error`, and the transformed item from `coll`. If
+     * `iteratee` passes an error to its callback, the main `callback` (for the
+     * `map` function) is immediately called with the error.
+     *
+     * Note, that since this function applies the `iteratee` to each item in
+     * parallel, there is no guarantee that the `iteratee` functions will complete
+     * in order. However, the results array will be in the same order as the
+     * original `coll`.
+     *
+     * If `map` is passed an Object, the results will be an Array.  The results
+     * will roughly be in the order of the original Objects' keys (but this can
+     * vary across JavaScript engines).
+     *
+     * @name map
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with the transformed item.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Results is an Array of the
+     * transformed items from the `coll`. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * // file1.txt is a file that is 1000 bytes in size
+     * // file2.txt is a file that is 2000 bytes in size
+     * // file3.txt is a file that is 3000 bytes in size
+     * // file4.txt does not exist
+     *
+     * const fileList = ['file1.txt','file2.txt','file3.txt'];
+     * const withMissingFileList = ['file1.txt','file2.txt','file4.txt'];
+     *
+     * // asynchronous function that returns the file size in bytes
+     * function getFileSizeInBytes(file, callback) {
+     *     fs.stat(file, function(err, stat) {
+     *         if (err) {
+     *             return callback(err);
+     *         }
+     *         callback(null, stat.size);
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.map(fileList, getFileSizeInBytes, function(err, results) {
+     *     if (err) {
+     *         console.log(err);
+     *     } else {
+     *         console.log(results);
+     *         // results is now an array of the file size in bytes for each file, e.g.
+     *         // [ 1000, 2000, 3000]
+     *     }
+     * });
+     *
+     * // Error Handling
+     * async.map(withMissingFileList, getFileSizeInBytes, function(err, results) {
+     *     if (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     } else {
+     *         console.log(results);
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.map(fileList, getFileSizeInBytes)
+     * .then( results => {
+     *     console.log(results);
+     *     // results is now an array of the file size in bytes for each file, e.g.
+     *     // [ 1000, 2000, 3000]
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Error Handling
+     * async.map(withMissingFileList, getFileSizeInBytes)
+     * .then( results => {
+     *     console.log(results);
+     * }).catch( err => {
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.map(fileList, getFileSizeInBytes);
+     *         console.log(results);
+     *         // results is now an array of the file size in bytes for each file, e.g.
+     *         // [ 1000, 2000, 3000]
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // Error Handling
+     * async () => {
+     *     try {
+     *         let results = await async.map(withMissingFileList, getFileSizeInBytes);
+     *         console.log(results);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     }
+     * }
+     *
+     */
+    function map (coll, iteratee, callback) {
+        return _asyncMap(eachOf$1, coll, iteratee, callback)
+    }
+    var map$1 = awaitify(map, 3);
+
+    /**
+     * Applies the provided arguments to each function in the array, calling
+     * `callback` after all functions have completed. If you only provide the first
+     * argument, `fns`, then it will return a function which lets you pass in the
+     * arguments as if it were a single function call. If more arguments are
+     * provided, `callback` is required while `args` is still optional. The results
+     * for each of the applied async functions are passed to the final callback
+     * as an array.
+     *
+     * @name applyEach
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Array|Iterable|AsyncIterable|Object} fns - A collection of {@link AsyncFunction}s
+     * to all call with the same arguments
+     * @param {...*} [args] - any number of separate arguments to pass to the
+     * function.
+     * @param {Function} [callback] - the final argument should be the callback,
+     * called when all functions have completed processing.
+     * @returns {AsyncFunction} - Returns a function that takes no args other than
+     * an optional callback, that is the result of applying the `args` to each
+     * of the functions.
+     * @example
+     *
+     * const appliedFn = async.applyEach([enableSearch, updateSchema], 'bucket')
+     *
+     * appliedFn((err, results) => {
+     *     // results[0] is the results for `enableSearch`
+     *     // results[1] is the results for `updateSchema`
+     * });
+     *
+     * // partial application example:
+     * async.each(
+     *     buckets,
+     *     async (bucket) => async.applyEach([enableSearch, updateSchema], bucket)(),
+     *     callback
+     * );
+     */
+    var applyEach$1 = applyEach(map$1);
+
+    /**
+     * The same as [`eachOf`]{@link module:Collections.eachOf} but runs only a single async operation at a time.
+     *
+     * @name eachOfSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.eachOf]{@link module:Collections.eachOf}
+     * @alias forEachOfSeries
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * Invoked with (item, key, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Invoked with (err).
+     * @returns {Promise} a promise, if a callback is omitted
+     */
+    function eachOfSeries(coll, iteratee, callback) {
+        return eachOfLimit$2(coll, 1, iteratee, callback)
+    }
+    var eachOfSeries$1 = awaitify(eachOfSeries, 3);
+
+    /**
+     * The same as [`map`]{@link module:Collections.map} but runs only a single async operation at a time.
+     *
+     * @name mapSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.map]{@link module:Collections.map}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with the transformed item.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Results is an array of the
+     * transformed items from the `coll`. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function mapSeries (coll, iteratee, callback) {
+        return _asyncMap(eachOfSeries$1, coll, iteratee, callback)
+    }
+    var mapSeries$1 = awaitify(mapSeries, 3);
+
+    /**
+     * The same as [`applyEach`]{@link module:ControlFlow.applyEach} but runs only a single async operation at a time.
+     *
+     * @name applyEachSeries
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.applyEach]{@link module:ControlFlow.applyEach}
+     * @category Control Flow
+     * @param {Array|Iterable|AsyncIterable|Object} fns - A collection of {@link AsyncFunction}s to all
+     * call with the same arguments
+     * @param {...*} [args] - any number of separate arguments to pass to the
+     * function.
+     * @param {Function} [callback] - the final argument should be the callback,
+     * called when all functions have completed processing.
+     * @returns {AsyncFunction} - A function, that when called, is the result of
+     * appling the `args` to the list of functions.  It takes no args, other than
+     * a callback.
+     */
+    var applyEachSeries = applyEach(mapSeries$1);
+
+    const PROMISE_SYMBOL = Symbol('promiseCallback');
+
+    function promiseCallback () {
+        let resolve, reject;
+        function callback (err, ...args) {
+            if (err) return reject(err)
+            resolve(args.length > 1 ? args : args[0]);
+        }
+
+        callback[PROMISE_SYMBOL] = new Promise((res, rej) => {
+            resolve = res,
+            reject = rej;
+        });
+
+        return callback
+    }
+
+    /**
+     * Determines the best order for running the {@link AsyncFunction}s in `tasks`, based on
+     * their requirements. Each function can optionally depend on other functions
+     * being completed first, and each function is run as soon as its requirements
+     * are satisfied.
+     *
+     * If any of the {@link AsyncFunction}s pass an error to their callback, the `auto` sequence
+     * will stop. Further tasks will not execute (so any other functions depending
+     * on it will not run), and the main `callback` is immediately called with the
+     * error.
+     *
+     * {@link AsyncFunction}s also receive an object containing the results of functions which
+     * have completed so far as the first argument, if they have dependencies. If a
+     * task function has no dependencies, it will only be passed a callback.
+     *
+     * @name auto
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Object} tasks - An object. Each of its properties is either a
+     * function or an array of requirements, with the {@link AsyncFunction} itself the last item
+     * in the array. The object's key of a property serves as the name of the task
+     * defined by that property, i.e. can be used when specifying requirements for
+     * other tasks. The function receives one or two arguments:
+     * * a `results` object, containing the results of the previously executed
+     *   functions, only passed if the task has any dependencies,
+     * * a `callback(err, result)` function, which must be called when finished,
+     *   passing an `error` (which can be `null`) and the result of the function's
+     *   execution.
+     * @param {number} [concurrency=Infinity] - An optional `integer` for
+     * determining the maximum number of tasks that can be run in parallel. By
+     * default, as many as possible.
+     * @param {Function} [callback] - An optional callback which is called when all
+     * the tasks have been completed. It receives the `err` argument if any `tasks`
+     * pass an error to their callback. Results are always returned; however, if an
+     * error occurs, no further `tasks` will be performed, and the results object
+     * will only contain partial results. Invoked with (err, results).
+     * @returns {Promise} a promise, if a callback is not passed
+     * @example
+     *
+     * //Using Callbacks
+     * async.auto({
+     *     get_data: function(callback) {
+     *         // async code to get some data
+     *         callback(null, 'data', 'converted to array');
+     *     },
+     *     make_folder: function(callback) {
+     *         // async code to create a directory to store a file in
+     *         // this is run at the same time as getting the data
+     *         callback(null, 'folder');
+     *     },
+     *     write_file: ['get_data', 'make_folder', function(results, callback) {
+     *         // once there is some data and the directory exists,
+     *         // write the data to a file in the directory
+     *         callback(null, 'filename');
+     *     }],
+     *     email_link: ['write_file', function(results, callback) {
+     *         // once the file is written let's email a link to it...
+     *         callback(null, {'file':results.write_file, 'email':'user@example.com'});
+     *     }]
+     * }, function(err, results) {
+     *     if (err) {
+     *         console.log('err = ', err);
+     *     }
+     *     console.log('results = ', results);
+     *     // results = {
+     *     //     get_data: ['data', 'converted to array']
+     *     //     make_folder; 'folder',
+     *     //     write_file: 'filename'
+     *     //     email_link: { file: 'filename', email: 'user@example.com' }
+     *     // }
+     * });
+     *
+     * //Using Promises
+     * async.auto({
+     *     get_data: function(callback) {
+     *         console.log('in get_data');
+     *         // async code to get some data
+     *         callback(null, 'data', 'converted to array');
+     *     },
+     *     make_folder: function(callback) {
+     *         console.log('in make_folder');
+     *         // async code to create a directory to store a file in
+     *         // this is run at the same time as getting the data
+     *         callback(null, 'folder');
+     *     },
+     *     write_file: ['get_data', 'make_folder', function(results, callback) {
+     *         // once there is some data and the directory exists,
+     *         // write the data to a file in the directory
+     *         callback(null, 'filename');
+     *     }],
+     *     email_link: ['write_file', function(results, callback) {
+     *         // once the file is written let's email a link to it...
+     *         callback(null, {'file':results.write_file, 'email':'user@example.com'});
+     *     }]
+     * }).then(results => {
+     *     console.log('results = ', results);
+     *     // results = {
+     *     //     get_data: ['data', 'converted to array']
+     *     //     make_folder; 'folder',
+     *     //     write_file: 'filename'
+     *     //     email_link: { file: 'filename', email: 'user@example.com' }
+     *     // }
+     * }).catch(err => {
+     *     console.log('err = ', err);
+     * });
+     *
+     * //Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.auto({
+     *             get_data: function(callback) {
+     *                 // async code to get some data
+     *                 callback(null, 'data', 'converted to array');
+     *             },
+     *             make_folder: function(callback) {
+     *                 // async code to create a directory to store a file in
+     *                 // this is run at the same time as getting the data
+     *                 callback(null, 'folder');
+     *             },
+     *             write_file: ['get_data', 'make_folder', function(results, callback) {
+     *                 // once there is some data and the directory exists,
+     *                 // write the data to a file in the directory
+     *                 callback(null, 'filename');
+     *             }],
+     *             email_link: ['write_file', function(results, callback) {
+     *                 // once the file is written let's email a link to it...
+     *                 callback(null, {'file':results.write_file, 'email':'user@example.com'});
+     *             }]
+     *         });
+     *         console.log('results = ', results);
+     *         // results = {
+     *         //     get_data: ['data', 'converted to array']
+     *         //     make_folder; 'folder',
+     *         //     write_file: 'filename'
+     *         //     email_link: { file: 'filename', email: 'user@example.com' }
+     *         // }
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function auto(tasks, concurrency, callback) {
+        if (typeof concurrency !== 'number') {
+            // concurrency is optional, shift the args.
+            callback = concurrency;
+            concurrency = null;
+        }
+        callback = once(callback || promiseCallback());
+        var numTasks = Object.keys(tasks).length;
+        if (!numTasks) {
+            return callback(null);
+        }
+        if (!concurrency) {
+            concurrency = numTasks;
+        }
+
+        var results = {};
+        var runningTasks = 0;
+        var canceled = false;
+        var hasError = false;
+
+        var listeners = Object.create(null);
+
+        var readyTasks = [];
+
+        // for cycle detection:
+        var readyToCheck = []; // tasks that have been identified as reachable
+        // without the possibility of returning to an ancestor task
+        var uncheckedDependencies = {};
+
+        Object.keys(tasks).forEach(key => {
+            var task = tasks[key];
+            if (!Array.isArray(task)) {
+                // no dependencies
+                enqueueTask(key, [task]);
+                readyToCheck.push(key);
+                return;
+            }
+
+            var dependencies = task.slice(0, task.length - 1);
+            var remainingDependencies = dependencies.length;
+            if (remainingDependencies === 0) {
+                enqueueTask(key, task);
+                readyToCheck.push(key);
+                return;
+            }
+            uncheckedDependencies[key] = remainingDependencies;
+
+            dependencies.forEach(dependencyName => {
+                if (!tasks[dependencyName]) {
+                    throw new Error('async.auto task `' + key +
+                        '` has a non-existent dependency `' +
+                        dependencyName + '` in ' +
+                        dependencies.join(', '));
+                }
+                addListener(dependencyName, () => {
+                    remainingDependencies--;
+                    if (remainingDependencies === 0) {
+                        enqueueTask(key, task);
+                    }
+                });
+            });
+        });
+
+        checkForDeadlocks();
+        processQueue();
+
+        function enqueueTask(key, task) {
+            readyTasks.push(() => runTask(key, task));
+        }
+
+        function processQueue() {
+            if (canceled) return
+            if (readyTasks.length === 0 && runningTasks === 0) {
+                return callback(null, results);
+            }
+            while(readyTasks.length && runningTasks < concurrency) {
+                var run = readyTasks.shift();
+                run();
+            }
+
+        }
+
+        function addListener(taskName, fn) {
+            var taskListeners = listeners[taskName];
+            if (!taskListeners) {
+                taskListeners = listeners[taskName] = [];
+            }
+
+            taskListeners.push(fn);
+        }
+
+        function taskComplete(taskName) {
+            var taskListeners = listeners[taskName] || [];
+            taskListeners.forEach(fn => fn());
+            processQueue();
+        }
+
+
+        function runTask(key, task) {
+            if (hasError) return;
+
+            var taskCallback = onlyOnce((err, ...result) => {
+                runningTasks--;
+                if (err === false) {
+                    canceled = true;
+                    return
+                }
+                if (result.length < 2) {
+                    [result] = result;
+                }
+                if (err) {
+                    var safeResults = {};
+                    Object.keys(results).forEach(rkey => {
+                        safeResults[rkey] = results[rkey];
+                    });
+                    safeResults[key] = result;
+                    hasError = true;
+                    listeners = Object.create(null);
+                    if (canceled) return
+                    callback(err, safeResults);
+                } else {
+                    results[key] = result;
+                    taskComplete(key);
+                }
+            });
+
+            runningTasks++;
+            var taskFn = wrapAsync(task[task.length - 1]);
+            if (task.length > 1) {
+                taskFn(results, taskCallback);
+            } else {
+                taskFn(taskCallback);
+            }
+        }
+
+        function checkForDeadlocks() {
+            // Kahn's algorithm
+            // https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm
+            // http://connalle.blogspot.com/2013/10/topological-sortingkahn-algorithm.html
+            var currentTask;
+            var counter = 0;
+            while (readyToCheck.length) {
+                currentTask = readyToCheck.pop();
+                counter++;
+                getDependents(currentTask).forEach(dependent => {
+                    if (--uncheckedDependencies[dependent] === 0) {
+                        readyToCheck.push(dependent);
+                    }
+                });
+            }
+
+            if (counter !== numTasks) {
+                throw new Error(
+                    'async.auto cannot execute tasks due to a recursive dependency'
+                );
+            }
+        }
+
+        function getDependents(taskName) {
+            var result = [];
+            Object.keys(tasks).forEach(key => {
+                const task = tasks[key];
+                if (Array.isArray(task) && task.indexOf(taskName) >= 0) {
+                    result.push(key);
+                }
+            });
+            return result;
+        }
+
+        return callback[PROMISE_SYMBOL]
+    }
+
+    var FN_ARGS = /^(?:async\s+)?(?:function)?\s*\w*\s*\(\s*([^)]+)\s*\)(?:\s*{)/;
+    var ARROW_FN_ARGS = /^(?:async\s+)?\(?\s*([^)=]+)\s*\)?(?:\s*=>)/;
+    var FN_ARG_SPLIT = /,/;
+    var FN_ARG = /(=.+)?(\s*)$/;
+
+    function stripComments(string) {
+        let stripped = '';
+        let index = 0;
+        let endBlockComment = string.indexOf('*/');
+        while (index < string.length) {
+            if (string[index] === '/' && string[index+1] === '/') {
+                // inline comment
+                let endIndex = string.indexOf('\n', index);
+                index = (endIndex === -1) ? string.length : endIndex;
+            } else if ((endBlockComment !== -1) && (string[index] === '/') && (string[index+1] === '*')) {
+                // block comment
+                let endIndex = string.indexOf('*/', index);
+                if (endIndex !== -1) {
+                    index = endIndex + 2;
+                    endBlockComment = string.indexOf('*/', index);
+                } else {
+                    stripped += string[index];
+                    index++;
+                }
+            } else {
+                stripped += string[index];
+                index++;
+            }
+        }
+        return stripped;
+    }
+
+    function parseParams(func) {
+        const src = stripComments(func.toString());
+        let match = src.match(FN_ARGS);
+        if (!match) {
+            match = src.match(ARROW_FN_ARGS);
+        }
+        if (!match) throw new Error('could not parse args in autoInject\nSource:\n' + src)
+        let [, args] = match;
+        return args
+            .replace(/\s/g, '')
+            .split(FN_ARG_SPLIT)
+            .map((arg) => arg.replace(FN_ARG, '').trim());
+    }
+
+    /**
+     * A dependency-injected version of the [async.auto]{@link module:ControlFlow.auto} function. Dependent
+     * tasks are specified as parameters to the function, after the usual callback
+     * parameter, with the parameter names matching the names of the tasks it
+     * depends on. This can provide even more readable task graphs which can be
+     * easier to maintain.
+     *
+     * If a final callback is specified, the task results are similarly injected,
+     * specified as named parameters after the initial error parameter.
+     *
+     * The autoInject function is purely syntactic sugar and its semantics are
+     * otherwise equivalent to [async.auto]{@link module:ControlFlow.auto}.
+     *
+     * @name autoInject
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.auto]{@link module:ControlFlow.auto}
+     * @category Control Flow
+     * @param {Object} tasks - An object, each of whose properties is an {@link AsyncFunction} of
+     * the form 'func([dependencies...], callback). The object's key of a property
+     * serves as the name of the task defined by that property, i.e. can be used
+     * when specifying requirements for other tasks.
+     * * The `callback` parameter is a `callback(err, result)` which must be called
+     *   when finished, passing an `error` (which can be `null`) and the result of
+     *   the function's execution. The remaining parameters name other tasks on
+     *   which the task is dependent, and the results from those tasks are the
+     *   arguments of those parameters.
+     * @param {Function} [callback] - An optional callback which is called when all
+     * the tasks have been completed. It receives the `err` argument if any `tasks`
+     * pass an error to their callback, and a `results` object with any completed
+     * task results, similar to `auto`.
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * //  The example from `auto` can be rewritten as follows:
+     * async.autoInject({
+     *     get_data: function(callback) {
+     *         // async code to get some data
+     *         callback(null, 'data', 'converted to array');
+     *     },
+     *     make_folder: function(callback) {
+     *         // async code to create a directory to store a file in
+     *         // this is run at the same time as getting the data
+     *         callback(null, 'folder');
+     *     },
+     *     write_file: function(get_data, make_folder, callback) {
+     *         // once there is some data and the directory exists,
+     *         // write the data to a file in the directory
+     *         callback(null, 'filename');
+     *     },
+     *     email_link: function(write_file, callback) {
+     *         // once the file is written let's email a link to it...
+     *         // write_file contains the filename returned by write_file.
+     *         callback(null, {'file':write_file, 'email':'user@example.com'});
+     *     }
+     * }, function(err, results) {
+     *     console.log('err = ', err);
+     *     console.log('email_link = ', results.email_link);
+     * });
+     *
+     * // If you are using a JS minifier that mangles parameter names, `autoInject`
+     * // will not work with plain functions, since the parameter names will be
+     * // collapsed to a single letter identifier.  To work around this, you can
+     * // explicitly specify the names of the parameters your task function needs
+     * // in an array, similar to Angular.js dependency injection.
+     *
+     * // This still has an advantage over plain `auto`, since the results a task
+     * // depends on are still spread into arguments.
+     * async.autoInject({
+     *     //...
+     *     write_file: ['get_data', 'make_folder', function(get_data, make_folder, callback) {
+     *         callback(null, 'filename');
+     *     }],
+     *     email_link: ['write_file', function(write_file, callback) {
+     *         callback(null, {'file':write_file, 'email':'user@example.com'});
+     *     }]
+     *     //...
+     * }, function(err, results) {
+     *     console.log('err = ', err);
+     *     console.log('email_link = ', results.email_link);
+     * });
+     */
+    function autoInject(tasks, callback) {
+        var newTasks = {};
+
+        Object.keys(tasks).forEach(key => {
+            var taskFn = tasks[key];
+            var params;
+            var fnIsAsync = isAsync(taskFn);
+            var hasNoDeps =
+                (!fnIsAsync && taskFn.length === 1) ||
+                (fnIsAsync && taskFn.length === 0);
+
+            if (Array.isArray(taskFn)) {
+                params = [...taskFn];
+                taskFn = params.pop();
+
+                newTasks[key] = params.concat(params.length > 0 ? newTask : taskFn);
+            } else if (hasNoDeps) {
+                // no dependencies, use the function as-is
+                newTasks[key] = taskFn;
+            } else {
+                params = parseParams(taskFn);
+                if ((taskFn.length === 0 && !fnIsAsync) && params.length === 0) {
+                    throw new Error("autoInject task functions require explicit parameters.");
+                }
+
+                // remove callback param
+                if (!fnIsAsync) params.pop();
+
+                newTasks[key] = params.concat(newTask);
+            }
+
+            function newTask(results, taskCb) {
+                var newArgs = params.map(name => results[name]);
+                newArgs.push(taskCb);
+                wrapAsync(taskFn)(...newArgs);
+            }
+        });
+
+        return auto(newTasks, callback);
+    }
+
+    // Simple doubly linked list (https://en.wikipedia.org/wiki/Doubly_linked_list) implementation
+    // used for queues. This implementation assumes that the node provided by the user can be modified
+    // to adjust the next and last properties. We implement only the minimal functionality
+    // for queue support.
+    class DLL {
+        constructor() {
+            this.head = this.tail = null;
+            this.length = 0;
+        }
+
+        removeLink(node) {
+            if (node.prev) node.prev.next = node.next;
+            else this.head = node.next;
+            if (node.next) node.next.prev = node.prev;
+            else this.tail = node.prev;
+
+            node.prev = node.next = null;
+            this.length -= 1;
+            return node;
+        }
+
+        empty () {
+            while(this.head) this.shift();
+            return this;
+        }
+
+        insertAfter(node, newNode) {
+            newNode.prev = node;
+            newNode.next = node.next;
+            if (node.next) node.next.prev = newNode;
+            else this.tail = newNode;
+            node.next = newNode;
+            this.length += 1;
+        }
+
+        insertBefore(node, newNode) {
+            newNode.prev = node.prev;
+            newNode.next = node;
+            if (node.prev) node.prev.next = newNode;
+            else this.head = newNode;
+            node.prev = newNode;
+            this.length += 1;
+        }
+
+        unshift(node) {
+            if (this.head) this.insertBefore(this.head, node);
+            else setInitial(this, node);
+        }
+
+        push(node) {
+            if (this.tail) this.insertAfter(this.tail, node);
+            else setInitial(this, node);
+        }
+
+        shift() {
+            return this.head && this.removeLink(this.head);
+        }
+
+        pop() {
+            return this.tail && this.removeLink(this.tail);
+        }
+
+        toArray() {
+            return [...this]
+        }
+
+        *[Symbol.iterator] () {
+            var cur = this.head;
+            while (cur) {
+                yield cur.data;
+                cur = cur.next;
+            }
+        }
+
+        remove (testFn) {
+            var curr = this.head;
+            while(curr) {
+                var {next} = curr;
+                if (testFn(curr)) {
+                    this.removeLink(curr);
+                }
+                curr = next;
+            }
+            return this;
+        }
+    }
+
+    function setInitial(dll, node) {
+        dll.length = 1;
+        dll.head = dll.tail = node;
+    }
+
+    function queue(worker, concurrency, payload) {
+        if (concurrency == null) {
+            concurrency = 1;
+        }
+        else if(concurrency === 0) {
+            throw new RangeError('Concurrency must not be zero');
+        }
+
+        var _worker = wrapAsync(worker);
+        var numRunning = 0;
+        var workersList = [];
+        const events = {
+            error: [],
+            drain: [],
+            saturated: [],
+            unsaturated: [],
+            empty: []
+        };
+
+        function on (event, handler) {
+            events[event].push(handler);
+        }
+
+        function once (event, handler) {
+            const handleAndRemove = (...args) => {
+                off(event, handleAndRemove);
+                handler(...args);
+            };
+            events[event].push(handleAndRemove);
+        }
+
+        function off (event, handler) {
+            if (!event) return Object.keys(events).forEach(ev => events[ev] = [])
+            if (!handler) return events[event] = []
+            events[event] = events[event].filter(ev => ev !== handler);
+        }
+
+        function trigger (event, ...args) {
+            events[event].forEach(handler => handler(...args));
+        }
+
+        var processingScheduled = false;
+        function _insert(data, insertAtFront, rejectOnError, callback) {
+            if (callback != null && typeof callback !== 'function') {
+                throw new Error('task callback must be a function');
+            }
+            q.started = true;
+
+            var res, rej;
+            function promiseCallback (err, ...args) {
+                // we don't care about the error, let the global error handler
+                // deal with it
+                if (err) return rejectOnError ? rej(err) : res()
+                if (args.length <= 1) return res(args[0])
+                res(args);
+            }
+
+            var item = q._createTaskItem(
+                data,
+                rejectOnError ? promiseCallback :
+                    (callback || promiseCallback)
+            );
+
+            if (insertAtFront) {
+                q._tasks.unshift(item);
+            } else {
+                q._tasks.push(item);
+            }
+
+            if (!processingScheduled) {
+                processingScheduled = true;
+                setImmediate$1(() => {
+                    processingScheduled = false;
+                    q.process();
+                });
+            }
+
+            if (rejectOnError || !callback) {
+                return new Promise((resolve, reject) => {
+                    res = resolve;
+                    rej = reject;
+                })
+            }
+        }
+
+        function _createCB(tasks) {
+            return function (err, ...args) {
+                numRunning -= 1;
+
+                for (var i = 0, l = tasks.length; i < l; i++) {
+                    var task = tasks[i];
+
+                    var index = workersList.indexOf(task);
+                    if (index === 0) {
+                        workersList.shift();
+                    } else if (index > 0) {
+                        workersList.splice(index, 1);
+                    }
+
+                    task.callback(err, ...args);
+
+                    if (err != null) {
+                        trigger('error', err, task.data);
+                    }
+                }
+
+                if (numRunning <= (q.concurrency - q.buffer) ) {
+                    trigger('unsaturated');
+                }
+
+                if (q.idle()) {
+                    trigger('drain');
+                }
+                q.process();
+            };
+        }
+
+        function _maybeDrain(data) {
+            if (data.length === 0 && q.idle()) {
+                // call drain immediately if there are no tasks
+                setImmediate$1(() => trigger('drain'));
+                return true
+            }
+            return false
+        }
+
+        const eventMethod = (name) => (handler) => {
+            if (!handler) {
+                return new Promise((resolve, reject) => {
+                    once(name, (err, data) => {
+                        if (err) return reject(err)
+                        resolve(data);
+                    });
+                })
+            }
+            off(name);
+            on(name, handler);
+
+        };
+
+        var isProcessing = false;
+        var q = {
+            _tasks: new DLL(),
+            _createTaskItem (data, callback) {
+                return {
+                    data,
+                    callback
+                };
+            },
+            *[Symbol.iterator] () {
+                yield* q._tasks[Symbol.iterator]();
+            },
+            concurrency,
+            payload,
+            buffer: concurrency / 4,
+            started: false,
+            paused: false,
+            push (data, callback) {
+                if (Array.isArray(data)) {
+                    if (_maybeDrain(data)) return
+                    return data.map(datum => _insert(datum, false, false, callback))
+                }
+                return _insert(data, false, false, callback);
+            },
+            pushAsync (data, callback) {
+                if (Array.isArray(data)) {
+                    if (_maybeDrain(data)) return
+                    return data.map(datum => _insert(datum, false, true, callback))
+                }
+                return _insert(data, false, true, callback);
+            },
+            kill () {
+                off();
+                q._tasks.empty();
+            },
+            unshift (data, callback) {
+                if (Array.isArray(data)) {
+                    if (_maybeDrain(data)) return
+                    return data.map(datum => _insert(datum, true, false, callback))
+                }
+                return _insert(data, true, false, callback);
+            },
+            unshiftAsync (data, callback) {
+                if (Array.isArray(data)) {
+                    if (_maybeDrain(data)) return
+                    return data.map(datum => _insert(datum, true, true, callback))
+                }
+                return _insert(data, true, true, callback);
+            },
+            remove (testFn) {
+                q._tasks.remove(testFn);
+            },
+            process () {
+                // Avoid trying to start too many processing operations. This can occur
+                // when callbacks resolve synchronously (#1267).
+                if (isProcessing) {
+                    return;
+                }
+                isProcessing = true;
+                while(!q.paused && numRunning < q.concurrency && q._tasks.length){
+                    var tasks = [], data = [];
+                    var l = q._tasks.length;
+                    if (q.payload) l = Math.min(l, q.payload);
+                    for (var i = 0; i < l; i++) {
+                        var node = q._tasks.shift();
+                        tasks.push(node);
+                        workersList.push(node);
+                        data.push(node.data);
+                    }
+
+                    numRunning += 1;
+
+                    if (q._tasks.length === 0) {
+                        trigger('empty');
+                    }
+
+                    if (numRunning === q.concurrency) {
+                        trigger('saturated');
+                    }
+
+                    var cb = onlyOnce(_createCB(tasks));
+                    _worker(data, cb);
+                }
+                isProcessing = false;
+            },
+            length () {
+                return q._tasks.length;
+            },
+            running () {
+                return numRunning;
+            },
+            workersList () {
+                return workersList;
+            },
+            idle() {
+                return q._tasks.length + numRunning === 0;
+            },
+            pause () {
+                q.paused = true;
+            },
+            resume () {
+                if (q.paused === false) { return; }
+                q.paused = false;
+                setImmediate$1(q.process);
+            }
+        };
+        // define these as fixed properties, so people get useful errors when updating
+        Object.defineProperties(q, {
+            saturated: {
+                writable: false,
+                value: eventMethod('saturated')
+            },
+            unsaturated: {
+                writable: false,
+                value: eventMethod('unsaturated')
+            },
+            empty: {
+                writable: false,
+                value: eventMethod('empty')
+            },
+            drain: {
+                writable: false,
+                value: eventMethod('drain')
+            },
+            error: {
+                writable: false,
+                value: eventMethod('error')
+            },
+        });
+        return q;
+    }
+
+    /**
+     * Creates a `cargo` object with the specified payload. Tasks added to the
+     * cargo will be processed altogether (up to the `payload` limit). If the
+     * `worker` is in progress, the task is queued until it becomes available. Once
+     * the `worker` has completed some tasks, each callback of those tasks is
+     * called. Check out [these](https://camo.githubusercontent.com/6bbd36f4cf5b35a0f11a96dcd2e97711ffc2fb37/68747470733a2f2f662e636c6f75642e6769746875622e636f6d2f6173736574732f313637363837312f36383130382f62626330636662302d356632392d313165322d393734662d3333393763363464633835382e676966) [animations](https://camo.githubusercontent.com/f4810e00e1c5f5f8addbe3e9f49064fd5d102699/68747470733a2f2f662e636c6f75642e6769746875622e636f6d2f6173736574732f313637363837312f36383130312f38346339323036362d356632392d313165322d383134662d3964336430323431336266642e676966)
+     * for how `cargo` and `queue` work.
+     *
+     * While [`queue`]{@link module:ControlFlow.queue} passes only one task to one of a group of workers
+     * at a time, cargo passes an array of tasks to a single worker, repeating
+     * when the worker is finished.
+     *
+     * @name cargo
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.queue]{@link module:ControlFlow.queue}
+     * @category Control Flow
+     * @param {AsyncFunction} worker - An asynchronous function for processing an array
+     * of queued tasks. Invoked with `(tasks, callback)`.
+     * @param {number} [payload=Infinity] - An optional `integer` for determining
+     * how many tasks should be processed per round; if omitted, the default is
+     * unlimited.
+     * @returns {module:ControlFlow.QueueObject} A cargo object to manage the tasks. Callbacks can
+     * attached as certain properties to listen for specific events during the
+     * lifecycle of the cargo and inner queue.
+     * @example
+     *
+     * // create a cargo object with payload 2
+     * var cargo = async.cargo(function(tasks, callback) {
+     *     for (var i=0; i<tasks.length; i++) {
+     *         console.log('hello ' + tasks[i].name);
+     *     }
+     *     callback();
+     * }, 2);
+     *
+     * // add some items
+     * cargo.push({name: 'foo'}, function(err) {
+     *     console.log('finished processing foo');
+     * });
+     * cargo.push({name: 'bar'}, function(err) {
+     *     console.log('finished processing bar');
+     * });
+     * await cargo.push({name: 'baz'});
+     * console.log('finished processing baz');
+     */
+    function cargo(worker, payload) {
+        return queue(worker, 1, payload);
+    }
+
+    /**
+     * Creates a `cargoQueue` object with the specified payload. Tasks added to the
+     * cargoQueue will be processed together (up to the `payload` limit) in `concurrency` parallel workers.
+     * If the all `workers` are in progress, the task is queued until one becomes available. Once
+     * a `worker` has completed some tasks, each callback of those tasks is
+     * called. Check out [these](https://camo.githubusercontent.com/6bbd36f4cf5b35a0f11a96dcd2e97711ffc2fb37/68747470733a2f2f662e636c6f75642e6769746875622e636f6d2f6173736574732f313637363837312f36383130382f62626330636662302d356632392d313165322d393734662d3333393763363464633835382e676966) [animations](https://camo.githubusercontent.com/f4810e00e1c5f5f8addbe3e9f49064fd5d102699/68747470733a2f2f662e636c6f75642e6769746875622e636f6d2f6173736574732f313637363837312f36383130312f38346339323036362d356632392d313165322d383134662d3964336430323431336266642e676966)
+     * for how `cargo` and `queue` work.
+     *
+     * While [`queue`]{@link module:ControlFlow.queue} passes only one task to one of a group of workers
+     * at a time, and [`cargo`]{@link module:ControlFlow.cargo} passes an array of tasks to a single worker,
+     * the cargoQueue passes an array of tasks to multiple parallel workers.
+     *
+     * @name cargoQueue
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.queue]{@link module:ControlFlow.queue}
+     * @see [async.cargo]{@link module:ControlFLow.cargo}
+     * @category Control Flow
+     * @param {AsyncFunction} worker - An asynchronous function for processing an array
+     * of queued tasks. Invoked with `(tasks, callback)`.
+     * @param {number} [concurrency=1] - An `integer` for determining how many
+     * `worker` functions should be run in parallel.  If omitted, the concurrency
+     * defaults to `1`.  If the concurrency is `0`, an error is thrown.
+     * @param {number} [payload=Infinity] - An optional `integer` for determining
+     * how many tasks should be processed per round; if omitted, the default is
+     * unlimited.
+     * @returns {module:ControlFlow.QueueObject} A cargoQueue object to manage the tasks. Callbacks can
+     * attached as certain properties to listen for specific events during the
+     * lifecycle of the cargoQueue and inner queue.
+     * @example
+     *
+     * // create a cargoQueue object with payload 2 and concurrency 2
+     * var cargoQueue = async.cargoQueue(function(tasks, callback) {
+     *     for (var i=0; i<tasks.length; i++) {
+     *         console.log('hello ' + tasks[i].name);
+     *     }
+     *     callback();
+     * }, 2, 2);
+     *
+     * // add some items
+     * cargoQueue.push({name: 'foo'}, function(err) {
+     *     console.log('finished processing foo');
+     * });
+     * cargoQueue.push({name: 'bar'}, function(err) {
+     *     console.log('finished processing bar');
+     * });
+     * cargoQueue.push({name: 'baz'}, function(err) {
+     *     console.log('finished processing baz');
+     * });
+     * cargoQueue.push({name: 'boo'}, function(err) {
+     *     console.log('finished processing boo');
+     * });
+     */
+    function cargo$1(worker, concurrency, payload) {
+        return queue(worker, concurrency, payload);
+    }
+
+    /**
+     * Reduces `coll` into a single value using an async `iteratee` to return each
+     * successive step. `memo` is the initial state of the reduction. This function
+     * only operates in series.
+     *
+     * For performance reasons, it may make sense to split a call to this function
+     * into a parallel map, and then use the normal `Array.prototype.reduce` on the
+     * results. This function is for situations where each step in the reduction
+     * needs to be async; if you can get the data before reducing it, then it's
+     * probably a good idea to do so.
+     *
+     * @name reduce
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias inject
+     * @alias foldl
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {*} memo - The initial state of the reduction.
+     * @param {AsyncFunction} iteratee - A function applied to each item in the
+     * array to produce the next step in the reduction.
+     * The `iteratee` should complete with the next state of the reduction.
+     * If the iteratee completes with an error, the reduction is stopped and the
+     * main `callback` is immediately called with the error.
+     * Invoked with (memo, item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Result is the reduced value. Invoked with
+     * (err, result).
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * // file1.txt is a file that is 1000 bytes in size
+     * // file2.txt is a file that is 2000 bytes in size
+     * // file3.txt is a file that is 3000 bytes in size
+     * // file4.txt does not exist
+     *
+     * const fileList = ['file1.txt','file2.txt','file3.txt'];
+     * const withMissingFileList = ['file1.txt','file2.txt','file3.txt', 'file4.txt'];
+     *
+     * // asynchronous function that computes the file size in bytes
+     * // file size is added to the memoized value, then returned
+     * function getFileSizeInBytes(memo, file, callback) {
+     *     fs.stat(file, function(err, stat) {
+     *         if (err) {
+     *             return callback(err);
+     *         }
+     *         callback(null, memo + stat.size);
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.reduce(fileList, 0, getFileSizeInBytes, function(err, result) {
+     *     if (err) {
+     *         console.log(err);
+     *     } else {
+     *         console.log(result);
+     *         // 6000
+     *         // which is the sum of the file sizes of the three files
+     *     }
+     * });
+     *
+     * // Error Handling
+     * async.reduce(withMissingFileList, 0, getFileSizeInBytes, function(err, result) {
+     *     if (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     } else {
+     *         console.log(result);
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.reduce(fileList, 0, getFileSizeInBytes)
+     * .then( result => {
+     *     console.log(result);
+     *     // 6000
+     *     // which is the sum of the file sizes of the three files
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Error Handling
+     * async.reduce(withMissingFileList, 0, getFileSizeInBytes)
+     * .then( result => {
+     *     console.log(result);
+     * }).catch( err => {
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.reduce(fileList, 0, getFileSizeInBytes);
+     *         console.log(result);
+     *         // 6000
+     *         // which is the sum of the file sizes of the three files
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // Error Handling
+     * async () => {
+     *     try {
+     *         let result = await async.reduce(withMissingFileList, 0, getFileSizeInBytes);
+     *         console.log(result);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     }
+     * }
+     *
+     */
+    function reduce(coll, memo, iteratee, callback) {
+        callback = once(callback);
+        var _iteratee = wrapAsync(iteratee);
+        return eachOfSeries$1(coll, (x, i, iterCb) => {
+            _iteratee(memo, x, (err, v) => {
+                memo = v;
+                iterCb(err);
+            });
+        }, err => callback(err, memo));
+    }
+    var reduce$1 = awaitify(reduce, 4);
+
+    /**
+     * Version of the compose function that is more natural to read. Each function
+     * consumes the return value of the previous function. It is the equivalent of
+     * [compose]{@link module:ControlFlow.compose} with the arguments reversed.
+     *
+     * Each function is executed with the `this` binding of the composed function.
+     *
+     * @name seq
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.compose]{@link module:ControlFlow.compose}
+     * @category Control Flow
+     * @param {...AsyncFunction} functions - the asynchronous functions to compose
+     * @returns {Function} a function that composes the `functions` in order
+     * @example
+     *
+     * // Requires lodash (or underscore), express3 and dresende's orm2.
+     * // Part of an app, that fetches cats of the logged user.
+     * // This example uses `seq` function to avoid overnesting and error
+     * // handling clutter.
+     * app.get('/cats', function(request, response) {
+     *     var User = request.models.User;
+     *     async.seq(
+     *         User.get.bind(User),  // 'User.get' has signature (id, callback(err, data))
+     *         function(user, fn) {
+     *             user.getCats(fn);      // 'getCats' has signature (callback(err, data))
+     *         }
+     *     )(req.session.user_id, function (err, cats) {
+     *         if (err) {
+     *             console.error(err);
+     *             response.json({ status: 'error', message: err.message });
+     *         } else {
+     *             response.json({ status: 'ok', message: 'Cats found', data: cats });
+     *         }
+     *     });
+     * });
+     */
+    function seq(...functions) {
+        var _functions = functions.map(wrapAsync);
+        return function (...args) {
+            var that = this;
+
+            var cb = args[args.length - 1];
+            if (typeof cb == 'function') {
+                args.pop();
+            } else {
+                cb = promiseCallback();
+            }
+
+            reduce$1(_functions, args, (newargs, fn, iterCb) => {
+                fn.apply(that, newargs.concat((err, ...nextargs) => {
+                    iterCb(err, nextargs);
+                }));
+            },
+            (err, results) => cb(err, ...results));
+
+            return cb[PROMISE_SYMBOL]
+        };
+    }
+
+    /**
+     * Creates a function which is a composition of the passed asynchronous
+     * functions. Each function consumes the return value of the function that
+     * follows. Composing functions `f()`, `g()`, and `h()` would produce the result
+     * of `f(g(h()))`, only this version uses callbacks to obtain the return values.
+     *
+     * If the last argument to the composed function is not a function, a promise
+     * is returned when you call it.
+     *
+     * Each function is executed with the `this` binding of the composed function.
+     *
+     * @name compose
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {...AsyncFunction} functions - the asynchronous functions to compose
+     * @returns {Function} an asynchronous function that is the composed
+     * asynchronous `functions`
+     * @example
+     *
+     * function add1(n, callback) {
+     *     setTimeout(function () {
+     *         callback(null, n + 1);
+     *     }, 10);
+     * }
+     *
+     * function mul3(n, callback) {
+     *     setTimeout(function () {
+     *         callback(null, n * 3);
+     *     }, 10);
+     * }
+     *
+     * var add1mul3 = async.compose(mul3, add1);
+     * add1mul3(4, function (err, result) {
+     *     // result now equals 15
+     * });
+     */
+    function compose(...args) {
+        return seq(...args.reverse());
+    }
+
+    /**
+     * The same as [`map`]{@link module:Collections.map} but runs a maximum of `limit` async operations at a time.
+     *
+     * @name mapLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.map]{@link module:Collections.map}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with the transformed item.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Results is an array of the
+     * transformed items from the `coll`. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function mapLimit (coll, limit, iteratee, callback) {
+        return _asyncMap(eachOfLimit(limit), coll, iteratee, callback)
+    }
+    var mapLimit$1 = awaitify(mapLimit, 4);
+
+    /**
+     * The same as [`concat`]{@link module:Collections.concat} but runs a maximum of `limit` async operations at a time.
+     *
+     * @name concatLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.concat]{@link module:Collections.concat}
+     * @category Collection
+     * @alias flatMapLimit
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - A function to apply to each item in `coll`,
+     * which should use an array as its result. Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished, or an error occurs. Results is an array
+     * containing the concatenated results of the `iteratee` function. Invoked with
+     * (err, results).
+     * @returns A Promise, if no callback is passed
+     */
+    function concatLimit(coll, limit, iteratee, callback) {
+        var _iteratee = wrapAsync(iteratee);
+        return mapLimit$1(coll, limit, (val, iterCb) => {
+            _iteratee(val, (err, ...args) => {
+                if (err) return iterCb(err);
+                return iterCb(err, args);
+            });
+        }, (err, mapResults) => {
+            var result = [];
+            for (var i = 0; i < mapResults.length; i++) {
+                if (mapResults[i]) {
+                    result = result.concat(...mapResults[i]);
+                }
+            }
+
+            return callback(err, result);
+        });
+    }
+    var concatLimit$1 = awaitify(concatLimit, 4);
+
+    /**
+     * Applies `iteratee` to each item in `coll`, concatenating the results. Returns
+     * the concatenated list. The `iteratee`s are called in parallel, and the
+     * results are concatenated as they return. The results array will be returned in
+     * the original order of `coll` passed to the `iteratee` function.
+     *
+     * @name concat
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @category Collection
+     * @alias flatMap
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A function to apply to each item in `coll`,
+     * which should use an array as its result. Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished, or an error occurs. Results is an array
+     * containing the concatenated results of the `iteratee` function. Invoked with
+     * (err, results).
+     * @returns A Promise, if no callback is passed
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     * // dir4 does not exist
+     *
+     * let directoryList = ['dir1','dir2','dir3'];
+     * let withMissingDirectoryList = ['dir1','dir2','dir3', 'dir4'];
+     *
+     * // Using callbacks
+     * async.concat(directoryList, fs.readdir, function(err, results) {
+     *    if (err) {
+     *        console.log(err);
+     *    } else {
+     *        console.log(results);
+     *        // [ 'file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', file5.txt ]
+     *    }
+     * });
+     *
+     * // Error Handling
+     * async.concat(withMissingDirectoryList, fs.readdir, function(err, results) {
+     *    if (err) {
+     *        console.log(err);
+     *        // [ Error: ENOENT: no such file or directory ]
+     *        // since dir4 does not exist
+     *    } else {
+     *        console.log(results);
+     *    }
+     * });
+     *
+     * // Using Promises
+     * async.concat(directoryList, fs.readdir)
+     * .then(results => {
+     *     console.log(results);
+     *     // [ 'file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', file5.txt ]
+     * }).catch(err => {
+     *      console.log(err);
+     * });
+     *
+     * // Error Handling
+     * async.concat(withMissingDirectoryList, fs.readdir)
+     * .then(results => {
+     *     console.log(results);
+     * }).catch(err => {
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     *     // since dir4 does not exist
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.concat(directoryList, fs.readdir);
+     *         console.log(results);
+     *         // [ 'file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', file5.txt ]
+     *     } catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // Error Handling
+     * async () => {
+     *     try {
+     *         let results = await async.concat(withMissingDirectoryList, fs.readdir);
+     *         console.log(results);
+     *     } catch (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *         // since dir4 does not exist
+     *     }
+     * }
+     *
+     */
+    function concat(coll, iteratee, callback) {
+        return concatLimit$1(coll, Infinity, iteratee, callback)
+    }
+    var concat$1 = awaitify(concat, 3);
+
+    /**
+     * The same as [`concat`]{@link module:Collections.concat} but runs only a single async operation at a time.
+     *
+     * @name concatSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.concat]{@link module:Collections.concat}
+     * @category Collection
+     * @alias flatMapSeries
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A function to apply to each item in `coll`.
+     * The iteratee should complete with an array an array of results.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished, or an error occurs. Results is an array
+     * containing the concatenated results of the `iteratee` function. Invoked with
+     * (err, results).
+     * @returns A Promise, if no callback is passed
+     */
+    function concatSeries(coll, iteratee, callback) {
+        return concatLimit$1(coll, 1, iteratee, callback)
+    }
+    var concatSeries$1 = awaitify(concatSeries, 3);
+
+    /**
+     * Returns a function that when called, calls-back with the values provided.
+     * Useful as the first function in a [`waterfall`]{@link module:ControlFlow.waterfall}, or for plugging values in to
+     * [`auto`]{@link module:ControlFlow.auto}.
+     *
+     * @name constant
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {...*} arguments... - Any number of arguments to automatically invoke
+     * callback with.
+     * @returns {AsyncFunction} Returns a function that when invoked, automatically
+     * invokes the callback with the previous given arguments.
+     * @example
+     *
+     * async.waterfall([
+     *     async.constant(42),
+     *     function (value, next) {
+     *         // value === 42
+     *     },
+     *     //...
+     * ], callback);
+     *
+     * async.waterfall([
+     *     async.constant(filename, "utf8"),
+     *     fs.readFile,
+     *     function (fileData, next) {
+     *         //...
+     *     }
+     *     //...
+     * ], callback);
+     *
+     * async.auto({
+     *     hostname: async.constant("https://server.net/"),
+     *     port: findFreePort,
+     *     launchServer: ["hostname", "port", function (options, cb) {
+     *         startServer(options, cb);
+     *     }],
+     *     //...
+     * }, callback);
+     */
+    function constant(...args) {
+        return function (...ignoredArgs/*, callback*/) {
+            var callback = ignoredArgs.pop();
+            return callback(null, ...args);
+        };
+    }
+
+    function _createTester(check, getResult) {
+        return (eachfn, arr, _iteratee, cb) => {
+            var testPassed = false;
+            var testResult;
+            const iteratee = wrapAsync(_iteratee);
+            eachfn(arr, (value, _, callback) => {
+                iteratee(value, (err, result) => {
+                    if (err || err === false) return callback(err);
+
+                    if (check(result) && !testResult) {
+                        testPassed = true;
+                        testResult = getResult(true, value);
+                        return callback(null, breakLoop);
+                    }
+                    callback();
+                });
+            }, err => {
+                if (err) return cb(err);
+                cb(null, testPassed ? testResult : getResult(false));
+            });
+        };
+    }
+
+    /**
+     * Returns the first value in `coll` that passes an async truth test. The
+     * `iteratee` is applied in parallel, meaning the first iteratee to return
+     * `true` will fire the detect `callback` with that result. That means the
+     * result might not be the first item in the original `coll` (in terms of order)
+     * that passes the test.
+
+     * If order within the original `coll` is important, then look at
+     * [`detectSeries`]{@link module:Collections.detectSeries}.
+     *
+     * @name detect
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias find
+     * @category Collections
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A truth test to apply to each item in `coll`.
+     * The iteratee must complete with a boolean value as its result.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called as soon as any
+     * iteratee returns `true`, or after all the `iteratee` functions have finished.
+     * Result will be the first item in the array that passes the truth test
+     * (iteratee) or the value `undefined` if none passed. Invoked with
+     * (err, result).
+     * @returns {Promise} a promise, if a callback is omitted
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     *
+     * // asynchronous function that checks if a file exists
+     * function fileExists(file, callback) {
+     *    fs.access(file, fs.constants.F_OK, (err) => {
+     *        callback(null, !err);
+     *    });
+     * }
+     *
+     * async.detect(['file3.txt','file2.txt','dir1/file1.txt'], fileExists,
+     *    function(err, result) {
+     *        console.log(result);
+     *        // dir1/file1.txt
+     *        // result now equals the first file in the list that exists
+     *    }
+     *);
+     *
+     * // Using Promises
+     * async.detect(['file3.txt','file2.txt','dir1/file1.txt'], fileExists)
+     * .then(result => {
+     *     console.log(result);
+     *     // dir1/file1.txt
+     *     // result now equals the first file in the list that exists
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.detect(['file3.txt','file2.txt','dir1/file1.txt'], fileExists);
+     *         console.log(result);
+     *         // dir1/file1.txt
+     *         // result now equals the file in the list that exists
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function detect(coll, iteratee, callback) {
+        return _createTester(bool => bool, (res, item) => item)(eachOf$1, coll, iteratee, callback)
+    }
+    var detect$1 = awaitify(detect, 3);
+
+    /**
+     * The same as [`detect`]{@link module:Collections.detect} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name detectLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.detect]{@link module:Collections.detect}
+     * @alias findLimit
+     * @category Collections
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - A truth test to apply to each item in `coll`.
+     * The iteratee must complete with a boolean value as its result.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called as soon as any
+     * iteratee returns `true`, or after all the `iteratee` functions have finished.
+     * Result will be the first item in the array that passes the truth test
+     * (iteratee) or the value `undefined` if none passed. Invoked with
+     * (err, result).
+     * @returns {Promise} a promise, if a callback is omitted
+     */
+    function detectLimit(coll, limit, iteratee, callback) {
+        return _createTester(bool => bool, (res, item) => item)(eachOfLimit(limit), coll, iteratee, callback)
+    }
+    var detectLimit$1 = awaitify(detectLimit, 4);
+
+    /**
+     * The same as [`detect`]{@link module:Collections.detect} but runs only a single async operation at a time.
+     *
+     * @name detectSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.detect]{@link module:Collections.detect}
+     * @alias findSeries
+     * @category Collections
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A truth test to apply to each item in `coll`.
+     * The iteratee must complete with a boolean value as its result.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called as soon as any
+     * iteratee returns `true`, or after all the `iteratee` functions have finished.
+     * Result will be the first item in the array that passes the truth test
+     * (iteratee) or the value `undefined` if none passed. Invoked with
+     * (err, result).
+     * @returns {Promise} a promise, if a callback is omitted
+     */
+    function detectSeries(coll, iteratee, callback) {
+        return _createTester(bool => bool, (res, item) => item)(eachOfLimit(1), coll, iteratee, callback)
+    }
+
+    var detectSeries$1 = awaitify(detectSeries, 3);
+
+    function consoleFunc(name) {
+        return (fn, ...args) => wrapAsync(fn)(...args, (err, ...resultArgs) => {
+            /* istanbul ignore else */
+            if (typeof console === 'object') {
+                /* istanbul ignore else */
+                if (err) {
+                    /* istanbul ignore else */
+                    if (console.error) {
+                        console.error(err);
+                    }
+                } else if (console[name]) { /* istanbul ignore else */
+                    resultArgs.forEach(x => console[name](x));
+                }
+            }
+        })
+    }
+
+    /**
+     * Logs the result of an [`async` function]{@link AsyncFunction} to the
+     * `console` using `console.dir` to display the properties of the resulting object.
+     * Only works in Node.js or in browsers that support `console.dir` and
+     * `console.error` (such as FF and Chrome).
+     * If multiple arguments are returned from the async function,
+     * `console.dir` is called on each argument in order.
+     *
+     * @name dir
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {AsyncFunction} function - The function you want to eventually apply
+     * all arguments to.
+     * @param {...*} arguments... - Any number of arguments to apply to the function.
+     * @example
+     *
+     * // in a module
+     * var hello = function(name, callback) {
+     *     setTimeout(function() {
+     *         callback(null, {hello: name});
+     *     }, 1000);
+     * };
+     *
+     * // in the node repl
+     * node> async.dir(hello, 'world');
+     * {hello: 'world'}
+     */
+    var dir = consoleFunc('dir');
+
+    /**
+     * The post-check version of [`whilst`]{@link module:ControlFlow.whilst}. To reflect the difference in
+     * the order of operations, the arguments `test` and `iteratee` are switched.
+     *
+     * `doWhilst` is to `whilst` as `do while` is to `while` in plain JavaScript.
+     *
+     * @name doWhilst
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.whilst]{@link module:ControlFlow.whilst}
+     * @category Control Flow
+     * @param {AsyncFunction} iteratee - A function which is called each time `test`
+     * passes. Invoked with (callback).
+     * @param {AsyncFunction} test - asynchronous truth test to perform after each
+     * execution of `iteratee`. Invoked with (...args, callback), where `...args` are the
+     * non-error args from the previous callback of `iteratee`.
+     * @param {Function} [callback] - A callback which is called after the test
+     * function has failed and repeated execution of `iteratee` has stopped.
+     * `callback` will be passed an error and any arguments passed to the final
+     * `iteratee`'s callback. Invoked with (err, [results]);
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function doWhilst(iteratee, test, callback) {
+        callback = onlyOnce(callback);
+        var _fn = wrapAsync(iteratee);
+        var _test = wrapAsync(test);
+        var results;
+
+        function next(err, ...args) {
+            if (err) return callback(err);
+            if (err === false) return;
+            results = args;
+            _test(...args, check);
+        }
+
+        function check(err, truth) {
+            if (err) return callback(err);
+            if (err === false) return;
+            if (!truth) return callback(null, ...results);
+            _fn(next);
+        }
+
+        return check(null, true);
+    }
+
+    var doWhilst$1 = awaitify(doWhilst, 3);
+
+    /**
+     * Like ['doWhilst']{@link module:ControlFlow.doWhilst}, except the `test` is inverted. Note the
+     * argument ordering differs from `until`.
+     *
+     * @name doUntil
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.doWhilst]{@link module:ControlFlow.doWhilst}
+     * @category Control Flow
+     * @param {AsyncFunction} iteratee - An async function which is called each time
+     * `test` fails. Invoked with (callback).
+     * @param {AsyncFunction} test - asynchronous truth test to perform after each
+     * execution of `iteratee`. Invoked with (...args, callback), where `...args` are the
+     * non-error args from the previous callback of `iteratee`
+     * @param {Function} [callback] - A callback which is called after the test
+     * function has passed and repeated execution of `iteratee` has stopped. `callback`
+     * will be passed an error and any arguments passed to the final `iteratee`'s
+     * callback. Invoked with (err, [results]);
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function doUntil(iteratee, test, callback) {
+        const _test = wrapAsync(test);
+        return doWhilst$1(iteratee, (...args) => {
+            const cb = args.pop();
+            _test(...args, (err, truth) => cb (err, !truth));
+        }, callback);
+    }
+
+    function _withoutIndex(iteratee) {
+        return (value, index, callback) => iteratee(value, callback);
+    }
+
+    /**
+     * Applies the function `iteratee` to each item in `coll`, in parallel.
+     * The `iteratee` is called with an item from the list, and a callback for when
+     * it has finished. If the `iteratee` passes an error to its `callback`, the
+     * main `callback` (for the `each` function) is immediately called with the
+     * error.
+     *
+     * Note, that since this function applies `iteratee` to each item in parallel,
+     * there is no guarantee that the iteratee functions will complete in order.
+     *
+     * @name each
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias forEach
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to
+     * each item in `coll`. Invoked with (item, callback).
+     * The array index is not passed to the iteratee.
+     * If you need the index, use `eachOf`.
+     * @param {Function} [callback] - A callback which is called when all
+     * `iteratee` functions have finished, or an error occurs. Invoked with (err).
+     * @returns {Promise} a promise, if a callback is omitted
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     * // dir4 does not exist
+     *
+     * const fileList = [ 'dir1/file2.txt', 'dir2/file3.txt', 'dir/file5.txt'];
+     * const withMissingFileList = ['dir1/file1.txt', 'dir4/file2.txt'];
+     *
+     * // asynchronous function that deletes a file
+     * const deleteFile = function(file, callback) {
+     *     fs.unlink(file, callback);
+     * };
+     *
+     * // Using callbacks
+     * async.each(fileList, deleteFile, function(err) {
+     *     if( err ) {
+     *         console.log(err);
+     *     } else {
+     *         console.log('All files have been deleted successfully');
+     *     }
+     * });
+     *
+     * // Error Handling
+     * async.each(withMissingFileList, deleteFile, function(err){
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     *     // since dir4/file2.txt does not exist
+     *     // dir1/file1.txt could have been deleted
+     * });
+     *
+     * // Using Promises
+     * async.each(fileList, deleteFile)
+     * .then( () => {
+     *     console.log('All files have been deleted successfully');
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Error Handling
+     * async.each(fileList, deleteFile)
+     * .then( () => {
+     *     console.log('All files have been deleted successfully');
+     * }).catch( err => {
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     *     // since dir4/file2.txt does not exist
+     *     // dir1/file1.txt could have been deleted
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         await async.each(files, deleteFile);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // Error Handling
+     * async () => {
+     *     try {
+     *         await async.each(withMissingFileList, deleteFile);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *         // since dir4/file2.txt does not exist
+     *         // dir1/file1.txt could have been deleted
+     *     }
+     * }
+     *
+     */
+    function eachLimit(coll, iteratee, callback) {
+        return eachOf$1(coll, _withoutIndex(wrapAsync(iteratee)), callback);
+    }
+
+    var each = awaitify(eachLimit, 3);
+
+    /**
+     * The same as [`each`]{@link module:Collections.each} but runs a maximum of `limit` async operations at a time.
+     *
+     * @name eachLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.each]{@link module:Collections.each}
+     * @alias forEachLimit
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The array index is not passed to the iteratee.
+     * If you need the index, use `eachOfLimit`.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called when all
+     * `iteratee` functions have finished, or an error occurs. Invoked with (err).
+     * @returns {Promise} a promise, if a callback is omitted
+     */
+    function eachLimit$1(coll, limit, iteratee, callback) {
+        return eachOfLimit(limit)(coll, _withoutIndex(wrapAsync(iteratee)), callback);
+    }
+    var eachLimit$2 = awaitify(eachLimit$1, 4);
+
+    /**
+     * The same as [`each`]{@link module:Collections.each} but runs only a single async operation at a time.
+     *
+     * Note, that unlike [`each`]{@link module:Collections.each}, this function applies iteratee to each item
+     * in series and therefore the iteratee functions will complete in order.
+
+     * @name eachSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.each]{@link module:Collections.each}
+     * @alias forEachSeries
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each
+     * item in `coll`.
+     * The array index is not passed to the iteratee.
+     * If you need the index, use `eachOfSeries`.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called when all
+     * `iteratee` functions have finished, or an error occurs. Invoked with (err).
+     * @returns {Promise} a promise, if a callback is omitted
+     */
+    function eachSeries(coll, iteratee, callback) {
+        return eachLimit$2(coll, 1, iteratee, callback)
+    }
+    var eachSeries$1 = awaitify(eachSeries, 3);
+
+    /**
+     * Wrap an async function and ensure it calls its callback on a later tick of
+     * the event loop.  If the function already calls its callback on a next tick,
+     * no extra deferral is added. This is useful for preventing stack overflows
+     * (`RangeError: Maximum call stack size exceeded`) and generally keeping
+     * [Zalgo](http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony)
+     * contained. ES2017 `async` functions are returned as-is -- they are immune
+     * to Zalgo's corrupting influences, as they always resolve on a later tick.
+     *
+     * @name ensureAsync
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {AsyncFunction} fn - an async function, one that expects a node-style
+     * callback as its last argument.
+     * @returns {AsyncFunction} Returns a wrapped function with the exact same call
+     * signature as the function passed in.
+     * @example
+     *
+     * function sometimesAsync(arg, callback) {
+     *     if (cache[arg]) {
+     *         return callback(null, cache[arg]); // this would be synchronous!!
+     *     } else {
+     *         doSomeIO(arg, callback); // this IO would be asynchronous
+     *     }
+     * }
+     *
+     * // this has a risk of stack overflows if many results are cached in a row
+     * async.mapSeries(args, sometimesAsync, done);
+     *
+     * // this will defer sometimesAsync's callback if necessary,
+     * // preventing stack overflows
+     * async.mapSeries(args, async.ensureAsync(sometimesAsync), done);
+     */
+    function ensureAsync(fn) {
+        if (isAsync(fn)) return fn;
+        return function (...args/*, callback*/) {
+            var callback = args.pop();
+            var sync = true;
+            args.push((...innerArgs) => {
+                if (sync) {
+                    setImmediate$1(() => callback(...innerArgs));
+                } else {
+                    callback(...innerArgs);
+                }
+            });
+            fn.apply(this, args);
+            sync = false;
+        };
+    }
+
+    /**
+     * Returns `true` if every element in `coll` satisfies an async test. If any
+     * iteratee call returns `false`, the main `callback` is immediately called.
+     *
+     * @name every
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias all
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async truth test to apply to each item
+     * in the collection in parallel.
+     * The iteratee must complete with a boolean result value.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Result will be either `true` or `false`
+     * depending on the values of the async tests. Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     * // dir4 does not exist
+     *
+     * const fileList = ['dir1/file1.txt','dir2/file3.txt','dir3/file5.txt'];
+     * const withMissingFileList = ['file1.txt','file2.txt','file4.txt'];
+     *
+     * // asynchronous function that checks if a file exists
+     * function fileExists(file, callback) {
+     *    fs.access(file, fs.constants.F_OK, (err) => {
+     *        callback(null, !err);
+     *    });
+     * }
+     *
+     * // Using callbacks
+     * async.every(fileList, fileExists, function(err, result) {
+     *     console.log(result);
+     *     // true
+     *     // result is true since every file exists
+     * });
+     *
+     * async.every(withMissingFileList, fileExists, function(err, result) {
+     *     console.log(result);
+     *     // false
+     *     // result is false since NOT every file exists
+     * });
+     *
+     * // Using Promises
+     * async.every(fileList, fileExists)
+     * .then( result => {
+     *     console.log(result);
+     *     // true
+     *     // result is true since every file exists
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * async.every(withMissingFileList, fileExists)
+     * .then( result => {
+     *     console.log(result);
+     *     // false
+     *     // result is false since NOT every file exists
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.every(fileList, fileExists);
+     *         console.log(result);
+     *         // true
+     *         // result is true since every file exists
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * async () => {
+     *     try {
+     *         let result = await async.every(withMissingFileList, fileExists);
+     *         console.log(result);
+     *         // false
+     *         // result is false since NOT every file exists
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function every(coll, iteratee, callback) {
+        return _createTester(bool => !bool, res => !res)(eachOf$1, coll, iteratee, callback)
+    }
+    var every$1 = awaitify(every, 3);
+
+    /**
+     * The same as [`every`]{@link module:Collections.every} but runs a maximum of `limit` async operations at a time.
+     *
+     * @name everyLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.every]{@link module:Collections.every}
+     * @alias allLimit
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - An async truth test to apply to each item
+     * in the collection in parallel.
+     * The iteratee must complete with a boolean result value.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Result will be either `true` or `false`
+     * depending on the values of the async tests. Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     */
+    function everyLimit(coll, limit, iteratee, callback) {
+        return _createTester(bool => !bool, res => !res)(eachOfLimit(limit), coll, iteratee, callback)
+    }
+    var everyLimit$1 = awaitify(everyLimit, 4);
+
+    /**
+     * The same as [`every`]{@link module:Collections.every} but runs only a single async operation at a time.
+     *
+     * @name everySeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.every]{@link module:Collections.every}
+     * @alias allSeries
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async truth test to apply to each item
+     * in the collection in series.
+     * The iteratee must complete with a boolean result value.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Result will be either `true` or `false`
+     * depending on the values of the async tests. Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     */
+    function everySeries(coll, iteratee, callback) {
+        return _createTester(bool => !bool, res => !res)(eachOfSeries$1, coll, iteratee, callback)
+    }
+    var everySeries$1 = awaitify(everySeries, 3);
+
+    function filterArray(eachfn, arr, iteratee, callback) {
+        var truthValues = new Array(arr.length);
+        eachfn(arr, (x, index, iterCb) => {
+            iteratee(x, (err, v) => {
+                truthValues[index] = !!v;
+                iterCb(err);
+            });
+        }, err => {
+            if (err) return callback(err);
+            var results = [];
+            for (var i = 0; i < arr.length; i++) {
+                if (truthValues[i]) results.push(arr[i]);
+            }
+            callback(null, results);
+        });
+    }
+
+    function filterGeneric(eachfn, coll, iteratee, callback) {
+        var results = [];
+        eachfn(coll, (x, index, iterCb) => {
+            iteratee(x, (err, v) => {
+                if (err) return iterCb(err);
+                if (v) {
+                    results.push({index, value: x});
+                }
+                iterCb(err);
+            });
+        }, err => {
+            if (err) return callback(err);
+            callback(null, results
+                .sort((a, b) => a.index - b.index)
+                .map(v => v.value));
+        });
+    }
+
+    function _filter(eachfn, coll, iteratee, callback) {
+        var filter = isArrayLike(coll) ? filterArray : filterGeneric;
+        return filter(eachfn, coll, wrapAsync(iteratee), callback);
+    }
+
+    /**
+     * Returns a new array of all the values in `coll` which pass an async truth
+     * test. This operation is performed in parallel, but the results array will be
+     * in the same order as the original.
+     *
+     * @name filter
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias select
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {Function} iteratee - A truth test to apply to each item in `coll`.
+     * The `iteratee` is passed a `callback(err, truthValue)`, which must be called
+     * with a boolean argument once it has completed. Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback provided
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     *
+     * const files = ['dir1/file1.txt','dir2/file3.txt','dir3/file6.txt'];
+     *
+     * // asynchronous function that checks if a file exists
+     * function fileExists(file, callback) {
+     *    fs.access(file, fs.constants.F_OK, (err) => {
+     *        callback(null, !err);
+     *    });
+     * }
+     *
+     * // Using callbacks
+     * async.filter(files, fileExists, function(err, results) {
+     *    if(err) {
+     *        console.log(err);
+     *    } else {
+     *        console.log(results);
+     *        // [ 'dir1/file1.txt', 'dir2/file3.txt' ]
+     *        // results is now an array of the existing files
+     *    }
+     * });
+     *
+     * // Using Promises
+     * async.filter(files, fileExists)
+     * .then(results => {
+     *     console.log(results);
+     *     // [ 'dir1/file1.txt', 'dir2/file3.txt' ]
+     *     // results is now an array of the existing files
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.filter(files, fileExists);
+     *         console.log(results);
+     *         // [ 'dir1/file1.txt', 'dir2/file3.txt' ]
+     *         // results is now an array of the existing files
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function filter (coll, iteratee, callback) {
+        return _filter(eachOf$1, coll, iteratee, callback)
+    }
+    var filter$1 = awaitify(filter, 3);
+
+    /**
+     * The same as [`filter`]{@link module:Collections.filter} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name filterLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.filter]{@link module:Collections.filter}
+     * @alias selectLimit
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {Function} iteratee - A truth test to apply to each item in `coll`.
+     * The `iteratee` is passed a `callback(err, truthValue)`, which must be called
+     * with a boolean argument once it has completed. Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback provided
+     */
+    function filterLimit (coll, limit, iteratee, callback) {
+        return _filter(eachOfLimit(limit), coll, iteratee, callback)
+    }
+    var filterLimit$1 = awaitify(filterLimit, 4);
+
+    /**
+     * The same as [`filter`]{@link module:Collections.filter} but runs only a single async operation at a time.
+     *
+     * @name filterSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.filter]{@link module:Collections.filter}
+     * @alias selectSeries
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {Function} iteratee - A truth test to apply to each item in `coll`.
+     * The `iteratee` is passed a `callback(err, truthValue)`, which must be called
+     * with a boolean argument once it has completed. Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Invoked with (err, results)
+     * @returns {Promise} a promise, if no callback provided
+     */
+    function filterSeries (coll, iteratee, callback) {
+        return _filter(eachOfSeries$1, coll, iteratee, callback)
+    }
+    var filterSeries$1 = awaitify(filterSeries, 3);
+
+    /**
+     * Calls the asynchronous function `fn` with a callback parameter that allows it
+     * to call itself again, in series, indefinitely.
+
+     * If an error is passed to the callback then `errback` is called with the
+     * error, and execution stops, otherwise it will never be called.
+     *
+     * @name forever
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {AsyncFunction} fn - an async function to call repeatedly.
+     * Invoked with (next).
+     * @param {Function} [errback] - when `fn` passes an error to it's callback,
+     * this function will be called, and execution stops. Invoked with (err).
+     * @returns {Promise} a promise that rejects if an error occurs and an errback
+     * is not passed
+     * @example
+     *
+     * async.forever(
+     *     function(next) {
+     *         // next is suitable for passing to things that need a callback(err [, whatever]);
+     *         // it will result in this function being called again.
+     *     },
+     *     function(err) {
+     *         // if next is called with a value in its first parameter, it will appear
+     *         // in here as 'err', and execution will stop.
+     *     }
+     * );
+     */
+    function forever(fn, errback) {
+        var done = onlyOnce(errback);
+        var task = wrapAsync(ensureAsync(fn));
+
+        function next(err) {
+            if (err) return done(err);
+            if (err === false) return;
+            task(next);
+        }
+        return next();
+    }
+    var forever$1 = awaitify(forever, 2);
+
+    /**
+     * The same as [`groupBy`]{@link module:Collections.groupBy} but runs a maximum of `limit` async operations at a time.
+     *
+     * @name groupByLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.groupBy]{@link module:Collections.groupBy}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with a `key` to group the value under.
+     * Invoked with (value, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Result is an `Object` whoses
+     * properties are arrays of values which returned the corresponding key.
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function groupByLimit(coll, limit, iteratee, callback) {
+        var _iteratee = wrapAsync(iteratee);
+        return mapLimit$1(coll, limit, (val, iterCb) => {
+            _iteratee(val, (err, key) => {
+                if (err) return iterCb(err);
+                return iterCb(err, {key, val});
+            });
+        }, (err, mapResults) => {
+            var result = {};
+            // from MDN, handle object having an `hasOwnProperty` prop
+            var {hasOwnProperty} = Object.prototype;
+
+            for (var i = 0; i < mapResults.length; i++) {
+                if (mapResults[i]) {
+                    var {key} = mapResults[i];
+                    var {val} = mapResults[i];
+
+                    if (hasOwnProperty.call(result, key)) {
+                        result[key].push(val);
+                    } else {
+                        result[key] = [val];
+                    }
+                }
+            }
+
+            return callback(err, result);
+        });
+    }
+
+    var groupByLimit$1 = awaitify(groupByLimit, 4);
+
+    /**
+     * Returns a new object, where each value corresponds to an array of items, from
+     * `coll`, that returned the corresponding key. That is, the keys of the object
+     * correspond to the values passed to the `iteratee` callback.
+     *
+     * Note: Since this function applies the `iteratee` to each item in parallel,
+     * there is no guarantee that the `iteratee` functions will complete in order.
+     * However, the values for each key in the `result` will be in the same order as
+     * the original `coll`. For Objects, the values will roughly be in the order of
+     * the original Objects' keys (but this can vary across JavaScript engines).
+     *
+     * @name groupBy
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with a `key` to group the value under.
+     * Invoked with (value, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Result is an `Object` whoses
+     * properties are arrays of values which returned the corresponding key.
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     * // dir4 does not exist
+     *
+     * const files = ['dir1/file1.txt','dir2','dir4']
+     *
+     * // asynchronous function that detects file type as none, file, or directory
+     * function detectFile(file, callback) {
+     *     fs.stat(file, function(err, stat) {
+     *         if (err) {
+     *             return callback(null, 'none');
+     *         }
+     *         callback(null, stat.isDirectory() ? 'directory' : 'file');
+     *     });
+     * }
+     *
+     * //Using callbacks
+     * async.groupBy(files, detectFile, function(err, result) {
+     *     if(err) {
+     *         console.log(err);
+     *     } else {
+     *	       console.log(result);
+     *         // {
+     *         //     file: [ 'dir1/file1.txt' ],
+     *         //     none: [ 'dir4' ],
+     *         //     directory: [ 'dir2']
+     *         // }
+     *         // result is object containing the files grouped by type
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.groupBy(files, detectFile)
+     * .then( result => {
+     *     console.log(result);
+     *     // {
+     *     //     file: [ 'dir1/file1.txt' ],
+     *     //     none: [ 'dir4' ],
+     *     //     directory: [ 'dir2']
+     *     // }
+     *     // result is object containing the files grouped by type
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.groupBy(files, detectFile);
+     *         console.log(result);
+     *         // {
+     *         //     file: [ 'dir1/file1.txt' ],
+     *         //     none: [ 'dir4' ],
+     *         //     directory: [ 'dir2']
+     *         // }
+     *         // result is object containing the files grouped by type
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function groupBy (coll, iteratee, callback) {
+        return groupByLimit$1(coll, Infinity, iteratee, callback)
+    }
+
+    /**
+     * The same as [`groupBy`]{@link module:Collections.groupBy} but runs only a single async operation at a time.
+     *
+     * @name groupBySeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.groupBy]{@link module:Collections.groupBy}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with a `key` to group the value under.
+     * Invoked with (value, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. Result is an `Object` whose
+     * properties are arrays of values which returned the corresponding key.
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function groupBySeries (coll, iteratee, callback) {
+        return groupByLimit$1(coll, 1, iteratee, callback)
+    }
+
+    /**
+     * Logs the result of an `async` function to the `console`. Only works in
+     * Node.js or in browsers that support `console.log` and `console.error` (such
+     * as FF and Chrome). If multiple arguments are returned from the async
+     * function, `console.log` is called on each argument in order.
+     *
+     * @name log
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {AsyncFunction} function - The function you want to eventually apply
+     * all arguments to.
+     * @param {...*} arguments... - Any number of arguments to apply to the function.
+     * @example
+     *
+     * // in a module
+     * var hello = function(name, callback) {
+     *     setTimeout(function() {
+     *         callback(null, 'hello ' + name);
+     *     }, 1000);
+     * };
+     *
+     * // in the node repl
+     * node> async.log(hello, 'world');
+     * 'hello world'
+     */
+    var log = consoleFunc('log');
+
+    /**
+     * The same as [`mapValues`]{@link module:Collections.mapValues} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name mapValuesLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.mapValues]{@link module:Collections.mapValues}
+     * @category Collection
+     * @param {Object} obj - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - A function to apply to each value and key
+     * in `coll`.
+     * The iteratee should complete with the transformed value as its result.
+     * Invoked with (value, key, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. `result` is a new object consisting
+     * of each key from `obj`, with each transformed value on the right-hand side.
+     * Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function mapValuesLimit(obj, limit, iteratee, callback) {
+        callback = once(callback);
+        var newObj = {};
+        var _iteratee = wrapAsync(iteratee);
+        return eachOfLimit(limit)(obj, (val, key, next) => {
+            _iteratee(val, key, (err, result) => {
+                if (err) return next(err);
+                newObj[key] = result;
+                next(err);
+            });
+        }, err => callback(err, newObj));
+    }
+
+    var mapValuesLimit$1 = awaitify(mapValuesLimit, 4);
+
+    /**
+     * A relative of [`map`]{@link module:Collections.map}, designed for use with objects.
+     *
+     * Produces a new Object by mapping each value of `obj` through the `iteratee`
+     * function. The `iteratee` is called each `value` and `key` from `obj` and a
+     * callback for when it has finished processing. Each of these callbacks takes
+     * two arguments: an `error`, and the transformed item from `obj`. If `iteratee`
+     * passes an error to its callback, the main `callback` (for the `mapValues`
+     * function) is immediately called with the error.
+     *
+     * Note, the order of the keys in the result is not guaranteed.  The keys will
+     * be roughly in the order they complete, (but this is very engine-specific)
+     *
+     * @name mapValues
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @category Collection
+     * @param {Object} obj - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A function to apply to each value and key
+     * in `coll`.
+     * The iteratee should complete with the transformed value as its result.
+     * Invoked with (value, key, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. `result` is a new object consisting
+     * of each key from `obj`, with each transformed value on the right-hand side.
+     * Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * // file1.txt is a file that is 1000 bytes in size
+     * // file2.txt is a file that is 2000 bytes in size
+     * // file3.txt is a file that is 3000 bytes in size
+     * // file4.txt does not exist
+     *
+     * const fileMap = {
+     *     f1: 'file1.txt',
+     *     f2: 'file2.txt',
+     *     f3: 'file3.txt'
+     * };
+     *
+     * const withMissingFileMap = {
+     *     f1: 'file1.txt',
+     *     f2: 'file2.txt',
+     *     f3: 'file4.txt'
+     * };
+     *
+     * // asynchronous function that returns the file size in bytes
+     * function getFileSizeInBytes(file, key, callback) {
+     *     fs.stat(file, function(err, stat) {
+     *         if (err) {
+     *             return callback(err);
+     *         }
+     *         callback(null, stat.size);
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.mapValues(fileMap, getFileSizeInBytes, function(err, result) {
+     *     if (err) {
+     *         console.log(err);
+     *     } else {
+     *         console.log(result);
+     *         // result is now a map of file size in bytes for each file, e.g.
+     *         // {
+     *         //     f1: 1000,
+     *         //     f2: 2000,
+     *         //     f3: 3000
+     *         // }
+     *     }
+     * });
+     *
+     * // Error handling
+     * async.mapValues(withMissingFileMap, getFileSizeInBytes, function(err, result) {
+     *     if (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     } else {
+     *         console.log(result);
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.mapValues(fileMap, getFileSizeInBytes)
+     * .then( result => {
+     *     console.log(result);
+     *     // result is now a map of file size in bytes for each file, e.g.
+     *     // {
+     *     //     f1: 1000,
+     *     //     f2: 2000,
+     *     //     f3: 3000
+     *     // }
+     * }).catch (err => {
+     *     console.log(err);
+     * });
+     *
+     * // Error Handling
+     * async.mapValues(withMissingFileMap, getFileSizeInBytes)
+     * .then( result => {
+     *     console.log(result);
+     * }).catch (err => {
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.mapValues(fileMap, getFileSizeInBytes);
+     *         console.log(result);
+     *         // result is now a map of file size in bytes for each file, e.g.
+     *         // {
+     *         //     f1: 1000,
+     *         //     f2: 2000,
+     *         //     f3: 3000
+     *         // }
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // Error Handling
+     * async () => {
+     *     try {
+     *         let result = await async.mapValues(withMissingFileMap, getFileSizeInBytes);
+     *         console.log(result);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     }
+     * }
+     *
+     */
+    function mapValues(obj, iteratee, callback) {
+        return mapValuesLimit$1(obj, Infinity, iteratee, callback)
+    }
+
+    /**
+     * The same as [`mapValues`]{@link module:Collections.mapValues} but runs only a single async operation at a time.
+     *
+     * @name mapValuesSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.mapValues]{@link module:Collections.mapValues}
+     * @category Collection
+     * @param {Object} obj - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - A function to apply to each value and key
+     * in `coll`.
+     * The iteratee should complete with the transformed value as its result.
+     * Invoked with (value, key, callback).
+     * @param {Function} [callback] - A callback which is called when all `iteratee`
+     * functions have finished, or an error occurs. `result` is a new object consisting
+     * of each key from `obj`, with each transformed value on the right-hand side.
+     * Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function mapValuesSeries(obj, iteratee, callback) {
+        return mapValuesLimit$1(obj, 1, iteratee, callback)
+    }
+
+    /**
+     * Caches the results of an async function. When creating a hash to store
+     * function results against, the callback is omitted from the hash and an
+     * optional hash function can be used.
+     *
+     * **Note: if the async function errs, the result will not be cached and
+     * subsequent calls will call the wrapped function.**
+     *
+     * If no hash function is specified, the first argument is used as a hash key,
+     * which may work reasonably if it is a string or a data type that converts to a
+     * distinct string. Note that objects and arrays will not behave reasonably.
+     * Neither will cases where the other arguments are significant. In such cases,
+     * specify your own hash function.
+     *
+     * The cache of results is exposed as the `memo` property of the function
+     * returned by `memoize`.
+     *
+     * @name memoize
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {AsyncFunction} fn - The async function to proxy and cache results from.
+     * @param {Function} hasher - An optional function for generating a custom hash
+     * for storing results. It has all the arguments applied to it apart from the
+     * callback, and must be synchronous.
+     * @returns {AsyncFunction} a memoized version of `fn`
+     * @example
+     *
+     * var slow_fn = function(name, callback) {
+     *     // do something
+     *     callback(null, result);
+     * };
+     * var fn = async.memoize(slow_fn);
+     *
+     * // fn can now be used as if it were slow_fn
+     * fn('some name', function() {
+     *     // callback
+     * });
+     */
+    function memoize(fn, hasher = v => v) {
+        var memo = Object.create(null);
+        var queues = Object.create(null);
+        var _fn = wrapAsync(fn);
+        var memoized = initialParams((args, callback) => {
+            var key = hasher(...args);
+            if (key in memo) {
+                setImmediate$1(() => callback(null, ...memo[key]));
+            } else if (key in queues) {
+                queues[key].push(callback);
+            } else {
+                queues[key] = [callback];
+                _fn(...args, (err, ...resultArgs) => {
+                    // #1465 don't memoize if an error occurred
+                    if (!err) {
+                        memo[key] = resultArgs;
+                    }
+                    var q = queues[key];
+                    delete queues[key];
+                    for (var i = 0, l = q.length; i < l; i++) {
+                        q[i](err, ...resultArgs);
+                    }
+                });
+            }
+        });
+        memoized.memo = memo;
+        memoized.unmemoized = fn;
+        return memoized;
+    }
+
+    /* istanbul ignore file */
+
+    /**
+     * Calls `callback` on a later loop around the event loop. In Node.js this just
+     * calls `process.nextTick`.  In the browser it will use `setImmediate` if
+     * available, otherwise `setTimeout(callback, 0)`, which means other higher
+     * priority events may precede the execution of `callback`.
+     *
+     * This is used internally for browser-compatibility purposes.
+     *
+     * @name nextTick
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @see [async.setImmediate]{@link module:Utils.setImmediate}
+     * @category Util
+     * @param {Function} callback - The function to call on a later loop around
+     * the event loop. Invoked with (args...).
+     * @param {...*} args... - any number of additional arguments to pass to the
+     * callback on the next tick.
+     * @example
+     *
+     * var call_order = [];
+     * async.nextTick(function() {
+     *     call_order.push('two');
+     *     // call_order now equals ['one','two']
+     * });
+     * call_order.push('one');
+     *
+     * async.setImmediate(function (a, b, c) {
+     *     // a, b, and c equal 1, 2, and 3
+     * }, 1, 2, 3);
+     */
+    var _defer$1;
+
+    if (hasNextTick) {
+        _defer$1 = process.nextTick;
+    } else if (hasSetImmediate) {
+        _defer$1 = setImmediate;
+    } else {
+        _defer$1 = fallback;
+    }
+
+    var nextTick = wrap(_defer$1);
+
+    var parallel = awaitify((eachfn, tasks, callback) => {
+        var results = isArrayLike(tasks) ? [] : {};
+
+        eachfn(tasks, (task, key, taskCb) => {
+            wrapAsync(task)((err, ...result) => {
+                if (result.length < 2) {
+                    [result] = result;
+                }
+                results[key] = result;
+                taskCb(err);
+            });
+        }, err => callback(err, results));
+    }, 3);
+
+    /**
+     * Run the `tasks` collection of functions in parallel, without waiting until
+     * the previous function has completed. If any of the functions pass an error to
+     * its callback, the main `callback` is immediately called with the value of the
+     * error. Once the `tasks` have completed, the results are passed to the final
+     * `callback` as an array.
+     *
+     * **Note:** `parallel` is about kicking-off I/O tasks in parallel, not about
+     * parallel execution of code.  If your tasks do not use any timers or perform
+     * any I/O, they will actually be executed in series.  Any synchronous setup
+     * sections for each task will happen one after the other.  JavaScript remains
+     * single-threaded.
+     *
+     * **Hint:** Use [`reflect`]{@link module:Utils.reflect} to continue the
+     * execution of other tasks when a task fails.
+     *
+     * It is also possible to use an object instead of an array. Each property will
+     * be run as a function and the results will be passed to the final `callback`
+     * as an object instead of an array. This can be a more readable way of handling
+     * results from {@link async.parallel}.
+     *
+     * @name parallel
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Array|Iterable|AsyncIterable|Object} tasks - A collection of
+     * [async functions]{@link AsyncFunction} to run.
+     * Each async function can complete with any number of optional `result` values.
+     * @param {Function} [callback] - An optional callback to run once all the
+     * functions have completed successfully. This function gets a results array
+     * (or object) containing all the result arguments passed to the task callbacks.
+     * Invoked with (err, results).
+     * @returns {Promise} a promise, if a callback is not passed
+     *
+     * @example
+     *
+     * //Using Callbacks
+     * async.parallel([
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'two');
+     *         }, 100);
+     *     }
+     * ], function(err, results) {
+     *     console.log(results);
+     *     // results is equal to ['one','two'] even though
+     *     // the second function had a shorter timeout.
+     * });
+     *
+     * // an example using an object instead of an array
+     * async.parallel({
+     *     one: function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 1);
+     *         }, 200);
+     *     },
+     *     two: function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 2);
+     *         }, 100);
+     *     }
+     * }, function(err, results) {
+     *     console.log(results);
+     *     // results is equal to: { one: 1, two: 2 }
+     * });
+     *
+     * //Using Promises
+     * async.parallel([
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'two');
+     *         }, 100);
+     *     }
+     * ]).then(results => {
+     *     console.log(results);
+     *     // results is equal to ['one','two'] even though
+     *     // the second function had a shorter timeout.
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * // an example using an object instead of an array
+     * async.parallel({
+     *     one: function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 1);
+     *         }, 200);
+     *     },
+     *     two: function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 2);
+     *         }, 100);
+     *     }
+     * }).then(results => {
+     *     console.log(results);
+     *     // results is equal to: { one: 1, two: 2 }
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * //Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.parallel([
+     *             function(callback) {
+     *                 setTimeout(function() {
+     *                     callback(null, 'one');
+     *                 }, 200);
+     *             },
+     *             function(callback) {
+     *                 setTimeout(function() {
+     *                     callback(null, 'two');
+     *                 }, 100);
+     *             }
+     *         ]);
+     *         console.log(results);
+     *         // results is equal to ['one','two'] even though
+     *         // the second function had a shorter timeout.
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // an example using an object instead of an array
+     * async () => {
+     *     try {
+     *         let results = await async.parallel({
+     *             one: function(callback) {
+     *                 setTimeout(function() {
+     *                     callback(null, 1);
+     *                 }, 200);
+     *             },
+     *            two: function(callback) {
+     *                 setTimeout(function() {
+     *                     callback(null, 2);
+     *                 }, 100);
+     *            }
+     *         });
+     *         console.log(results);
+     *         // results is equal to: { one: 1, two: 2 }
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function parallel$1(tasks, callback) {
+        return parallel(eachOf$1, tasks, callback);
+    }
+
+    /**
+     * The same as [`parallel`]{@link module:ControlFlow.parallel} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name parallelLimit
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.parallel]{@link module:ControlFlow.parallel}
+     * @category Control Flow
+     * @param {Array|Iterable|AsyncIterable|Object} tasks - A collection of
+     * [async functions]{@link AsyncFunction} to run.
+     * Each async function can complete with any number of optional `result` values.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {Function} [callback] - An optional callback to run once all the
+     * functions have completed successfully. This function gets a results array
+     * (or object) containing all the result arguments passed to the task callbacks.
+     * Invoked with (err, results).
+     * @returns {Promise} a promise, if a callback is not passed
+     */
+    function parallelLimit(tasks, limit, callback) {
+        return parallel(eachOfLimit(limit), tasks, callback);
+    }
+
+    /**
+     * A queue of tasks for the worker function to complete.
+     * @typedef {Iterable} QueueObject
+     * @memberOf module:ControlFlow
+     * @property {Function} length - a function returning the number of items
+     * waiting to be processed. Invoke with `queue.length()`.
+     * @property {boolean} started - a boolean indicating whether or not any
+     * items have been pushed and processed by the queue.
+     * @property {Function} running - a function returning the number of items
+     * currently being processed. Invoke with `queue.running()`.
+     * @property {Function} workersList - a function returning the array of items
+     * currently being processed. Invoke with `queue.workersList()`.
+     * @property {Function} idle - a function returning false if there are items
+     * waiting or being processed, or true if not. Invoke with `queue.idle()`.
+     * @property {number} concurrency - an integer for determining how many `worker`
+     * functions should be run in parallel. This property can be changed after a
+     * `queue` is created to alter the concurrency on-the-fly.
+     * @property {number} payload - an integer that specifies how many items are
+     * passed to the worker function at a time. only applies if this is a
+     * [cargo]{@link module:ControlFlow.cargo} object
+     * @property {AsyncFunction} push - add a new task to the `queue`. Calls `callback`
+     * once the `worker` has finished processing the task. Instead of a single task,
+     * a `tasks` array can be submitted. The respective callback is used for every
+     * task in the list. Invoke with `queue.push(task, [callback])`,
+     * @property {AsyncFunction} unshift - add a new task to the front of the `queue`.
+     * Invoke with `queue.unshift(task, [callback])`.
+     * @property {AsyncFunction} pushAsync - the same as `q.push`, except this returns
+     * a promise that rejects if an error occurs.
+     * @property {AsyncFunction} unshiftAsync - the same as `q.unshift`, except this returns
+     * a promise that rejects if an error occurs.
+     * @property {Function} remove - remove items from the queue that match a test
+     * function.  The test function will be passed an object with a `data` property,
+     * and a `priority` property, if this is a
+     * [priorityQueue]{@link module:ControlFlow.priorityQueue} object.
+     * Invoked with `queue.remove(testFn)`, where `testFn` is of the form
+     * `function ({data, priority}) {}` and returns a Boolean.
+     * @property {Function} saturated - a function that sets a callback that is
+     * called when the number of running workers hits the `concurrency` limit, and
+     * further tasks will be queued.  If the callback is omitted, `q.saturated()`
+     * returns a promise for the next occurrence.
+     * @property {Function} unsaturated - a function that sets a callback that is
+     * called when the number of running workers is less than the `concurrency` &
+     * `buffer` limits, and further tasks will not be queued. If the callback is
+     * omitted, `q.unsaturated()` returns a promise for the next occurrence.
+     * @property {number} buffer - A minimum threshold buffer in order to say that
+     * the `queue` is `unsaturated`.
+     * @property {Function} empty - a function that sets a callback that is called
+     * when the last item from the `queue` is given to a `worker`. If the callback
+     * is omitted, `q.empty()` returns a promise for the next occurrence.
+     * @property {Function} drain - a function that sets a callback that is called
+     * when the last item from the `queue` has returned from the `worker`. If the
+     * callback is omitted, `q.drain()` returns a promise for the next occurrence.
+     * @property {Function} error - a function that sets a callback that is called
+     * when a task errors. Has the signature `function(error, task)`. If the
+     * callback is omitted, `error()` returns a promise that rejects on the next
+     * error.
+     * @property {boolean} paused - a boolean for determining whether the queue is
+     * in a paused state.
+     * @property {Function} pause - a function that pauses the processing of tasks
+     * until `resume()` is called. Invoke with `queue.pause()`.
+     * @property {Function} resume - a function that resumes the processing of
+     * queued tasks when the queue is paused. Invoke with `queue.resume()`.
+     * @property {Function} kill - a function that removes the `drain` callback and
+     * empties remaining tasks from the queue forcing it to go idle. No more tasks
+     * should be pushed to the queue after calling this function. Invoke with `queue.kill()`.
+     *
+     * @example
+     * const q = async.queue(worker, 2)
+     * q.push(item1)
+     * q.push(item2)
+     * q.push(item3)
+     * // queues are iterable, spread into an array to inspect
+     * const items = [...q] // [item1, item2, item3]
+     * // or use for of
+     * for (let item of q) {
+     *     console.log(item)
+     * }
+     *
+     * q.drain(() => {
+     *     console.log('all done')
+     * })
+     * // or
+     * await q.drain()
+     */
+
+    /**
+     * Creates a `queue` object with the specified `concurrency`. Tasks added to the
+     * `queue` are processed in parallel (up to the `concurrency` limit). If all
+     * `worker`s are in progress, the task is queued until one becomes available.
+     * Once a `worker` completes a `task`, that `task`'s callback is called.
+     *
+     * @name queue
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {AsyncFunction} worker - An async function for processing a queued task.
+     * If you want to handle errors from an individual task, pass a callback to
+     * `q.push()`. Invoked with (task, callback).
+     * @param {number} [concurrency=1] - An `integer` for determining how many
+     * `worker` functions should be run in parallel.  If omitted, the concurrency
+     * defaults to `1`.  If the concurrency is `0`, an error is thrown.
+     * @returns {module:ControlFlow.QueueObject} A queue object to manage the tasks. Callbacks can be
+     * attached as certain properties to listen for specific events during the
+     * lifecycle of the queue.
+     * @example
+     *
+     * // create a queue object with concurrency 2
+     * var q = async.queue(function(task, callback) {
+     *     console.log('hello ' + task.name);
+     *     callback();
+     * }, 2);
+     *
+     * // assign a callback
+     * q.drain(function() {
+     *     console.log('all items have been processed');
+     * });
+     * // or await the end
+     * await q.drain()
+     *
+     * // assign an error callback
+     * q.error(function(err, task) {
+     *     console.error('task experienced an error');
+     * });
+     *
+     * // add some items to the queue
+     * q.push({name: 'foo'}, function(err) {
+     *     console.log('finished processing foo');
+     * });
+     * // callback is optional
+     * q.push({name: 'bar'});
+     *
+     * // add some items to the queue (batch-wise)
+     * q.push([{name: 'baz'},{name: 'bay'},{name: 'bax'}], function(err) {
+     *     console.log('finished processing item');
+     * });
+     *
+     * // add some items to the front of the queue
+     * q.unshift({name: 'bar'}, function (err) {
+     *     console.log('finished processing bar');
+     * });
+     */
+    function queue$1 (worker, concurrency) {
+        var _worker = wrapAsync(worker);
+        return queue((items, cb) => {
+            _worker(items[0], cb);
+        }, concurrency, 1);
+    }
+
+    // Binary min-heap implementation used for priority queue.
+    // Implementation is stable, i.e. push time is considered for equal priorities
+    class Heap {
+        constructor() {
+            this.heap = [];
+            this.pushCount = Number.MIN_SAFE_INTEGER;
+        }
+
+        get length() {
+            return this.heap.length;
+        }
+
+        empty () {
+            this.heap = [];
+            return this;
+        }
+
+        percUp(index) {
+            let p;
+
+            while (index > 0 && smaller(this.heap[index], this.heap[p=parent(index)])) {
+                let t = this.heap[index];
+                this.heap[index] = this.heap[p];
+                this.heap[p] = t;
+
+                index = p;
+            }
+        }
+
+        percDown(index) {
+            let l;
+
+            while ((l=leftChi(index)) < this.heap.length) {
+                if (l+1 < this.heap.length && smaller(this.heap[l+1], this.heap[l])) {
+                    l = l+1;
+                }
+
+                if (smaller(this.heap[index], this.heap[l])) {
+                    break;
+                }
+
+                let t = this.heap[index];
+                this.heap[index] = this.heap[l];
+                this.heap[l] = t;
+
+                index = l;
+            }
+        }
+
+        push(node) {
+            node.pushCount = ++this.pushCount;
+            this.heap.push(node);
+            this.percUp(this.heap.length-1);
+        }
+
+        unshift(node) {
+            return this.heap.push(node);
+        }
+
+        shift() {
+            let [top] = this.heap;
+
+            this.heap[0] = this.heap[this.heap.length-1];
+            this.heap.pop();
+            this.percDown(0);
+
+            return top;
+        }
+
+        toArray() {
+            return [...this];
+        }
+
+        *[Symbol.iterator] () {
+            for (let i = 0; i < this.heap.length; i++) {
+                yield this.heap[i].data;
+            }
+        }
+
+        remove (testFn) {
+            let j = 0;
+            for (let i = 0; i < this.heap.length; i++) {
+                if (!testFn(this.heap[i])) {
+                    this.heap[j] = this.heap[i];
+                    j++;
+                }
+            }
+
+            this.heap.splice(j);
+
+            for (let i = parent(this.heap.length-1); i >= 0; i--) {
+                this.percDown(i);
+            }
+
+            return this;
+        }
+    }
+
+    function leftChi(i) {
+        return (i<<1)+1;
+    }
+
+    function parent(i) {
+        return ((i+1)>>1)-1;
+    }
+
+    function smaller(x, y) {
+        if (x.priority !== y.priority) {
+            return x.priority < y.priority;
+        }
+        else {
+            return x.pushCount < y.pushCount;
+        }
+    }
+
+    /**
+     * The same as [async.queue]{@link module:ControlFlow.queue} only tasks are assigned a priority and
+     * completed in ascending priority order.
+     *
+     * @name priorityQueue
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.queue]{@link module:ControlFlow.queue}
+     * @category Control Flow
+     * @param {AsyncFunction} worker - An async function for processing a queued task.
+     * If you want to handle errors from an individual task, pass a callback to
+     * `q.push()`.
+     * Invoked with (task, callback).
+     * @param {number} concurrency - An `integer` for determining how many `worker`
+     * functions should be run in parallel.  If omitted, the concurrency defaults to
+     * `1`.  If the concurrency is `0`, an error is thrown.
+     * @returns {module:ControlFlow.QueueObject} A priorityQueue object to manage the tasks. There are three
+     * differences between `queue` and `priorityQueue` objects:
+     * * `push(task, priority, [callback])` - `priority` should be a number. If an
+     *   array of `tasks` is given, all tasks will be assigned the same priority.
+     * * `pushAsync(task, priority, [callback])` - the same as `priorityQueue.push`,
+     *   except this returns a promise that rejects if an error occurs.
+     * * The `unshift` and `unshiftAsync` methods were removed.
+     */
+    function priorityQueue(worker, concurrency) {
+        // Start with a normal queue
+        var q = queue$1(worker, concurrency);
+
+        var {
+            push,
+            pushAsync
+        } = q;
+
+        q._tasks = new Heap();
+        q._createTaskItem = ({data, priority}, callback) => {
+            return {
+                data,
+                priority,
+                callback
+            };
+        };
+
+        function createDataItems(tasks, priority) {
+            if (!Array.isArray(tasks)) {
+                return {data: tasks, priority};
+            }
+            return tasks.map(data => { return {data, priority}; });
+        }
+
+        // Override push to accept second parameter representing priority
+        q.push = function(data, priority = 0, callback) {
+            return push(createDataItems(data, priority), callback);
+        };
+
+        q.pushAsync = function(data, priority = 0, callback) {
+            return pushAsync(createDataItems(data, priority), callback);
+        };
+
+        // Remove unshift functions
+        delete q.unshift;
+        delete q.unshiftAsync;
+
+        return q;
+    }
+
+    /**
+     * Runs the `tasks` array of functions in parallel, without waiting until the
+     * previous function has completed. Once any of the `tasks` complete or pass an
+     * error to its callback, the main `callback` is immediately called. It's
+     * equivalent to `Promise.race()`.
+     *
+     * @name race
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Array} tasks - An array containing [async functions]{@link AsyncFunction}
+     * to run. Each function can complete with an optional `result` value.
+     * @param {Function} callback - A callback to run once any of the functions have
+     * completed. This function gets an error or result from the first function that
+     * completed. Invoked with (err, result).
+     * @returns {Promise} a promise, if a callback is omitted
+     * @example
+     *
+     * async.race([
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'two');
+     *         }, 100);
+     *     }
+     * ],
+     * // main callback
+     * function(err, result) {
+     *     // the result will be equal to 'two' as it finishes earlier
+     * });
+     */
+    function race(tasks, callback) {
+        callback = once(callback);
+        if (!Array.isArray(tasks)) return callback(new TypeError('First argument to race must be an array of functions'));
+        if (!tasks.length) return callback();
+        for (var i = 0, l = tasks.length; i < l; i++) {
+            wrapAsync(tasks[i])(callback);
+        }
+    }
+
+    var race$1 = awaitify(race, 2);
+
+    /**
+     * Same as [`reduce`]{@link module:Collections.reduce}, only operates on `array` in reverse order.
+     *
+     * @name reduceRight
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.reduce]{@link module:Collections.reduce}
+     * @alias foldr
+     * @category Collection
+     * @param {Array} array - A collection to iterate over.
+     * @param {*} memo - The initial state of the reduction.
+     * @param {AsyncFunction} iteratee - A function applied to each item in the
+     * array to produce the next step in the reduction.
+     * The `iteratee` should complete with the next state of the reduction.
+     * If the iteratee completes with an error, the reduction is stopped and the
+     * main `callback` is immediately called with the error.
+     * Invoked with (memo, item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Result is the reduced value. Invoked with
+     * (err, result).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function reduceRight (array, memo, iteratee, callback) {
+        var reversed = [...array].reverse();
+        return reduce$1(reversed, memo, iteratee, callback);
+    }
+
+    /**
+     * Wraps the async function in another function that always completes with a
+     * result object, even when it errors.
+     *
+     * The result object has either the property `error` or `value`.
+     *
+     * @name reflect
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {AsyncFunction} fn - The async function you want to wrap
+     * @returns {Function} - A function that always passes null to it's callback as
+     * the error. The second argument to the callback will be an `object` with
+     * either an `error` or a `value` property.
+     * @example
+     *
+     * async.parallel([
+     *     async.reflect(function(callback) {
+     *         // do some stuff ...
+     *         callback(null, 'one');
+     *     }),
+     *     async.reflect(function(callback) {
+     *         // do some more stuff but error ...
+     *         callback('bad stuff happened');
+     *     }),
+     *     async.reflect(function(callback) {
+     *         // do some more stuff ...
+     *         callback(null, 'two');
+     *     })
+     * ],
+     * // optional callback
+     * function(err, results) {
+     *     // values
+     *     // results[0].value = 'one'
+     *     // results[1].error = 'bad stuff happened'
+     *     // results[2].value = 'two'
+     * });
+     */
+    function reflect(fn) {
+        var _fn = wrapAsync(fn);
+        return initialParams(function reflectOn(args, reflectCallback) {
+            args.push((error, ...cbArgs) => {
+                let retVal = {};
+                if (error) {
+                    retVal.error = error;
+                }
+                if (cbArgs.length > 0){
+                    var value = cbArgs;
+                    if (cbArgs.length <= 1) {
+                        [value] = cbArgs;
+                    }
+                    retVal.value = value;
+                }
+                reflectCallback(null, retVal);
+            });
+
+            return _fn.apply(this, args);
+        });
+    }
+
+    /**
+     * A helper function that wraps an array or an object of functions with `reflect`.
+     *
+     * @name reflectAll
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @see [async.reflect]{@link module:Utils.reflect}
+     * @category Util
+     * @param {Array|Object|Iterable} tasks - The collection of
+     * [async functions]{@link AsyncFunction} to wrap in `async.reflect`.
+     * @returns {Array} Returns an array of async functions, each wrapped in
+     * `async.reflect`
+     * @example
+     *
+     * let tasks = [
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     function(callback) {
+     *         // do some more stuff but error ...
+     *         callback(new Error('bad stuff happened'));
+     *     },
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'two');
+     *         }, 100);
+     *     }
+     * ];
+     *
+     * async.parallel(async.reflectAll(tasks),
+     * // optional callback
+     * function(err, results) {
+     *     // values
+     *     // results[0].value = 'one'
+     *     // results[1].error = Error('bad stuff happened')
+     *     // results[2].value = 'two'
+     * });
+     *
+     * // an example using an object instead of an array
+     * let tasks = {
+     *     one: function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     two: function(callback) {
+     *         callback('two');
+     *     },
+     *     three: function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'three');
+     *         }, 100);
+     *     }
+     * };
+     *
+     * async.parallel(async.reflectAll(tasks),
+     * // optional callback
+     * function(err, results) {
+     *     // values
+     *     // results.one.value = 'one'
+     *     // results.two.error = 'two'
+     *     // results.three.value = 'three'
+     * });
+     */
+    function reflectAll(tasks) {
+        var results;
+        if (Array.isArray(tasks)) {
+            results = tasks.map(reflect);
+        } else {
+            results = {};
+            Object.keys(tasks).forEach(key => {
+                results[key] = reflect.call(this, tasks[key]);
+            });
+        }
+        return results;
+    }
+
+    function reject(eachfn, arr, _iteratee, callback) {
+        const iteratee = wrapAsync(_iteratee);
+        return _filter(eachfn, arr, (value, cb) => {
+            iteratee(value, (err, v) => {
+                cb(err, !v);
+            });
+        }, callback);
+    }
+
+    /**
+     * The opposite of [`filter`]{@link module:Collections.filter}. Removes values that pass an `async` truth test.
+     *
+     * @name reject
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.filter]{@link module:Collections.filter}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {Function} iteratee - An async truth test to apply to each item in
+     * `coll`.
+     * The should complete with a boolean value as its `result`.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     *
+     * const fileList = ['dir1/file1.txt','dir2/file3.txt','dir3/file6.txt'];
+     *
+     * // asynchronous function that checks if a file exists
+     * function fileExists(file, callback) {
+     *    fs.access(file, fs.constants.F_OK, (err) => {
+     *        callback(null, !err);
+     *    });
+     * }
+     *
+     * // Using callbacks
+     * async.reject(fileList, fileExists, function(err, results) {
+     *    // [ 'dir3/file6.txt' ]
+     *    // results now equals an array of the non-existing files
+     * });
+     *
+     * // Using Promises
+     * async.reject(fileList, fileExists)
+     * .then( results => {
+     *     console.log(results);
+     *     // [ 'dir3/file6.txt' ]
+     *     // results now equals an array of the non-existing files
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.reject(fileList, fileExists);
+     *         console.log(results);
+     *         // [ 'dir3/file6.txt' ]
+     *         // results now equals an array of the non-existing files
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function reject$1 (coll, iteratee, callback) {
+        return reject(eachOf$1, coll, iteratee, callback)
+    }
+    var reject$2 = awaitify(reject$1, 3);
+
+    /**
+     * The same as [`reject`]{@link module:Collections.reject} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name rejectLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.reject]{@link module:Collections.reject}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {Function} iteratee - An async truth test to apply to each item in
+     * `coll`.
+     * The should complete with a boolean value as its `result`.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function rejectLimit (coll, limit, iteratee, callback) {
+        return reject(eachOfLimit(limit), coll, iteratee, callback)
+    }
+    var rejectLimit$1 = awaitify(rejectLimit, 4);
+
+    /**
+     * The same as [`reject`]{@link module:Collections.reject} but runs only a single async operation at a time.
+     *
+     * @name rejectSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.reject]{@link module:Collections.reject}
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {Function} iteratee - An async truth test to apply to each item in
+     * `coll`.
+     * The should complete with a boolean value as its `result`.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     */
+    function rejectSeries (coll, iteratee, callback) {
+        return reject(eachOfSeries$1, coll, iteratee, callback)
+    }
+    var rejectSeries$1 = awaitify(rejectSeries, 3);
+
+    function constant$1(value) {
+        return function () {
+            return value;
+        }
+    }
+
+    /**
+     * Attempts to get a successful response from `task` no more than `times` times
+     * before returning an error. If the task is successful, the `callback` will be
+     * passed the result of the successful task. If all attempts fail, the callback
+     * will be passed the error and result (if any) of the final attempt.
+     *
+     * @name retry
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @see [async.retryable]{@link module:ControlFlow.retryable}
+     * @param {Object|number} [opts = {times: 5, interval: 0}| 5] - Can be either an
+     * object with `times` and `interval` or a number.
+     * * `times` - The number of attempts to make before giving up.  The default
+     *   is `5`.
+     * * `interval` - The time to wait between retries, in milliseconds.  The
+     *   default is `0`. The interval may also be specified as a function of the
+     *   retry count (see example).
+     * * `errorFilter` - An optional synchronous function that is invoked on
+     *   erroneous result. If it returns `true` the retry attempts will continue;
+     *   if the function returns `false` the retry flow is aborted with the current
+     *   attempt's error and result being returned to the final callback.
+     *   Invoked with (err).
+     * * If `opts` is a number, the number specifies the number of times to retry,
+     *   with the default interval of `0`.
+     * @param {AsyncFunction} task - An async function to retry.
+     * Invoked with (callback).
+     * @param {Function} [callback] - An optional callback which is called when the
+     * task has succeeded, or after the final failed attempt. It receives the `err`
+     * and `result` arguments of the last attempt at completing the `task`. Invoked
+     * with (err, results).
+     * @returns {Promise} a promise if no callback provided
+     *
+     * @example
+     *
+     * // The `retry` function can be used as a stand-alone control flow by passing
+     * // a callback, as shown below:
+     *
+     * // try calling apiMethod 3 times
+     * async.retry(3, apiMethod, function(err, result) {
+     *     // do something with the result
+     * });
+     *
+     * // try calling apiMethod 3 times, waiting 200 ms between each retry
+     * async.retry({times: 3, interval: 200}, apiMethod, function(err, result) {
+     *     // do something with the result
+     * });
+     *
+     * // try calling apiMethod 10 times with exponential backoff
+     * // (i.e. intervals of 100, 200, 400, 800, 1600, ... milliseconds)
+     * async.retry({
+     *   times: 10,
+     *   interval: function(retryCount) {
+     *     return 50 * Math.pow(2, retryCount);
+     *   }
+     * }, apiMethod, function(err, result) {
+     *     // do something with the result
+     * });
+     *
+     * // try calling apiMethod the default 5 times no delay between each retry
+     * async.retry(apiMethod, function(err, result) {
+     *     // do something with the result
+     * });
+     *
+     * // try calling apiMethod only when error condition satisfies, all other
+     * // errors will abort the retry control flow and return to final callback
+     * async.retry({
+     *   errorFilter: function(err) {
+     *     return err.message === 'Temporary error'; // only retry on a specific error
+     *   }
+     * }, apiMethod, function(err, result) {
+     *     // do something with the result
+     * });
+     *
+     * // to retry individual methods that are not as reliable within other
+     * // control flow functions, use the `retryable` wrapper:
+     * async.auto({
+     *     users: api.getUsers.bind(api),
+     *     payments: async.retryable(3, api.getPayments.bind(api))
+     * }, function(err, results) {
+     *     // do something with the results
+     * });
+     *
+     */
+    const DEFAULT_TIMES = 5;
+    const DEFAULT_INTERVAL = 0;
+
+    function retry(opts, task, callback) {
+        var options = {
+            times: DEFAULT_TIMES,
+            intervalFunc: constant$1(DEFAULT_INTERVAL)
+        };
+
+        if (arguments.length < 3 && typeof opts === 'function') {
+            callback = task || promiseCallback();
+            task = opts;
+        } else {
+            parseTimes(options, opts);
+            callback = callback || promiseCallback();
+        }
+
+        if (typeof task !== 'function') {
+            throw new Error("Invalid arguments for async.retry");
+        }
+
+        var _task = wrapAsync(task);
+
+        var attempt = 1;
+        function retryAttempt() {
+            _task((err, ...args) => {
+                if (err === false) return
+                if (err && attempt++ < options.times &&
+                    (typeof options.errorFilter != 'function' ||
+                        options.errorFilter(err))) {
+                    setTimeout(retryAttempt, options.intervalFunc(attempt - 1));
+                } else {
+                    callback(err, ...args);
+                }
+            });
+        }
+
+        retryAttempt();
+        return callback[PROMISE_SYMBOL]
+    }
+
+    function parseTimes(acc, t) {
+        if (typeof t === 'object') {
+            acc.times = +t.times || DEFAULT_TIMES;
+
+            acc.intervalFunc = typeof t.interval === 'function' ?
+                t.interval :
+                constant$1(+t.interval || DEFAULT_INTERVAL);
+
+            acc.errorFilter = t.errorFilter;
+        } else if (typeof t === 'number' || typeof t === 'string') {
+            acc.times = +t || DEFAULT_TIMES;
+        } else {
+            throw new Error("Invalid arguments for async.retry");
+        }
+    }
+
+    /**
+     * A close relative of [`retry`]{@link module:ControlFlow.retry}.  This method
+     * wraps a task and makes it retryable, rather than immediately calling it
+     * with retries.
+     *
+     * @name retryable
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.retry]{@link module:ControlFlow.retry}
+     * @category Control Flow
+     * @param {Object|number} [opts = {times: 5, interval: 0}| 5] - optional
+     * options, exactly the same as from `retry`, except for a `opts.arity` that
+     * is the arity of the `task` function, defaulting to `task.length`
+     * @param {AsyncFunction} task - the asynchronous function to wrap.
+     * This function will be passed any arguments passed to the returned wrapper.
+     * Invoked with (...args, callback).
+     * @returns {AsyncFunction} The wrapped function, which when invoked, will
+     * retry on an error, based on the parameters specified in `opts`.
+     * This function will accept the same parameters as `task`.
+     * @example
+     *
+     * async.auto({
+     *     dep1: async.retryable(3, getFromFlakyService),
+     *     process: ["dep1", async.retryable(3, function (results, cb) {
+     *         maybeProcessData(results.dep1, cb);
+     *     })]
+     * }, callback);
+     */
+    function retryable (opts, task) {
+        if (!task) {
+            task = opts;
+            opts = null;
+        }
+        let arity = (opts && opts.arity) || task.length;
+        if (isAsync(task)) {
+            arity += 1;
+        }
+        var _task = wrapAsync(task);
+        return initialParams((args, callback) => {
+            if (args.length < arity - 1 || callback == null) {
+                args.push(callback);
+                callback = promiseCallback();
+            }
+            function taskFn(cb) {
+                _task(...args, cb);
+            }
+
+            if (opts) retry(opts, taskFn, callback);
+            else retry(taskFn, callback);
+
+            return callback[PROMISE_SYMBOL]
+        });
+    }
+
+    /**
+     * Run the functions in the `tasks` collection in series, each one running once
+     * the previous function has completed. If any functions in the series pass an
+     * error to its callback, no more functions are run, and `callback` is
+     * immediately called with the value of the error. Otherwise, `callback`
+     * receives an array of results when `tasks` have completed.
+     *
+     * It is also possible to use an object instead of an array. Each property will
+     * be run as a function, and the results will be passed to the final `callback`
+     * as an object instead of an array. This can be a more readable way of handling
+     *  results from {@link async.series}.
+     *
+     * **Note** that while many implementations preserve the order of object
+     * properties, the [ECMAScript Language Specification](http://www.ecma-international.org/ecma-262/5.1/#sec-8.6)
+     * explicitly states that
+     *
+     * > The mechanics and order of enumerating the properties is not specified.
+     *
+     * So if you rely on the order in which your series of functions are executed,
+     * and want this to work on all platforms, consider using an array.
+     *
+     * @name series
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Array|Iterable|AsyncIterable|Object} tasks - A collection containing
+     * [async functions]{@link AsyncFunction} to run in series.
+     * Each function can complete with any number of optional `result` values.
+     * @param {Function} [callback] - An optional callback to run once all the
+     * functions have completed. This function gets a results array (or object)
+     * containing all the result arguments passed to the `task` callbacks. Invoked
+     * with (err, result).
+     * @return {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * //Using Callbacks
+     * async.series([
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             // do some async task
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             // then do another async task
+     *             callback(null, 'two');
+     *         }, 100);
+     *     }
+     * ], function(err, results) {
+     *     console.log(results);
+     *     // results is equal to ['one','two']
+     * });
+     *
+     * // an example using objects instead of arrays
+     * async.series({
+     *     one: function(callback) {
+     *         setTimeout(function() {
+     *             // do some async task
+     *             callback(null, 1);
+     *         }, 200);
+     *     },
+     *     two: function(callback) {
+     *         setTimeout(function() {
+     *             // then do another async task
+     *             callback(null, 2);
+     *         }, 100);
+     *     }
+     * }, function(err, results) {
+     *     console.log(results);
+     *     // results is equal to: { one: 1, two: 2 }
+     * });
+     *
+     * //Using Promises
+     * async.series([
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'one');
+     *         }, 200);
+     *     },
+     *     function(callback) {
+     *         setTimeout(function() {
+     *             callback(null, 'two');
+     *         }, 100);
+     *     }
+     * ]).then(results => {
+     *     console.log(results);
+     *     // results is equal to ['one','two']
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * // an example using an object instead of an array
+     * async.series({
+     *     one: function(callback) {
+     *         setTimeout(function() {
+     *             // do some async task
+     *             callback(null, 1);
+     *         }, 200);
+     *     },
+     *     two: function(callback) {
+     *         setTimeout(function() {
+     *             // then do another async task
+     *             callback(null, 2);
+     *         }, 100);
+     *     }
+     * }).then(results => {
+     *     console.log(results);
+     *     // results is equal to: { one: 1, two: 2 }
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * //Using async/await
+     * async () => {
+     *     try {
+     *         let results = await async.series([
+     *             function(callback) {
+     *                 setTimeout(function() {
+     *                     // do some async task
+     *                     callback(null, 'one');
+     *                 }, 200);
+     *             },
+     *             function(callback) {
+     *                 setTimeout(function() {
+     *                     // then do another async task
+     *                     callback(null, 'two');
+     *                 }, 100);
+     *             }
+     *         ]);
+     *         console.log(results);
+     *         // results is equal to ['one','two']
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * // an example using an object instead of an array
+     * async () => {
+     *     try {
+     *         let results = await async.parallel({
+     *             one: function(callback) {
+     *                 setTimeout(function() {
+     *                     // do some async task
+     *                     callback(null, 1);
+     *                 }, 200);
+     *             },
+     *            two: function(callback) {
+     *                 setTimeout(function() {
+     *                     // then do another async task
+     *                     callback(null, 2);
+     *                 }, 100);
+     *            }
+     *         });
+     *         console.log(results);
+     *         // results is equal to: { one: 1, two: 2 }
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function series(tasks, callback) {
+        return parallel(eachOfSeries$1, tasks, callback);
+    }
+
+    /**
+     * Returns `true` if at least one element in the `coll` satisfies an async test.
+     * If any iteratee call returns `true`, the main `callback` is immediately
+     * called.
+     *
+     * @name some
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @alias any
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async truth test to apply to each item
+     * in the collections in parallel.
+     * The iteratee should complete with a boolean `result` value.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called as soon as any
+     * iteratee returns `true`, or after all the iteratee functions have finished.
+     * Result will be either `true` or `false` depending on the values of the async
+     * tests. Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     * @example
+     *
+     * // dir1 is a directory that contains file1.txt, file2.txt
+     * // dir2 is a directory that contains file3.txt, file4.txt
+     * // dir3 is a directory that contains file5.txt
+     * // dir4 does not exist
+     *
+     * // asynchronous function that checks if a file exists
+     * function fileExists(file, callback) {
+     *    fs.access(file, fs.constants.F_OK, (err) => {
+     *        callback(null, !err);
+     *    });
+     * }
+     *
+     * // Using callbacks
+     * async.some(['dir1/missing.txt','dir2/missing.txt','dir3/file5.txt'], fileExists,
+     *    function(err, result) {
+     *        console.log(result);
+     *        // true
+     *        // result is true since some file in the list exists
+     *    }
+     *);
+     *
+     * async.some(['dir1/missing.txt','dir2/missing.txt','dir4/missing.txt'], fileExists,
+     *    function(err, result) {
+     *        console.log(result);
+     *        // false
+     *        // result is false since none of the files exists
+     *    }
+     *);
+     *
+     * // Using Promises
+     * async.some(['dir1/missing.txt','dir2/missing.txt','dir3/file5.txt'], fileExists)
+     * .then( result => {
+     *     console.log(result);
+     *     // true
+     *     // result is true since some file in the list exists
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * async.some(['dir1/missing.txt','dir2/missing.txt','dir4/missing.txt'], fileExists)
+     * .then( result => {
+     *     console.log(result);
+     *     // false
+     *     // result is false since none of the files exists
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.some(['dir1/missing.txt','dir2/missing.txt','dir3/file5.txt'], fileExists);
+     *         console.log(result);
+     *         // true
+     *         // result is true since some file in the list exists
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     * async () => {
+     *     try {
+     *         let result = await async.some(['dir1/missing.txt','dir2/missing.txt','dir4/missing.txt'], fileExists);
+     *         console.log(result);
+     *         // false
+     *         // result is false since none of the files exists
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function some(coll, iteratee, callback) {
+        return _createTester(Boolean, res => res)(eachOf$1, coll, iteratee, callback)
+    }
+    var some$1 = awaitify(some, 3);
+
+    /**
+     * The same as [`some`]{@link module:Collections.some} but runs a maximum of `limit` async operations at a time.
+     *
+     * @name someLimit
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.some]{@link module:Collections.some}
+     * @alias anyLimit
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - An async truth test to apply to each item
+     * in the collections in parallel.
+     * The iteratee should complete with a boolean `result` value.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called as soon as any
+     * iteratee returns `true`, or after all the iteratee functions have finished.
+     * Result will be either `true` or `false` depending on the values of the async
+     * tests. Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     */
+    function someLimit(coll, limit, iteratee, callback) {
+        return _createTester(Boolean, res => res)(eachOfLimit(limit), coll, iteratee, callback)
+    }
+    var someLimit$1 = awaitify(someLimit, 4);
+
+    /**
+     * The same as [`some`]{@link module:Collections.some} but runs only a single async operation at a time.
+     *
+     * @name someSeries
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @see [async.some]{@link module:Collections.some}
+     * @alias anySeries
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async truth test to apply to each item
+     * in the collections in series.
+     * The iteratee should complete with a boolean `result` value.
+     * Invoked with (item, callback).
+     * @param {Function} [callback] - A callback which is called as soon as any
+     * iteratee returns `true`, or after all the iteratee functions have finished.
+     * Result will be either `true` or `false` depending on the values of the async
+     * tests. Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     */
+    function someSeries(coll, iteratee, callback) {
+        return _createTester(Boolean, res => res)(eachOfSeries$1, coll, iteratee, callback)
+    }
+    var someSeries$1 = awaitify(someSeries, 3);
+
+    /**
+     * Sorts a list by the results of running each `coll` value through an async
+     * `iteratee`.
+     *
+     * @name sortBy
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {AsyncFunction} iteratee - An async function to apply to each item in
+     * `coll`.
+     * The iteratee should complete with a value to use as the sort criteria as
+     * its `result`.
+     * Invoked with (item, callback).
+     * @param {Function} callback - A callback which is called after all the
+     * `iteratee` functions have finished, or an error occurs. Results is the items
+     * from the original `coll` sorted by the values returned by the `iteratee`
+     * calls. Invoked with (err, results).
+     * @returns {Promise} a promise, if no callback passed
+     * @example
+     *
+     * // bigfile.txt is a file that is 251100 bytes in size
+     * // mediumfile.txt is a file that is 11000 bytes in size
+     * // smallfile.txt is a file that is 121 bytes in size
+     *
+     * // asynchronous function that returns the file size in bytes
+     * function getFileSizeInBytes(file, callback) {
+     *     fs.stat(file, function(err, stat) {
+     *         if (err) {
+     *             return callback(err);
+     *         }
+     *         callback(null, stat.size);
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.sortBy(['mediumfile.txt','smallfile.txt','bigfile.txt'], getFileSizeInBytes,
+     *     function(err, results) {
+     *         if (err) {
+     *             console.log(err);
+     *         } else {
+     *             console.log(results);
+     *             // results is now the original array of files sorted by
+     *             // file size (ascending by default), e.g.
+     *             // [ 'smallfile.txt', 'mediumfile.txt', 'bigfile.txt']
+     *         }
+     *     }
+     * );
+     *
+     * // By modifying the callback parameter the
+     * // sorting order can be influenced:
+     *
+     * // ascending order
+     * async.sortBy(['mediumfile.txt','smallfile.txt','bigfile.txt'], function(file, callback) {
+     *     getFileSizeInBytes(file, function(getFileSizeErr, fileSize) {
+     *         if (getFileSizeErr) return callback(getFileSizeErr);
+     *         callback(null, fileSize);
+     *     });
+     * }, function(err, results) {
+     *         if (err) {
+     *             console.log(err);
+     *         } else {
+     *             console.log(results);
+     *             // results is now the original array of files sorted by
+     *             // file size (ascending by default), e.g.
+     *             // [ 'smallfile.txt', 'mediumfile.txt', 'bigfile.txt']
+     *         }
+     *     }
+     * );
+     *
+     * // descending order
+     * async.sortBy(['bigfile.txt','mediumfile.txt','smallfile.txt'], function(file, callback) {
+     *     getFileSizeInBytes(file, function(getFileSizeErr, fileSize) {
+     *         if (getFileSizeErr) {
+     *             return callback(getFileSizeErr);
+     *         }
+     *         callback(null, fileSize * -1);
+     *     });
+     * }, function(err, results) {
+     *         if (err) {
+     *             console.log(err);
+     *         } else {
+     *             console.log(results);
+     *             // results is now the original array of files sorted by
+     *             // file size (ascending by default), e.g.
+     *             // [ 'bigfile.txt', 'mediumfile.txt', 'smallfile.txt']
+     *         }
+     *     }
+     * );
+     *
+     * // Error handling
+     * async.sortBy(['mediumfile.txt','smallfile.txt','missingfile.txt'], getFileSizeInBytes,
+     *     function(err, results) {
+     *         if (err) {
+     *             console.log(err);
+     *             // [ Error: ENOENT: no such file or directory ]
+     *         } else {
+     *             console.log(results);
+     *         }
+     *     }
+     * );
+     *
+     * // Using Promises
+     * async.sortBy(['mediumfile.txt','smallfile.txt','bigfile.txt'], getFileSizeInBytes)
+     * .then( results => {
+     *     console.log(results);
+     *     // results is now the original array of files sorted by
+     *     // file size (ascending by default), e.g.
+     *     // [ 'smallfile.txt', 'mediumfile.txt', 'bigfile.txt']
+     * }).catch( err => {
+     *     console.log(err);
+     * });
+     *
+     * // Error handling
+     * async.sortBy(['mediumfile.txt','smallfile.txt','missingfile.txt'], getFileSizeInBytes)
+     * .then( results => {
+     *     console.log(results);
+     * }).catch( err => {
+     *     console.log(err);
+     *     // [ Error: ENOENT: no such file or directory ]
+     * });
+     *
+     * // Using async/await
+     * (async () => {
+     *     try {
+     *         let results = await async.sortBy(['bigfile.txt','mediumfile.txt','smallfile.txt'], getFileSizeInBytes);
+     *         console.log(results);
+     *         // results is now the original array of files sorted by
+     *         // file size (ascending by default), e.g.
+     *         // [ 'smallfile.txt', 'mediumfile.txt', 'bigfile.txt']
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * })();
+     *
+     * // Error handling
+     * async () => {
+     *     try {
+     *         let results = await async.sortBy(['missingfile.txt','mediumfile.txt','smallfile.txt'], getFileSizeInBytes);
+     *         console.log(results);
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *         // [ Error: ENOENT: no such file or directory ]
+     *     }
+     * }
+     *
+     */
+    function sortBy (coll, iteratee, callback) {
+        var _iteratee = wrapAsync(iteratee);
+        return map$1(coll, (x, iterCb) => {
+            _iteratee(x, (err, criteria) => {
+                if (err) return iterCb(err);
+                iterCb(err, {value: x, criteria});
+            });
+        }, (err, results) => {
+            if (err) return callback(err);
+            callback(null, results.sort(comparator).map(v => v.value));
+        });
+
+        function comparator(left, right) {
+            var a = left.criteria, b = right.criteria;
+            return a < b ? -1 : a > b ? 1 : 0;
+        }
+    }
+    var sortBy$1 = awaitify(sortBy, 3);
+
+    /**
+     * Sets a time limit on an asynchronous function. If the function does not call
+     * its callback within the specified milliseconds, it will be called with a
+     * timeout error. The code property for the error object will be `'ETIMEDOUT'`.
+     *
+     * @name timeout
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @category Util
+     * @param {AsyncFunction} asyncFn - The async function to limit in time.
+     * @param {number} milliseconds - The specified time limit.
+     * @param {*} [info] - Any variable you want attached (`string`, `object`, etc)
+     * to timeout Error for more information..
+     * @returns {AsyncFunction} Returns a wrapped function that can be used with any
+     * of the control flow functions.
+     * Invoke this function with the same parameters as you would `asyncFunc`.
+     * @example
+     *
+     * function myFunction(foo, callback) {
+     *     doAsyncTask(foo, function(err, data) {
+     *         // handle errors
+     *         if (err) return callback(err);
+     *
+     *         // do some stuff ...
+     *
+     *         // return processed data
+     *         return callback(null, data);
+     *     });
+     * }
+     *
+     * var wrapped = async.timeout(myFunction, 1000);
+     *
+     * // call `wrapped` as you would `myFunction`
+     * wrapped({ bar: 'bar' }, function(err, data) {
+     *     // if `myFunction` takes < 1000 ms to execute, `err`
+     *     // and `data` will have their expected values
+     *
+     *     // else `err` will be an Error with the code 'ETIMEDOUT'
+     * });
+     */
+    function timeout(asyncFn, milliseconds, info) {
+        var fn = wrapAsync(asyncFn);
+
+        return initialParams((args, callback) => {
+            var timedOut = false;
+            var timer;
+
+            function timeoutCallback() {
+                var name = asyncFn.name || 'anonymous';
+                var error  = new Error('Callback function "' + name + '" timed out.');
+                error.code = 'ETIMEDOUT';
+                if (info) {
+                    error.info = info;
+                }
+                timedOut = true;
+                callback(error);
+            }
+
+            args.push((...cbArgs) => {
+                if (!timedOut) {
+                    callback(...cbArgs);
+                    clearTimeout(timer);
+                }
+            });
+
+            // setup timer and call original function
+            timer = setTimeout(timeoutCallback, milliseconds);
+            fn(...args);
+        });
+    }
+
+    function range(size) {
+        var result = Array(size);
+        while (size--) {
+            result[size] = size;
+        }
+        return result;
+    }
+
+    /**
+     * The same as [times]{@link module:ControlFlow.times} but runs a maximum of `limit` async operations at a
+     * time.
+     *
+     * @name timesLimit
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.times]{@link module:ControlFlow.times}
+     * @category Control Flow
+     * @param {number} count - The number of times to run the function.
+     * @param {number} limit - The maximum number of async operations at a time.
+     * @param {AsyncFunction} iteratee - The async function to call `n` times.
+     * Invoked with the iteration index and a callback: (n, next).
+     * @param {Function} callback - see [async.map]{@link module:Collections.map}.
+     * @returns {Promise} a promise, if no callback is provided
+     */
+    function timesLimit(count, limit, iteratee, callback) {
+        var _iteratee = wrapAsync(iteratee);
+        return mapLimit$1(range(count), limit, _iteratee, callback);
+    }
+
+    /**
+     * Calls the `iteratee` function `n` times, and accumulates results in the same
+     * manner you would use with [map]{@link module:Collections.map}.
+     *
+     * @name times
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.map]{@link module:Collections.map}
+     * @category Control Flow
+     * @param {number} n - The number of times to run the function.
+     * @param {AsyncFunction} iteratee - The async function to call `n` times.
+     * Invoked with the iteration index and a callback: (n, next).
+     * @param {Function} callback - see {@link module:Collections.map}.
+     * @returns {Promise} a promise, if no callback is provided
+     * @example
+     *
+     * // Pretend this is some complicated async factory
+     * var createUser = function(id, callback) {
+     *     callback(null, {
+     *         id: 'user' + id
+     *     });
+     * };
+     *
+     * // generate 5 users
+     * async.times(5, function(n, next) {
+     *     createUser(n, function(err, user) {
+     *         next(err, user);
+     *     });
+     * }, function(err, users) {
+     *     // we should now have 5 users
+     * });
+     */
+    function times (n, iteratee, callback) {
+        return timesLimit(n, Infinity, iteratee, callback)
+    }
+
+    /**
+     * The same as [times]{@link module:ControlFlow.times} but runs only a single async operation at a time.
+     *
+     * @name timesSeries
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.times]{@link module:ControlFlow.times}
+     * @category Control Flow
+     * @param {number} n - The number of times to run the function.
+     * @param {AsyncFunction} iteratee - The async function to call `n` times.
+     * Invoked with the iteration index and a callback: (n, next).
+     * @param {Function} callback - see {@link module:Collections.map}.
+     * @returns {Promise} a promise, if no callback is provided
+     */
+    function timesSeries (n, iteratee, callback) {
+        return timesLimit(n, 1, iteratee, callback)
+    }
+
+    /**
+     * A relative of `reduce`.  Takes an Object or Array, and iterates over each
+     * element in parallel, each step potentially mutating an `accumulator` value.
+     * The type of the accumulator defaults to the type of collection passed in.
+     *
+     * @name transform
+     * @static
+     * @memberOf module:Collections
+     * @method
+     * @category Collection
+     * @param {Array|Iterable|AsyncIterable|Object} coll - A collection to iterate over.
+     * @param {*} [accumulator] - The initial state of the transform.  If omitted,
+     * it will default to an empty Object or Array, depending on the type of `coll`
+     * @param {AsyncFunction} iteratee - A function applied to each item in the
+     * collection that potentially modifies the accumulator.
+     * Invoked with (accumulator, item, key, callback).
+     * @param {Function} [callback] - A callback which is called after all the
+     * `iteratee` functions have finished. Result is the transformed accumulator.
+     * Invoked with (err, result).
+     * @returns {Promise} a promise, if no callback provided
+     * @example
+     *
+     * // file1.txt is a file that is 1000 bytes in size
+     * // file2.txt is a file that is 2000 bytes in size
+     * // file3.txt is a file that is 3000 bytes in size
+     *
+     * // helper function that returns human-readable size format from bytes
+     * function formatBytes(bytes, decimals = 2) {
+     *   // implementation not included for brevity
+     *   return humanReadbleFilesize;
+     * }
+     *
+     * const fileList = ['file1.txt','file2.txt','file3.txt'];
+     *
+     * // asynchronous function that returns the file size, transformed to human-readable format
+     * // e.g. 1024 bytes = 1KB, 1234 bytes = 1.21 KB, 1048576 bytes = 1MB, etc.
+     * function transformFileSize(acc, value, key, callback) {
+     *     fs.stat(value, function(err, stat) {
+     *         if (err) {
+     *             return callback(err);
+     *         }
+     *         acc[key] = formatBytes(stat.size);
+     *         callback(null);
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.transform(fileList, transformFileSize, function(err, result) {
+     *     if(err) {
+     *         console.log(err);
+     *     } else {
+     *         console.log(result);
+     *         // [ '1000 Bytes', '1.95 KB', '2.93 KB' ]
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.transform(fileList, transformFileSize)
+     * .then(result => {
+     *     console.log(result);
+     *     // [ '1000 Bytes', '1.95 KB', '2.93 KB' ]
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * (async () => {
+     *     try {
+     *         let result = await async.transform(fileList, transformFileSize);
+     *         console.log(result);
+     *         // [ '1000 Bytes', '1.95 KB', '2.93 KB' ]
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * })();
+     *
+     * @example
+     *
+     * // file1.txt is a file that is 1000 bytes in size
+     * // file2.txt is a file that is 2000 bytes in size
+     * // file3.txt is a file that is 3000 bytes in size
+     *
+     * // helper function that returns human-readable size format from bytes
+     * function formatBytes(bytes, decimals = 2) {
+     *   // implementation not included for brevity
+     *   return humanReadbleFilesize;
+     * }
+     *
+     * const fileMap = { f1: 'file1.txt', f2: 'file2.txt', f3: 'file3.txt' };
+     *
+     * // asynchronous function that returns the file size, transformed to human-readable format
+     * // e.g. 1024 bytes = 1KB, 1234 bytes = 1.21 KB, 1048576 bytes = 1MB, etc.
+     * function transformFileSize(acc, value, key, callback) {
+     *     fs.stat(value, function(err, stat) {
+     *         if (err) {
+     *             return callback(err);
+     *         }
+     *         acc[key] = formatBytes(stat.size);
+     *         callback(null);
+     *     });
+     * }
+     *
+     * // Using callbacks
+     * async.transform(fileMap, transformFileSize, function(err, result) {
+     *     if(err) {
+     *         console.log(err);
+     *     } else {
+     *         console.log(result);
+     *         // { f1: '1000 Bytes', f2: '1.95 KB', f3: '2.93 KB' }
+     *     }
+     * });
+     *
+     * // Using Promises
+     * async.transform(fileMap, transformFileSize)
+     * .then(result => {
+     *     console.log(result);
+     *     // { f1: '1000 Bytes', f2: '1.95 KB', f3: '2.93 KB' }
+     * }).catch(err => {
+     *     console.log(err);
+     * });
+     *
+     * // Using async/await
+     * async () => {
+     *     try {
+     *         let result = await async.transform(fileMap, transformFileSize);
+     *         console.log(result);
+     *         // { f1: '1000 Bytes', f2: '1.95 KB', f3: '2.93 KB' }
+     *     }
+     *     catch (err) {
+     *         console.log(err);
+     *     }
+     * }
+     *
+     */
+    function transform (coll, accumulator, iteratee, callback) {
+        if (arguments.length <= 3 && typeof accumulator === 'function') {
+            callback = iteratee;
+            iteratee = accumulator;
+            accumulator = Array.isArray(coll) ? [] : {};
+        }
+        callback = once(callback || promiseCallback());
+        var _iteratee = wrapAsync(iteratee);
+
+        eachOf$1(coll, (v, k, cb) => {
+            _iteratee(accumulator, v, k, cb);
+        }, err => callback(err, accumulator));
+        return callback[PROMISE_SYMBOL]
+    }
+
+    /**
+     * It runs each task in series but stops whenever any of the functions were
+     * successful. If one of the tasks were successful, the `callback` will be
+     * passed the result of the successful task. If all tasks fail, the callback
+     * will be passed the error and result (if any) of the final attempt.
+     *
+     * @name tryEach
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Array|Iterable|AsyncIterable|Object} tasks - A collection containing functions to
+     * run, each function is passed a `callback(err, result)` it must call on
+     * completion with an error `err` (which can be `null`) and an optional `result`
+     * value.
+     * @param {Function} [callback] - An optional callback which is called when one
+     * of the tasks has succeeded, or all have failed. It receives the `err` and
+     * `result` arguments of the last attempt at completing the `task`. Invoked with
+     * (err, results).
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     * async.tryEach([
+     *     function getDataFromFirstWebsite(callback) {
+     *         // Try getting the data from the first website
+     *         callback(err, data);
+     *     },
+     *     function getDataFromSecondWebsite(callback) {
+     *         // First website failed,
+     *         // Try getting the data from the backup website
+     *         callback(err, data);
+     *     }
+     * ],
+     * // optional callback
+     * function(err, results) {
+     *     Now do something with the data.
+     * });
+     *
+     */
+    function tryEach(tasks, callback) {
+        var error = null;
+        var result;
+        return eachSeries$1(tasks, (task, taskCb) => {
+            wrapAsync(task)((err, ...args) => {
+                if (err === false) return taskCb(err);
+
+                if (args.length < 2) {
+                    [result] = args;
+                } else {
+                    result = args;
+                }
+                error = err;
+                taskCb(err ? null : {});
+            });
+        }, () => callback(error, result));
+    }
+
+    var tryEach$1 = awaitify(tryEach);
+
+    /**
+     * Undoes a [memoize]{@link module:Utils.memoize}d function, reverting it to the original,
+     * unmemoized form. Handy for testing.
+     *
+     * @name unmemoize
+     * @static
+     * @memberOf module:Utils
+     * @method
+     * @see [async.memoize]{@link module:Utils.memoize}
+     * @category Util
+     * @param {AsyncFunction} fn - the memoized function
+     * @returns {AsyncFunction} a function that calls the original unmemoized function
+     */
+    function unmemoize(fn) {
+        return (...args) => {
+            return (fn.unmemoized || fn)(...args);
+        };
+    }
+
+    /**
+     * Repeatedly call `iteratee`, while `test` returns `true`. Calls `callback` when
+     * stopped, or an error occurs.
+     *
+     * @name whilst
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {AsyncFunction} test - asynchronous truth test to perform before each
+     * execution of `iteratee`. Invoked with ().
+     * @param {AsyncFunction} iteratee - An async function which is called each time
+     * `test` passes. Invoked with (callback).
+     * @param {Function} [callback] - A callback which is called after the test
+     * function has failed and repeated execution of `iteratee` has stopped. `callback`
+     * will be passed an error and any arguments passed to the final `iteratee`'s
+     * callback. Invoked with (err, [results]);
+     * @returns {Promise} a promise, if no callback is passed
+     * @example
+     *
+     * var count = 0;
+     * async.whilst(
+     *     function test(cb) { cb(null, count < 5); },
+     *     function iter(callback) {
+     *         count++;
+     *         setTimeout(function() {
+     *             callback(null, count);
+     *         }, 1000);
+     *     },
+     *     function (err, n) {
+     *         // 5 seconds have passed, n = 5
+     *     }
+     * );
+     */
+    function whilst(test, iteratee, callback) {
+        callback = onlyOnce(callback);
+        var _fn = wrapAsync(iteratee);
+        var _test = wrapAsync(test);
+        var results = [];
+
+        function next(err, ...rest) {
+            if (err) return callback(err);
+            results = rest;
+            if (err === false) return;
+            _test(check);
+        }
+
+        function check(err, truth) {
+            if (err) return callback(err);
+            if (err === false) return;
+            if (!truth) return callback(null, ...results);
+            _fn(next);
+        }
+
+        return _test(check);
+    }
+    var whilst$1 = awaitify(whilst, 3);
+
+    /**
+     * Repeatedly call `iteratee` until `test` returns `true`. Calls `callback` when
+     * stopped, or an error occurs. `callback` will be passed an error and any
+     * arguments passed to the final `iteratee`'s callback.
+     *
+     * The inverse of [whilst]{@link module:ControlFlow.whilst}.
+     *
+     * @name until
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @see [async.whilst]{@link module:ControlFlow.whilst}
+     * @category Control Flow
+     * @param {AsyncFunction} test - asynchronous truth test to perform before each
+     * execution of `iteratee`. Invoked with (callback).
+     * @param {AsyncFunction} iteratee - An async function which is called each time
+     * `test` fails. Invoked with (callback).
+     * @param {Function} [callback] - A callback which is called after the test
+     * function has passed and repeated execution of `iteratee` has stopped. `callback`
+     * will be passed an error and any arguments passed to the final `iteratee`'s
+     * callback. Invoked with (err, [results]);
+     * @returns {Promise} a promise, if a callback is not passed
+     *
+     * @example
+     * const results = []
+     * let finished = false
+     * async.until(function test(cb) {
+     *     cb(null, finished)
+     * }, function iter(next) {
+     *     fetchPage(url, (err, body) => {
+     *         if (err) return next(err)
+     *         results = results.concat(body.objects)
+     *         finished = !!body.next
+     *         next(err)
+     *     })
+     * }, function done (err) {
+     *     // all pages have been fetched
+     * })
+     */
+    function until(test, iteratee, callback) {
+        const _test = wrapAsync(test);
+        return whilst$1((cb) => _test((err, truth) => cb (err, !truth)), iteratee, callback);
+    }
+
+    /**
+     * Runs the `tasks` array of functions in series, each passing their results to
+     * the next in the array. However, if any of the `tasks` pass an error to their
+     * own callback, the next function is not executed, and the main `callback` is
+     * immediately called with the error.
+     *
+     * @name waterfall
+     * @static
+     * @memberOf module:ControlFlow
+     * @method
+     * @category Control Flow
+     * @param {Array} tasks - An array of [async functions]{@link AsyncFunction}
+     * to run.
+     * Each function should complete with any number of `result` values.
+     * The `result` values will be passed as arguments, in order, to the next task.
+     * @param {Function} [callback] - An optional callback to run once all the
+     * functions have completed. This will be passed the results of the last task's
+     * callback. Invoked with (err, [results]).
+     * @returns {Promise} a promise, if a callback is omitted
+     * @example
+     *
+     * async.waterfall([
+     *     function(callback) {
+     *         callback(null, 'one', 'two');
+     *     },
+     *     function(arg1, arg2, callback) {
+     *         // arg1 now equals 'one' and arg2 now equals 'two'
+     *         callback(null, 'three');
+     *     },
+     *     function(arg1, callback) {
+     *         // arg1 now equals 'three'
+     *         callback(null, 'done');
+     *     }
+     * ], function (err, result) {
+     *     // result now equals 'done'
+     * });
+     *
+     * // Or, with named functions:
+     * async.waterfall([
+     *     myFirstFunction,
+     *     mySecondFunction,
+     *     myLastFunction,
+     * ], function (err, result) {
+     *     // result now equals 'done'
+     * });
+     * function myFirstFunction(callback) {
+     *     callback(null, 'one', 'two');
+     * }
+     * function mySecondFunction(arg1, arg2, callback) {
+     *     // arg1 now equals 'one' and arg2 now equals 'two'
+     *     callback(null, 'three');
+     * }
+     * function myLastFunction(arg1, callback) {
+     *     // arg1 now equals 'three'
+     *     callback(null, 'done');
+     * }
+     */
+    function waterfall (tasks, callback) {
+        callback = once(callback);
+        if (!Array.isArray(tasks)) return callback(new Error('First argument to waterfall must be an array of functions'));
+        if (!tasks.length) return callback();
+        var taskIndex = 0;
+
+        function nextTask(args) {
+            var task = wrapAsync(tasks[taskIndex++]);
+            task(...args, onlyOnce(next));
+        }
+
+        function next(err, ...args) {
+            if (err === false) return
+            if (err || taskIndex === tasks.length) {
+                return callback(err, ...args);
+            }
+            nextTask(args);
+        }
+
+        nextTask([]);
+    }
+
+    var waterfall$1 = awaitify(waterfall);
+
+    /**
+     * An "async function" in the context of Async is an asynchronous function with
+     * a variable number of parameters, with the final parameter being a callback.
+     * (`function (arg1, arg2, ..., callback) {}`)
+     * The final callback is of the form `callback(err, results...)`, which must be
+     * called once the function is completed.  The callback should be called with a
+     * Error as its first argument to signal that an error occurred.
+     * Otherwise, if no error occurred, it should be called with `null` as the first
+     * argument, and any additional `result` arguments that may apply, to signal
+     * successful completion.
+     * The callback must be called exactly once, ideally on a later tick of the
+     * JavaScript event loop.
+     *
+     * This type of function is also referred to as a "Node-style async function",
+     * or a "continuation passing-style function" (CPS). Most of the methods of this
+     * library are themselves CPS/Node-style async functions, or functions that
+     * return CPS/Node-style async functions.
+     *
+     * Wherever we accept a Node-style async function, we also directly accept an
+     * [ES2017 `async` function]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function}.
+     * In this case, the `async` function will not be passed a final callback
+     * argument, and any thrown error will be used as the `err` argument of the
+     * implicit callback, and the return value will be used as the `result` value.
+     * (i.e. a `rejected` of the returned Promise becomes the `err` callback
+     * argument, and a `resolved` value becomes the `result`.)
+     *
+     * Note, due to JavaScript limitations, we can only detect native `async`
+     * functions and not transpilied implementations.
+     * Your environment must have `async`/`await` support for this to work.
+     * (e.g. Node > v7.6, or a recent version of a modern browser).
+     * If you are using `async` functions through a transpiler (e.g. Babel), you
+     * must still wrap the function with [asyncify]{@link module:Utils.asyncify},
+     * because the `async function` will be compiled to an ordinary function that
+     * returns a promise.
+     *
+     * @typedef {Function} AsyncFunction
+     * @static
+     */
+
+    var index = {
+        apply,
+        applyEach: applyEach$1,
+        applyEachSeries,
+        asyncify,
+        auto,
+        autoInject,
+        cargo,
+        cargoQueue: cargo$1,
+        compose,
+        concat: concat$1,
+        concatLimit: concatLimit$1,
+        concatSeries: concatSeries$1,
+        constant,
+        detect: detect$1,
+        detectLimit: detectLimit$1,
+        detectSeries: detectSeries$1,
+        dir,
+        doUntil,
+        doWhilst: doWhilst$1,
+        each,
+        eachLimit: eachLimit$2,
+        eachOf: eachOf$1,
+        eachOfLimit: eachOfLimit$2,
+        eachOfSeries: eachOfSeries$1,
+        eachSeries: eachSeries$1,
+        ensureAsync,
+        every: every$1,
+        everyLimit: everyLimit$1,
+        everySeries: everySeries$1,
+        filter: filter$1,
+        filterLimit: filterLimit$1,
+        filterSeries: filterSeries$1,
+        forever: forever$1,
+        groupBy,
+        groupByLimit: groupByLimit$1,
+        groupBySeries,
+        log,
+        map: map$1,
+        mapLimit: mapLimit$1,
+        mapSeries: mapSeries$1,
+        mapValues,
+        mapValuesLimit: mapValuesLimit$1,
+        mapValuesSeries,
+        memoize,
+        nextTick,
+        parallel: parallel$1,
+        parallelLimit,
+        priorityQueue,
+        queue: queue$1,
+        race: race$1,
+        reduce: reduce$1,
+        reduceRight,
+        reflect,
+        reflectAll,
+        reject: reject$2,
+        rejectLimit: rejectLimit$1,
+        rejectSeries: rejectSeries$1,
+        retry,
+        retryable,
+        seq,
+        series,
+        setImmediate: setImmediate$1,
+        some: some$1,
+        someLimit: someLimit$1,
+        someSeries: someSeries$1,
+        sortBy: sortBy$1,
+        timeout,
+        times,
+        timesLimit,
+        timesSeries,
+        transform,
+        tryEach: tryEach$1,
+        unmemoize,
+        until,
+        waterfall: waterfall$1,
+        whilst: whilst$1,
+
+        // aliases
+        all: every$1,
+        allLimit: everyLimit$1,
+        allSeries: everySeries$1,
+        any: some$1,
+        anyLimit: someLimit$1,
+        anySeries: someSeries$1,
+        find: detect$1,
+        findLimit: detectLimit$1,
+        findSeries: detectSeries$1,
+        flatMap: concat$1,
+        flatMapLimit: concatLimit$1,
+        flatMapSeries: concatSeries$1,
+        forEach: each,
+        forEachSeries: eachSeries$1,
+        forEachLimit: eachLimit$2,
+        forEachOf: eachOf$1,
+        forEachOfSeries: eachOfSeries$1,
+        forEachOfLimit: eachOfLimit$2,
+        inject: reduce$1,
+        foldl: reduce$1,
+        foldr: reduceRight,
+        select: filter$1,
+        selectLimit: filterLimit$1,
+        selectSeries: filterSeries$1,
+        wrapSync: asyncify,
+        during: whilst$1,
+        doDuring: doWhilst$1
+    };
+
+    exports.default = index;
+    exports.apply = apply;
+    exports.applyEach = applyEach$1;
+    exports.applyEachSeries = applyEachSeries;
+    exports.asyncify = asyncify;
+    exports.auto = auto;
+    exports.autoInject = autoInject;
+    exports.cargo = cargo;
+    exports.cargoQueue = cargo$1;
+    exports.compose = compose;
+    exports.concat = concat$1;
+    exports.concatLimit = concatLimit$1;
+    exports.concatSeries = concatSeries$1;
+    exports.constant = constant;
+    exports.detect = detect$1;
+    exports.detectLimit = detectLimit$1;
+    exports.detectSeries = detectSeries$1;
+    exports.dir = dir;
+    exports.doUntil = doUntil;
+    exports.doWhilst = doWhilst$1;
+    exports.each = each;
+    exports.eachLimit = eachLimit$2;
+    exports.eachOf = eachOf$1;
+    exports.eachOfLimit = eachOfLimit$2;
+    exports.eachOfSeries = eachOfSeries$1;
+    exports.eachSeries = eachSeries$1;
+    exports.ensureAsync = ensureAsync;
+    exports.every = every$1;
+    exports.everyLimit = everyLimit$1;
+    exports.everySeries = everySeries$1;
+    exports.filter = filter$1;
+    exports.filterLimit = filterLimit$1;
+    exports.filterSeries = filterSeries$1;
+    exports.forever = forever$1;
+    exports.groupBy = groupBy;
+    exports.groupByLimit = groupByLimit$1;
+    exports.groupBySeries = groupBySeries;
+    exports.log = log;
+    exports.map = map$1;
+    exports.mapLimit = mapLimit$1;
+    exports.mapSeries = mapSeries$1;
+    exports.mapValues = mapValues;
+    exports.mapValuesLimit = mapValuesLimit$1;
+    exports.mapValuesSeries = mapValuesSeries;
+    exports.memoize = memoize;
+    exports.nextTick = nextTick;
+    exports.parallel = parallel$1;
+    exports.parallelLimit = parallelLimit;
+    exports.priorityQueue = priorityQueue;
+    exports.queue = queue$1;
+    exports.race = race$1;
+    exports.reduce = reduce$1;
+    exports.reduceRight = reduceRight;
+    exports.reflect = reflect;
+    exports.reflectAll = reflectAll;
+    exports.reject = reject$2;
+    exports.rejectLimit = rejectLimit$1;
+    exports.rejectSeries = rejectSeries$1;
+    exports.retry = retry;
+    exports.retryable = retryable;
+    exports.seq = seq;
+    exports.series = series;
+    exports.setImmediate = setImmediate$1;
+    exports.some = some$1;
+    exports.someLimit = someLimit$1;
+    exports.someSeries = someSeries$1;
+    exports.sortBy = sortBy$1;
+    exports.timeout = timeout;
+    exports.times = times;
+    exports.timesLimit = timesLimit;
+    exports.timesSeries = timesSeries;
+    exports.transform = transform;
+    exports.tryEach = tryEach$1;
+    exports.unmemoize = unmemoize;
+    exports.until = until;
+    exports.waterfall = waterfall$1;
+    exports.whilst = whilst$1;
+    exports.all = every$1;
+    exports.allLimit = everyLimit$1;
+    exports.allSeries = everySeries$1;
+    exports.any = some$1;
+    exports.anyLimit = someLimit$1;
+    exports.anySeries = someSeries$1;
+    exports.find = detect$1;
+    exports.findLimit = detectLimit$1;
+    exports.findSeries = detectSeries$1;
+    exports.flatMap = concat$1;
+    exports.flatMapLimit = concatLimit$1;
+    exports.flatMapSeries = concatSeries$1;
+    exports.forEach = each;
+    exports.forEachSeries = eachSeries$1;
+    exports.forEachLimit = eachLimit$2;
+    exports.forEachOf = eachOf$1;
+    exports.forEachOfSeries = eachOfSeries$1;
+    exports.forEachOfLimit = eachOfLimit$2;
+    exports.inject = reduce$1;
+    exports.foldl = reduce$1;
+    exports.foldr = reduceRight;
+    exports.select = filter$1;
+    exports.selectLimit = filterLimit$1;
+    exports.selectSeries = filterSeries$1;
+    exports.wrapSync = asyncify;
+    exports.during = whilst$1;
+    exports.doDuring = doWhilst$1;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
 
 
 /***/ }),
@@ -29251,76 +35428,52 @@ function vary (res, field) {
 
 /***/ }),
 
-/***/ 6207:
+/***/ 2191:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateCameraConfig = exports.switchToAP = exports.switchToP2P = exports.updateFirmware = exports.configureOnBoot = exports.getStopPreviewCommand = exports.getStartPreviewCommand = exports.getStartCameraCommand = exports.getStopCameraCommand = exports.NETWORK_CONFIG_PATH = exports.NETWORK_BOOT_CONFIG_PATH = exports.UPLOAD_PATH = exports.IMAGER_BRIDGE_PATH = exports.IMAGER_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.WEBSERVER_LOG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_LATEST_SAMPLE = exports.GPS_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
+exports.updateFirmware = exports.configureOnBoot = exports.CMD = exports.CAMERA_TYPE = exports.IMAGER_BRIDGE_PATH = exports.CRON_EXECUTED_TASKS_PATH = exports.CRON_CONFIG = exports.DEVICE_INFO_LOG_FILE = exports.UPLOAD_PATH = exports.IMAGER_CONFIG_PATH = exports.LED_CONFIG_PATH = exports.WEBSERVER_LOG_PATH = exports.BUILD_INFO_PATH = exports.LORA_ROOT_FOLDER = exports.IMU_ROOT_FOLDER = exports.GPS_LATEST_SAMPLE = exports.GPS_ROOT_FOLDER = exports.FRAMEKM_ROOT_FOLDER = exports.FRAMES_ROOT_FOLDER = exports.PUBLIC_FOLDER = exports.PORT = void 0;
 const child_process_1 = __nccwpck_require__(2081);
-const fs_1 = __nccwpck_require__(7147);
+const types_1 = __nccwpck_require__(3372);
 exports.PORT = 5000;
-exports.PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
-exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
-exports.GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
-exports.GPS_LATEST_SAMPLE = __dirname + '/../../../mnt/data/gps/latest.log';
-exports.IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
-exports.LORA_ROOT_FOLDER = __dirname + '/../../../mnt/data/lora';
+exports.PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
+exports.FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording/pic';
+exports.FRAMEKM_ROOT_FOLDER = __dirname + '/../../../tmp/recording/framekm';
+exports.GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
+exports.GPS_LATEST_SAMPLE = __dirname + '/../../../tmp/recording/gps/latest.log';
+exports.IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
+exports.LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
 exports.BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
-exports.WEBSERVER_LOG_PATH = __dirname + '/../../../mnt/data/camera-node.log';
+exports.WEBSERVER_LOG_PATH = __dirname + '/../../../home/root/camera-node.log';
 exports.LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
-exports.IMAGER_CONFIG_PATH = __dirname + '/../../../opt/dashcam/bin/config.json';
+// File containing the camera configuration
+exports.IMAGER_CONFIG_PATH = __dirname + '/../../../opt/camera-bridge/config.json';
+// Path that will be used by the App to upload the new firmware image
+exports.UPLOAD_PATH = __dirname + '/../../../data/';
+exports.DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
+exports.CRON_CONFIG = '/home/root/cron_config';
+exports.CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 exports.IMAGER_BRIDGE_PATH = __dirname + '/../../../opt/dashcam/bin/bridge.sh';
-exports.UPLOAD_PATH = __dirname + '/../../../tmp/';
-exports.NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../mnt/data/network_mode.txt';
-exports.NETWORK_CONFIG_PATH = __dirname + '/../network-mode.txt';
-const getStopCameraCommand = () => {
-    return 'systemctl stop camera-bridge';
+exports.CAMERA_TYPE = types_1.CameraType.HdcS;
+exports.CMD = {
+    START_CAMERA: 'systemctl start camera-bridge',
+    STOP_CAMERA: 'systemctl stop camera-bridge',
+    START_PREVIEW: 'systemctl start camera-preview',
+    STOP_PREVIEW: 'systemctl stop camera-preview',
+    READ_DEVICE_INFO: 'sh /opt/dashcam/bin/eeprom_access.sh -r -f /tmp/dump.bin -o 0 -ba 0 -s',
 };
-exports.getStopCameraCommand = getStopCameraCommand;
-const getStartCameraCommand = () => {
-    return 'systemctl start camera-bridge';
-};
-exports.getStartCameraCommand = getStartCameraCommand;
-const getStartPreviewCommand = () => {
-    return 'systemctl start camera-preview';
-};
-exports.getStartPreviewCommand = getStartPreviewCommand;
-const getStopPreviewCommand = () => {
-    return 'systemctl stop camera-preview';
-};
-exports.getStopPreviewCommand = getStopPreviewCommand;
 const configureOnBoot = async (req, res) => {
-    try {
-        // const realTime = Number(req.query.time);
-        // const timeToSet = new Date(realTime)
-        //   .toISOString()
-        //   .replace(/T/, ' ')
-        //   .replace(/\..+/, '')
-        //   .split(' ');
-        // // setting up initial time for camera
-        // exec('timedatectl set-ntp 0', () => {
-        //   exec(`timedatectl set-time ${timeToSet[0]}`, () => {
-        //     exec(`timedatectl set-time ${timeToSet[1]}`, () => {
-        //       // TODO: Temp solution for restarting the camera to catch the freshest timestamp
-        //       // Will be fixed outside of ODC API by polling the config and applying that on-the-fly
-        //       exec('systemctl stop camera-bridge', () => {
-        //         exec('systemctl start camera-bridge');
-        //       });
-        //     });
-        //   });
-        // });
-        res.json({
-            output: 'done',
-        });
-    }
-    catch (error) {
-        res.json({ error });
-    }
+    // If anything needs to be done on boot for HDC-S
+    // Placeholder
+    res.json({
+        output: 'done',
+    });
 };
 exports.configureOnBoot = configureOnBoot;
 const updateFirmware = async (req, res) => {
+    // Execute utility to update the firmware using the image file that was uploaded to /tmp/<new firmware image file>
     try {
         const output = (0, child_process_1.execSync)('rauc install /tmp/' + req.query.filename, {
             encoding: 'utf-8',
@@ -29334,72 +35487,7 @@ const updateFirmware = async (req, res) => {
     }
 };
 exports.updateFirmware = updateFirmware;
-const switchToP2P = async (req, res) => {
-    try {
-        // No need to wait for response — it's tearing down current Network method, so it will kill the connection anyways
-        (0, child_process_1.exec)(__dirname + '/network/test_P2Pconnect_any.sh');
-        try {
-            (0, fs_1.writeFile)(exports.NETWORK_BOOT_CONFIG_PATH, 'P2P', null, () => { });
-        }
-        catch (e) {
-            console.log(e);
-        }
-        res.json({
-            output: 'done',
-        });
-    }
-    catch (error) {
-        res.json({ error: error.stdout || error.stderr });
-    }
-};
-exports.switchToP2P = switchToP2P;
-const switchToAP = async (req, res) => {
-    try {
-        (0, child_process_1.exec)(__dirname + '/network/wifi_switch_AP.sh');
-        try {
-            (0, fs_1.writeFile)(exports.NETWORK_BOOT_CONFIG_PATH, 'AP', null, () => { });
-        }
-        catch (e) {
-            console.log(e);
-        }
-        res.json({
-            output: 'done',
-        });
-    }
-    catch (error) {
-        res.json({ error: error.stdout || error.stderr });
-    }
-};
-exports.switchToAP = switchToAP;
-const updateCameraConfig = (replaceLine, path) => {
-    try {
-        (0, child_process_1.exec)((0, exports.getStopCameraCommand)(), {
-            encoding: 'utf-8',
-        }, (error) => {
-            if (!error) {
-                try {
-                    (0, child_process_1.exec)(`sed -i 's/${replaceLine}/g' ${path}`, {
-                        encoding: 'utf-8',
-                    }, () => {
-                        console.log('Successfully restarted the camera');
-                        (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-                    });
-                }
-                catch (e) {
-                    (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-                }
-            }
-            else {
-                (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-            }
-        });
-    }
-    catch (e) {
-        (0, child_process_1.exec)((0, exports.getStartCameraCommand)());
-    }
-};
-exports.updateCameraConfig = updateCameraConfig;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvY29uZmlnL2hkYy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBOEQ7QUFFOUQsMkJBQStCO0FBRWxCLFFBQUEsSUFBSSxHQUFHLElBQUksQ0FBQztBQUVaLFFBQUEsYUFBYSxHQUFHLFNBQVMsR0FBRyxvQkFBb0IsQ0FBQztBQUNqRCxRQUFBLGtCQUFrQixHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUMxRCxRQUFBLGVBQWUsR0FBRyxTQUFTLEdBQUcsd0JBQXdCLENBQUM7QUFDdkQsUUFBQSxpQkFBaUIsR0FBRyxTQUFTLEdBQUcsbUNBQW1DLENBQUM7QUFDcEUsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsZ0JBQWdCLEdBQUcsU0FBUyxHQUFHLHlCQUF5QixDQUFDO0FBQ3pELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw0QkFBNEIsQ0FBQztBQUMzRCxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcsb0NBQW9DLENBQUM7QUFDdEMsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3ZELFFBQUEsa0JBQWtCLEdBQzdCLFNBQVMsR0FBRyx1Q0FBdUMsQ0FBQztBQUN6QyxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxXQUFXLEdBQUcsU0FBUyxHQUFHLGdCQUFnQixDQUFDO0FBQzNDLFFBQUEsd0JBQXdCLEdBQ25DLFNBQVMsR0FBRyxxQ0FBcUMsQ0FBQztBQUN2QyxRQUFBLG1CQUFtQixHQUFHLFNBQVMsR0FBRyxzQkFBc0IsQ0FBQztBQUUvRCxNQUFNLG9CQUFvQixHQUFHLEdBQUcsRUFBRTtJQUN2QyxPQUFPLDhCQUE4QixDQUFDO0FBQ3hDLENB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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGRjLXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9jb25maWcvaGRjLXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQXlDO0FBRXpDLGlDQUFtQztBQUV0QixRQUFBLElBQUksR0FBRyxJQUFJLENBQUM7QUFFWixRQUFBLGFBQWEsR0FBRyxTQUFTLEdBQUcseUJBQXlCLENBQUM7QUFDdEQsUUFBQSxrQkFBa0IsR0FBRyxTQUFTLEdBQUcsNkJBQTZCLENBQUM7QUFDL0QsUUFBQSxtQkFBbUIsR0FDOUIsU0FBUyxHQUFHLGlDQUFpQyxDQUFDO0FBQ25DLFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw2QkFBNkIsQ0FBQztBQUM1RCxRQUFBLGlCQUFpQixHQUM1QixTQUFTLEdBQUcsd0NBQXdDLENBQUM7QUFDMUMsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLDZCQUE2QixDQUFDO0FBQzVELFFBQUEsZ0JBQWdCLEdBQUcsU0FBUyxHQUFHLDhCQUE4QixDQUFDO0FBQzlELFFBQUEsZUFBZSxHQUFHLFNBQVMsR0FBRyw0QkFBNEIsQ0FBQztBQUMzRCxRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcscUNBQXFDLENBQUM7QUFDdkMsUUFBQSxlQUFlLEdBQUcsU0FBUyxHQUFHLHdCQUF3QixDQUFDO0FBQ3BFLDJDQUEyQztBQUM5QixRQUFBLGtCQUFrQixHQUM3QixTQUFTLEdBQUcseUNBQXlDLENBQUM7QUFDeEQscUVBQXFFO0FBQ3hELFFBQUEsV0FBVyxHQUFHLFNBQVMsR0FBRyxpQkFBaUIsQ0FBQztBQUM1QyxRQUFBLG9CQUFvQixHQUFHLFNBQVMsR0FBRyx3QkFBd0IsQ0FBQztBQUM1RCxRQUFBLFdBQVcsR0FBRyx3QkFBd0IsQ0FBQztBQUN2QyxRQUFBLHdCQUF3QixHQUFHLDBCQUEwQixDQUFDO0FBQ3RELFFBQUEsa0JBQWtCLEdBQzdCLFNBQVMsR0FBRyxxQ0FBcUMsQ0FBQztBQUN2QyxRQUFBLFdBQVcsR0FBZSxrQkFBVSxDQUFDLElBQUksQ0FBQztBQUUxQyxRQUFBLEdBQUcsR0FBRztJQUNqQixZQUFZLEVBQUUsK0JBQStCO0lBQzdDLFdBQVcsRUFBRSw4QkFBOEI7SUFDM0MsYUFBYSxFQUFFLGdDQUFnQztJQUMvQyxZQUFZLEVBQUUsK0JBQStCO0lBQzdDLGdCQUFnQixFQUNkLHdFQUF3RTtDQUMzRSxDQUFDO0FBRUssTUFBTSxlQUFlLEdBQUcsS0FBSyxFQUFFLEdBQVksRUFBRSxHQUFhLEVBQUUsRUFBRTtJQUNuRSxpREFBaUQ7SUFDakQsY0FBYztJQUNkLEdBQUcsQ0FBQyxJQUFJLENBQUM7UUFDUCxNQUFNLEVBQUUsTUFBTTtLQUNmLENBQUMsQ0FBQztBQUNMLENBQUMsQ0FBQztBQU5XLFFBQUEsZUFBZSxtQkFNMUI7QUFFSyxNQUFNLGNBQWMsR0FBRyxLQUFLLEVBQUUsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ2xFLGtIQUFrSDtJQUNsSCxJQUFJO1FBQ0YsTUFBTSxNQUFNLEdBQUcsSUFBQSx3QkFBUSxFQUFDLG9CQUFvQixHQUFHLEdBQUcsQ0FBQyxLQUFLLENBQUMsUUFBUSxFQUFFO1lBQ2pFLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztRQUNILEdBQUcsQ0FBQyxJQUFJLENBQUM7WUFDUCxNQUFNO1NBQ1AsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLEtBQVUsRUFBRTtRQUNuQixHQUFHLENBQUMsSUFBSSxDQUFDLEVBQUUsS0FBSyxFQUFFLEtBQUssQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQUM7S0FDbkQ7QUFDSCxDQUFDLENBQUM7QUFaVyxRQUFBLGNBQWMsa0JBWXpCIn0=
 
 /***/ }),
 
@@ -29423,10 +35511,113 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.API_VERSION = void 0;
-__exportStar(__nccwpck_require__(6207), exports);
-exports.API_VERSION = '0.10.5';
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9jb25maWcvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSx3Q0FBc0I7QUFDVCxRQUFBLFdBQVcsR0FBRyxRQUFRLENBQUMifQ==
+exports.isDev = exports.API_VERSION = void 0;
+__exportStar(__nccwpck_require__(2191), exports);
+exports.API_VERSION = '0.11.3';
+const isDev = () => {
+    return false;
+};
+exports.isDev = isDev;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9jb25maWcvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSwwQ0FBd0I7QUFDWCxRQUFBLFdBQVcsR0FBRyxRQUFRLENBQUM7QUFFN0IsTUFBTSxLQUFLLEdBQUcsR0FBRyxFQUFFO0lBQ3hCLE9BQU8sS0FBSyxDQUFDO0FBQ2YsQ0FBQyxDQUFDO0FBRlcsUUFBQSxLQUFLLFNBRWhCIn0=
+
+/***/ }),
+
+/***/ 6:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DeviceInfoService = exports.getDeviceInfo = void 0;
+const fs_1 = __nccwpck_require__(7147);
+const child_process_1 = __nccwpck_require__(2081);
+const index_1 = __nccwpck_require__(5896);
+const config_1 = __nccwpck_require__(6039);
+let deviceInfo = {
+    serial: '',
+    ssid: '',
+    boardConfig: '',
+};
+const getDeviceInfo = () => {
+    return deviceInfo;
+};
+exports.getDeviceInfo = getDeviceInfo;
+exports.DeviceInfoService = {
+    execute: async () => {
+        try {
+            if ((0, fs_1.existsSync)(config_1.DEVICE_INFO_LOG_FILE)) {
+                (0, fs_1.rmSync)(config_1.DEVICE_INFO_LOG_FILE);
+            }
+            (0, child_process_1.execSync)(config_1.CMD.READ_DEVICE_INFO);
+            await (0, index_1.sleep)(3000);
+            if ((0, fs_1.existsSync)(config_1.DEVICE_INFO_LOG_FILE)) {
+                (0, fs_1.readFile)(config_1.DEVICE_INFO_LOG_FILE, (err, data) => {
+                    if (!err && data) {
+                        //@ts-ignore
+                        const parts = data.toString().split('+');
+                        if (parts && parts.length && parts.length >= 3) {
+                            deviceInfo = {
+                                ssid: parts[0],
+                                boardConfig: parts[1],
+                                serial: parts[2],
+                            };
+                        }
+                    }
+                    else {
+                        console.log('Error reading serial data', err);
+                    }
+                });
+            }
+        }
+        catch (e) {
+            console.log('Error writing serial data');
+        }
+    },
+    delay: 0,
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZGV2aWNlSW5mby5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3NlcnZpY2VzL2RldmljZUluZm8udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsMkJBQWtEO0FBQ2xELGlEQUF5QztBQUV6QyxzQ0FBbUM7QUFDbkMsbUNBQW1EO0FBRW5ELElBQUksVUFBVSxHQUFlO0lBQzNCLE1BQU0sRUFBRSxFQUFFO0lBQ1YsSUFBSSxFQUFFLEVBQUU7SUFDUixXQUFXLEVBQUUsRUFBRTtDQUNoQixDQUFDO0FBQ0ssTUFBTSxhQUFhLEdBQUcsR0FBRyxFQUFFO0lBQ2hDLE9BQU8sVUFBVSxDQUFDO0FBQ3BCLENBQUMsQ0FBQztBQUZXLFFBQUEsYUFBYSxpQkFFeEI7QUFFVyxRQUFBLGlCQUFpQixHQUFhO0lBQ3pDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixJQUFJO1lBQ0YsSUFBSSxJQUFBLGVBQVUsRUFBQyw2QkFBb0IsQ0FBQyxFQUFFO2dCQUNwQyxJQUFBLFdBQU0sRUFBQyw2QkFBb0IsQ0FBQyxDQUFDO2FBQzlCO1lBQ0QsSUFBQSx3QkFBUSxFQUFDLFlBQUcsQ0FBQyxnQkFBZ0IsQ0FBQyxDQUFDO1lBQy9CLE1BQU0sSUFBQSxhQUFLLEVBQUMsSUFBSSxDQUFDLENBQUM7WUFDbEIsSUFBSSxJQUFBLGVBQVUsRUFBQyw2QkFBb0IsQ0FBQyxFQUFFO2dCQUNwQyxJQUFBLGFBQVEsRUFDTiw2QkFBb0IsRUFDcEIsQ0FBQyxHQUFpQyxFQUFFLElBQVksRUFBRSxFQUFFO29CQUNsRCxJQUFJLENBQUMsR0FBRyxJQUFJLElBQUksRUFBRTt3QkFDaEIsWUFBWTt3QkFDWixNQUFNLEtBQUssR0FBRyxJQUFJLENBQUMsUUFBUSxFQUFFLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO3dCQUN6QyxJQUFJLEtBQUssSUFBSSxLQUFLLENBQUMsTUFBTSxJQUFJLEtBQUssQ0FBQyxNQUFNLElBQUksQ0FBQyxFQUFFOzRCQUM5QyxVQUFVLEdBQUc7Z0NBQ1gsSUFBSSxFQUFFLEtBQUssQ0FBQyxDQUFDLENBQUM7Z0NBQ2QsV0FBVyxFQUFFLEtBQUssQ0FBQyxDQUFDLENBQUM7Z0NBQ3JCLE1BQU0sRUFBRSxLQUFLLENBQUMsQ0FBQyxDQUFDOzZCQUNqQixDQUFDO3lCQUNIO3FCQUNGO3lCQUFNO3dCQUNMLE9BQU8sQ0FBQyxHQUFHLENBQUMsMkJBQTJCLEVBQUUsR0FBRyxDQUFDLENBQUM7cUJBQy9DO2dCQUNILENBQUMsQ0FDRixDQUFDO2FBQ0g7U0FDRjtRQUFDLE9BQU8sQ0FBVSxFQUFFO1lBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsMkJBQTJCLENBQUMsQ0FBQztTQUMxQztJQUNILENBQUM7SUFDRCxLQUFLLEVBQUUsQ0FBQztDQUNULENBQUMifQ==
+
+/***/ }),
+
+/***/ 491:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GnssHealthCheck = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const index_1 = __nccwpck_require__(5896);
+exports.GnssHealthCheck = {
+    execute: async () => {
+        try {
+            (0, child_process_1.exec)(`systemctl is-active gpsd`, {
+                encoding: 'utf-8',
+            }, async (error, stdout) => {
+                const cmdOutput = error ? '' : stdout;
+                if (cmdOutput.indexOf('active') !== 0) {
+                    (0, child_process_1.exec)('systemctl start gpsd');
+                    console.log('GPSD was down. Bringing back!');
+                    await (0, index_1.sleep)(2000);
+                }
+                (0, child_process_1.exec)(`systemctl is-active gnss-logger`, {
+                    encoding: 'utf-8',
+                }, (error, stdout) => {
+                    const cmdOutput = error ? '' : stdout;
+                    if (cmdOutput.indexOf('active') !== 0) {
+                        (0, child_process_1.exec)('systemctl start gnss-logger');
+                        console.log('Gnss-logger was down. Bringing back!');
+                    }
+                });
+            });
+        }
+        catch (e) {
+            console.log('LED service failed with error', e);
+        }
+    },
+    interval: 15051,
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ25zc0hlYWx0aENoZWNrLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvZ25zc0hlYWx0aENoZWNrLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFvRDtBQUVwRCxzQ0FBbUM7QUFFdEIsUUFBQSxlQUFlLEdBQWE7SUFDdkMsT0FBTyxFQUFFLEtBQUssSUFBSSxFQUFFO1FBQ2xCLElBQUk7WUFDRixJQUFBLG9CQUFJLEVBQ0YsMEJBQTBCLEVBQzFCO2dCQUNFLFFBQVEsRUFBRSxPQUFPO2FBQ2xCLEVBQ0QsS0FBSyxFQUFFLEtBQTJCLEVBQUUsTUFBYyxFQUFFLEVBQUU7Z0JBQ3BELE1BQU0sU0FBUyxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxNQUFNLENBQUM7Z0JBRXRDLElBQUksU0FBUyxDQUFDLE9BQU8sQ0FBQyxRQUFRLENBQUMsS0FBSyxDQUFDLEVBQUU7b0JBQ3JDLElBQUEsb0JBQUksRUFBQyxzQkFBc0IsQ0FBQyxDQUFDO29CQUM3QixPQUFPLENBQUMsR0FBRyxDQUFDLCtCQUErQixDQUFDLENBQUM7b0JBQzdDLE1BQU0sSUFBQSxhQUFLLEVBQUMsSUFBSSxDQUFDLENBQUM7aUJBQ25CO2dCQUVELElBQUEsb0JBQUksRUFDRixpQ0FBaUMsRUFDakM7b0JBQ0UsUUFBUSxFQUFFLE9BQU87aUJBQ2xCLEVBQ0QsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO29CQUM5QyxNQUFNLFNBQVMsR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsTUFBTSxDQUFDO29CQUV0QyxJQUFJLFNBQVMsQ0FBQyxPQUFPLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQyxFQUFFO3dCQUNyQyxJQUFBLG9CQUFJLEVBQUMsNkJBQTZCLENBQUMsQ0FBQzt3QkFDcEMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxzQ0FBc0MsQ0FBQyxDQUFDO3FCQUNyRDtnQkFDSCxDQUFDLENBQ0YsQ0FBQztZQUNKLENBQUMsQ0FDRixDQUFDO1NBQ0g7UUFBQyxPQUFPLENBQVUsRUFBRTtZQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLCtCQUErQixFQUFFLENBQUMsQ0FBQyxDQUFDO1NBQ2pEO0lBQ0gsQ0FBQztJQUNELFFBQVEsRUFBRSxLQUFLO0NBQ2hCLENBQUMifQ==
 
 /***/ }),
 
@@ -29441,10 +35632,10 @@ const child_process_1 = __nccwpck_require__(2081);
 const config_1 = __nccwpck_require__(6039);
 const fs_1 = __nccwpck_require__(7147);
 const lock_1 = __nccwpck_require__(5609);
-// import { isPairing, repairNetworking } from 'util/network';
 const led_1 = __nccwpck_require__(4011);
-let previousCameraResponse = '';
+// let previousCameraResponse = '';
 let mostRecentPing = 0;
+let lastSuccessfulFix = 0;
 let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
 let wasGpsGood = false;
@@ -29468,26 +35659,24 @@ exports.HeartBeatService = {
                 (0, led_1.updateLED)(led_1.COLORS.PURPLE, led_1.COLORS.PURPLE, led_1.COLORS.PURPLE);
                 return;
             }
-            (0, child_process_1.exec)(`systemctl is-active camera-bridge && ls ${config_1.FRAMES_ROOT_FOLDER} | tail -1`, {
+            // systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1
+            (0, child_process_1.exec)(`systemctl is-active camera-bridge`, {
                 encoding: 'utf-8',
             }, (error, stdout) => {
                 const cameraResponse = error ? '' : stdout;
                 let imgLED;
-                if (isPreviewInProgress) {
+                if (isPreviewInProgress && (0, config_1.isDev)()) {
                     imgLED = led_1.COLORS.WHITE;
                 }
                 else {
+                    // const activeButOutdatedColor = isDev() ? COLORS.YELLOW : COLORS.RED;
                     imgLED =
                         cameraResponse.indexOf('active') === 0
-                            ? cameraResponse !== previousCameraResponse
-                                ? previousCameraResponse
-                                    ? led_1.COLORS.GREEN
-                                    : led_1.COLORS.YELLOW
-                                : led_1.COLORS.YELLOW
+                            ? led_1.COLORS.GREEN
                             : led_1.COLORS.RED;
                 }
-                previousCameraResponse = cameraResponse;
-                let gpsLED = led_1.COLORS.RED;
+                // previousCameraResponse = cameraResponse;
+                let gpsLED = led_1.COLORS.GREEN;
                 try {
                     (0, fs_1.readFile)(config_1.GPS_LATEST_SAMPLE, {
                         encoding: 'utf-8',
@@ -29498,11 +35687,12 @@ exports.HeartBeatService = {
                                 gpsSample = JSON.parse(data) || {};
                             }
                             catch (e) {
-                                console.log(e);
+                                console.log('Latest.log Parse Error:', e);
                             }
                         }
-                        if (gpsSample?.fix === '3D') {
+                        if (gpsSample && gpsSample.fix === '3D') {
                             gpsLED = led_1.COLORS.GREEN;
+                            lastSuccessfulFix = Date.now();
                             (0, lock_1.setLockTime)();
                             (0, lock_1.setCameraTime)();
                             if (!wasGpsGood) {
@@ -29512,8 +35702,11 @@ exports.HeartBeatService = {
                             got3dOnce = true;
                         }
                         else {
-                            if (gpsSample?.fix === '2D') {
-                                gpsLED = led_1.COLORS.YELLOW;
+                            const gpsLostPeriod = lastSuccessfulFix
+                                ? Math.abs(Date.now() - lastSuccessfulFix)
+                                : 70000;
+                            if (gpsLostPeriod > 60000) {
+                                gpsLED = led_1.COLORS.RED;
                             }
                             if (wasGpsGood) {
                                 console.log('Lost 3d Fix');
@@ -29523,7 +35716,7 @@ exports.HeartBeatService = {
                                 !(0, lock_1.ifTimeSet)() &&
                                 !got3dOnce &&
                                 !isPreviewInProgress) {
-                                (0, child_process_1.exec)((0, config_1.getStopCameraCommand)());
+                                (0, child_process_1.exec)(config_1.CMD.STOP_CAMERA);
                                 console.log('Camera intentionally stopped cause Lock is not there yet');
                             }
                         }
@@ -29533,9 +35726,6 @@ exports.HeartBeatService = {
                         let appLED = led_1.COLORS.RED;
                         if (appDisconnectionPeriod < 15000) {
                             appLED = led_1.COLORS.GREEN;
-                        }
-                        else {
-                            appLED = led_1.COLORS.YELLOW;
                         }
                         (0, led_1.updateLED)(imgLED, gpsLED, appLED);
                     });
@@ -29551,49 +35741,7 @@ exports.HeartBeatService = {
     },
     interval: 7000,
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGVhcnRCZWF0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvaGVhcnRCZWF0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFvRDtBQUNwRCxtQ0FJZ0I7QUFDaEIsMkJBQThCO0FBRTlCLG9DQUFrRTtBQUNsRSw4REFBOEQ7QUFDOUQscUNBQWdEO0FBRWhELElBQUksc0JBQXNCLEdBQUcsRUFBRSxDQUFDO0FBQ2hDLElBQUksY0FBYyxHQUFHLENBQUMsQ0FBQztBQUN2QixJQUFJLGdCQUFnQixHQUFHLEtBQUssQ0FBQztBQUM3QixJQUFJLG1CQUFtQixHQUFHLEtBQUssQ0FBQztBQUNoQyxJQUFJLFVBQVUsR0FBRyxLQUFLLENBQUM7QUFDdkIsSUFBSSxTQUFTLEdBQUcsS0FBSyxDQUFDO0FBRWYsTUFBTSxpQkFBaUIsR0FBRyxDQUFDLGVBQXVCLEVBQUUsRUFBRTtJQUMzRCxjQUFjLEdBQUcsZUFBZSxDQUFDO0FBQ25DLENBQUMsQ0FBQztBQUZXLFFBQUEsaUJBQWlCLHFCQUU1QjtBQUVLLE1BQU0sc0JBQXNCLEdBQUcsQ0FBQyxLQUFjLEVBQUUsRUFBRTtJQUN2RCxnQkFBZ0IsR0FBRyxLQUFLLENBQUM7QUFDM0IsQ0FBQyxDQUFDO0FBRlcsUUFBQSxzQkFBc0IsMEJBRWpDO0FBRUssTUFBTSxnQkFBZ0IsR0FBRyxDQUFDLEtBQWMsRUFBRSxFQUFFO0lBQ2pELG1CQUFtQixHQUFHLEtBQUssQ0FBQztBQUM5QixDQUFDLENBQUM7QUFGVyxRQUFBLGdCQUFnQixvQkFFM0I7QUFFVyxRQUFBLGdCQUFnQixHQUFhO0lBQ3hDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixJQUFJO1lBQ0YsSUFBSSxnQkFBZ0IsRUFBRTtnQkFDcEIsSUFBQSxlQUFTLEVBQUMsWUFBTSxDQUFDLE1BQU0sRUFBRSxZ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
-
-/***/ }),
-
-/***/ 1242:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ImageRotationService = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-const config_1 = __nccwpck_require__(6039);
-const fs_1 = __nccwpck_require__(7147);
-const index_1 = __nccwpck_require__(5896);
-const lock_1 = __nccwpck_require__(5609);
-exports.ImageRotationService = {
-    execute: async () => {
-        console.log('Set rotation to 180');
-        try {
-            (0, fs_1.writeFile)(config_1.IMAGER_CONFIG_PATH, JSON.stringify((0, index_1.getCameraConfig)()), {
-                encoding: 'utf-8',
-            }, () => {
-                if ((0, lock_1.ifTimeSet)()) {
-                    (0, child_process_1.exec)((0, config_1.getStopCameraCommand)(), () => {
-                        (0, child_process_1.exec)((0, config_1.getStartCameraCommand)(), () => {
-                            console.log('Successfully restarted the camera');
-                        });
-                    });
-                }
-                else {
-                    // do not restart the camera for image rotation
-                    // it will be restarted on 3d lock anyways
-                }
-            });
-        }
-        catch (e) {
-            console.log('Image Rotation service failed with error', e);
-        }
-    },
-    delay: 4000,
-};
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW1hZ2VSb3RhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3NlcnZpY2VzL2ltYWdlUm90YXRpb24udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsaURBQXFDO0FBQ3JDLG1DQUlnQjtBQUNoQiwyQkFBK0I7QUFFL0Isc0NBQTZDO0FBQzdDLG9DQUFzQztBQUV6QixRQUFBLG9CQUFvQixHQUFhO0lBQzVDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixPQUFPLENBQUMsR0FBRyxDQUFDLHFCQUFxQixDQUFDLENBQUM7UUFFbkMsSUFBSTtZQUNGLElBQUEsY0FBUyxFQUNQLDJCQUFrQixFQUNsQixJQUFJLENBQUMsU0FBUyxDQUFDLElBQUEsdUJBQWUsR0FBRSxDQUFDLEVBQ2pDO2dCQUNFLFFBQVEsRUFBRSxPQUFPO2FBQ2xCLEVBQ0QsR0FBRyxFQUFFO2dCQUNILElBQUksSUFBQSxnQkFBUyxHQUFFLEVBQUU7b0JBQ2YsSUFBQSxvQkFBSSxFQUFDLElBQUEsNkJBQW9CLEdBQUUsRUFBRSxHQUFHLEVBQUU7d0JBQ2hDLElBQUEsb0JBQUksRUFBQyxJQUFBLDhCQUFxQixHQUFFLEVBQUUsR0FBRyxFQUFFOzRCQUNqQyxPQUFPLENBQUMsR0FBRyxDQUFDLG1DQUFtQyxDQUFDLENBQUM7d0JBQ25ELENBQUMsQ0FBQyxDQUFDO29CQUNMLENBQUMsQ0FBQyxDQUFDO2lCQUNKO3FCQUFNO29CQUNMLCtDQUErQztvQkFDL0MsMENBQTBDO2lCQUMzQztZQUNILENBQUMsQ0FDRixDQUFDO1NBQ0g7UUFBQyxPQUFPLENBQVUsRUFBRTtZQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLDBDQUEwQyxFQUFFLENBQUMsQ0FBQyxDQUFDO1NBQzVEO0lBQ0gsQ0FBQztJQUNELEtBQUssRUFBRSxJQUFJO0NBQ1osQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaGVhcnRCZWF0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvaGVhcnRCZWF0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFvRDtBQUNwRCxtQ0FBdUQ7QUFDdkQsMkJBQThCO0FBRTlCLG9DQUFrRTtBQUNsRSxxQ0FBZ0Q7QUFFaEQsbUNBQW1DO0FBQ25DLElBQUksY0FBYyxHQUFHLENBQUMsQ0FBQztBQUN2QixJQUFJLGlCQUFpQixHQUFHLENBQUMsQ0FBQztBQUMxQixJQUFJLGdCQUFnQixHQUFHLEtBQUssQ0FBQztBQUM3QixJQUFJLG1CQUFtQixHQUFHLEtBQUssQ0FBQztBQUNoQyxJQUFJLFVBQVUsR0FBRyxLQUFLLENBQUM7QUFDdkIsSUFBSSxTQUFTLEdBQUcsS0FBSyxDQUFDO0FBRWYsTUFBTSxpQkFBaUIsR0FBRyxDQUFDLGVBQXVCLEVBQUUsRUFBRTtJQUMzRCxjQUFjLEdBQUcsZUFBZSxDQUFDO0FBQ25DLENBQUMsQ0FBQztBQUZXLFFBQUEsaUJBQWlCLHFCQUU1QjtBQUVLLE1BQU0sc0JBQXNCLEdBQUcsQ0FBQyxLQUFjLEVBQUUsRUFBRTtJQUN2RCxnQkFBZ0IsR0FBRyxLQUFLLENBQUM7QUFDM0IsQ0FBQyxDQUFDO0FBRlcsUUFBQSxzQkFBc0IsMEJBRWpDO0FBRUssTUFBTSxnQkFBZ0IsR0FBRyxDQUFDLEtBQWMsRUFBRSxFQUFFO0lBQ2pELG1CQUFtQixHQUFHLEtBQUssQ0FBQztBQUM5QixDQUFDLENBQUM7QUFGVyxRQUFBLGdCQUFnQixvQkFFM0I7QUFFVyxRQUFBLGdCQUFnQixHQUFhO0lBQ3hDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixJQUFJO1lBQ0YsSUFBSSxnQkFBZ0IsRUFBRTtnQkFDcEIsSUFBQSxlQUFTLEVBQUMsWUFBTSxDQUFDLE1BQU0sRUFBRSxZ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
 
 /***/ }),
 
@@ -29645,14 +35793,448 @@ exports.serviceRunner = new ServiceRunner();
 
 /***/ }),
 
+/***/ 8173:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InitCronService = void 0;
+const fs_1 = __nccwpck_require__(7147);
+const index_1 = __nccwpck_require__(5896);
+const cron_1 = __nccwpck_require__(5740);
+const child_process_1 = __nccwpck_require__(2081);
+const config_1 = __nccwpck_require__(6039);
+exports.InitCronService = {
+    execute: async () => {
+        const exists = await (0, index_1.fileExists)(config_1.CRON_CONFIG);
+        if (exists) {
+            try {
+                (0, child_process_1.exec)('touch ' + config_1.CRON_EXECUTED_TASKS_PATH);
+                (0, fs_1.readFile)(config_1.CRON_CONFIG, (err, data) => {
+                    if (err)
+                        throw err;
+                    try {
+                        const cronJobs = JSON.parse(data.toString());
+                        (0, cron_1.scheduleCronJobs)(cronJobs);
+                    }
+                    catch (e) {
+                        console.log('Error parsing cron config', e);
+                    }
+                });
+            }
+            catch (e) {
+                console.log('Error initiating cron config', e);
+            }
+        }
+    },
+    delay: 2000,
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5pdENyb24uanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy9zZXJ2aWNlcy9pbml0Q3Jvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSwyQkFBZ0Q7QUFFaEQsc0NBQXdDO0FBQ3hDLG9DQUE2QztBQUM3QyxpREFBcUM7QUFDckMsbUNBQStEO0FBRWxELFFBQUEsZUFBZSxHQUFhO0lBQ3ZDLE9BQU8sRUFBRSxLQUFLLElBQUksRUFBRTtRQUNsQixNQUFNLE1BQU0sR0FBRyxNQUFNLElBQUEsa0JBQVUsRUFBQyxvQkFBVyxDQUFDLENBQUM7UUFDN0MsSUFBSSxNQUFNLEVBQUU7WUFDVixJQUFJO2dCQUNGLElBQUEsb0JBQUksRUFBQyxRQUFRLEdBQUcsaUNBQXdCLENBQUMsQ0FBQztnQkFDMUMsSUFBQSxhQUFRLEVBQUMsb0JBQVcsRUFBRSxDQUFDLEdBQUcsRUFBRSxJQUFJLEVBQUUsRUFBRTtvQkFDbEMsSUFBSSxHQUFHO3dCQUFFLE1BQU0sR0FBRyxDQUFDO29CQUNuQixJQUFJO3dCQUNGLE1BQU0sUUFBUSxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLFFBQVEsRUFBRSxDQUFDLENBQUM7d0JBQzdDLElBQUEsdUJBQWdCLEVBQUMsUUFBUSxDQUFDLENBQUM7cUJBQzVCO29CQUFDLE9BQU8sQ0FBVSxFQUFFO3dCQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLDJCQUEyQixFQUFFLENBQUMsQ0FBQyxDQUFDO3FCQUM3QztnQkFDSCxDQUFDLENBQUMsQ0FBQzthQUNKO1lBQUMsT0FBTyxDQUFVLEVBQUU7Z0JBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsOEJBQThCLEVBQUUsQ0FBQyxDQUFDLENBQUM7YUFDaEQ7U0FDRjtJQUNILENBQUM7SUFDRCxLQUFLLEVBQUUsSUFBSTtDQUNaLENBQUMifQ==
+
+/***/ }),
+
+/***/ 3894:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateCameraConfigService = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const config_1 = __nccwpck_require__(6039);
+const fs_1 = __nccwpck_require__(7147);
+const types_1 = __nccwpck_require__(3372);
+const index_1 = __nccwpck_require__(5896);
+const lock_1 = __nccwpck_require__(5609);
+exports.UpdateCameraConfigService = {
+    execute: async () => {
+        if (config_1.CAMERA_TYPE !== types_1.CameraType.Hdc) {
+            return;
+        }
+        console.log('Updating camera config');
+        try {
+            (0, fs_1.writeFile)(config_1.IMAGER_CONFIG_PATH, JSON.stringify((0, index_1.getCameraConfig)()), {
+                encoding: 'utf-8',
+            }, () => {
+                if ((0, lock_1.ifTimeSet)()) {
+                    (0, child_process_1.exec)(config_1.CMD.STOP_CAMERA, () => {
+                        (0, child_process_1.exec)(config_1.CMD.START_CAMERA, () => {
+                            console.log('Successfully restarted the camera');
+                        });
+                    });
+                }
+                else {
+                    // do not restart the camera for image rotation
+                    // it will be restarted on 3d lock anyways
+                }
+            });
+        }
+        catch (e) {
+            console.log('Camera Config service failed with error', e);
+        }
+    },
+    delay: 200,
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXBkYXRlQ2FtZXJhQ29uZmlnLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9hbGVrc2VpcHVub3YvUHJvamVjdHMvc2FuZGJveC9kYXNoY2FtLWFwaS9zcmMvc2VydmljZXMvdXBkYXRlQ2FtZXJhQ29uZmlnLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUFxQztBQUNyQyxtQ0FBOEQ7QUFDOUQsMkJBQStCO0FBQy9CLGlDQUE2QztBQUM3QyxzQ0FBNkM7QUFDN0Msb0NBQXNDO0FBRXpCLFFBQUEseUJBQXlCLEdBQWE7SUFDakQsT0FBTyxFQUFFLEtBQUssSUFBSSxFQUFFO1FBQ2xCLElBQUksb0JBQVcsS0FBSyxrQkFBVSxDQUFDLEdBQUcsRUFBRTtZQUNsQyxPQUFPO1NBQ1I7UUFDRCxPQUFPLENBQUMsR0FBRyxDQUFDLHdCQUF3QixDQUFDLENBQUM7UUFFdEMsSUFBSTtZQUNGLElBQUEsY0FBUyxFQUNQLDJCQUFrQixFQUNsQixJQUFJLENBQUMsU0FBUyxDQUFDLElBQUEsdUJBQWUsR0FBRSxDQUFDLEVBQ2pDO2dCQUNFLFFBQVEsRUFBRSxPQUFPO2FBQ2xCLEVBQ0QsR0FBRyxFQUFFO2dCQUNILElBQUksSUFBQSxnQkFBUyxHQUFFLEVBQUU7b0JBQ2YsSUFBQSxvQkFBSSxFQUFDLFlBQUcsQ0FBQyxXQUFXLEVBQUUsR0FBRyxFQUFFO3dCQUN6QixJQUFBLG9CQUFJLEVBQUMsWUFBRyxDQUFDLFlBQVksRUFBRSxHQUFHLEVBQUU7NEJBQzFCLE9BQU8sQ0FBQyxHQUFHLENBQUMsbUNBQW1DLENBQUMsQ0FBQzt3QkFDbkQsQ0FBQyxDQUFDLENBQUM7b0JBQ0wsQ0FBQyxDQUFDLENBQUM7aUJBQ0o7cUJBQU07b0JBQ0wsK0NBQStDO29CQUMvQywwQ0FBMEM7aUJBQzNDO1lBQ0gsQ0FBQyxDQUNGLENBQUM7U0FDSDtRQUFDLE9BQU8sQ0FBVSxFQUFFO1lBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMseUNBQXlDLEVBQUUsQ0FBQyxDQUFDLENBQUM7U0FDM0Q7SUFDSCxDQUFDO0lBQ0QsS0FBSyxFQUFFLEdBQUc7Q0FDWCxDQUFDIn0=
+
+/***/ }),
+
+/***/ 3372:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CameraType = void 0;
+var CameraType;
+(function (CameraType) {
+    CameraType["Hdc"] = "hdc";
+    CameraType["HdcS"] = "hdc-s";
+})(CameraType = exports.CameraType || (exports.CameraType = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy90eXBlcy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxJQUFZLFVBR1g7QUFIRCxXQUFZLFVBQVU7SUFDcEIseUJBQVcsQ0FBQTtJQUNYLDRCQUFjLENBQUE7QUFDaEIsQ0FBQyxFQUhXLFVBQVUsR0FBVixrQkFBVSxLQUFWLGtCQUFVLFFBR3JCIn0=
+
+/***/ }),
+
+/***/ 5740:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createCronJobExecutor = exports.cacheExecutionForDevice = exports.resolveCondition = exports.conditionMatches = exports.createCronJob = exports.scheduleCronJobs = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+const config_1 = __nccwpck_require__(6039);
+const fs_1 = __nccwpck_require__(7147);
+let currentCronJobs = [];
+let schedulerIsUpdating = false;
+const scheduleCronJobs = (cronJobsConfig) => {
+    if (Array.isArray(cronJobsConfig)) {
+        if (!cronJobsConfig.length || schedulerIsUpdating) {
+            return;
+        }
+        schedulerIsUpdating = true;
+        // We have an array of already executed jobs, currentCronJobs
+        // Let's stop jobs that are not included in the new config
+        // And do not touch jobs with the same id — let them run
+        try {
+            const jobsToKeep = [];
+            const jobsToStop = [];
+            for (const job of currentCronJobs) {
+                if (cronJobsConfig.some((config) => config.id === job.config.id)) {
+                    jobsToKeep.push(job);
+                }
+                else {
+                    jobsToStop.push(job);
+                }
+            }
+            // stop the jobs that are not needed anymore
+            for (const job of jobsToStop) {
+                job.stop();
+            }
+            currentCronJobs = jobsToKeep;
+            const commandsExecutedOncePerDevice = (0, child_process_1.execSync)('cat ' + config_1.CRON_EXECUTED_TASKS_PATH, {
+                encoding: 'utf-8',
+            });
+            // create new cron jobs
+            for (const cronJobConf of cronJobsConfig) {
+                if (!currentCronJobs.some((job) => cronJobConf.id === job.config.id)) {
+                    if (commandsExecutedOncePerDevice.indexOf(cronJobConf.id) !== -1) {
+                        console.log('Cron ' + cronJobConf.id + ' was executed already. Ignored');
+                    }
+                    else {
+                        const job = (0, exports.createCronJob)(cronJobConf);
+                        job.start();
+                        currentCronJobs.push(job);
+                    }
+                }
+            }
+            (0, fs_1.writeFile)(config_1.CRON_CONFIG, JSON.stringify(cronJobsConfig), {
+                encoding: 'utf-8',
+            }, () => { });
+        }
+        catch (e) {
+            console.log('Error updaring scheduler', e);
+        }
+        schedulerIsUpdating = false;
+    }
+    else {
+        console.log('Wrong format of cronConfig: it should be an array of jobs');
+    }
+};
+exports.scheduleCronJobs = scheduleCronJobs;
+const createCronJob = (config) => {
+    let interval;
+    let timeout;
+    return {
+        config,
+        start: () => {
+            const executor = (0, exports.createCronJobExecutor)(config);
+            console.log('Cron scheduled: ' + config.id);
+            if (config.frequency.interval) {
+                interval = setInterval(() => executor(interval), Number(config.frequency.interval));
+            }
+            else if (config.frequency.delay) {
+                timeout = setTimeout(executor, Number(config.frequency.delay));
+            }
+            else {
+                executor();
+            }
+        },
+        stop: () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+        },
+    };
+};
+exports.createCronJob = createCronJob;
+const conditionMatches = (stdout, method, value) => {
+    switch (method) {
+        case 'contains':
+            return stdout.indexOf(value.toString()) !== -1;
+        case 'equals':
+            // better to ignore type matching here
+            return stdout == value;
+        case 'greaterThan':
+            return Number(stdout.trim()) > Number(value);
+        case 'lessThan':
+            return Number(stdout.trim()) < Number(value);
+        case 'startsWith':
+            return stdout.indexOf(value.toString()) === 0;
+        default:
+            return true;
+    }
+};
+exports.conditionMatches = conditionMatches;
+const resolveCondition = async (condition, log, _resolve) => {
+    return new Promise(resolve => {
+        if (_resolve) {
+            resolve = _resolve;
+        }
+        if (condition.cmd) {
+            try {
+                (0, child_process_1.exec)(condition.cmd, {
+                    encoding: 'utf-8',
+                }, (error, stdout) => {
+                    if (log) {
+                        console.log(condition.cmd);
+                        console.log(stdout || error);
+                    }
+                    if (stdout &&
+                        (0, exports.conditionMatches)(stdout, condition.method, condition.value)) {
+                        if (condition.and) {
+                            (0, exports.resolveCondition)(condition.and, log, resolve);
+                        }
+                        else {
+                            resolve(true);
+                        }
+                    }
+                    else {
+                        if (condition.or) {
+                            (0, exports.resolveCondition)(condition.or, log, resolve);
+                        }
+                        else {
+                            resolve(false);
+                        }
+                    }
+                });
+            }
+            catch (e) {
+                console.log('Failed executing command', e);
+            }
+        }
+        else {
+            return resolve(true);
+        }
+    });
+};
+exports.resolveCondition = resolveCondition;
+const cacheExecutionForDevice = (id) => {
+    try {
+        (0, fs_1.appendFile)(config_1.CRON_EXECUTED_TASKS_PATH, id + '\n', {
+            encoding: 'utf-8',
+        }, () => { });
+    }
+    catch (e) {
+        console.log('Error appending to cache file', e);
+    }
+};
+exports.cacheExecutionForDevice = cacheExecutionForDevice;
+const createCronJobExecutor = (config) => {
+    let isRunning = false;
+    const executeOneOrMany = (command) => {
+        const cmd = Array.isArray(command) ? command.shift() : command;
+        if (cmd === 'reboot') {
+            (0, exports.cacheExecutionForDevice)(config.id);
+        }
+        try {
+            (0, child_process_1.exec)(cmd, {
+                encoding: 'utf-8',
+            }, (error, stdout) => {
+                if (config.log) {
+                    console.log(cmd);
+                    console.log(stdout);
+                }
+                if (config.frequency.oncePerDevice) {
+                    (0, exports.cacheExecutionForDevice)(config.id);
+                }
+                if (Array.isArray(command) && command.length) {
+                    executeOneOrMany(command);
+                }
+                else {
+                    isRunning = false;
+                }
+            });
+        }
+        catch (e) {
+            console.log('Failed executing command', e);
+        }
+    };
+    const executor = async (interval) => {
+        if (isRunning)
+            return;
+        isRunning = true;
+        try {
+            let isValid = true;
+            if (config.if) {
+                isValid = await (0, exports.resolveCondition)(config.if, config.log);
+            }
+            if (isValid) {
+                if (config.frequency.executeOnce && interval) {
+                    clearInterval(interval);
+                }
+                executeOneOrMany(Array.isArray(config.cmd) ? [...config.cmd] : config.cmd);
+            }
+            else {
+                isRunning = false;
+            }
+        }
+        catch (e) {
+            console.log('Failed running command ' + config.cmd + ' for cron ' + config.id, e);
+            isRunning = false;
+        }
+    };
+    return executor;
+};
+exports.createCronJobExecutor = createCronJobExecutor;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY3Jvbi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvY3Jvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBK0M7QUFDL0MsbUNBQStEO0FBQy9ELDJCQUEyQztBQVEzQyxJQUFJLGVBQWUsR0FBZSxFQUFFLENBQUM7QUFDckMsSUFBSSxtQkFBbUIsR0FBRyxLQUFLLENBQUM7QUFFekIsTUFBTSxnQkFBZ0IsR0FBRyxDQUFDLGNBQWdDLEVBQUUsRUFBRTtJQUNuRSxJQUFJLEtBQUssQ0FBQyxPQUFPLENBQUMsY0FBYyxDQUFDLEVBQUU7UUFDakMsSUFBSSxDQUFDLGNBQWMsQ0FBQyxNQUFNLElBQUksbUJBQW1CLEVBQUU7WUFDakQsT0FBTztTQUNSO1FBQ0QsbUJBQW1CLEdBQUcsSUFBSSxDQUFDO1FBRTNCLDZEQUE2RDtRQUM3RCwwREFBMEQ7UUFDMUQsd0RBQXdEO1FBQ3hELElBQUk7WUFDRixNQUFNLFVBQVUsR0FBZSxFQUFFLENBQUM7WUFDbEMsTUFBTSxVQUFVLEdBQWUsRUFBRSxDQUFDO1lBQ2xDLEtBQUssTUFBTSxHQUFHLElBQUksZUFBZSxFQUFFO2dCQUNqQyxJQUNFLGNBQWMsQ0FBQyxJQUFJLENBQ2pCLENBQUMsTUFBc0IsRUFBRSxFQUFFLENBQUMsTUFBTSxDQUFDLEVBQUUsS0FBSyxHQUFHLENBQUMsTUFBTSxDQUFDLEVBQUUsQ0FDeEQsRUFDRDtvQkFDQSxVQUFVLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO2lCQUN0QjtxQkFBTTtvQkFDTCxVQUFVLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO2lCQUN0QjthQUNGO1lBRUQsNENBQTRDO1lBQzVDLEtBQUssTUFBTSxHQUFHLElBQUksVUFBVSxFQUFFO2dCQUM1QixHQUFHLENBQUMsSUFBSSxFQUFFLENBQUM7YUFDWjtZQUNE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
+
+/***/ }),
+
+/***/ 885:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.concatFrames = void 0;
+const async_1 = __nccwpck_require__(9256);
+const config_1 = __nccwpck_require__(6039);
+const fs_1 = __nccwpck_require__(7147);
+const index_1 = __nccwpck_require__(5896);
+const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
+const MIN_PER_FRAME_BYTES = 25 * 1000;
+const concatFrames = async (frames, framekmName) => {
+    // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
+    try {
+        await new Promise(resolve => {
+            (0, fs_1.mkdir)(config_1.FRAMEKM_ROOT_FOLDER, resolve);
+        });
+    }
+    catch (e) {
+        console.log(e);
+    }
+    const framesPath = frames.map((frame) => config_1.FRAMES_ROOT_FOLDER + '/' + frame);
+    const bytesMap = {};
+    let framesParsed = 0;
+    return new Promise(async (resolve, reject) => {
+        // USING NON-BLOCKING IO,
+        // 1. GET SIZE FOR EACH FRAME, AND FILTER OUT ALL INEXISTANT
+        let fileStats = [];
+        try {
+            fileStats = await (0, async_1.map)(framesPath, index_1.getStats);
+        }
+        catch (e) {
+            reject(e);
+            console.log(e);
+            return;
+        }
+        // 2. PACK IT ALTOGETHER INTO A SINGLE CHUNK USING NON-BLOCKING I/O FUNCTION
+        try {
+            (0, async_1.eachSeries)(fileStats, function (fileStat, callback) {
+                if (fileStat &&
+                    fileStat.size > MIN_PER_FRAME_BYTES &&
+                    fileStat.size < MAX_PER_FRAME_BYTES) {
+                    try {
+                        (0, fs_1.readFile)(config_1.FRAMES_ROOT_FOLDER + '/' + fileStat.name, (err, payload) => {
+                            if (err) {
+                                callback(null);
+                            }
+                            else {
+                                if (!framesParsed) {
+                                    try {
+                                        (0, fs_1.writeFile)(config_1.FRAMEKM_ROOT_FOLDER + '/' + framekmName, payload, async (err) => {
+                                            if (!err) {
+                                                bytesMap[fileStat.name] = fileStat.size;
+                                            }
+                                            await (0, index_1.sleep)(100);
+                                            callback(null);
+                                        });
+                                        framesParsed++;
+                                    }
+                                    catch (e) {
+                                        callback(null);
+                                    }
+                                }
+                                else {
+                                    try {
+                                        (0, fs_1.appendFile)(config_1.FRAMEKM_ROOT_FOLDER + '/' + framekmName, payload, err => {
+                                            if (!err) {
+                                                bytesMap[fileStat.name] = fileStat.size;
+                                            }
+                                            callback(null);
+                                        });
+                                    }
+                                    catch (e) {
+                                        callback(null);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    catch (e) {
+                        console.log(e);
+                        callback(null);
+                    }
+                }
+                else {
+                    callback(null);
+                }
+            }, () => {
+                resolve(bytesMap);
+            });
+        }
+        catch (e) {
+            reject(e);
+            console.log(e);
+        }
+    });
+};
+exports.concatFrames = concatFrames;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZnJhbWVrbS5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvZnJhbWVrbS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpQ0FBd0M7QUFDeEMsbUNBQWlFO0FBQ2pFLDJCQUFtRTtBQUNuRSxzQ0FBNkM7QUFFN0MsTUFBTSxtQkFBbUIsR0FBRyxDQUFDLEdBQUcsSUFBSSxHQUFHLElBQUksQ0FBQztBQUM1QyxNQUFNLG1CQUFtQixHQUFHLEVBQUUsR0FBRyxJQUFJLENBQUM7QUFFL0IsTUFBTSxZQUFZLEdBQUcsS0FBSyxFQUMvQixNQUFnQixFQUNoQixXQUFtQixFQUNMLEVBQUU7SUFDaEIsMENBQTBDO0lBQzFDLElBQUk7UUFDRixNQUFNLElBQUksT0FBTyxDQUFDLE9BQU8sQ0FBQyxFQUFFO1lBQzFCLElBQUEsVUFBSyxFQUFDLDRCQUFtQixFQUFFLE9BQU8sQ0FBQyxDQUFDO1FBQ3RDLENBQUMsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQ2hCO0lBRUQsTUFBTSxVQUFVLEdBQUcsTUFBTSxDQUFDLEdBQUcsQ0FDM0IsQ0FBQyxLQUFhLEVBQUUsRUFBRSxDQUFDLDJCQUFrQixHQUFHLEdBQUcsR0FBRyxLQUFLLENBQ3BELENBQUM7SUFDRixNQUFNLFFBQVEsR0FBOEIsRUFBRSxDQUFDO0lBQy9DLElBQUksWUFBWSxHQUFHLENBQUMsQ0FBQztJQUVyQixPQUFPLElBQUksT0FBTyxDQUFDLEtBQUssRUFBRSxPQUFPLEVBQUUsTUFBTSxFQUFFLEVBQUU7UUFDM0MseUJBQXlCO1FBQ3pCLDREQUE0RDtRQUM1RCxJQUFJLFNBQVMsR0FBVSxFQUFFLENBQUM7UUFDMUIsSUFBSTtZQUNGLFNBQVMsR0FBRyxNQUFNLElBQUEsV0FB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
+
+/***/ }),
+
 /***/ 5896:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getCameraConfig = exports.getPreviewConfig = exports.sleep = exports.checkIfUpsideDown = exports.filterBySinceUntil = exports.getSessionId = exports.setSessionId = exports.getDateFromUnicodeTimastamp = exports.getDateFromFilename = void 0;
+exports.fileExists = exports.getStats = exports.setCameraConfig = exports.getCameraConfig = exports.getPreviewConfig = exports.sleep = exports.checkIfUpsideDown = exports.filterBySinceUntil = exports.getSessionId = exports.setSessionId = exports.getDateFromUnicodeTimastamp = exports.getDateFromFilename = void 0;
 const shortid_1 = __nccwpck_require__(8777);
+const updateCameraConfig_1 = __nccwpck_require__(3894);
+const fs_1 = __nccwpck_require__(7147);
 let sessionId;
 const getDateFromFilename = (filename) => {
     try {
@@ -29699,7 +36281,7 @@ const filterBySinceUntil = (files, req) => {
 };
 exports.filterBySinceUntil = filterBySinceUntil;
 const checkIfUpsideDown = (imu) => {
-    return imu?.accel.y < -0.8;
+    return imu && imu.accel.y < -0.8;
 };
 exports.checkIfUpsideDown = checkIfUpsideDown;
 const sleep = async (ms) => {
@@ -29733,32 +36315,58 @@ const getPreviewConfig = () => {
     };
 };
 exports.getPreviewConfig = getPreviewConfig;
+let cameraConfig = {
+    recording: {
+        directory: {
+            prefix: '',
+            output: '/mnt/data/pic/',
+            minfreespace: 64000000,
+            output2: '/media/usb0/recording/',
+            minfreespace2: 32000000,
+        },
+    },
+    camera: {
+        encoding: {
+            fps: 10,
+            width: 4056,
+            height: 2160,
+            codec: 'mjpeg',
+        },
+        adjustment: {
+            hflip: false,
+            vflip: false,
+            rotation: 180,
+        },
+    },
+};
 const getCameraConfig = () => {
-    return {
-        recording: {
-            directory: {
-                prefix: '',
-                output: '/mnt/data/pic/',
-                minfreespace: 64000000,
-            },
-        },
-        camera: {
-            encoding: {
-                fps: 10,
-                width: 4056,
-                height: 2160,
-                codec: 'mjpeg',
-            },
-            adjustment: {
-                hflip: false,
-                vflip: false,
-                rotation: 180,
-            },
-        },
-    };
+    return cameraConfig;
 };
 exports.getCameraConfig = getCameraConfig;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy91dGlsL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUVBLHFDQUFtQztBQUVuQyxJQUFJLFNBQWlCLENBQUM7QUFFZixNQUFNLG1CQUFtQixHQUFHLENBQUMsUUFBZ0IsRUFBRSxFQUFFO0lBQ3RELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxRQUFRLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ2xDLE1BQU0sSUFBSSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxPQUFPLENBQUMsSUFBSSxFQUFFLEdBQUcsQ0FBQyxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNwRCxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7UUFDWCxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsSUFBSSxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUMxQixPQUFPLElBQUksSUFBSSxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQztLQUNsQztJQUFDLE9BQU8sQ0FBQyxFQUFFO1FBQ1YsT0FBTyxJQUFJLElBQUksRUFBRSxDQUFDO0tBQ25CO0FBQ0gsQ0FBQyxDQUFDO0FBVlcsUUFBQSxtQkFBbUIsdUJBVTlCO0FBRUssTUFBTSwyQkFBMkIsR0FBRyxDQUFDLFFBQWdCLEVBQUUsRUFBRTtJQUM5RCxJQUFJO1FBQ0YsTUFBTSxLQUFLLEdBQUcsUUFBUSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNsQyxPQUFPLElBQUksSUFBSSxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENB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
+const setCameraConfig = (newCameraConfig) => {
+    cameraConfig = newCameraConfig;
+    updateCameraConfig_1.UpdateCameraConfigService.execute();
+};
+exports.setCameraConfig = setCameraConfig;
+const getStats = (filePath, callback) => {
+    (0, fs_1.stat)(filePath, function (err, stat) {
+        if (err) {
+            return callback(null);
+        }
+        const name = filePath.split('/').pop() || '';
+        callback(null, { ...stat, name });
+    });
+};
+exports.getStats = getStats;
+const fileExists = (filepath) => {
+    return new Promise((resolve, reject) => {
+        (0, fs_1.access)(filepath, fs_1.constants.F_OK, error => {
+            resolve(!error);
+        });
+    });
+};
+exports.fileExists = fileExists;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJmaWxlOi8vL1VzZXJzL2FsZWtzZWlwdW5vdi9Qcm9qZWN0cy9zYW5kYm94L2Rhc2hjYW0tYXBpL3NyYy91dGlsL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUVBLHFDQUFtQztBQUNuQyxvRUFBd0U7QUFDeEUsMkJBQTZDO0FBRTdDLElBQUksU0FBaUIsQ0FBQztBQUVmLE1BQU0sbUJBQW1CLEdBQUcsQ0FBQyxRQUFnQixFQUFFLEVBQUU7SUFDdEQsSUFBSTtRQUNGLE1BQU0sS0FBSyxHQUFHLFFBQVEsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUM7UUFDbEMsTUFBTSxJQUFJLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxJQUFJLEVBQUUsR0FBRyxDQUFDLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ3BELElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztRQUNYLEtBQUssQ0FBQyxDQUFDLENBQUMsR0FBRyxJQUFJLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQzFCLE9BQU8sSUFBSSxJQUFJLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO0tBQ2xDO0lBQUMsT0FBTyxDQUFDLEVBQUU7UUFDVixPQUFPLElBQUksSUFBSSxFQUFFLENBQUM7S0FDbkI7QUFDSCxDQUFDLENBQUM7QUFWVyxRQUFBLG1CQUFtQix1QkFVOUI7QUFFSyxNQUFNLDJCQUEyQixHQUFHLENBQUMsUUFBZ0IsRUFBRSxFQUFFO0lBQzlELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxRQUFRLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQ2xDLE9BQU8sSUFBSSxJQUFJLENBQUMsTUFBTSxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsU0FBUyxD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
 
 /***/ }),
 
@@ -29998,7 +36606,10 @@ const setCameraTime = () => {
                     if (timeDateBytes === '1111' || timeDateBytes === '0111') {
                         elems.pop();
                         const time = elems.pop();
-                        const date = elems.pop()?.replace(/\//g, '-');
+                        let date = elems.pop();
+                        if (date) {
+                            date = date.replace(/\//g, '-');
+                        }
                         if (time && date && !isTimeSet) {
                             try {
                                 const d = date.split('-').map(Number);
@@ -30009,14 +36620,14 @@ const setCameraTime = () => {
                                     isTimeSet = true;
                                     // Here you can check the delta between last gps timestamp record
                                     // and system time
-                                    (0, child_process_1.exec)((0, config_1.getStopCameraCommand)(), () => {
+                                    (0, child_process_1.exec)(config_1.CMD.STOP_CAMERA, () => {
                                         setTimeout(() => {
-                                            (0, child_process_1.exec)((0, config_1.getStartCameraCommand)(), (error) => {
+                                            (0, child_process_1.exec)(config_1.CMD.START_CAMERA, (error) => {
                                                 if (!error) {
                                                     console.log('Camera restarted');
                                                 }
                                                 else {
-                                                    (0, child_process_1.exec)((0, config_1.getStartCameraCommand)());
+                                                    (0, child_process_1.exec)(config_1.CMD.START_CAMERA);
                                                     console.log('Camera restarted after second attempt.');
                                                 }
                                             });
@@ -30057,7 +36668,7 @@ const getLockTime = () => {
     };
 };
 exports.getLockTime = getLockTime;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibG9jay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvbG9jay50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBb0Q7QUFDcEQsbUNBQXFFO0FBRXJFLElBQUksUUFBUSxHQUFHLENBQUMsQ0FBQztBQUNqQixJQUFJLElBQUksR0FBRyxDQUFDLENBQUM7QUFDYixJQUFJLE9BQU8sR0FBYSxFQUFFLENBQUM7QUFDM0IsSUFBSSxTQUFTLEdBQUcsS0FBSyxDQUFDO0FBQ3RCLElBQUksc0JBQXNCLEdBQUcsS0FBSyxDQUFDO0FBQ25DLElBQUksb0JBQW9CLEdBQUcsS0FBSyxDQUFDO0FBRTFCLE1BQU0sU0FBUyxHQUFHLEdBQUcsRUFBRTtJQUM1QixPQUFPLFNBQVMsQ0FBQztBQUNuQixDQUFDLENBQUM7QUFGVyxRQUFBLFNBQVMsYUFFcEI7QUFFSyxNQUFNLFdBQVcsR0FBRyxHQUFHLEVBQUU7SUFDOUIsSUFBSSxDQUFDLG9CQUFvQixJQUFJLENBQUMsUUFBUSxFQUFFO1FBQ3RDLG9CQUFvQixHQUFHLElBQUksQ0FBQztRQUM1QixJQUFJO1lBQ0YsSUFBQSxvQkFBSSxFQUNGLG1DQUFtQyxFQUNuQyxFQUFFLFFBQVEsRUFBRSxPQUFPLEVBQUUsRUFDckIsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO2dCQUM5QyxJQUFJLE1BQU0sR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsTUFBTSxDQUFDO2dCQUNqQyxNQUFNLEtBQUssR0FBRyxNQUFNLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO2dCQUNoQyxJQUFJLEtBQUssQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsRUFBRTtvQkFD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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibG9jay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvbG9jay50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBb0Q7QUFDcEQsbUNBQTZCO0FBRTdCLElBQUksUUFBUSxHQUFHLENBQUMsQ0FBQztBQUNqQixJQUFJLElBQUksR0FBRyxDQUFDLENBQUM7QUFDYixJQUFJLE9BQU8sR0FBYSxFQUFFLENBQUM7QUFDM0IsSUFBSSxTQUFTLEdBQUcsS0FBSyxDQUFDO0FBQ3RCLElBQUksc0JBQXNCLEdBQUcsS0FBSyxDQUFDO0FBQ25DLElBQUksb0JBQW9CLEdBQUcsS0FBSyxDQUFDO0FBRTFCLE1BQU0sU0FBUyxHQUFHLEdBQUcsRUFBRTtJQUM1QixPQUFPLFNBQVMsQ0FBQztBQUNuQixDQUFDLENBQUM7QUFGVyxRQUFBLFNBQVMsYUFFcEI7QUFFSyxNQUFNLFdBQVcsR0FBRyxHQUFHLEVBQUU7SUFDOUIsSUFBSSxDQUFDLG9CQUFvQixJQUFJLENBQUMsUUFBUSxFQUFFO1FBQ3RDLG9CQUFvQixHQUFHLElBQUksQ0FBQztRQUM1QixJQUFJO1lBQ0YsSUFBQSxvQkFBSSxFQUNGLG1DQUFtQyxFQUNuQyxFQUFFLFFBQVEsRUFBRSxPQUFPLEVBQUUsRUFDckIsQ0FBQyxLQUEyQixFQUFFLE1BQWMsRUFBRSxFQUFFO2dCQUM5QyxJQUFJLE1BQU0sR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsTUFBTSxDQUFDO2dCQUNqQyxNQUFNLEtBQUssR0FBRyxNQUFNLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDO2dCQUNoQyxJQUFJLEtBQUssQ0FBQyxNQUFNLElBQUksS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLENBQUMsRUFBRTtvQkFD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
 
 /***/ }),
 
@@ -30096,15 +36707,15 @@ const startPreview = async () => {
     catch (e) {
         console.log(e);
     }
-    await (0, child_process_1.execSync)((0, config_1.getStopCameraCommand)(), {
+    await (0, child_process_1.execSync)(config_1.CMD.STOP_CAMERA, {
         encoding: 'utf-8',
     });
     await (0, index_1.sleep)(1000);
-    await (0, child_process_1.execSync)((0, config_1.getStartCameraCommand)(), {
+    await (0, child_process_1.execSync)(config_1.CMD.START_CAMERA, {
         encoding: 'utf-8',
     });
     await (0, index_1.sleep)(500);
-    await (0, child_process_1.execSync)((0, config_1.getStartPreviewCommand)(), {
+    await (0, child_process_1.execSync)(config_1.CMD.START_PREVIEW, {
         encoding: 'utf-8',
     });
 };
@@ -30114,7 +36725,7 @@ const stopPreview = async () => {
         clearTimeout(timer);
     }
     (0, heartBeat_1.setPreviewStatus)(false);
-    await (0, child_process_1.execSync)((0, config_1.getStopPreviewCommand)(), {
+    await (0, child_process_1.execSync)(config_1.CMD.STOP_PREVIEW, {
         encoding: 'utf-8',
     });
     try {
@@ -30125,11 +36736,11 @@ const stopPreview = async () => {
     catch (e) {
         console.log(e);
     }
-    await (0, child_process_1.execSync)((0, config_1.getStopCameraCommand)(), {
+    await (0, child_process_1.execSync)(config_1.CMD.STOP_CAMERA, {
         encoding: 'utf-8',
     });
     await (0, index_1.sleep)(1000);
-    await (0, child_process_1.execSync)((0, config_1.getStartCameraCommand)(), {
+    await (0, child_process_1.execSync)(config_1.CMD.START_CAMERA, {
         encoding: 'utf-8',
     });
     // No need to wait for this one
@@ -30143,7 +36754,7 @@ const stopPreview = async () => {
     }
 };
 exports.stopPreview = stopPreview;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicHJldmlldy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvcHJldmlldy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBK0M7QUFDL0MsMkJBQW1DO0FBQ25DLG1DQU1nQjtBQUNoQixrREFBc0Q7QUFDdEQsc0NBQXNFO0FBRXRFLElBQUksS0FBSyxHQUFRLFNBQVMsQ0FBQztBQUVwQixNQUFNLFlBQVksR0FBRyxLQUFLLElBQUksRUFBRTtJQUNyQyxJQUFJLEtBQUssRUFBRTtRQUNULFlBQVksQ0FBQyxLQUFLLENBQUMsQ0FBQztLQUNyQjtJQUNELEtBQUssR0FBRyxVQUFVLENBQUMsbUJBQVcsRUFBRSxNQUFNLENBQUMsQ0FBQztJQUN4QyxJQUFBLDRCQUFnQixFQUFDLElBQUksQ0FBQyxDQUFDO0lBQ3ZCLElBQUk7UUFDRixNQUFNLElBQUEsd0JBQVEsRUFBQyw4QkFBOEIsRUFBRTtZQUM3QyxRQUFRLEVBQUUsT0FBTztTQUNsQixDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7S0FDaEI7SUFFRCxJQUFJO1FBQ0YsSUFBQSxrQkFBYSxFQUFDLDJCQUFrQixFQUFFLElBQUksQ0FBQyxTQUFTLENBQUMsSUFBQSx3QkFBZ0IsR0FBRSxDQUFDLEVBQUU7WUFDcEUsUUFBUSxFQUFFLE9BQU87U0FDbEIsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQ2hCO0lBQ0QsTUFBTSxJQUFBLHdCQUFRLEVBQUMsSUFBQSw2QkFBb0IsR0FBRSxFQUFFO1FBQ3JDLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztJQUNILE1BQU0sSUFBQSxhQUFLLEVBQUMsSUFBSSxDQUFDLENBQUM7SUFDbEIsTUFBTSxJQUFBLHdCQUFRLEVBQUMsSUFBQSw4QkFBcUIsR0FBRSxFQUFFO1FBQ3RDLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztJQUNILE1BQU0sSUFBQSxhQUFLLEVBQUMsR0FBRyxDQUFDLENBQUM7SUFDakIsTUFBTSxJQUFBLHdCQUFRLEVBQUMsSUFBQSwrQkFBc0IsR0FBRSxFQUFFO1FBQ3ZDLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztBQUNMLENBQUMsQ0FBQztBQWhDVyxRQUFBLFlBQVksZ0JBZ0N2QjtBQUVLLE1BQU0sV0FBVyxHQUFHLEtBQUssSUFBSSxFQUFFO0lBQ3BDLElBQUksS0FBSyxFQUFFO1FBQ1QsWUFBWSxDQUFDLEtBQUssQ0FBQyxDQUFDO0tBQ3JCO0lBQ0QsSUFBQSw0QkFBZ0IsRUFBQyxLQUFLLENBQUMsQ0FBQztJQUN4QixNQUFNLElBQUEsd0JBQVEsRUFBQyxJQUFBLDhCQUFxQixHQUFFLEVBQUU7UUFDdEMsUUFBUSxFQUFFLE9BQU87S0FDbEIsQ0FBQyxDQUFDO0lBQ0gsSUFBSTtRQUNGLElBQUEsa0JBQWEsRUFBQywyQkFBa0IsRUFBRSxJQUFJLENBQUMsU0FBUyxDQUFDLElBQUEsdUJBQWUsR0FBRSxDQUFDLEVBQUU7WUFDbkUsUUFBUSxFQUFFLE9BQU87U0FDbEIsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQ2hCO0lBQ0QsTUFBTSxJQUFBLHdCQUFRLEVBQUMsSUFBQSw2QkFBb0IsR0FBRSxFQUFFO1FBQ3JDLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztJQUNILE1BQU0sSUFBQSxhQUFLLEVBQUMsSUFBSSxDQUFDLENBQUM7SUFDbEIsTUFBTSxJQUFBLHdCQUFRLEVBQUMsSUFBQSw4QkFBcUIsR0FBRSxFQUFFO1FBQ3RDLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztJQUVILCtCQUErQjtJQUMvQixJQUFJO1FBQ0YsSUFBQSxvQkFBSSxFQUFDLDhCQUE4QixFQUFFO1lBQ25DLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztLQUNKO0lBQUMsT0FBTyxDQUFVLEVBQUU7UUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztLQUNoQjtBQUNILENBQUMsQ0FBQztBQS9CVyxRQUFBLFdBQVcsZUErQnRCIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicHJldmlldy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImZpbGU6Ly8vVXNlcnMvYWxla3NlaXB1bm92L1Byb2plY3RzL3NhbmRib3gvZGFzaGNhbS1hcGkvc3JjL3V0aWwvcHJldmlldy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxpREFBK0M7QUFDL0MsMkJBQW1DO0FBQ25DLG1DQUFpRDtBQUNqRCxrREFBc0Q7QUFDdEQsc0NBQXNFO0FBRXRFLElBQUksS0FBSyxHQUFRLFNBQVMsQ0FBQztBQUVwQixNQUFNLFlBQVksR0FBRyxLQUFLLElBQUksRUFBRTtJQUNyQyxJQUFJLEtBQUssRUFBRTtRQUNULFlBQVksQ0FBQyxLQUFLLENBQUMsQ0FBQztLQUNyQjtJQUNELEtBQUssR0FBRyxVQUFVLENBQUMsbUJBQVcsRUFBRSxNQUFNLENBQUMsQ0FBQztJQUN4QyxJQUFBLDRCQUFnQixFQUFDLElBQUksQ0FBQyxDQUFDO0lBQ3ZCLElBQUk7UUFDRixNQUFNLElBQUEsd0JBQVEsRUFBQyw4QkFBOEIsRUFBRTtZQUM3QyxRQUFRLEVBQUUsT0FBTztTQUNsQixDQUFDLENBQUM7S0FDSjtJQUFDLE9BQU8sQ0FBVSxFQUFFO1FBQ25CLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7S0FDaEI7SUFFRCxJQUFJO1FBQ0YsSUFBQSxrQkFBYSxFQUFDLDJCQUFrQixFQUFFLElBQUksQ0FBQyxTQUFTLENBQUMsSUFBQSx3QkFBZ0IsR0FBRSxDQUFDLEVBQUU7WUFDcEUsUUFBUSxFQUFFLE9BQU87U0FDbEIsQ0FBQyxDQUFDO0tBQ0o7SUFBQyxPQUFPLENBQVUsRUFBRTtRQUNuQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO0tBQ2hCO0lBQ0QsTUFBTSxJQUFBLHdCQUFRLEVBQUMsWUFBRyxDQUFDLFdBQVcsRUFBRTtRQUM5QixRQUFRLEVBQUUsT0FBTztLQUNsQixDQUFDLENBQUM7SUFDSCxNQUFNLElBQUEsYUFBSyxFQUFDLElBQUksQ0FBQyxDQUFDO0lBQ2xCLE1BQU0sSUFBQSx3QkFBUSxFQUFDLFlBQUcsQ0FBQyxZQUFZLEVBQUU7UUFDL0IsUUFBUSxFQUFFLE9BQU87S0FDbEIsQ0FBQyxDQUFDO0lBQ0gsTUFBTSxJQUFBLGFBQUssRUFBQyxHQUFHLENBQUMsQ0FBQztJQUNqQixNQUFNLElBQUEsd0JBQVEsRUFBQyxZQUFHLENBQUMsYUFBYSxFQUFFO1FBQ2hDLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztBQUNMLENBQUMsQ0FBQztBQWhDVyxRQUFBLFlBQVksZ0JBZ0N2QjtBQUVLLE1BQU0sV0FBVyxHQUFHLEtBQUssSUFBSSxFQUFFO0lBQ3BDLElBQUksS0FBSyxFQUFFO1FBQ1QsWUFBWSxDQUFDLEtBQUssQ0FBQyxDQUFDO0tBQ3JCO0lBQ0QsSUFBQSw0QkFBZ0IsRUFBQyxLQUFLLENBQUMsQ0FBQztJQUN4QixNQUFNLElBQUEsd0JBQVEsRUFBQyxZQUFHLENBQUMsWUFBWSxFQUFFO1FBQy9CLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztJQUNILElBQUk7UUFDRixJQUFBLGtCQUFhLEVBQUMsMkJBQWtCLEVBQUUsSUFBSSxDQUFDLFNBQVMsQ0FBQyxJQUFBLHVCQUFlLEdBQUUsQ0FBQyxFQUFFO1lBQ25FLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztLQUNKO0lBQUMsT0FBTyxDQUFVLEVBQUU7UUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztLQUNoQjtJQUNELE1BQU0sSUFBQSx3QkFBUSxFQUFDLFlBQUcsQ0FBQyxXQUFXLEVBQUU7UUFDOUIsUUFBUSxFQUFFLE9BQU87S0FDbEIsQ0FBQyxDQUFDO0lBQ0gsTUFBTSxJQUFBLGFBQUssRUFBQyxJQUFJLENBQUMsQ0FBQztJQUNsQixNQUFNLElBQUEsd0JBQVEsRUFBQyxZQUFHLENBQUMsWUFBWSxFQUFFO1FBQy9CLFFBQVEsRUFBRSxPQUFPO0tBQ2xCLENBQUMsQ0FBQztJQUVILCtCQUErQjtJQUMvQixJQUFJO1FBQ0YsSUFBQSxvQkFBSSxFQUFDLDhCQUE4QixFQUFFO1lBQ25DLFFBQVEsRUFBRSxPQUFPO1NBQ2xCLENBQUMsQ0FBQztLQUNKO0lBQUMsT0FBTyxDQUFVLEVBQUU7UUFDbkIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztLQUNoQjtBQUNILENBQUMsQ0FBQztBQS9CVyxRQUFBLFdBQVcsZUErQnRCIn0=
 
 /***/ }),
 

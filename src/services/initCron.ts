@@ -1,12 +1,9 @@
 import { readFile, write, writeFile } from 'fs';
 import { IService } from '../types';
 import { fileExists } from 'util/index';
-import {
-  CRON_CONFIG,
-  CRON_EXECUTED_TASKS_PATH,
-  scheduleCronJobs,
-} from 'util/cron';
+import { scheduleCronJobs } from 'util/cron';
 import { exec } from 'child_process';
+import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 
 export const InitCronService: IService = {
   execute: async () => {

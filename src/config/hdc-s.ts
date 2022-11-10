@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import { Request, Response } from 'express';
+import { CameraType } from 'types';
 
 export const PORT = 5000;
 
@@ -14,14 +15,19 @@ export const IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
 export const LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const WEBSERVER_LOG_PATH =
-  __dirname + '/../../../mnt/data/camera-node.log';
+  __dirname + '/../../../home/root/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 // File containing the camera configuration
 export const IMAGER_CONFIG_PATH =
-  __dirname + '/../../../opt/dashcam/bin/config.json';
+  __dirname + '/../../../opt/camera-bridge/config.json';
 // Path that will be used by the App to upload the new firmware image
-export const UPLOAD_PATH = __dirname + '/../../../tmp/';
+export const UPLOAD_PATH = __dirname + '/../../../data/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
+export const CRON_CONFIG = '/home/root/cron_config';
+export const CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
+export const IMAGER_BRIDGE_PATH =
+  __dirname + '/../../../opt/dashcam/bin/bridge.sh';
+export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 
 export const CMD = {
   START_CAMERA: 'systemctl start camera-bridge',
@@ -30,12 +36,6 @@ export const CMD = {
   STOP_PREVIEW: 'systemctl stop camera-preview',
   READ_DEVICE_INFO:
     'sh /opt/dashcam/bin/eeprom_access.sh -r -f /tmp/dump.bin -o 0 -ba 0 -s',
-};
-
-export const getImageQuality = () => {
-  // TBD
-  // Return number between 0 to 100 that is used for configuring the imager quality
-  return 70;
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {

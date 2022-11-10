@@ -5,6 +5,7 @@ import { exec, execSync } from 'child_process';
 import {
   API_VERSION,
   BUILD_INFO_PATH,
+  CAMERA_TYPE,
   configureOnBoot,
   FRAMEKM_ROOT_FOLDER,
   WEBSERVER_LOG_PATH,
@@ -59,6 +60,7 @@ router.get('/info', async (req: Request, res: Response) => {
   res.json({
     ...versionInfo,
     ...deviceInfo,
+    dashcam: CAMERA_TYPE,
     api_version: API_VERSION,
   });
 
@@ -77,6 +79,7 @@ router.get('/ping', (req, res) => {
     healthy: true,
     cameraTime: Date.now(),
     leds: getCurrentLEDs(),
+    dashcam: CAMERA_TYPE,
     sessionId: getSessionId(),
     ...getLockTime(),
   });
