@@ -5,8 +5,10 @@ import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 const router = Router();
+let gnssBinaryLogger: ChildProcessWithoutNullStreams;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -53,6 +55,35 @@ router.get('/sample', async (req: Request, res: Response) => {
         res.json(sample);
       },
     );
+  } catch (e) {
+    console.log(e);
+    res.json({});
+  }
+});
+
+router.get('/raw', async (req: Request, res: Response) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-control': 'no-cache',
+  });
+  try {
+    // read bytes from the wherever gpsd is tee'ing the bytes to
+    gnssBinaryLogger = spawn('path/to/gnss-binary-logger-exec', ['--argument'])
+    gnssBinaryLogger.stdout.on('data', function (data: string) {
+      res.write(data)
+    });
+    gnssBinaryLogger.on('close', function () {
+      res.end('');
+      gnssBinaryLogger.kill();
+    });
+    gnssBinaryLogger.on('error', function (err) {
+      console.log(err)
+      res.end('');
+      gnssBinaryLogger.kill();
+    });
+    gnssBinaryLogger.stderr.on('data', function (data) {
+      res.end('stderr: ' + data + '\n\n');
+      });
   } catch (e) {
     console.log(e);
     res.json({});
