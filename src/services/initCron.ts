@@ -8,9 +8,9 @@ import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 export const InitCronService: IService = {
   execute: async () => {
     const exists = await fileExists(CRON_CONFIG);
+    exec('touch ' + CRON_EXECUTED_TASKS_PATH);
     if (exists) {
       try {
-        exec('touch ' + CRON_EXECUTED_TASKS_PATH);
         readFile(CRON_CONFIG, (err, data) => {
           if (err) throw err;
           try {

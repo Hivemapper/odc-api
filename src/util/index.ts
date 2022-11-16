@@ -62,6 +62,7 @@ export const getPreviewConfig = () => {
     recording: {
       directory: {
         prefix: '',
+        writeTmp: false,
         output: '/tmp/recording/preview/',
         minfreespace: 64000000,
       },

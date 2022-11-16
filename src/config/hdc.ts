@@ -27,6 +27,8 @@ export const NETWORK_BOOT_CONFIG_PATH =
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
+export const PREVIEW_ROUTE = ':9001/?action=stream';
+
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 
 export const CMD = {

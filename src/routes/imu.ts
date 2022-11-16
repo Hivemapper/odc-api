@@ -78,6 +78,12 @@ router.get('/live', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/status', async (req: Request, res: Response) => {
+  res.json({
+    status: imuLogger ? 'started' : 'stopped',
+  });
+});
+
 router.get('/close', async (req: Request, res: Response) => {
   if (imuLogger) {
     imuLogger.kill();

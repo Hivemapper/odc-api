@@ -4,13 +4,15 @@ import { IMAGER_CONFIG_PATH, CMD } from 'config';
 import { setPreviewStatus } from 'services/heartBeat';
 import { getCameraConfig, getPreviewConfig, sleep } from 'util/index';
 
+// Safe-check to not leave the preview constantly running. Otherwise no images will be created with 4K quality
+const PREVIEW_TIMEOUT = 120000;
 let timer: any = undefined;
 
 export const startPreview = async () => {
   if (timer) {
     clearTimeout(timer);
   }
-  timer = setTimeout(stopPreview, 100000);
+  timer = setTimeout(stopPreview, PREVIEW_TIMEOUT);
   setPreviewStatus(true);
   try {
     await execSync('mkdir /tmp/recording/preview', {

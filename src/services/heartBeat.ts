@@ -25,6 +25,10 @@ export const setPreviewStatus = (state: boolean) => {
   isPreviewInProgress = state;
 };
 
+export const getPreviewStatus = () => {
+  return isPreviewInProgress;
+};
+
 export const HeartBeatService: IService = {
   execute: async () => {
     try {
