@@ -1,6 +1,6 @@
 import { LORA_REQUEST_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
-import { readdirSync, statSync } from 'fs';
+import { promises as Fs } from 'fs';
 import { LORA_RESPONSE_FOLDER } from 'config/hdc-s';
 import { initDirectory } from 'util/files';
 import { createLoraFile } from 'util/lora';
@@ -13,10 +13,10 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/join', async (req: Request, res: Response) => {
   try {
-    if (!req.body?.device) throw new Error('No device found');
-    initDirectory(LORA_REQUEST_FOLDER);
-    initDirectory(LORA_RESPONSE_FOLDER);
-    const created = createLoraFile(
+    if (!(req.body && req.body.device)) throw new Error('No device found');
+    await initDirectory(LORA_REQUEST_FOLDER);
+    await initDirectory(LORA_RESPONSE_FOLDER);
+    const created = await createLoraFile(
       'join',
       req.body.device,
       LORA_REQUEST_FOLDER,
@@ -40,8 +40,9 @@ router.post('/ping', async (req: Request, res: Response) => {
       port: 1,
       confirm: true,
     };
-    initDirectory(LORA_REQUEST_FOLDER);
-    createLoraFile(
+    await initDirectory(LORA_REQUEST_FOLDER);
+    await initDirectory(LORA_RESPONSE_FOLDER);
+    await createLoraFile(
       'message',
       JSON.stringify(content),
       LORA_REQUEST_FOLDER,
@@ -56,25 +57,18 @@ router.post('/ping', async (req: Request, res: Response) => {
 
 router.get('/verify/:type', async (req: Request, res: Response) => {
   try {
-    const { created } = req.query;
     const type = req.params.type;
     let extension = '';
     if (type === 'ping') extension = 'response';
     else if (type === 'join') extension = 'joined';
     else throw new Error('Type should be either join or ping');
-
-    let files = readdirSync(LORA_RESPONSE_FOLDER);
-    if (files.length) {
-      files = files.filter((filename: string) => {
-        const { birthtime } = statSync(LORA_RESPONSE_FOLDER + '/' + filename);
-        const timestamp = Number(created) || 0;
-        return (
-          filename.split('.')?.[1] === extension &&
-          birthtime.getTime() > timestamp
-        );
-      });
-      if (files.length) {
-        res.json({ ready: true });
+    const dir = await Fs.readdir(LORA_RESPONSE_FOLDER);
+    if (dir.length) {
+      for (const file of dir) {
+        const [, fileExtension] = file.split('.');
+        if (fileExtension === extension) {
+          return res.json({ ready: true });
+        }
       }
     }
     res.json({ ready: false });

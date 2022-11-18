@@ -1,6 +1,6 @@
-import { writeFileSync } from 'fs';
+import { promises as Fs } from 'fs';
 
-export const createLoraFile = (
+export const createLoraFile = async (
   type: 'join' | 'message',
   content: string,
   location: string,
@@ -8,6 +8,6 @@ export const createLoraFile = (
 ) => {
   const _filename = filename || Date.now() + '';
   const file = `${location}/${_filename}.${type}`;
-  writeFileSync(file, JSON.stringify(content), { encoding: 'utf-8' });
+  await Fs.writeFile(file, JSON.stringify(content), { encoding: 'utf-8' });
   return _filename;
 };
