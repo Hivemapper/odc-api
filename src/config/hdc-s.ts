@@ -12,7 +12,8 @@ export const GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../tmp/recording/gps/latest.log';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
-export const LORA_ROOT_FOLDER = __dirname + '/../../../tmp/recording/lora';
+export const LORA_RESPONSE_FOLDER = __dirname + '/../../../mnt/data/lorawan';
+export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../home/root/camera-node.log';
