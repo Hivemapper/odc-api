@@ -8,6 +8,6 @@ export const createLoraFile = async (
 ) => {
   const _filename = filename || Date.now() + '';
   const file = `${location}/${_filename}.${type}`;
-  await Fs.writeFile(file, JSON.stringify(content), { encoding: 'utf-8' });
+  await Fs.writeFile(file, content, { encoding: 'utf-8' });
   return _filename;
 };

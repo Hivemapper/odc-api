@@ -18,7 +18,7 @@ router.post('/join', async (req: Request, res: Response) => {
     await initDirectory(LORA_RESPONSE_FOLDER);
     const created = await createLoraFile(
       'join',
-      req.body.device,
+      JSON.stringify(req.body.device),
       LORA_REQUEST_FOLDER,
     );
     res.json({ created });
