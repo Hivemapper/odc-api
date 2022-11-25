@@ -103,6 +103,7 @@ let cameraConfig: any = {
     adjustment: {
       hflip: false,
       vflip: false,
+      denoise: 'off',
       rotation: 180,
     },
   },

@@ -1,4 +1,4 @@
-import { FRAMES_ROOT_FOLDER, IMAGER_BRIDGE_PATH } from '../config';
+import { CAMERA_TYPE, FRAMES_ROOT_FOLDER, IMAGER_BRIDGE_PATH } from '../config';
 import { Request, Response, Router } from 'express';
 import { readdir, readFile } from 'fs';
 
@@ -60,7 +60,7 @@ router.get('/last', async (req: Request, res: Response) => {
 
 router.get('/quality', async (req: Request, res: Response) => {
   try {
-    if (CameraType.HdcS) {
+    if (CAMERA_TYPE === CameraType.HdcS) {
       // TODO: placeholder
       return res.json({ quality: 70 });
     }
