@@ -39,7 +39,7 @@ export const CMD = {
   START_PREVIEW: 'systemctl start camera-preview',
   STOP_PREVIEW: 'systemctl stop camera-preview',
   READ_DEVICE_INFO:
-    'sh /opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -ba 0 -l 30',
+    '/opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -ba 0 -l 27',
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {
