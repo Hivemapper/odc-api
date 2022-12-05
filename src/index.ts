@@ -8,6 +8,7 @@ import { InitCronService } from 'services/initCron';
 import { GnssHealthCheck } from 'services/gnssHealthCheck';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
+import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId } from 'util/index';
 import console_stamp from 'console-stamp';
 
@@ -49,12 +50,26 @@ export async function initAppServer() {
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(GnssHealthCheck);
     serviceRunner.add(InitCronService);
+    serviceRunner.add(TrackDownloadDebt);
 
     serviceRunner.run();
     setSessionId();
   } catch (e: unknown) {
     console.log('Error running services:', e);
   }
+
+  // server to listen for port 80 and answer with 204
+  // try {
+  //   const captiveApp = express();
+  //   captiveApp.all('*', (req: Request, res: Response) => {
+  //     res.status(204).send();
+  //   });
+  //   captiveApp.listen(80, () => {
+  //     console.log('Captive Redirect Server started on port 80');
+  //   });
+  // } catch (e: unknown) {
+  //   console.log('Error setting up second server on port 80');
+  // }
 }
 
 initAppServer();

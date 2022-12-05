@@ -1,8 +1,8 @@
 import { FRAMEKM_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
-import { existsSync, readdirSync, rmSync, stat } from 'fs';
+import { existsSync, readdirSync, rmSync } from 'fs';
 import { concatFrames } from 'util/framekm';
-import { map } from 'async';
+import { exec } from 'child_process';
 
 const router = Router();
 
@@ -29,23 +29,25 @@ router.post('/:name', async (req: Request, res: Response) => {
 
 router.get('/total', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(FRAMEKM_ROOT_FOLDER);
-    let total = 0;
-    const fileStats: any[] = await map(
-      files.map((frame: string) => FRAMEKM_ROOT_FOLDER + '/' + frame),
-      stat,
+    exec(
+      'du -sb /mnt/data/framekm',
+      {
+        encoding: 'utf-8',
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.log(error);
+          res.json({ error: stdout || stderr });
+        } else {
+          const total = Number(stdout.split('\t')[0]);
+          res.json({
+            bytes: total || 0,
+          });
+        }
+      },
     );
-    for (const stat of fileStats) {
-      total += stat.size;
-    }
-    res.json({
-      total,
-    });
-  } catch (error) {
-    console.log(error);
-    res.json({
-      total: 0,
-    });
+  } catch (error: unknown) {
+    res.json({ bytes: 0 });
   }
 });
 

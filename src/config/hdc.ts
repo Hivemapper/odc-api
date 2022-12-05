@@ -29,6 +29,7 @@ export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
+export const MAX_DOWNLOAD_DEBT = 10737418240;
 
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 
@@ -38,7 +39,7 @@ export const CMD = {
   START_PREVIEW: 'systemctl start camera-preview',
   STOP_PREVIEW: 'systemctl stop camera-preview',
   READ_DEVICE_INFO:
-    'sh /opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -ba 0 -l 31',
+    'sh /opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -ba 0 -l 30',
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {
