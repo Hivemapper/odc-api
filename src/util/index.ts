@@ -69,9 +69,9 @@ export const getPreviewConfig = () => {
     },
     camera: {
       encoding: {
-        fps: 24,
-        width: 1080,
-        height: 720,
+        fps: 10,
+        width: 568,
+        height: 320,
         codec: 'mjpeg',
       },
       adjustment: {
@@ -91,6 +91,7 @@ let cameraConfig: any = {
       minfreespace: 64000000,
       output2: '/media/usb0/recording/',
       minfreespace2: 32000000,
+      maxusedspace: 16106127360,
     },
   },
   camera: {
