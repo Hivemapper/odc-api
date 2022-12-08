@@ -63,12 +63,12 @@ router.get('/sample', async (req: Request, res: Response) => {
 
 router.get('/raw', async (req: Request, res: Response) => {
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
+    'Content-Type': 'application/octet-stream',
     'Cache-control': 'no-cache',
   });
   try {
     // read bytes from the wherever gpsd is tee'ing the bytes to
-    gnssBinaryLogger = spawn('path/to/gnss-binary-logger-exec', ['--argument'])
+    const gnssBinaryLogger = spawn('gpspipe', ['-R', '-n', '10']);
     gnssBinaryLogger.stdout.on('data', function (data: string) {
       res.write(data)
     });
