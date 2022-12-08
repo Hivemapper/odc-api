@@ -8,7 +8,6 @@ import { setMostRecentPing } from 'services/heartBeat';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 const router = Router();
-let gnssBinaryLogger: ChildProcessWithoutNullStreams;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -67,26 +66,23 @@ router.get('/raw', async (req: Request, res: Response) => {
     'Cache-control': 'no-cache',
   });
   try {
-    // read bytes from the wherever gpsd is tee'ing the bytes to
-    const gnssBinaryLogger = spawn('gpspipe', ['-R', '-n', '10']);
-    gnssBinaryLogger.stdout.on('data', function (data: string) {
-      res.write(data)
-    });
-    gnssBinaryLogger.on('close', function () {
-      res.end('');
-      gnssBinaryLogger.kill();
-    });
-    gnssBinaryLogger.on('error', function (err) {
-      console.log(err)
-      res.end('');
-      gnssBinaryLogger.kill();
-    });
-    gnssBinaryLogger.stderr.on('data', function (data) {
-      res.end('stderr: ' + data + '\n\n');
-      });
+    exec(
+      'gpspipe -R -n 10',
+      { encoding: null },
+      (error: ExecException | null, stdout: Buffer) => {
+        if (error) {
+          res.write(error);
+          return
+        }
+        res.write(stdout);
+        return
+      }
+    )
   } catch (e) {
     console.log(e);
-    res.json({});
+    res.write(e);
+    res.end();
+    return
   }
 });
 
