@@ -70,6 +70,7 @@ router.get('/raw/:num_msgs', async (req: Request, res: Response) => {
     num_msgs = parseInt(req.params.num_msgs)
   } catch (e){
     console.log(e);
+    res.statusCode = 400
     res.write(e)
     return
   }
