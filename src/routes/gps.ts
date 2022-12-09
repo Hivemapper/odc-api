@@ -60,14 +60,27 @@ router.get('/sample', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/raw', async (req: Request, res: Response) => {
+router.get('/raw/:num_msg(^\d+$)', async (req: Request, res: Response) => {
   res.writeHead(200, {
     'Content-Type': 'application/octet-stream',
     'Cache-control': 'no-cache',
   });
+  let num_msg = undefined
+  try {
+    num_msg = parseInt(req.params.num_msg)
+  } catch (e){
+    console.log(e);
+    res.write(e)
+    return
+  }
+  if (num_msg < 0) {
+    res.statusCode = 400
+    res.write("num_msg must be a positive integer")
+    return
+  }
   try {
     exec(
-      'gpspipe -R -n 6',
+      `gpspipe -R -n ${num_msg}`,
       { encoding: null },
       (error: ExecException | null, stdout: Buffer) => {
         if (error) {
