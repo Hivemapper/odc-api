@@ -67,7 +67,7 @@ router.get('/raw', async (req: Request, res: Response) => {
   });
   try {
     exec(
-      'gpspipe -R -n 10',
+      'gpspipe -R -n 6',
       { encoding: null },
       (error: ExecException | null, stdout: Buffer) => {
         if (error) {
