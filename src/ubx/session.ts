@@ -35,8 +35,19 @@ function setSessionId(sessionId: ISessionId) {
     return
 }
 
-export function initUbxSession() {
+function enableSecEcSignatures() {
+    const secEcSignCommand = `ubxtool -c 0x06,0x8a,0x00,0x01,0x00,0x00,0x4b,0x03,0x91,0x20,0x01`
+    try {
+        exec(secEcSignCommand)
+    } catch (e) {
+        console.log(`Failed to enable SEC-EC signatures: ${e}`);
+    }
+    return
+}
+
+export function initUbxSessionAndSignatures() {
     const id = createRandomSessionId();
     setSessionId(id);
+    enableSecEcSignatures();
     return
 }
