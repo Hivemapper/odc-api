@@ -71,6 +71,7 @@ And double-check if it's healthy:
 - [List Files](#list-of-gps-files)
 - [Get single file](#single-gps-single)
 - [Get GPS sample](#get-gps-sample)
+- [Get raw GPS messages](#get-raw-gps-messages)
 
 ### IMU
 
@@ -180,6 +181,23 @@ $ curl --GET http://192.168.0.10:5000/api/1/gps/sample
   "fix":"3D",
   "timestamp": ...
 },
+```
+
+### Get Raw GPS Messages
+
+**GET /gps/raw/<num_msg>**
+
+Request to get `num_msg` binary messages from the M9N.
+
+```javascript
+--GET http://192.168.0.10:5000/api/1/gps/raw/5
+
+{"class":"VERSION","release":"3.23.1","rev":"3.23.1","proto_major":3,"proto_minor":14}
+{"class":"DEVICES","devices":[{"class":"DEVICE","path":"/dev/ttyAMA1","driver":"u-blox","subtype":"SW EXT CORE 4.04 (7f89f7),HW 00190000","subtype1":"ROM BASE 0x118B2060,FWVER=SPG 4.04,PROTVER=32.01,MOD=NEO-M9N,GPS;GLO;GAL;BDS,SBAS;QZSS","activated":"2022-09-20T00:33:00.061Z","flags":1,"native":1,"bps":38400,"parity":"N","stopbits":1,"cycle":1.00,"mincycle":0.02}]}
+{"class":"WATCH","enable":true,"json":false,"nmea":false,"raw":2,"scaled":false,"timing":false,"split24":false,"pps":false}
+�b\h�!�����$����������� N��'�O/w��b5 h����D�bh��C&@p�&�r�bh�'''''''�ɵbh��
+                                                                         �b h�����M�bah�t;�b'l����8po��l7��B}���"�_S�8""""""""33333333�>���f=�q;VU��֧��1����kxw�Y����޶3���O�������b\P�!�����$����������� N��'�O/eڵb5 P����d�bP��C&@p�&�޵bP�'''''''�]�bP���l�b P�����9εbaP�`�b'l6�J0鸓�/��A�c*�Ļ��"�hE�����""""""""33333333��]��uF������WQ����m��at�>?�
+l���OtK8��4�CĊ�H                                                         ��_�3ݐԅ*ϟ��3�b\8�!�����$����������� N��'�O/S'�b5 8������b8��C&�p�&�J�b8�'''''''w�b8���صb 8�����%��ba8�L��b'l��{���w0��RW�A���}��^�{F�k��""""""""33333333�]     V"�O�   vZ95�D�Ae%�T
 ```
 
 ## IMU
