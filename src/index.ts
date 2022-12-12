@@ -10,7 +10,7 @@ import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId } from 'util/index';
-import { initUbxSession } from 'ubx/session';
+import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 
 //import { BootNetworkService } from 'services/bootNetwork';
@@ -60,7 +60,7 @@ export async function initAppServer() {
   }
 
   try{
-    initUbxSession();
+    initUbxSessionAndSignatures();
   } catch (e: unknown){
     console.log('Error setting M9N session ID:', e);
   }
