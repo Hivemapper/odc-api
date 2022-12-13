@@ -61,10 +61,6 @@ router.get('/sample', async (req: Request, res: Response) => {
 });
 
 router.get('/raw/:num_msgs', async (req: Request, res: Response) => {
-  res.writeHead(200, {
-    'Content-Type': 'application/octet-stream',
-    'Cache-control': 'no-cache',
-  });
   let num_msgs = undefined
   try {
     num_msgs = parseInt(req.params.num_msgs)
@@ -79,7 +75,6 @@ router.get('/raw/:num_msgs', async (req: Request, res: Response) => {
     res.json({ err: "num_msg must be a positive integer" })    
     return
   }
-  const resultBody = {};
   try {
     exec(
       `gpspipe -R -n ${num_msgs}`,
