@@ -32,7 +32,7 @@ export const DeviceInfoService: IService = {
                 deviceInfo = {
                   ssid: parts[0],
                   boardConfig: parts[1],
-                  serial: parts[2],
+                  serial: parts[2].split('\n')[0],
                 };
               }
             } else {
