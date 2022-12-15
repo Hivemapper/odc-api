@@ -1,6 +1,6 @@
 import { CAMERA_TYPE, FRAMES_ROOT_FOLDER, IMAGER_BRIDGE_PATH } from '../config';
 import { Request, Response, Router } from 'express';
-import { readdir, readFile } from 'fs';
+import { existsSync, readdir, readFile } from 'fs';
 
 import { filterBySinceUntil, getDateFromUnicodeTimastamp } from '../util';
 import { CameraType, ICameraFile } from '../types';
@@ -29,6 +29,28 @@ router.get('/', async (req: Request, res: Response) => {
         }
       },
     );
+  } catch (error) {
+    res.json({ error });
+  }
+});
+
+router.get('/pic/:name', (req: Request, res: Response) => {
+  try {
+    const name = req.params.name;
+    if (existsSync(FRAMES_ROOT_FOLDER + '/' + name)) {
+      readFile(
+        FRAMES_ROOT_FOLDER + '/' + name,
+        (err: NodeJS.ErrnoException | null, data: Buffer) => {
+          if (!err) {
+            res.json({
+              binary: data,
+            });
+          } else {
+            res.json({ error: err });
+          }
+        },
+      );
+    }
   } catch (error) {
     res.json({ error });
   }
