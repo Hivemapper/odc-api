@@ -5,7 +5,6 @@ import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 const router = Router();
 
@@ -61,19 +60,19 @@ router.get('/sample', async (req: Request, res: Response) => {
 });
 
 router.get('/raw/:num_msgs', async (req: Request, res: Response) => {
-  let num_msgs = undefined
+  let num_msgs = undefined;
   try {
-    num_msgs = parseInt(req.params.num_msgs)
+    num_msgs = parseInt(req.params.num_msgs);
   } catch (e) {
     console.log(e);
-    res.statusCode = 400
-    res.json({ err: "num_msg must be a positive integer" });
-    return
+    res.statusCode = 400;
+    res.json({ err: 'num_msg must be a positive integer' });
+    return;
   }
   if (num_msgs < 0) {
-    res.statusCode = 400
-    res.json({ err: "num_msg must be a positive integer" })    
-    return
+    res.statusCode = 400;
+    res.json({ err: 'num_msg must be a positive integer' });
+    return;
   }
   try {
     exec(
@@ -81,17 +80,17 @@ router.get('/raw/:num_msgs', async (req: Request, res: Response) => {
       { encoding: null },
       (error: ExecException | null, stdout: Buffer) => {
         if (error) {
-          res.json({error});
-          return
+          res.json({ error });
+          return;
         }
-        res.json({b64EncodedBytes: stdout.toString('base64')});
-        return
-      }
-    )
+        res.json({ b64EncodedBytes: stdout.toString('base64') });
+        return;
+      },
+    );
   } catch (e) {
     console.log(e);
-    res.json({err: e});
-    return
+    res.json({ err: e });
+    return;
   }
 });
 
