@@ -1,6 +1,6 @@
-export * from './hdc';
-export const API_VERSION = '0.12.2';
-
+export * from './hdc'
+const packageJson = require('./package.json')
+export const API_VERSION = packageJson.version
 export const isDev = () => {
-  return false;
-};
+  return false
+}
