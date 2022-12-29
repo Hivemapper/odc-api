@@ -16,6 +16,7 @@
         "@typescript-eslint"
     ],
     "rules": {
+    //   "semi": ["error", "never"],
       "@typescript-eslint/no-var-requires": 0,
       "no-fallthrough": 0,
       "@typescript-eslint/no-empty-function": 0,
