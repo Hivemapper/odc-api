@@ -129,7 +129,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isDev = exports.API_VERSION = void 0;
 __exportStar(__nccwpck_require__(1546), exports);
-exports.API_VERSION = '0.12.0';
+exports.API_VERSION = '0.12.2';
 const isDev = () => {
     return false;
 };
@@ -35794,7 +35794,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isDev = exports.API_VERSION = void 0;
 __exportStar(__nccwpck_require__(6207), exports);
-exports.API_VERSION = '0.12.0';
+exports.API_VERSION = '0.12.2';
 const isDev = () => {
     return false;
 };
