@@ -30,4 +30,4 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm run build 
-    #- run: npm run compile --camera='hdc'
+    - run: npm run compile --camera='hdc'
