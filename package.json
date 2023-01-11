@@ -15,6 +15,7 @@
     "@types/shortid": "^0.0.29",
     "@typescript-eslint/eslint-plugin": "4.27.0",
     "@typescript-eslint/parser": "4.27.0",
+    "@vercel/ncc": "^0.36.0",
     "babel-jest": "^26.6.3",
     "copyfiles": "^2.4.1",
     "eslint": "7.28.0",
@@ -38,13 +39,15 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "compile": "rm -rf dist && sed -i '' \"s/hdc'/$npm_config_camera'/g\" src/config/index.ts && tsc && rm -rf compiled/odc-api-$npm_config_camera.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/odc-api-$npm_config_camera.js && copyfiles -u 2 src/fixtures/* compiled/fixtures && sed -i '' \"s/$npm_config_camera'/hdc'/g\" src/config/index.ts",
+    "compile-gh": "rm -rf dist && sed -i \"s/hdc'/$npm_config_camera'/g\" src/config/index.ts && tsc && rm -rf compiled/odc-api-$npm_config_camera.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/odc-api-$npm_config_camera.js && copyfiles -u 2 src/fixtures/* compiled/fixtures && sed -i \"s/$npm_config_camera'/hdc'/g\" src/config/index.ts",
     "compile-dev": "rm -rf dist && sed -i '' \"s/hdc'/$npm_config_camera'/g\" src/config/index.ts && tsc && rm -rf compiled/dashcam-api.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/dashcam-api.js && copyfiles -u 2 src/fixtures/* compiled/fixtures && sed -i '' \"s/$npm_config_camera'/hdc'/g\" src/config/index.ts",
     "compile-win": "rm -rf dist && tsc && rm -rf compiled/dashcam-api.js && ncc build dist/index.js -o compiled && mv compiled/index.js compiled/dashcam-api.js && copyfiles -u 2 src/fixtures/* compiled/fixtures",
     "start-compiled": "node compiled/dashcam-api.js",
     "prestart": "npm run build",
     "start": "node dist/index.js",
-    "lint": "eslint --fix",
+    "lint": "eslint --fix src/",
     "type-check": "tsc --project tsconfig.json --noEmit",
-    "pre-commit": "lint-staged"
+    "pre-commit": "lint-staged",
+    "transfer-dashcam-api": "scp compiled/dashcam-api.js root@192.168.0.10:/tmp/"
   }
 }
