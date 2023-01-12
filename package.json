@@ -15,6 +15,7 @@
     "@types/shortid": "^0.0.29",
     "@typescript-eslint/eslint-plugin": "4.27.0",
     "@typescript-eslint/parser": "4.27.0",
+    "@vercel/ncc": "^0.36.0",
     "babel-jest": "^26.6.3",
     "copyfiles": "^2.4.1",
     "eslint": "7.28.0",
@@ -43,8 +44,9 @@
     "start-compiled": "node compiled/dashcam-api.js",
     "prestart": "npm run build",
     "start": "node dist/index.js",
-    "lint": "eslint --fix",
+    "lint": "eslint --fix src/",
     "type-check": "tsc --project tsconfig.json --noEmit",
-    "pre-commit": "lint-staged"
+    "pre-commit": "lint-staged",
+    "transfer-dashcam-api": "scp compiled/dashcam-api.js root@192.168.0.10:/tmp/"
   }
 }
