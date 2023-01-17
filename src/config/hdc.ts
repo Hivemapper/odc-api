@@ -1,4 +1,4 @@
-import { exec, execSync, ExecException } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { Request, Response } from 'express';
 import { writeFile } from 'fs';
 import { CameraType } from 'types';
@@ -8,6 +8,7 @@ export const PORT = 5000;
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
 export const FRAMEKM_ROOT_FOLDER = __dirname + '/../../../mnt/data/framekm';
+export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../mnt/data/gps/latest.log';
