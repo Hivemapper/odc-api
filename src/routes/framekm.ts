@@ -57,7 +57,7 @@ router.get('/stream', async (req: Request, res: Response) => {
   isInProgress = false;
 
   const cleanupDownloadProgress = () => {
-    console.log('Download: finished');
+    console.log('Download: finished: ' + fileToDownload);
     isInProgress = false;
     if (
       fileToDownload &&
