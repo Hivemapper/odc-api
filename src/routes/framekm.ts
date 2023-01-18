@@ -75,21 +75,18 @@ router.get('/stream', async (req: Request, res: Response) => {
     fileToDownload = '';
   };
 
+  const resetStreamState = () => {
+    console.log('Download pipe finished');
+    isInProgress = false;
+    clearInterval(keepAliveInterval);
+    keepAliveInterval = null;
+  };
+
   res
     .on('unpipe', cleanupDownloadProgress)
     .on('error', cleanupDownloadProgress)
-    .on('close', () => {
-      console.log('Download pipe closed');
-      isInProgress = false;
-      clearInterval(keepAliveInterval);
-      keepAliveInterval = null;
-    })
-    .on('finish', () => {
-      console.log('Download pipe finished');
-      isInProgress = false;
-      clearInterval(keepAliveInterval);
-      keepAliveInterval = null;
-    });
+    .on('close', resetStreamState)
+    .on('finish', resetStreamState);
 
   try {
     if (!keepAliveInterval) {
