@@ -6,11 +6,11 @@ class ServiceRunner {
     this.services.push(service);
   }
   run() {
-    this.services.map((service: IService) => {
+    this.services.forEach(async (service: IService) => {
       if (service.interval || service.delay) {
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
           try {
-            service.execute();
+            await service.execute();
             if (service.delay) {
               clearInterval(interval);
             }
@@ -19,11 +19,11 @@ class ServiceRunner {
           }
         }, service.interval || service.delay);
         if (!service.delay) {
-          service.execute();
+          await service.execute();
         }
       } else {
         try {
-          service.execute();
+          await service.execute();
         } catch (e: unknown) {
           console.log('Service stopped with error', e);
         }

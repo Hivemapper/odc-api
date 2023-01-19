@@ -6,11 +6,11 @@ import { getCameraConfig } from 'util/index';
 import { ifTimeSet } from 'util/lock';
 
 export const UpdateCameraConfigService: IService = {
-  execute: () => {
+  execute: async () => {
     if (CAMERA_TYPE !== CameraType.Hdc) {
       return;
     }
-    // console.log('Updating camera config');
+    console.log('Updating camera config');
 
     try {
       writeFile(
