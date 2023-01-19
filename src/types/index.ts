@@ -99,3 +99,50 @@ export interface ICronJob {
   start: () => void;
   stop: () => void;
 }
+
+export interface ICameraConfig {
+  recording: {
+    directory: {
+      prefix: string;
+      output: string;
+      minfreespace: number;
+      output2: string;
+      minfreespace2: number;
+      maxusedspace: number;
+    };
+  };
+  camera: {
+    encoding: {
+      fps: number;
+      width: number;
+      height: number;
+      codec: string;
+    };
+    adjustment: {
+      hflip: boolean;
+      vflip: boolean;
+      denoise: string;
+      rotation: number;
+    }
+  }
+}
+
+export interface ICameraResolutionConfig {
+  width: number;
+  height: number;
+}
+
+export const Camera4KResolutionConfig: ICameraResolutionConfig = {
+  width: 4056,
+  height: 2160,
+}
+
+export const Camera2KResolutionConfig: ICameraResolutionConfig = {
+  width: 2048,
+  height: 1536,
+}
+
+export const Camera1KResolutionConfig: ICameraResolutionConfig = {
+  width: 1024,
+  height: 768,
+}
