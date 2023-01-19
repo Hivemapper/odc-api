@@ -27,13 +27,14 @@ To make it up-n-running, it's as simple as
 # How to Compile
 
 For a quick start,
+```
+npm install
+npm run build
+npm run start
+```
+Check if it's healthy: `http://localhost:5000/api/1/info`.
 
-`npm install`
-`npm run build`
-`npm run start`
-
-Check if it's healthy:
-`http://localhost:5000/api/1/info`
+# Compile on Dev
 
 To configure it for your device,
 create your own camera config file under `/config` folder, and make sure it is set as default under `/config/index.ts`
@@ -41,21 +42,25 @@ create your own camera config file under `/config` folder, and make sure it is s
 To build a standalone server file,
 make sure you have ncc installed:
 
-`npm i -g @vercel/ncc`
-
-and then execute:
-
-`npm run compile --camera=<camera name>`
-
+```
+npm i -g @vercel/ncc
+```
+and then execute: `npm run compile-dev --camera=<camera name>`
+```
+npm run compile-dev --camera=hdc
+```
 Server will get compiled into single file with bunch of fixtures next to it, and located in `compiled/` folder
 
 To check if everything OK with compiled server file, execute:
 
-`npm run start-compiled`
+```
+npm run start-compiled
+```
 
-And double-check if it's healthy:
+And double-check if it's healthy: `http://localhost:5000/api/1/info`
 
-`http://localhost:5000/api/1/info`
+# Troubleshooting
+If you're on a mac, as you're starting up the server, you might run into an `EADDRINUSE` error on port 5000. This port is reserved for Apple's Airplay receiver. Turn it off here: *System Preferences > General > disable Airplay Receiver*
 
 # Overview
 
