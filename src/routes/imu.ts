@@ -1,11 +1,11 @@
-import { IMU_ROOT_FOLDER } from '../config';
+import { IMU_ROOT_FOLDER } from 'config';
 import { Request, Response, Router } from 'express';
 import { readdirSync } from 'fs';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 import { filterBySinceUntil, getDateFromFilename } from '../util';
-import { ICameraFile } from '../types';
-import { setMostRecentPing } from '../services/heartBeat';
+import { ICameraFile } from 'types';
+import { setMostRecentPing } from 'services/heartBeat';
 
 const router = Router();
 let imuLogger: ChildProcessWithoutNullStreams;

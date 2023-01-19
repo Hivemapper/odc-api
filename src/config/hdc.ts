@@ -1,7 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { Request, Response } from 'express';
 import { writeFile } from 'fs';
-import { CameraType } from '../types';
+import { CameraType } from 'types';
 
 export const PORT = 5000;
 
