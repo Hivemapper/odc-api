@@ -10,8 +10,8 @@ let mostRecentPing = 0;
 let lastSuccessfulFix = 0;
 let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
+let wasCameraActive = false;
 let wasGpsGood = false;
-let got3dOnce = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -49,12 +49,13 @@ export const HeartBeatService: IService = {
           if (isPreviewInProgress && isDev()) {
             imgLED = COLORS.WHITE;
           } else {
-            // const activeButOutdatedColor = isDev() ? COLORS.YELLOW : COLORS.RED;
+            const isCameraActive = cameraResponse.indexOf('active') === 0;
+            imgLED = isCameraActive ? COLORS.GREEN : COLORS.RED;
 
-            imgLED =
-              cameraResponse.indexOf('active') === 0
-                ? COLORS.GREEN
-                : COLORS.RED;
+            if (!isCameraActive && wasCameraActive) {
+              console.log('CAMERA TURNED OFF!!!');
+            }
+            wasCameraActive = isCameraActive;
           }
 
           // previousCameraResponse = cameraResponse;
@@ -85,7 +86,6 @@ export const HeartBeatService: IService = {
                     console.log('Got 3d Fix');
                   }
                   wasGpsGood = true;
-                  got3dOnce = true;
                 } else {
                   const gpsLostPeriod = lastSuccessfulFix
                     ? Math.abs(Date.now() - lastSuccessfulFix)
@@ -98,18 +98,6 @@ export const HeartBeatService: IService = {
                     console.log('Lost 3d Fix');
                   }
                   wasGpsGood = false;
-
-                  if (
-                    cameraResponse.indexOf('active') === 0 &&
-                    !ifTimeSet() &&
-                    !got3dOnce &&
-                    !isPreviewInProgress
-                  ) {
-                    exec(CMD.STOP_CAMERA);
-                    console.log(
-                      'Camera intentionally stopped cause Lock is not there yet',
-                    );
-                  }
                 }
 
                 const appDisconnectionPeriod = mostRecentPing
