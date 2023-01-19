@@ -2,7 +2,6 @@ import app from 'index';
 import request from 'supertest';
 import { getCameraConfig } from 'util/index';
 
-
 describe('Config handlers', () => {
   describe('PUT /config/resolution', () => {
     it('should return 200 && update resolution with a valid resolution type', async () => {

@@ -22,7 +22,7 @@ router.post('/cameraconfig', async (req: Request, res: Response) => {
 
 router.get('/test', async (req: Request, res: Response) => {
   res.status(200).send('test');
-})
+});
 
 router.put('/resolution', async (req: Request, res: Response) => {
   try {
