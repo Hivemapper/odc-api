@@ -3,9 +3,7 @@ import request from 'supertest';
 
 
 describe('Config handlers', () => {
-
   describe('PUT /config/resolution', () => {
-
     it('should return 200 && update resolution with a valid resolution type', async () => {
       const res = await request(app)
         .put('/config/resolution')
@@ -21,6 +19,5 @@ describe('Config handlers', () => {
       expect(res.statusCode).toBe(400)
       expect(res.body).toMatchObject({ error: 'Resolutions supported: 4K, 2K, 1K' })
     })
-
   })
 })
