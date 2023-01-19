@@ -1,9 +1,9 @@
-import { CAMERA_TYPE, FRAMES_ROOT_FOLDER, IMAGER_BRIDGE_PATH } from '../config';
+import { CAMERA_TYPE, FRAMES_ROOT_FOLDER, IMAGER_BRIDGE_PATH } from 'config';
 import { Request, Response, Router } from 'express';
 import { existsSync, readdir, readFile } from 'fs';
 
-import { filterBySinceUntil, getDateFromUnicodeTimastamp } from '../util';
-import { CameraType, ICameraFile } from '../types';
+import { filterBySinceUntil, getDateFromUnicodeTimastamp } from 'util/index';
+import { CameraType, ICameraFile } from 'types';
 import { exec, ExecException } from 'child_process';
 
 const router = Router();

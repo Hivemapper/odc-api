@@ -6,7 +6,9 @@ describe('Config handlers', () => {
     it('should return 200 && update resolution with a valid resolution type', async () => {
       const res = await request(app)
         .put('/config/resolution')
-        .send({ resolution: '4K' });
+        .send({ resolution: '4K' })
+        // .expect(200)
+        // .expect({ output: 'done' });
       expect(res.statusCode).toBe(200);
       expect(res.body).toMatchObject({ output: 'done' });
     });
