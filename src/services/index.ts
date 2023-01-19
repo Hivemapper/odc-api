@@ -10,7 +10,7 @@ class ServiceRunner {
       if (service.interval || service.delay) {
         const interval = setInterval(async () => {
           try {
-            await service.execute();
+            service.execute();
             if (service.delay) {
               clearInterval(interval);
             }
@@ -19,11 +19,11 @@ class ServiceRunner {
           }
         }, service.interval || service.delay);
         if (!service.delay) {
-          await service.execute();
+          service.execute();
         }
       } else {
         try {
-          await service.execute();
+          service.execute();
         } catch (e: unknown) {
           console.log('Service stopped with error', e);
         }
