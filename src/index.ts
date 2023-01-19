@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Application } from 'express';
 import router from './routes';
 import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT } from './config';
@@ -16,8 +16,14 @@ import console_stamp from 'console-stamp';
 //import { BootNetworkService } from 'services/bootNetwork';
 // import { AssistNowService } from 'services/assistNow';
 
+
+
+
+
+
+
 export async function initAppServer() {
-  const app = express();
+  const app: Application = express();
 
   // Making all the files accessible via direct HTTP urls
   app.use('/public', express.static(PUBLIC_FOLDER));
