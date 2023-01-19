@@ -16,7 +16,7 @@ router.post('/cameraconfig', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/resolution', async (req: Request, res: Response) => {
+router.put('/resolution', async (req: Request, res: Response) => {
   try {
     let resolution: ICameraResolutionConfig | null = null;
     if (req.body.resolution === '4K') {
@@ -26,21 +26,20 @@ router.post('/resolution', async (req: Request, res: Response) => {
     } else if (req.body.resolution === '1K') {
       resolution = Camera1KResolutionConfig;
     } else {
-      res.json({
-        error: 'Currently only supports: 4K, 2K, 1K',
+      res.status(400).json({
+        error: 'Resolutions supported: 4K, 2K, 1K',
       })
       return;
     }
-    // update width x height
     const config = getCameraConfig();
     config.camera.encoding = {
       ...config.camera.encoding,
-      ...resolution,
+      ...resolution || {},
     }
     setCameraConfig(config);
-    res.json({ output: 'done' })
+    res.status(200).json({ output: 'done' })
   } catch (error) {
-    res.json({ error });
+    res.status(400).json({ error });
   }
 });
 
