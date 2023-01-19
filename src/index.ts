@@ -34,7 +34,7 @@ app.use(router);
   await new Promise<void>((resolve, reject) => {
     app.listen(PORT, resolve);
   });
-})()
+})();
 console.log(
   `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
 );
@@ -59,19 +59,13 @@ try {
   console.log('Error running services:', e);
 }
 
-try{
+try {
   initUbxSessionAndSignatures();
-} catch (e: unknown){
+} catch (e: unknown) {
   console.log('Error setting M9N session ID:', e);
 }
 
 export default app;
-
-
-
-
-
-
 
 // export async function initAppServer() {
 //   const app: Application = express();

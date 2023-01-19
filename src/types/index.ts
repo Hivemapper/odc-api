@@ -123,8 +123,8 @@ export interface ICameraConfig {
       vflip: boolean;
       denoise: string;
       rotation: number;
-    }
-  }
+    };
+  };
 }
 
 export interface ICameraResolutionConfig {
@@ -135,14 +135,14 @@ export interface ICameraResolutionConfig {
 export const Camera4KResolutionConfig: ICameraResolutionConfig = {
   width: 4056,
   height: 2160,
-}
+};
 
 export const Camera2KResolutionConfig: ICameraResolutionConfig = {
   width: 2048,
   height: 1536,
-}
+};
 
 export const Camera1KResolutionConfig: ICameraResolutionConfig = {
   width: 1024,
   height: 768,
-}
+};

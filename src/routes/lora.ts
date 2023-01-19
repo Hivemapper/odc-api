@@ -5,8 +5,6 @@ import { LORA_RESPONSE_FOLDER } from 'config/hdc-s';
 import { initDirectory } from 'util/files';
 import { createLoraFile } from 'util/lora';
 
-
-
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {

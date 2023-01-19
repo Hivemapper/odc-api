@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { Camera4KResolutionConfig } from 'types';
 import { setCameraConfig, getCameraConfig } from 'util/index';
-import { ICameraResolutionConfig, Camera2KResolutionConfig, Camera1KResolutionConfig } from 'types/index';
+import {
+  ICameraResolutionConfig,
+  Camera2KResolutionConfig,
+  Camera1KResolutionConfig,
+} from 'types/index';
 
 const router = Router();
 
@@ -28,16 +32,16 @@ router.put('/resolution', async (req: Request, res: Response) => {
     } else {
       res.status(400).json({
         error: 'Resolutions supported: 4K, 2K, 1K',
-      })
+      });
       return;
     }
     const config = getCameraConfig();
     config.camera.encoding = {
       ...config.camera.encoding,
-      ...resolution || {},
-    }
+      ...(resolution || {}),
+    };
     setCameraConfig(config);
-    res.status(200).json({ output: 'done' })
+    res.status(200).json({ output: 'done' });
   } catch (error) {
     res.status(400).json({ error });
   }
