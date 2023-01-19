@@ -21,12 +21,12 @@ import kpiRouter from './kpi';
 import framekmRouter from './framekm';
 import utilRouter from './util';
 import previewRouter from './preview';
-import { setMostRecentPing } from 'services/heartBeat';
-import { getLockTime } from 'util/lock';
-import { getSessionId } from 'util/index';
-import { getCurrentLEDs } from 'util/led';
-import { getDeviceInfo } from 'services/deviceInfo';
-import { scheduleCronJobs } from 'util/cron';
+import { setMostRecentPing } from '../services/heartBeat';
+import { getLockTime } from '../util/lock';
+import { getSessionId } from '../util/index';
+import { getCurrentLEDs } from '../util/led';
+import { getDeviceInfo } from '../services/deviceInfo';
+import { scheduleCronJobs } from '../util/cron';
 
 const router = Router();
 

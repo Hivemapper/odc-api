@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { Camera4KResolutionConfig } from 'types';
 import { setCameraConfig, getCameraConfig } from 'util/index';
-import { ICameraResolutionConfig, Camera2KResolutionConfig, Camera1KResolutionConfig } from '../types/index';
+import { ICameraResolutionConfig, Camera2KResolutionConfig, Camera1KResolutionConfig } from 'types/index';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { exec, ExecException } from 'child_process';
-import { CMD } from 'config';
+import { CMD } from '../config';
 
 let lockTime = 0;
 let msss = 0;

@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { ICameraConfig, ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
-import { UpdateCameraConfigService } from 'services/updateCameraConfig';
+import { UpdateCameraConfigService } from '../services/updateCameraConfig';
 import { access, constants, stat } from 'fs';
 
 let sessionId: string;
