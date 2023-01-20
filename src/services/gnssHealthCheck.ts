@@ -24,7 +24,7 @@ export const GnssHealthCheck: IService = {
             {
               encoding: 'utf-8',
             },
-            async (error: ExecException | null, stdout: string) => {
+            (error: ExecException | null, stdout: string) => {
               const cmdOutput = error ? '' : stdout;
 
               if (cmdOutput.indexOf('active') !== 0) {

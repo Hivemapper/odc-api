@@ -1,4 +1,4 @@
-import { LED_CONFIG_PATH } from '../config';
+import { LED_CONFIG_PATH } from 'config';
 import { ILED } from '../types';
 import { readFile, writeFile } from 'fs';
 

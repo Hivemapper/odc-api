@@ -4,7 +4,7 @@ import { readdirSync, readFile } from 'fs';
 import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
-import { setMostRecentPing } from '../services/heartBeat';
+import { setMostRecentPing } from 'services/heartBeat';
 
 const router = Router();
 

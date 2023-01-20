@@ -9,7 +9,7 @@ import {
   configureOnBoot,
   FRAMEKM_ROOT_FOLDER,
   WEBSERVER_LOG_PATH,
-} from 'config';
+} from '../config';
 import recordingsRouter from './recordings';
 import gpsRouter from './gps';
 import imuRouter from './imu';

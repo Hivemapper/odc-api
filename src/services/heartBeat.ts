@@ -1,8 +1,8 @@
 import { exec, ExecException } from 'child_process';
-import { CMD, GPS_LATEST_SAMPLE, isDev } from '../config';
+import { CMD, GPS_LATEST_SAMPLE, isDev } from 'config';
 import { readFile } from 'fs';
-import { IService } from '../types';
-import { setLockTime, setCameraTime, ifTimeSet } from '../util/lock';
+import { IService } from 'types';
+import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 import { COLORS, updateLED } from '../util/led';
 
 // let previousCameraResponse = '';

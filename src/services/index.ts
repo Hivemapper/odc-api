@@ -6,9 +6,9 @@ class ServiceRunner {
     this.services.push(service);
   }
   run() {
-    this.services.forEach(async (service: IService) => {
+    this.services.map((service: IService) => {
       if (service.interval || service.delay) {
-        const interval = setInterval(async () => {
+        const interval = setInterval(() => {
           try {
             service.execute();
             if (service.delay) {
