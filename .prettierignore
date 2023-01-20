@@ -1,0 +1,2 @@
+# Run prettier on .ts only
+*.js*

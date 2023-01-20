@@ -45,6 +45,7 @@
     "prestart": "npm run build",
     "start": "node dist/index.js",
     "lint": "eslint --fix src/",
+    "format": "prettier --write .",
     "type-check": "tsc --project tsconfig.json --noEmit",
     "pre-commit": "lint-staged",
     "transfer-dashcam-api": "scp compiled/dashcam-api.js root@192.168.0.10:/tmp/"
