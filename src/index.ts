@@ -59,9 +59,9 @@ export async function initAppServer() {
     console.log('Error running services:', e);
   }
 
-  try{
+  try {
     initUbxSessionAndSignatures();
-  } catch (e: unknown){
+  } catch (e: unknown) {
     console.log('Error setting M9N session ID:', e);
   }
 
