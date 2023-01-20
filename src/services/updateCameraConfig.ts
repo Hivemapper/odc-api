@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { CAMERA_TYPE, CMD, IMAGER_CONFIG_PATH } from 'config';
 import { writeFile } from 'fs';
 import { CameraType, IService } from 'types';
-import { getCameraConfig } from 'util/index';
+import { getCameraConfig, sleep } from 'util/index';
 
 export const UpdateCameraConfigService: IService = {
   execute: async () => {
@@ -28,7 +28,10 @@ export const UpdateCameraConfigService: IService = {
 };
 
 const restartCamera = () => {
-  exec(CMD.STOP_CAMERA, () => {
+  exec(CMD.STOP_CAMERA, async () => {
+    // starting RIGHT after another may bring issues on the Pi;
+    //  give it ~2secs before start up
+    await sleep(2000); 
     exec(CMD.START_CAMERA, () => {
       console.log('Successfully restarted the camera');
     });
