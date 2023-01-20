@@ -15,7 +15,7 @@ export const GnssHealthCheck: IService = {
 
           if (cmdOutput.indexOf('active') !== 0) {
             exec('systemctl start gpsd');
-            // console.log('GPSD was down. Bringing back!');
+            console.log('GPSD was down. Bringing back!');
             await sleep(2000);
           }
 
@@ -29,7 +29,7 @@ export const GnssHealthCheck: IService = {
 
               if (cmdOutput.indexOf('active') !== 0) {
                 exec('systemctl start gnss-logger');
-                // console.log('Gnss-logger was down. Bringing back!');
+                console.log('Gnss-logger was down. Bringing back!');
               }
             },
           );
