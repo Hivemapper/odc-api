@@ -29,8 +29,7 @@ export const UpdateCameraConfigService: IService = {
 
 const restartCamera = () => {
   exec(CMD.STOP_CAMERA, async () => {
-    // starting RIGHT after another may bring issues on the Pi;
-    //  give it ~2secs before start up
+    // Give it a couple of seconds for it to fully stop before starting up again
     await sleep(2000);
     exec(CMD.START_CAMERA, () => {
       console.log('Successfully restarted the camera');
