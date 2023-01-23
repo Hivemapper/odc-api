@@ -126,6 +126,3 @@ export interface ICameraConfig {
     };
   };
 }
-
-
-

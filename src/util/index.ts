@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { ICameraFile, IMU } from '../types';
+import { ICameraConfig, ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { access, constants, stat } from 'fs';
@@ -83,7 +83,7 @@ export const getPreviewConfig = () => {
   };
 };
 
-let cameraConfig: any = {
+let cameraConfig: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
@@ -114,7 +114,7 @@ export const getCameraConfig = () => {
   return cameraConfig;
 };
 
-export const setCameraConfig = (newCameraConfig: any) => {
+export const setCameraConfig = (newCameraConfig: ICameraConfig) => {
   cameraConfig = newCameraConfig;
   UpdateCameraConfigService.execute();
 };
