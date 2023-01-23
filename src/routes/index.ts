@@ -99,7 +99,7 @@ router.get('/time', (req, res) => {
 
 router.post('/cron', (req, res) => {
   try {
-    scheduleCronJobs(req.body?.config || []);
+    scheduleCronJobs(req && req.body && req.body.config ? req.body.config : []);
     res.json({
       output: 'done',
     });

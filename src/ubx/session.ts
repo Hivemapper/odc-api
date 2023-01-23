@@ -17,8 +17,11 @@ function createRandomSessionId(): ISessionId {
 
 function formatSessionIdForUbxtool(sessionId: string): string {
   const hexDigitPairs = sessionId.match(/.{1,2}/g);
-  const formattedDigitPairs = hexDigitPairs?.map(pair => `0x${pair}`);
-  return formattedDigitPairs?.join(',') || '';
+  const formattedDigitPairs =
+    hexDigitPairs && hexDigitPairs.length
+      ? hexDigitPairs.map(pair => `0x${pair}`)
+      : [];
+  return formattedDigitPairs.join(',') || '';
 }
 
 function setSessionId(sessionId: ISessionId) {

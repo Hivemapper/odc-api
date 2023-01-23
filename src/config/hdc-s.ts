@@ -8,6 +8,8 @@ export const PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording/pic';
 export const FRAMEKM_ROOT_FOLDER =
   __dirname + '/../../../tmp/recording/framekm';
+export const STREAM_REQUEST_FOLDER =
+  __dirname + '/../../../tmp/recording/request';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../tmp/recording/gps/latest.log';

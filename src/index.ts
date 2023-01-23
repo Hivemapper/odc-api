@@ -49,7 +49,7 @@ export async function initAppServer() {
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(UpdateCameraConfigService);
     serviceRunner.add(DeviceInfoService);
-    serviceRunner.add(GnssHealthCheck);
+    // serviceRunner.add(GnssHealthCheck);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
 
