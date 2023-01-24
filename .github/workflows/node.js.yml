@@ -35,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@master
       with:
          name: odc-api
-         path: compiled/index.js
+         path: compiled/dashcam-api.js
