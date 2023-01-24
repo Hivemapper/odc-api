@@ -31,3 +31,7 @@ jobs:
     - run: npm install
     - run: npm run build
     - run: npm run compile-gh --camera=hdc 
+    - name : Upload
+      uses: actions/upload-artifact@master
+      with:
+         name: odc-api
