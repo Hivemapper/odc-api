@@ -115,6 +115,7 @@ router.get('/stream', async (req: Request, res: Response) => {
                     );
                     const stream = createReadStream(
                       FRAMEKM_ROOT_FOLDER + '/' + fileToDownload,
+                      'base64',
                     );
                     stream.pipe(res, { end: false });
                   } else {
@@ -129,7 +130,7 @@ router.get('/stream', async (req: Request, res: Response) => {
             },
           );
         }
-      }, 5000);
+      }, 3000);
     }
   } catch (error: unknown) {
     i = 0;

@@ -4,21 +4,21 @@ import { CameraType } from 'types';
 
 export const PORT = 5000;
 
-export const PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
-export const FRAMES_ROOT_FOLDER = __dirname + '/../../../tmp/recording/pic';
+export const PUBLIC_FOLDER = __dirname + '/../../../data/recording';
+export const FRAMES_ROOT_FOLDER = __dirname + '/../../../data/recording/pic';
 export const FRAMEKM_ROOT_FOLDER =
-  __dirname + '/../../../tmp/recording/framekm';
+  __dirname + '/../../../data/recording/framekm';
 export const STREAM_REQUEST_FOLDER =
-  __dirname + '/../../../tmp/recording/request';
-export const GPS_ROOT_FOLDER = __dirname + '/../../../tmp/recording/gps';
+  __dirname + '/../../../data/recording/request';
+export const GPS_ROOT_FOLDER = __dirname + '/../../../data/recording/gps';
 export const GPS_LATEST_SAMPLE =
-  __dirname + '/../../../tmp/recording/gps/latest.log';
-export const IMU_ROOT_FOLDER = __dirname + '/../../../tmp/recording/imu';
-export const LORA_RESPONSE_FOLDER = __dirname + '/../../../mnt/data/lorawan';
+  __dirname + '/../../../data/recording/gps/latest.log';
+export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
+export const LORA_RESPONSE_FOLDER = __dirname + '/../../../data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const WEBSERVER_LOG_PATH =
-  __dirname + '/../../../home/root/camera-node.log';
+  __dirname + '/../../../data/recording/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 // File containing the camera configuration
 export const IMAGER_CONFIG_PATH =
@@ -41,7 +41,7 @@ export const CMD = {
   START_PREVIEW: 'systemctl start camera-preview',
   STOP_PREVIEW: 'systemctl stop camera-preview',
   READ_DEVICE_INFO:
-    'sh /opt/dashcam/bin/eeprom_access.sh -r -f /tmp/dump.bin -o 0 -ba 0 -s',
+    '/opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -l 30',
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {
@@ -55,7 +55,7 @@ export const configureOnBoot = async (req: Request, res: Response) => {
 export const updateFirmware = async (req: Request, res: Response) => {
   // Execute utility to update the firmware using the image file that was uploaded to /tmp/<new firmware image file>
   try {
-    const output = execSync('rauc install /tmp/' + req.query.filename, {
+    const output = execSync('mender -install /data/' + req.query.filename, {
       encoding: 'utf-8',
     });
     res.json({
