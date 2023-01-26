@@ -99,3 +99,30 @@ export interface ICronJob {
   start: () => void;
   stop: () => void;
 }
+
+export interface ICameraConfig {
+  recording: {
+    directory: {
+      prefix: string;
+      output: string;
+      minfreespace: number;
+      output2: string;
+      minfreespace2: number;
+      maxusedspace: number;
+    };
+  };
+  camera: {
+    encoding: {
+      fps: number;
+      width: number;
+      height: number;
+      codec: string;
+    };
+    adjustment: {
+      hflip: boolean;
+      vflip: boolean;
+      denoise: string;
+      rotation: number;
+    };
+  };
+}
