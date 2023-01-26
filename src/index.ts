@@ -17,9 +17,8 @@ import console_stamp from 'console-stamp';
 // import { AssistNowService } from 'services/assistNow';
 
 export async function initAppServer() {
-
   console.log('>> foobar');
-  
+
   const app = express();
 
   // Making all the files accessible via direct HTTP urls
