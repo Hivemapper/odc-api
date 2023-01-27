@@ -18,7 +18,7 @@ router.get('/cameraconfig', async (req: Request, res: Response) => {
     const config = getCameraConfig();
     res.json(config);
   } catch (error: unknown) {
-    res.json({ error })
+    res.json({ error });
   }
 });
 
