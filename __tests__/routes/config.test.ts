@@ -2,8 +2,9 @@ import { app } from 'index';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import request from 'supertest';
 import { getCameraConfig } from 'util/index';
+import { ICameraConfig } from '../../src/types/index';
 
-const mockDefaultConfig = {
+const mockDefaultConfig: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
@@ -29,7 +30,7 @@ const mockDefaultConfig = {
     },
   },
 };
-const mockConfig2K = {
+const mockConfig2K: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
