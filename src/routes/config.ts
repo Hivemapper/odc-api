@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { setCameraConfig } from 'util/index';
+import { setCameraConfig, getCameraConfig } from 'util/index';
 const router = Router();
 
 router.post('/cameraconfig', async (req: Request, res: Response) => {
@@ -10,6 +10,15 @@ router.post('/cameraconfig', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.json({ error });
+  }
+});
+
+router.get('/cameraconfig', async (req: Request, res: Response) => {
+  try {
+    const config = getCameraConfig();
+    res.json(config);
+  } catch (error: unknown) {
+    res.json({ error })
   }
 });
 
