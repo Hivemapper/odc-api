@@ -17,6 +17,8 @@ export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
 export const LORA_RESPONSE_FOLDER = __dirname + '/../../../data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
+export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
+export const ACL_FILES_PATH = '/data';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../data/recording/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
