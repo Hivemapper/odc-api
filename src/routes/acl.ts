@@ -6,7 +6,7 @@ const router = Router();
 router.get('/load', async (req: Request, res: Response) => {
   try {
     exec(
-      `${ACL_TOOL_PATH} laod ${ACL_FILES_PATH}`,
+      `${ACL_TOOL_PATH} load ${ACL_FILES_PATH}`,
       {
         encoding: 'utf-8',
       },
@@ -38,7 +38,7 @@ router.get('/clear', async (_req: Request, res: Response) => {
 router.post('/store', (req: Request, res: Response) => {
   try {
     exec(
-      `${ACL_TOOL_PATH} ${req.body.hex} ${req.body.signature} ${ACL_FILES_PATH}`,
+      `${ACL_TOOL_PATH} store ${req.body.hex} ${req.body.signature} ${ACL_FILES_PATH}`,
       {
         encoding: 'utf-8',
       },
