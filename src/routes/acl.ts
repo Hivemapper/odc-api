@@ -11,7 +11,7 @@ router.get('/load', async (req: Request, res: Response) => {
         encoding: 'utf-8',
       },
       (_error: ExecException | null, output: string, error: string) => {
-        _error ? res.json({ output }) : res.json({ error });
+        _error ? res.json({ error }) : res.json({ output });
       },
     );
   } catch (error: unknown) {
@@ -27,7 +27,7 @@ router.get('/clear', async (_req: Request, res: Response) => {
         encoding: 'utf-8',
       },
       (_error: ExecException | null, output: string, error: string) => {
-        _error ? res.json({ output }) : res.json({ error });
+        _error ? res.json({ error }) : res.json({ output });
       },
     );
   } catch (error: unknown) {
@@ -43,7 +43,7 @@ router.post('/store', (req: Request, res: Response) => {
         encoding: 'utf-8',
       },
       (_error: ExecException | null, output: string, error: string) => {
-        _error ? res.json({ output }) : res.json({ error });
+        _error ? res.json({ error }) : res.json({ output });
       },
     );
   } catch (error: unknown) {
