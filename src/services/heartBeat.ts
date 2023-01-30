@@ -12,6 +12,7 @@ let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
 let wasCameraActive = false;
 let wasGpsGood = false;
+let got3dOnce = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -86,6 +87,7 @@ export const HeartBeatService: IService = {
                     console.log('Got 3d Fix');
                   }
                   wasGpsGood = true;
+                  got3dOnce = true;
                 } else {
                   const gpsLostPeriod = lastSuccessfulFix
                     ? Math.abs(Date.now() - lastSuccessfulFix)
@@ -98,6 +100,18 @@ export const HeartBeatService: IService = {
                     console.log('Lost 3d Fix');
                   }
                   wasGpsGood = false;
+
+                  if (
+                    cameraResponse.indexOf('active') === 0 &&
+                    !ifTimeSet() &&
+                    !got3dOnce &&
+                    !isPreviewInProgress
+                  ) {
+                    exec(CMD.STOP_CAMERA);
+                    console.log(
+                      'Camera intentionally stopped cause Lock is not there yet',
+                    );
+                  }
                 }
 
                 const appDisconnectionPeriod = mostRecentPing
