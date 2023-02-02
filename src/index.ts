@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import router from './routes';
 import busboy from 'connect-busboy';
-import { PUBLIC_FOLDER, PORT } from './config';
+import { PUBLIC_FOLDER, PORT, PREVIEW_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
@@ -21,6 +21,10 @@ export async function initAppServer(): Promise<Application> {
 
   // Making all the files accessible via direct HTTP urls
   app.use('/public', express.static(PUBLIC_FOLDER));
+
+  // for the preview photos to adjust the dashcam
+  app.use('/preview', express.static(PREVIEW_FOLDER));
+
   app.use(
     busboy({
       highWaterMark: 2 * 1024 * 1024, // Set 2MiB buffer
