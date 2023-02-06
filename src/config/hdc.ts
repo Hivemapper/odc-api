@@ -21,6 +21,7 @@ export const ACL_FILES_PATH = '/mnt/data';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../mnt/data/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
+export const CACHED_CAMERA_CONFIG = '/../../../mnt/data/camera.config';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
 export const IMAGER_BRIDGE_PATH =
