@@ -72,7 +72,7 @@ scp ./compiled/dashcam-api.js root@192.168.0.10:/tmp/
 
 # inside the ssh'd webcam execute:
 rm /opt/dashcam/bin/dashcam-api.js
-mv /tmp/dashcam-api.js opt/dashcam/bin/
+mv /tmp/dashcam-api.js /opt/dashcam/bin/
 ```
 Start Camera node
 ```sh
