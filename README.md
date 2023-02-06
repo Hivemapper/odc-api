@@ -41,15 +41,7 @@ Check if it's healthy: `http://localhost:5000/api/1/info`.
 To configure it for your device,
 create your own camera config file under `/config` folder, and make sure it is set as default under `/config/index.ts`
 
-To build a standalone server file,
-make sure you have ncc installed:
-
-```
-npm i -g @vercel/ncc
-```
-
-and then execute: `npm run compile-dev --camera=<camera name>`
-
+To build a standalone server file:
 ```
 npm run compile-dev --camera=hdc
 ```
