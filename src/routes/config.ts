@@ -4,7 +4,7 @@ const router = Router();
 
 router.post('/cameraconfig', async (req: Request, res: Response) => {
   try {
-    setCameraConfig(req.body.config);
+    await setCameraConfig(req.body.config);
     res.json({
       output: 'done',
     });
@@ -15,7 +15,7 @@ router.post('/cameraconfig', async (req: Request, res: Response) => {
 
 router.get('/cameraconfig', async (req: Request, res: Response) => {
   try {
-    const config = getCameraConfig();
+    const config = await getCameraConfig();
     res.json(config);
   } catch (error: unknown) {
     res.json({ error });

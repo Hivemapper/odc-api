@@ -5,7 +5,6 @@ import { PUBLIC_FOLDER, PORT } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
-import { GnssHealthCheck } from 'services/gnssHealthCheck';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';

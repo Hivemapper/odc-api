@@ -18,8 +18,8 @@ const mockDefaultConfig: ICameraConfig = {
   camera: {
     encoding: {
       fps: 10,
-      width: 4056,
-      height: 2160,
+      width: 2048,
+      height: 1536,
       codec: 'mjpeg',
     },
     adjustment: {
@@ -77,9 +77,9 @@ describe('Camera Configuration endpoints', () => {
         .send({ config: mockConfig2K });
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({ output: 'done' });
-
+      const cameraConfig = await getCameraConfig();
       // verify local cache
-      expect(getCameraConfig()).toEqual(mockConfig2K);
+      expect(cameraConfig).toEqual(mockConfig2K);
     });
   });
 });
