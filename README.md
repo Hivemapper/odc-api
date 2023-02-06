@@ -56,6 +56,30 @@ npm run start-compiled
 
 And double-check if it's healthy: `http://localhost:5000/api/1/info`
 
+## Running on Dashcam
+SSH into dashcam
+```
+ssh -t root@192.168.0.10
+```
+stop camera node service
+```
+systemctl stop camera-node
+```
+Install the new javascript file
+```sh
+# inside your pc execute:
+scp ./compiled/dashcam-api.js root@192.168.0.10:/tmp/
+
+# inside the ssh'd webcam execute:
+rm /opt/dashcam/bin/dashcam-api.js
+mv /tmp/dashcam-api.js opt/dashcam/bin/
+```
+Start Camera node
+```sh
+systemctl start camera-node
+```
+And you can now test!
+
 # Troubleshooting
 
 If you're on a mac, as you're starting up the server, you might run into an `EADDRINUSE` error on port 5000. This port is reserved for Apple's Airplay receiver. Turn it off here: _System Preferences > General > disable Airplay Receiver_
