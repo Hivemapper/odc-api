@@ -5,7 +5,7 @@ import { CameraType } from 'types';
 export const PORT = 5000;
 
 export const PUBLIC_FOLDER = __dirname + '/../../../data/recording';
-export const PREVIEW_FOLDER = __dirname + '/../../../tmp/preview';
+export const TEMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../data/recording/pic';
 export const FRAMEKM_ROOT_FOLDER =
   __dirname + '/../../../data/recording/framekm';

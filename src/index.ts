@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import router from './routes';
 import busboy from 'connect-busboy';
-import { PUBLIC_FOLDER, PORT, PREVIEW_FOLDER } from './config';
+import { PUBLIC_FOLDER, PORT, TEMP_PUBLIC_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
@@ -23,7 +23,7 @@ export async function initAppServer(): Promise<Application> {
   app.use('/public', express.static(PUBLIC_FOLDER));
 
   // for the preview photos to adjust the dashcam
-  app.use('/preview', express.static(PREVIEW_FOLDER));
+  app.use('/tmp', express.static(TEMP_PUBLIC_FOLDER));
 
   app.use(
     busboy({
