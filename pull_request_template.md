@@ -1,3 +1,3 @@
 - [ ] Add a link to the ticket in the PR title or add a description of work in the PR title
 - [ ] dashcam firmware was loaded on a device and successfully runs
-- [ ] semantic version was bumped
+- [ ] semantic version was incremented inside `index.ts`
