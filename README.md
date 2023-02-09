@@ -57,25 +57,22 @@ npm run start-compiled
 And double-check if it's healthy: `http://localhost:5000/api/1/info`
 
 ## Running on Dashcam
-SSH into dashcam
-```
-ssh -t root@192.168.0.10
-```
-stop camera node service
-```
-systemctl stop camera-node
-```
-Install the new javascript file
+Steps taken on your machine:
 ```sh
-# inside your pc execute:
+npm run compile-dev --camera=hdc
+
+# Connect to dashcam wifi
+
 scp ./compiled/dashcam-api.js root@192.168.0.10:/tmp/
 
-# inside the ssh'd webcam execute:
+ssh -t root@192.168.0.10
+```
+
+Steps taken on dashcam:
+```sh
+systemctl stop camera-node
 rm /opt/dashcam/bin/dashcam-api.js
 mv /tmp/dashcam-api.js /opt/dashcam/bin/
-```
-Start Camera node
-```sh
 systemctl start camera-node
 ```
 And you can now test!
