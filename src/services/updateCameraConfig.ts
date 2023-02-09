@@ -12,9 +12,10 @@ export const UpdateCameraConfigService: IService = {
     console.log('Updating camera config');
 
     try {
+      const cameraConfig = await getCameraConfig();
       writeFile(
         IMAGER_CONFIG_PATH,
-        JSON.stringify(getCameraConfig()),
+        JSON.stringify(cameraConfig),
         {
           encoding: 'utf-8',
         },

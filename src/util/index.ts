@@ -2,7 +2,8 @@ import { Request } from 'express';
 import { ICameraConfig, ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
-import { access, constants, stat } from 'fs';
+import { access, constants, readFile, stat, writeFileSync } from 'fs';
+import { CACHED_CAMERA_CONFIG } from 'config';
 
 let sessionId: string;
 
@@ -83,7 +84,7 @@ export const getPreviewConfig = () => {
   };
 };
 
-let cameraConfig: ICameraConfig = {
+const defaultCameraConfig: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
@@ -97,8 +98,8 @@ let cameraConfig: ICameraConfig = {
   camera: {
     encoding: {
       fps: 10,
-      width: 4056,
-      height: 2160,
+      width: 2048,
+      height: 1536,
       codec: 'mjpeg',
     },
     adjustment: {
@@ -110,12 +111,31 @@ let cameraConfig: ICameraConfig = {
   },
 };
 
-export const getCameraConfig = () => {
-  return cameraConfig;
+export const getCameraConfig = async () => {
+  const exists = await fileExists(CACHED_CAMERA_CONFIG);
+  if (exists) {
+    try {
+      readFile(CACHED_CAMERA_CONFIG, (err, data) => {
+        if (err) throw err;
+        try {
+          const cameraConfig = JSON.parse(data.toString());
+          return cameraConfig;
+        } catch (e: unknown) {
+          console.log('Error parsing camera config', e);
+          return defaultCameraConfig;
+        }
+      });
+    } catch (e: unknown) {
+      console.log('Error reading camera config', e);
+      return defaultCameraConfig;
+    }
+  } else {
+    return defaultCameraConfig;
+  }
 };
 
-export const setCameraConfig = (newCameraConfig: ICameraConfig) => {
-  cameraConfig = newCameraConfig;
+export const setCameraConfig = async (newCameraConfig: ICameraConfig) => {
+  writeFileSync(CACHED_CAMERA_CONFIG, JSON.stringify(newCameraConfig, null, 4));
   UpdateCameraConfigService.execute();
 };
 
