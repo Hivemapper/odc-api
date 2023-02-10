@@ -41,15 +41,7 @@ Check if it's healthy: `http://localhost:5000/api/1/info`.
 To configure it for your device,
 create your own camera config file under `/config` folder, and make sure it is set as default under `/config/index.ts`
 
-To build a standalone server file,
-make sure you have ncc installed:
-
-```
-npm i -g @vercel/ncc
-```
-
-and then execute: `npm run compile-dev --camera=<camera name>`
-
+To build a standalone server file:
 ```
 npm run compile-dev --camera=hdc
 ```
@@ -63,6 +55,27 @@ npm run start-compiled
 ```
 
 And double-check if it's healthy: `http://localhost:5000/api/1/info`
+
+## Running on Dashcam
+Steps taken on your machine:
+```sh
+npm run compile-dev --camera=hdc
+
+# Connect to dashcam wifi
+
+scp ./compiled/dashcam-api.js root@192.168.0.10:/tmp/
+
+ssh -t root@192.168.0.10
+```
+
+Steps taken on dashcam:
+```sh
+systemctl stop camera-node
+rm /opt/dashcam/bin/dashcam-api.js
+mv /tmp/dashcam-api.js /opt/dashcam/bin/
+systemctl start camera-node
+```
+And you can now test!
 
 # Troubleshooting
 
