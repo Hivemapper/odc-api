@@ -12,9 +12,6 @@ import { setSessionId } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 
-//import { BootNetworkService } from 'services/bootNetwork';
-// import { AssistNowService } from 'services/assistNow';
-
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
 
@@ -52,7 +49,6 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(UpdateCameraConfigService);
     serviceRunner.add(DeviceInfoService);
-    // serviceRunner.add(GnssHealthCheck);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
 
