@@ -22,6 +22,7 @@ import kpiRouter from './kpi';
 import framekmRouter from './framekm';
 import utilRouter from './util';
 import ledRouter from './led';
+import networkRouter from './network';
 import previewRouter from './preview';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
@@ -45,6 +46,7 @@ router.use('/kpi', kpiRouter);
 router.use('/framekm', framekmRouter);
 router.use('/util', utilRouter);
 router.use('/led', ledRouter);
+router.use('/network', networkRouter);
 router.use('/preview', previewRouter);
 
 router.get('/init', configureOnBoot);

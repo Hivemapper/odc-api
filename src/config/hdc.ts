@@ -29,7 +29,7 @@ export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';
 export const NETWORK_BOOT_CONFIG_PATH =
-  __dirname + '/../../../mnt/data/network_mode.txt';
+  __dirname + '/../../../mnt/data/wifi.cfg';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
@@ -73,33 +73,31 @@ export const updateFirmware = async (req: Request, res: Response) => {
 
 export const switchToP2P = async (req: Request, res: Response) => {
   try {
-    // No need to wait for response — it's tearing down current Network method, so it will kill the connection anyways
-    exec(__dirname + '/network/test_P2Pconnect_any.sh');
-    try {
-      writeFile(NETWORK_BOOT_CONFIG_PATH, 'P2P', null, () => {});
-    } catch (e: unknown) {
-      console.log(e);
-    }
-    res.json({
-      output: 'done',
-    });
-  } catch (error: any) {
-    res.json({ error: error.stdout || error.stderr });
+    writeFile(
+      NETWORK_BOOT_CONFIG_PATH,
+      `P2P, ${req.body.deviceName}`,
+      null,
+      () => {
+        exec(__dirname + '/network/wifi_switch_P2P.sh');
+      },
+    );
+  } catch (e: unknown) {
+    console.log(e);
   }
+  res.json({
+    output: 'done',
+  });
 };
 
 export const switchToAP = async (req: Request, res: Response) => {
   try {
-    exec(__dirname + '/network/wifi_switch_AP.sh');
-    try {
-      writeFile(NETWORK_BOOT_CONFIG_PATH, 'AP', null, () => {});
-    } catch (e: unknown) {
-      console.log(e);
-    }
-    res.json({
-      output: 'done',
+    writeFile(NETWORK_BOOT_CONFIG_PATH, 'AP', null, () => {
+      exec(__dirname + '/network/wifi_switch_AP.sh');
     });
-  } catch (error: any) {
-    res.json({ error: error.stdout || error.stderr });
+  } catch (e: unknown) {
+    console.log(e);
   }
+  res.json({
+    output: 'done',
+  });
 };

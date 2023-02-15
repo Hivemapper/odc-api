@@ -1,8 +1,14 @@
 import { exec, ExecException } from 'child_process';
-import { CMD, GPS_LATEST_SAMPLE, isDev } from 'config';
-import { readFile } from 'fs';
+import {
+  CMD,
+  GPS_LATEST_SAMPLE,
+  isDev,
+  NETWORK_BOOT_CONFIG_PATH,
+} from 'config';
+import { existsSync, readFile, readFileSync } from 'fs';
 import { IService } from 'types';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
+import { restartP2P } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
 // let previousCameraResponse = '';
@@ -13,6 +19,8 @@ let isPreviewInProgress = false;
 let wasCameraActive = false;
 let wasGpsGood = false;
 let got3dOnce = false;
+let restartedP2P = true;
+let isLedControlledByDashcam = true;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -30,10 +38,14 @@ export const getPreviewStatus = () => {
   return isPreviewInProgress;
 };
 
+export const setIsLedControlledByDashcam = (state: boolean) => {
+  isLedControlledByDashcam = state;
+};
+
 export const HeartBeatService: IService = {
   execute: async () => {
     try {
-      if (isFirmwareUpdate) {
+      if (isFirmwareUpdate && isLedControlledByDashcam) {
         updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
         return;
       }
@@ -121,8 +133,28 @@ export const HeartBeatService: IService = {
                 let appLED = COLORS.RED;
                 if (appDisconnectionPeriod < 15000) {
                   appLED = COLORS.GREEN;
+                  restartedP2P = false;
+                } else if (!restartedP2P) {
+                  try {
+                    if (existsSync(NETWORK_BOOT_CONFIG_PATH)) {
+                      const currentNetwork = readFileSync(
+                        NETWORK_BOOT_CONFIG_PATH,
+                        {
+                          encoding: 'utf-8',
+                        },
+                      );
+                      if (currentNetwork.indexOf('P2P') !== -1) {
+                        restartP2P();
+                        restartedP2P = true;
+                      }
+                    }
+                  } catch (e) {
+                    console.log('Error reading network state path', e);
+                  }
                 }
-                updateLED(imgLED, gpsLED, appLED);
+                if (isLedControlledByDashcam) {
+                  updateLED(imgLED, gpsLED, appLED);
+                }
               },
             );
           } catch (e: unknown) {
