@@ -1,5 +1,6 @@
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { Request, Response } from 'express';
+import { writeFile } from 'fs';
 import { CameraType } from 'types';
 
 export const PORT = 5000;
@@ -18,6 +19,7 @@ export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
 export const LORA_RESPONSE_FOLDER = __dirname + '/../../../data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
+export const NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../data/wifi.cfg';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const ACL_FILES_PATH = '/data';
 export const CACHED_CAMERA_CONFIG = '/data/camera.config';
@@ -68,4 +70,35 @@ export const updateFirmware = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.json({ error: error.stdout || error.stderr });
   }
+};
+
+export const switchToP2P = async (req: Request, res: Response) => {
+  try {
+    writeFile(
+      NETWORK_BOOT_CONFIG_PATH,
+      `P2P, ${req.body.deviceName}`,
+      null,
+      () => {
+        exec(__dirname + '/network/wifi_switch_P2P.sh');
+      },
+    );
+  } catch (e: unknown) {
+    console.log(e);
+  }
+  res.json({
+    output: 'done',
+  });
+};
+
+export const switchToAP = async (req: Request, res: Response) => {
+  try {
+    writeFile(NETWORK_BOOT_CONFIG_PATH, 'AP', null, () => {
+      exec(__dirname + '/network/wifi_switch_AP.sh');
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
+  res.json({
+    output: 'done',
+  });
 };
