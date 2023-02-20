@@ -75,7 +75,7 @@ export const switchToP2P = async (req: Request, res: Response) => {
   try {
     writeFile(
       NETWORK_BOOT_CONFIG_PATH,
-      `P2P, "${req.body.deviceName}"`,
+      `P2P, ${req.body.deviceName}`,
       null,
       () => {
         exec(__dirname + '/network/wifi_switch_P2P.sh');
