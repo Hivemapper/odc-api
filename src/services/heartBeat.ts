@@ -19,7 +19,6 @@ let isPreviewInProgress = false;
 let wasCameraActive = false;
 let wasGpsGood = false;
 let got3dOnce = false;
-let restartedP2P = true;
 let isLedControlledByDashcam = true;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
@@ -133,24 +132,6 @@ export const HeartBeatService: IService = {
                 let appLED = COLORS.RED;
                 if (appDisconnectionPeriod < 15000) {
                   appLED = COLORS.GREEN;
-                  restartedP2P = false;
-                } else if (!restartedP2P) {
-                  try {
-                    if (existsSync(NETWORK_BOOT_CONFIG_PATH)) {
-                      const currentNetwork = readFileSync(
-                        NETWORK_BOOT_CONFIG_PATH,
-                        {
-                          encoding: 'utf-8',
-                        },
-                      );
-                      if (currentNetwork.indexOf('P2P') !== -1) {
-                        restartP2P();
-                        restartedP2P = true;
-                      }
-                    }
-                  } catch (e) {
-                    console.log('Error reading network state path', e);
-                  }
                 }
                 if (isLedControlledByDashcam) {
                   updateLED(imgLED, gpsLED, appLED);
