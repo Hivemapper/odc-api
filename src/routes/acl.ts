@@ -19,7 +19,23 @@ router.get('/load', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/clear', async (req: Request, res: Response) => {
+router.get('/clear', async (_req: Request, res: Response) => {
+  try {
+    exec(
+      `${ACL_TOOL_PATH} clear ${ACL_FILES_PATH}`,
+      {
+        encoding: 'utf-8',
+      },
+      (_error: ExecException | null, output: string, error: string) => {
+        _error ? res.json({ error }) : res.json({ output });
+      },
+    );
+  } catch (error: unknown) {
+    res.json({ error });
+  }
+});
+
+router.post('/clear', async (req: Request, res: Response) => {
   try {
     const signature = req.body.signature ? req.body.signature : '';
 
@@ -67,6 +83,6 @@ router.get('/version', (req: Request, res: Response) => {
   } catch (error: unknown) {
     res.json({ error });
   }
-})
+});
 
 export default router;

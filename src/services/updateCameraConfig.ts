@@ -1,6 +1,11 @@
 import { exec } from 'child_process';
-import { CAMERA_TYPE, CMD, IMAGER_CONFIG_PATH } from 'config';
-import { writeFile } from 'fs';
+import {
+  CAMERA_TYPE,
+  CMD,
+  IMAGER_BRIDGE_PATH,
+  IMAGER_CONFIG_PATH,
+} from 'config';
+import { readFileSync, writeFile, writeFileSync } from 'fs';
 import { CameraType, IService } from 'types';
 import { getCameraConfig, sleep } from 'util/index';
 
@@ -13,6 +18,28 @@ export const UpdateCameraConfigService: IService = {
 
     try {
       const cameraConfig = await getCameraConfig();
+      if (cameraConfig && cameraConfig.quality) {
+        const newQuality = cameraConfig.quality;
+        const bridgeScript = readFileSync(IMAGER_BRIDGE_PATH, {
+          encoding: 'utf-8',
+        });
+
+        if (bridgeScript) {
+          const parts = bridgeScript.split(' ');
+          const qualityInd = parts.indexOf('--quality');
+
+          if (qualityInd !== -1) {
+            const oldQuality = Number(parts[qualityInd + 1]);
+            if (oldQuality && newQuality) {
+              const newScript = bridgeScript.replace(
+                '--quality ' + oldQuality,
+                '--quality ' + newQuality,
+              );
+              writeFileSync(IMAGER_BRIDGE_PATH, newScript);
+            }
+          }
+        }
+      }
       writeFile(
         IMAGER_CONFIG_PATH,
         JSON.stringify(cameraConfig),

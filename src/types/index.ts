@@ -125,4 +125,5 @@ export interface ICameraConfig {
       rotation: number;
     };
   };
+  quality?: number;
 }
