@@ -198,7 +198,7 @@ export const setCameraTime = () => {
 };
 
 export const getLockTime = () => {
-  return isTimeSet
+  return ifTimeSet()
     ? {
         lockTime,
         msss,
