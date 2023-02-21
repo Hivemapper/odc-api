@@ -198,9 +198,15 @@ export const setCameraTime = () => {
 };
 
 export const getLockTime = () => {
-  return {
-    lockTime,
-    msss,
-    gnssId: gnssIds.join(' '),
-  };
+  return isTimeSet
+    ? {
+        lockTime,
+        msss,
+        gnssId: gnssIds.join(' '),
+      }
+    : {
+        lockTime: 0,
+        msss: 0,
+        gnssIds: [],
+      };
 };
