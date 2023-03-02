@@ -1,7 +1,7 @@
 import { map, eachSeries } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import { writeFile, readFile, appendFile, Stats, mkdir } from 'fs';
-import { getStats, sleep } from 'util/index';
+import { compressFrame, getCameraConfig, getStats, sleep } from 'util/index';
 
 const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -19,7 +19,7 @@ export const concatFrames = async (
     console.log(e);
   }
 
-  const framesPath = frames.map(
+  let framesPath = frames.map(
     (frame: string) => FRAMES_ROOT_FOLDER + '/' + frame,
   );
   const bytesMap: { [key: string]: number } = {};
@@ -27,6 +27,26 @@ export const concatFrames = async (
 
   return new Promise(async (resolve, reject) => {
     // USING NON-BLOCKING IO,
+    // 0. FIRST WE NEED TO COMPRESS ALL THE FRAMES PROVIDED
+    let compressedFrames: any[] = [];
+    const cameraConfig = await getCameraConfig();
+    try {
+      compressedFrames = await map(
+        framesPath,
+        compressFrame.bind(
+          this,
+          `${cameraConfig?.camera.encoding.width}*${cameraConfig?.camera.encoding.height}`,
+        ),
+      );
+    } catch (e: unknown) {
+      reject(e);
+      console.log(e);
+      return;
+    }
+    framesPath = compressedFrames
+      .map(frame => frame?.path)
+      .filter(frame => frame);
+
     // 1. GET SIZE FOR EACH FRAME, AND FILTER OUT ALL INEXISTANT
     let fileStats: any[] = [];
     try {

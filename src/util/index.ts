@@ -4,6 +4,7 @@ import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { access, constants, readFile, stat, writeFileSync } from 'fs';
 import { CACHED_CAMERA_CONFIG } from 'config';
+import { exec } from 'child_process';
 
 let sessionId: string;
 
@@ -111,12 +112,14 @@ const defaultCameraConfig: ICameraConfig = {
   },
 };
 
-export const getCameraConfig = async () => {
+export const getCameraConfig = async (): Promise<ICameraConfig | undefined> => {
   const exists = await fileExists(CACHED_CAMERA_CONFIG);
   if (exists) {
     try {
       readFile(CACHED_CAMERA_CONFIG, (err, data) => {
-        if (err) throw err;
+        if (err) {
+          return defaultCameraConfig;
+        }
         try {
           const cameraConfig = JSON.parse(data.toString());
           return cameraConfig;
@@ -147,6 +150,22 @@ export const getStats = (filePath: string, callback: any) => {
     const name = filePath.split('/').pop() || '';
     callback(null, { ...stat, name });
   });
+};
+
+export const compressFrame = (
+  size: string,
+  filePath: string,
+  callback: any,
+) => {
+  exec(
+    `gm convert -size 4056x2160 ${filePath} -resize ${size} -quality 80 ${filePath}`,
+    function (err) {
+      if (err) {
+        return callback(null);
+      }
+      callback(null, { path: filePath });
+    },
+  );
 };
 
 export const fileExists = (filepath: string) => {
