@@ -111,12 +111,14 @@ const defaultCameraConfig: ICameraConfig = {
   },
 };
 
-export const getCameraConfig = async () => {
+export const getCameraConfig = async (): Promise<ICameraConfig | undefined> => {
   const exists = await fileExists(CACHED_CAMERA_CONFIG);
   if (exists) {
     try {
       readFile(CACHED_CAMERA_CONFIG, (err, data) => {
-        if (err) throw err;
+        if (err) {
+          return defaultCameraConfig;
+        }
         try {
           const cameraConfig = JSON.parse(data.toString());
           return cameraConfig;

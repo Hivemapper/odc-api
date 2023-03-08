@@ -11,6 +11,10 @@ import { getCameraConfig, sleep } from 'util/index';
 
 export const UpdateCameraConfigService: IService = {
   execute: async () => {
+    if (true) {
+      console.log('Camera config service temporarily disabled');
+      return;
+    }
     if (CAMERA_TYPE !== CameraType.Hdc) {
       return;
     }
@@ -18,8 +22,8 @@ export const UpdateCameraConfigService: IService = {
 
     try {
       const cameraConfig = await getCameraConfig();
-      if (cameraConfig && cameraConfig.quality) {
-        const newQuality = cameraConfig.quality;
+      if (cameraConfig && cameraConfig?.quality) {
+        const newQuality = cameraConfig?.quality;
         const bridgeScript = readFileSync(IMAGER_BRIDGE_PATH, {
           encoding: 'utf-8',
         });
