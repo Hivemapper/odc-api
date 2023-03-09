@@ -115,16 +115,26 @@ export const getCameraConfig = async () => {
   const exists = await fileExists(CACHED_CAMERA_CONFIG);
   if (exists) {
     try {
-      readFile(CACHED_CAMERA_CONFIG, (err, data) => {
-        if (err) throw err;
-        try {
-          const cameraConfig = JSON.parse(data.toString());
-          return cameraConfig;
-        } catch (e: unknown) {
-          console.log('Error parsing camera config', e);
-          return defaultCameraConfig;
-        }
-      });
+      readFile(
+        CACHED_CAMERA_CONFIG,
+        {
+          encoding: 'utf-8',
+        },
+        (err, data) => {
+          if (err) {
+            return defaultCameraConfig;
+          }
+          if (data) {
+            try {
+              const cameraConfig = JSON.parse(data.toString());
+              return cameraConfig;
+            } catch (e: unknown) {
+              console.log('Error parsing camera config', e);
+              return defaultCameraConfig;
+            }
+          }
+        },
+      );
     } catch (e: unknown) {
       console.log('Error reading camera config', e);
       return defaultCameraConfig;
