@@ -109,6 +109,7 @@ export interface ICameraConfig {
       output2: string;
       minfreespace2: number;
       maxusedspace: number;
+      downsampleStreamDir?: string;
     };
   };
   camera: {
@@ -117,13 +118,13 @@ export interface ICameraConfig {
       width: number;
       height: number;
       codec: string;
+      quality: number;
     };
     adjustment: {
       hflip: boolean;
       vflip: boolean;
-      denoise: string;
+      denoise?: string;
       rotation: number;
     };
   };
-  quality?: number;
 }
