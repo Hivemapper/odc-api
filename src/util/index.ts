@@ -88,7 +88,7 @@ const defaultCameraConfig: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
-      output: '/mnt/data/pic_lg/',
+      output: '',
       maxusedspace: 21474836480,
       minfreespace: 64000000,
       output2: '/media/usb0/recording/',
@@ -102,13 +102,10 @@ const defaultCameraConfig: ICameraConfig = {
       width: 4096,
       height: 2160,
       codec: 'mjpeg',
-      quality: 90,
+      quality: 80,
+      qualityDwn: 90,
     },
-    adjustment: {
-      hflip: false,
-      vflip: false,
-      rotation: 180,
-    },
+    adjustment: { hflip: false, vflip: false, rotation: 180 },
   },
 };
 

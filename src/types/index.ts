@@ -119,6 +119,7 @@ export interface ICameraConfig {
       height: number;
       codec: string;
       quality: number;
+      qualityDwn?: number;
     };
     adjustment: {
       hflip: boolean;
