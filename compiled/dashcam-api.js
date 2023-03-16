@@ -1603,6 +1603,16 @@ const getCameraConfig = async () => {
                     console.log('Error parsing camera config', e);
                     return defaultCameraConfig;
                 }
+                if (data) {
+                    try {
+                        const cameraConfig = JSON.parse(data.toString());
+                        return cameraConfig;
+                    }
+                    catch (e) {
+                        console.log('Error parsing camera config', e);
+                        return defaultCameraConfig;
+                    }
+                }
             });
         }
         catch (e) {
@@ -37071,6 +37081,16 @@ const getCameraConfig = async () => {
                 catch (e) {
                     console.log('Error parsing camera config', e);
                     return defaultCameraConfig;
+                }
+                if (data) {
+                    try {
+                        const cameraConfig = JSON.parse(data.toString());
+                        return cameraConfig;
+                    }
+                    catch (e) {
+                        console.log('Error parsing camera config', e);
+                        return defaultCameraConfig;
+                    }
                 }
             });
         }

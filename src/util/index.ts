@@ -126,12 +126,14 @@ export const getCameraConfig = async (): Promise<ICameraConfig | undefined> => {
           if (err) {
             return defaultCameraConfig;
           }
-          try {
-            const cameraConfig = JSON.parse(data.toString());
-            return cameraConfig;
-          } catch (e: unknown) {
-            console.log('Error parsing camera config', e);
-            return defaultCameraConfig;
+          if (data) {
+            try {
+              const cameraConfig = JSON.parse(data.toString());
+              return cameraConfig;
+            } catch (e: unknown) {
+              console.log('Error parsing camera config', e);
+              return defaultCameraConfig;
+            }
           }
         },
       );
