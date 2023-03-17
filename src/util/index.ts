@@ -88,30 +88,32 @@ const defaultCameraConfig: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
-      output: '/mnt/data/pic/',
+      output: '',
+      maxusedspace: 21474836480,
       minfreespace: 64000000,
       output2: '/media/usb0/recording/',
       minfreespace2: 32000000,
-      maxusedspace: 16106127360,
+      downsampleStreamDir: '/mnt/data/pic/',
     },
   },
   camera: {
     encoding: {
       fps: 10,
-      width: 2048,
-      height: 1536,
+      width: 4096,
+      height: 2160,
       codec: 'mjpeg',
+      quality: 80,
+      qualityDwn: 90,
     },
-    adjustment: {
-      hflip: false,
-      vflip: false,
-      denoise: 'off',
-      rotation: 180,
-    },
+    adjustment: { hflip: false, vflip: false, rotation: 180 },
   },
 };
 
-export const getCameraConfig = async () => {
+export const getQuality = (): number => {
+  return defaultCameraConfig.camera.encoding.quality || 80;
+};
+
+export const getCameraConfig = async (): Promise<ICameraConfig | undefined> => {
   const exists = await fileExists(CACHED_CAMERA_CONFIG);
   if (exists) {
     try {
@@ -145,7 +147,13 @@ export const getCameraConfig = async () => {
 };
 
 export const setCameraConfig = async (newCameraConfig: ICameraConfig) => {
-  writeFileSync(CACHED_CAMERA_CONFIG, JSON.stringify(newCameraConfig, null, 4));
+  writeFileSync(
+    CACHED_CAMERA_CONFIG,
+    JSON.stringify(newCameraConfig, null, 4),
+    {
+      encoding: 'utf-8',
+    },
+  );
   UpdateCameraConfigService.execute();
 };
 

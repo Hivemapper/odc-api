@@ -21,6 +21,7 @@ const mockDefaultConfig: ICameraConfig = {
       width: 2048,
       height: 1536,
       codec: 'mjpeg',
+      quality: 90,
     },
     adjustment: {
       hflip: false,
@@ -47,6 +48,7 @@ const mockConfig2K: ICameraConfig = {
       width: 2048,
       height: 1080,
       codec: 'mjpeg',
+      quality: 90,
     },
     adjustment: {
       hflip: false,

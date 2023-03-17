@@ -1,8 +1,12 @@
-import { CAMERA_TYPE, FRAMES_ROOT_FOLDER, IMAGER_BRIDGE_PATH } from '../config';
+import { CAMERA_TYPE, FRAMES_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
 import { existsSync, readdir, readFile } from 'fs';
 
-import { filterBySinceUntil, getDateFromUnicodeTimastamp } from '../util';
+import {
+  filterBySinceUntil,
+  getDateFromUnicodeTimastamp,
+  getQuality,
+} from '../util';
 import { CameraType, ICameraFile } from '../types';
 import { exec, ExecException } from 'child_process';
 
@@ -86,30 +90,7 @@ router.get('/quality', async (req: Request, res: Response) => {
       // TODO: placeholder
       return res.json({ quality: 70 });
     }
-    readFile(
-      IMAGER_BRIDGE_PATH,
-      {
-        encoding: 'utf-8',
-      },
-      (err: NodeJS.ErrnoException | null, data: string) => {
-        if (err) {
-          res.json({ error: err });
-          return;
-        }
-        if (data) {
-          const parts = data.split(' ');
-          const qualityInd = parts.indexOf('--quality');
-
-          if (qualityInd !== -1) {
-            res.json({ quality: Number(parts[qualityInd + 1]) });
-          } else {
-            res.json({ error: 'No quality specified' });
-          }
-        } else {
-          res.json({ error: 'Quality is not set' });
-        }
-      },
-    );
+    res.json({ quality: getQuality() });
   } catch (error) {
     res.json({ error });
   }
