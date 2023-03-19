@@ -88,24 +88,16 @@ const defaultCameraConfig: ICameraConfig = {
   recording: {
     directory: {
       prefix: '',
-      output: '',
-      maxusedspace: 21474836480,
+      output: '/mnt/data/pic/',
       minfreespace: 64000000,
       output2: '/media/usb0/recording/',
       minfreespace2: 32000000,
-      downsampleStreamDir: '/mnt/data/pic/',
+      maxusedspace: 16106127360,
     },
   },
   camera: {
-    encoding: {
-      fps: 10,
-      width: 4096,
-      height: 2160,
-      codec: 'mjpeg',
-      quality: 80,
-      qualityDwn: 90,
-    },
-    adjustment: { hflip: false, vflip: false, rotation: 180 },
+    encoding: { fps: 10, width: 2048, height: 1080, codec: 'mjpeg' },
+    adjustment: { hflip: false, vflip: false, denoise: 'off', rotation: 180 },
   },
 };
 
@@ -114,6 +106,8 @@ export const getQuality = (): number => {
 };
 
 export const getCameraConfig = async (): Promise<ICameraConfig | undefined> => {
+  return defaultCameraConfig;
+
   const exists = await fileExists(CACHED_CAMERA_CONFIG);
   if (exists) {
     try {
