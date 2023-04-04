@@ -118,7 +118,7 @@ export interface ICameraConfig {
       width: number;
       height: number;
       codec: string;
-      quality: number;
+      quality?: number;
       qualityDwn?: number;
     };
     adjustment: {
