@@ -32,6 +32,7 @@ export const NETWORK_BOOT_CONFIG_PATH =
   __dirname + '/../../../mnt/data/wifi.cfg';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
+export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
 export const MAX_DOWNLOAD_DEBT = 10737418240;

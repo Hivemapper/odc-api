@@ -23,6 +23,7 @@ export const NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../data/wifi.cfg';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const ACL_FILES_PATH = '/data';
 export const CACHED_CAMERA_CONFIG = '/data/camera.config';
+export const HEALTH_MARKER_PATH = '/data/healthy.txt';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../data/recording/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';

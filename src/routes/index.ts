@@ -8,6 +8,7 @@ import {
   CAMERA_TYPE,
   configureOnBoot,
   FRAMEKM_ROOT_FOLDER,
+  HEALTH_MARKER_PATH,
   WEBSERVER_LOG_PATH,
 } from '../config';
 import recordingsRouter from './recordings';
@@ -93,6 +94,7 @@ router.get('/ping', (req, res) => {
     sessionId: getSessionId(),
     ...getLockTime(),
   });
+  exec('touch ' + HEALTH_MARKER_PATH);
 });
 
 router.get('/locktime', (req, res) => {
