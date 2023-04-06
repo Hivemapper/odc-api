@@ -2,6 +2,7 @@ import { exec, ExecException } from 'child_process';
 import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
 import { readFile } from 'fs';
 import { IService } from 'types';
+import { Instrumentation } from 'util/instrumentation';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 import { COLORS, updateLED } from '../util/led';
 
@@ -89,8 +90,14 @@ export const HeartBeatService: IService = {
                     lastSuccessfulFix = Date.now();
                     setLockTime();
                     setCameraTime();
-                    if (!wasGpsGood) {
-                      console.log('Got 3d Fix');
+                    if (!got3dOnce) {
+                      Instrumentation.add({
+                        event: 'DashcamReceivedFirstGpsLock',
+                      });
+                    } else if (!wasGpsGood) {
+                      Instrumentation.add({
+                        event: 'DashcamGot3dLock',
+                      });
                     }
                     wasGpsGood = true;
                     got3dOnce = true;
@@ -103,7 +110,9 @@ export const HeartBeatService: IService = {
                     }
 
                     if (wasGpsGood) {
-                      console.log('Lost 3d Fix');
+                      Instrumentation.add({
+                        event: 'DashcamLost3dLock',
+                      });
                     }
                     wasGpsGood = false;
 

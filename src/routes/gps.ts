@@ -5,8 +5,12 @@ import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
+import { getLockTime } from 'util/lock';
+import { Instrumentation } from 'util/instrumentation';
 
 const router = Router();
+
+let firstFileFetched = false;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -27,7 +31,16 @@ router.get('/', async (req: Request, res: Response) => {
         };
       });
 
-    res.json(filterBySinceUntil(gpsFiles, req));
+    const filteredFiles = filterBySinceUntil(gpsFiles, req);
+
+    if (!firstFileFetched && getLockTime().lockTime && filteredFiles.length) {
+      firstFileFetched = true;
+      Instrumentation.add({
+        event: 'DashcamFetchedFirstGpsFile',
+      });
+    }
+
+    res.json(filteredFiles);
     setMostRecentPing(Date.now());
   } catch (error) {
     // It's an important route for an App poller to check the connection,

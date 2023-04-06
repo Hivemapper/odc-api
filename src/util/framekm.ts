@@ -2,6 +2,7 @@ import { map, eachSeries } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import { writeFile, readFile, appendFile, Stats, mkdir } from 'fs';
 import { getStats, sleep } from 'util/index';
+import { Instrumentation } from './instrumentation';
 
 const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -23,6 +24,7 @@ export const concatFrames = async (
     (frame: string) => FRAMES_ROOT_FOLDER + '/' + frame,
   );
   const bytesMap: { [key: string]: number } = {};
+  let totalBytes = 0;
   let framesParsed = 0;
 
   return new Promise(async (resolve, reject) => {
@@ -62,6 +64,7 @@ export const concatFrames = async (
                           async err => {
                             if (!err) {
                               bytesMap[fileStat.name] = fileStat.size;
+                              totalBytes += fileStat.size;
                             }
                             await sleep(100);
                             callback(null);
@@ -79,6 +82,7 @@ export const concatFrames = async (
                           err => {
                             if (!err) {
                               bytesMap[fileStat.name] = fileStat.size;
+                              totalBytes += fileStat.size;
                             }
                             callback(null);
                           },
@@ -100,6 +104,10 @@ export const concatFrames = async (
         },
         () => {
           resolve(bytesMap);
+          Instrumentation.add({
+            event: 'DashcamPackedFrameKm',
+            size: totalBytes,
+          });
         },
       );
     } catch (e: unknown) {

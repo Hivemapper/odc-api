@@ -129,3 +129,14 @@ export interface ICameraConfig {
     };
   };
 }
+
+export interface InstrumentationData {
+  event: string;
+  size?: number;
+  start?: number;
+  end?: number;
+  timestamp?: number;
+  session?: string;
+  usedMemory?: number;
+  message?: string;
+}
