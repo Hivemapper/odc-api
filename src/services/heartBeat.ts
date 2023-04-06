@@ -1,14 +1,9 @@
 import { exec, ExecException } from 'child_process';
-import {
-  CMD,
-  GPS_LATEST_SAMPLE,
-  isDev,
-  NETWORK_BOOT_CONFIG_PATH,
-} from 'config';
-import { existsSync, readFile, readFileSync } from 'fs';
+import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
+import { readFile } from 'fs';
 import { IService } from 'types';
+import { Instrumentation } from 'util/instrumentation';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
-import { restartP2P } from 'util/network';
 import { COLORS, updateLED } from '../util/led';
 
 // let previousCameraResponse = '';
@@ -72,7 +67,7 @@ export const HeartBeatService: IService = {
 
           // previousCameraResponse = cameraResponse;
 
-          let gpsLED = COLORS.GREEN;
+          let gpsLED: any = null;
           try {
             readFile(
               GPS_LATEST_SAMPLE,
@@ -80,48 +75,58 @@ export const HeartBeatService: IService = {
                 encoding: 'utf-8',
               },
               (err: NodeJS.ErrnoException | null, data: string) => {
-                let gpsSample: any = {};
+                let gpsSample: any = null;
                 if (data) {
                   try {
-                    gpsSample = JSON.parse(data) || {};
+                    gpsSample = JSON.parse(data);
                   } catch (e: unknown) {
                     console.log('Latest.log Parse Error:', e);
                   }
                 }
 
-                if (gpsSample && gpsSample.fix === '3D') {
-                  gpsLED = COLORS.GREEN;
-                  lastSuccessfulFix = Date.now();
-                  setLockTime();
-                  setCameraTime();
-                  if (!wasGpsGood) {
-                    console.log('Got 3d Fix');
-                  }
-                  wasGpsGood = true;
-                  got3dOnce = true;
-                } else {
-                  const gpsLostPeriod = lastSuccessfulFix
-                    ? Math.abs(Date.now() - lastSuccessfulFix)
-                    : 70000;
-                  if (gpsLostPeriod > 60000) {
-                    gpsLED = COLORS.RED;
-                  }
+                if (gpsSample) {
+                  if (gpsSample.fix === '3D') {
+                    gpsLED = COLORS.GREEN;
+                    lastSuccessfulFix = Date.now();
+                    setLockTime();
+                    setCameraTime();
+                    if (!got3dOnce) {
+                      Instrumentation.add({
+                        event: 'DashcamReceivedFirstGpsLock',
+                      });
+                    } else if (!wasGpsGood) {
+                      Instrumentation.add({
+                        event: 'DashcamGot3dLock',
+                      });
+                    }
+                    wasGpsGood = true;
+                    got3dOnce = true;
+                  } else {
+                    const gpsLostPeriod = lastSuccessfulFix
+                      ? Math.abs(Date.now() - lastSuccessfulFix)
+                      : 70000;
+                    if (gpsLostPeriod > 60000) {
+                      gpsLED = COLORS.RED;
+                    }
 
-                  if (wasGpsGood) {
-                    console.log('Lost 3d Fix');
-                  }
-                  wasGpsGood = false;
+                    if (wasGpsGood) {
+                      Instrumentation.add({
+                        event: 'DashcamLost3dLock',
+                      });
+                    }
+                    wasGpsGood = false;
 
-                  if (
-                    cameraResponse.indexOf('active') === 0 &&
-                    !ifTimeSet() &&
-                    !got3dOnce &&
-                    !isPreviewInProgress
-                  ) {
-                    exec(CMD.STOP_CAMERA);
-                    console.log(
-                      'Camera intentionally stopped cause Lock is not there yet',
-                    );
+                    if (
+                      cameraResponse.indexOf('active') === 0 &&
+                      !ifTimeSet() &&
+                      !got3dOnce &&
+                      !isPreviewInProgress
+                    ) {
+                      exec(CMD.STOP_CAMERA);
+                      console.log(
+                        'Camera intentionally stopped cause Lock is not there yet',
+                      );
+                    }
                   }
                 }
 
@@ -143,9 +148,10 @@ export const HeartBeatService: IService = {
           }
         },
       );
+      exec('touch ' + HEALTH_MARKER_PATH);
     } catch (e: unknown) {
       console.log('LED service failed with error', e);
     }
   },
-  interval: 7000,
+  interval: 3000,
 };

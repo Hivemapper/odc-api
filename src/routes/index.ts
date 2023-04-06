@@ -8,6 +8,7 @@ import {
   CAMERA_TYPE,
   configureOnBoot,
   FRAMEKM_ROOT_FOLDER,
+  HEALTH_MARKER_PATH,
   WEBSERVER_LOG_PATH,
 } from '../config';
 import recordingsRouter from './recordings';
@@ -24,6 +25,7 @@ import utilRouter from './util';
 import ledRouter from './led';
 import networkRouter from './network';
 import previewRouter from './preview';
+import instrumentationRouter from './instrumentation';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { getSessionId } from 'util/index';
@@ -46,6 +48,7 @@ router.use('/kpi', kpiRouter);
 router.use('/framekm', framekmRouter);
 router.use('/util', utilRouter);
 router.use('/led', ledRouter);
+router.use('/instrumentation', instrumentationRouter);
 router.use('/network', networkRouter);
 router.use('/preview', previewRouter);
 
@@ -93,6 +96,7 @@ router.get('/ping', (req, res) => {
     sessionId: getSessionId(),
     ...getLockTime(),
   });
+  exec('touch ' + HEALTH_MARKER_PATH);
 });
 
 router.get('/locktime', (req, res) => {

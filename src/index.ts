@@ -8,9 +8,10 @@ import { InitCronService } from 'services/initCron';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
-import { setSessionId } from 'util/index';
+import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
+import { Instrumentation } from 'util/instrumentation';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -46,6 +47,16 @@ export async function initAppServer(): Promise<Application> {
   }
 
   try {
+    setSessionId();
+    Instrumentation.add({
+      event: 'DashcamLoaded',
+    });
+    startSystemTimer();
+  } catch (e: unknown) {
+    console.log('Error initiating system variables');
+  }
+
+  try {
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(UpdateCameraConfigService);
     serviceRunner.add(DeviceInfoService);
@@ -53,7 +64,6 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(TrackDownloadDebt);
 
     serviceRunner.run();
-    setSessionId();
   } catch (e: unknown) {
     console.log('Error running services:', e);
   }

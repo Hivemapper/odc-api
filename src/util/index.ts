@@ -2,8 +2,17 @@ import { Request } from 'express';
 import { ICameraConfig, ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
-import { access, constants, readFile, stat, writeFileSync } from 'fs';
-import { CACHED_CAMERA_CONFIG } from 'config';
+import {
+  access,
+  constants,
+  readFile,
+  stat,
+  Stats,
+  writeFile,
+  writeFileSync,
+} from 'fs';
+import { CACHED_CAMERA_CONFIG, WEBSERVER_LOG_PATH } from 'config';
+import { exec } from 'child_process';
 
 let sessionId: string;
 
@@ -34,6 +43,44 @@ export const setSessionId = () => {
 
 export const getSessionId = () => {
   return sessionId;
+};
+
+let start: [number, number] = [0, 0];
+export const startSystemTimer = () => {
+  start = process.hrtime();
+};
+
+export const getTimeFromBoot = () => {
+  if (!start || (!start[0] && !start[1])) {
+    return 0;
+  }
+  const end = process.hrtime(start);
+  const elapsedTime = (end[0] * 1e9 + end[1]) / 1e6;
+  return Math.round(elapsedTime);
+};
+
+export const deleteLogsIfTooBig = () => {
+  try {
+    stat(
+      WEBSERVER_LOG_PATH,
+      (err: NodeJS.ErrnoException | null, stats: Stats) => {
+        if (stats.size > 1024 * 1024 * 2) {
+          // if log is getting bigger than 2Megs,
+          // wipe it
+          writeFile(
+            WEBSERVER_LOG_PATH,
+            '',
+            {
+              encoding: 'utf-8',
+            },
+            () => {},
+          );
+        }
+      },
+    );
+  } catch (error) {
+    console.log('Webserver Log file is missing');
+  }
 };
 
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
@@ -99,6 +146,33 @@ const defaultCameraConfig: ICameraConfig = {
     encoding: { fps: 10, width: 2048, height: 1080, codec: 'mjpeg' },
     adjustment: { hflip: false, vflip: false, denoise: 'off', rotation: 180 },
   },
+};
+
+export const getCpuLoad = (callback: (load: number) => void) => {
+  try {
+    exec(
+      `uptime | awk '{print $7}'`,
+      {
+        encoding: 'utf-8',
+      },
+      (error, stdout) => {
+        let cpuLoad = 0;
+        if (!error) {
+          try {
+            const parsed = Math.round(Number(stdout.replace(',', '')));
+            if (parsed) {
+              cpuLoad = parsed;
+            }
+          } catch {
+            callback(0);
+          }
+        }
+        callback(cpuLoad);
+      },
+    );
+  } catch {
+    callback(0);
+  }
 };
 
 export const getQuality = (): number => {

@@ -9,8 +9,11 @@ import {
 } from '../util';
 import { CameraType, ICameraFile } from '../types';
 import { exec, ExecException } from 'child_process';
+import { Instrumentation } from 'util/instrumentation';
 
 const router = Router();
+
+let firstFileFetched = false;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -27,7 +30,16 @@ router.get('/', async (req: Request, res: Response) => {
               };
             });
 
-          res.json(filterBySinceUntil(jpgFiles, req));
+          const filteredFiles = filterBySinceUntil(jpgFiles, req);
+
+          if (!firstFileFetched && filteredFiles.length) {
+            firstFileFetched = true;
+            Instrumentation.add({
+              event: 'DashcamFetchedFirstImages',
+            });
+          }
+
+          res.json(filteredFiles);
         } catch (error) {
           res.json({ error });
         }
