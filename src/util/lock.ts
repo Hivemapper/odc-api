@@ -7,7 +7,7 @@ let gnssIds: number[] = [];
 let isTimeSet = false;
 let isCameraTimeInProgress = false;
 let isLockTimeInProgress = false;
-const DEFAULT_TIME = 1672000000000;
+export const DEFAULT_TIME = 1672000000000;
 
 export const ifTimeSet = () => {
   return isTimeSet || Date.now() > DEFAULT_TIME;

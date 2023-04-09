@@ -32,8 +32,10 @@ import { getSessionId } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
+import { Instrumentation } from 'util/instrumentation';
 
 const router = Router();
+let isAppConnected = false;
 
 router.use('/api/1', router);
 router.use('/recordings', recordingsRouter);
@@ -97,10 +99,22 @@ router.get('/ping', (req, res) => {
     ...getLockTime(),
   });
   exec('touch ' + HEALTH_MARKER_PATH);
+  if (!isAppConnected) {
+    isAppConnected = true;
+    Instrumentation.add({
+      event: 'DashcamAppConnected',
+    });
+  }
 });
 
 router.get('/locktime', (req, res) => {
   res.json(getLockTime());
+  if (!isAppConnected) {
+    isAppConnected = true;
+    Instrumentation.add({
+      event: 'DashcamAppConnected',
+    });
+  }
 });
 
 router.get('/time', (req, res) => {

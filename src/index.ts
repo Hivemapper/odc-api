@@ -12,6 +12,7 @@ import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 import { Instrumentation } from 'util/instrumentation';
+import { DEFAULT_TIME } from 'util/lock';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -48,6 +49,9 @@ export async function initAppServer(): Promise<Application> {
 
   try {
     setSessionId();
+    if (Date.now() > DEFAULT_TIME) {
+      Instrumentation.setHotLoad(true);
+    }
     Instrumentation.add({
       event: 'DashcamLoaded',
     });

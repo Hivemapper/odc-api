@@ -9,6 +9,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamFetchedFirstImages',
   'DashcamLost3dLock',
   'DashcamGot3dLock',
+  'DashcamAppConnected',
   'DashcamApiRepaired',
   'DashcamPreviewImage',
   'DashcamApiError',
@@ -18,7 +19,10 @@ const VALID_DASHCAM_EVENTS = new Set([
 ]);
 
 export class InstrumentationClass {
-  constructor() {}
+  private isHotLoad: boolean;
+  constructor() {
+    this.isHotLoad = false;
+  }
   public add(record: InstrumentationData) {
     if (!VALID_DASHCAM_EVENTS.has(record.event)) {
       console.log('Invalid event name: ' + record.event);
@@ -31,12 +35,15 @@ export class InstrumentationClass {
             record.event
           }|${getTimeFromBoot()}|${record.size || 0}|${cpuLoad}|${
             record.message || ''
-          }`,
+          }|${this.isHotLoad ? 1 : 0}`,
         );
       });
     } catch {
       //
     }
+  }
+  public setHotLoad(_isHotLoad: boolean) {
+    this.isHotLoad = _isHotLoad;
   }
 }
 
