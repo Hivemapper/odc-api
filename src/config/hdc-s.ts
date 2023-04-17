@@ -30,6 +30,9 @@ export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 // File containing the camera configuration
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/camera-bridge/config.json';
+export const NEW_IMAGER_CONFIG_PATH =
+  __dirname + '/../../../opt/camera-bridge/config.json';
+export const CACHED_RES_CONFIG = '/data/res.config';
 // Path that will be used by the App to upload the new firmware image
 export const UPLOAD_PATH = __dirname + '/../../../data/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';

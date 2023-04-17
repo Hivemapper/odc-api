@@ -6,6 +6,7 @@ import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
+import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
@@ -63,6 +64,7 @@ export async function initAppServer(): Promise<Application> {
   try {
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(UpdateCameraConfigService);
+    serviceRunner.add(UpdateCameraResolutionService);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);

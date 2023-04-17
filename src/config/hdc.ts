@@ -25,6 +25,9 @@ export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const CACHED_CAMERA_CONFIG = '/../../../mnt/data/camera.conf';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
+export const NEW_IMAGER_CONFIG_PATH =
+  __dirname + '/../../../opt/dashcam/bin/camera_config.json';
+export const CACHED_RES_CONFIG = '/../../../mnt/data/res.conf';
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = __dirname + '/../../../tmp/';

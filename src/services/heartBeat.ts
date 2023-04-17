@@ -39,6 +39,7 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 export const HeartBeatService: IService = {
   execute: async () => {
     try {
+      exec('touch ' + HEALTH_MARKER_PATH);
       if (isFirmwareUpdate && isLedControlledByDashcam) {
         updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
         return;
@@ -138,6 +139,9 @@ export const HeartBeatService: IService = {
                 if (appDisconnectionPeriod < 15000) {
                   appLED = COLORS.GREEN;
                 }
+                if (!got3dOnce) {
+                  imgLED = COLORS.RED;
+                }
                 if (isLedControlledByDashcam) {
                   updateLED(imgLED, gpsLED, appLED);
                 }
@@ -148,7 +152,6 @@ export const HeartBeatService: IService = {
           }
         },
       );
-      exec('touch ' + HEALTH_MARKER_PATH);
     } catch (e: unknown) {
       console.log('LED service failed with error', e);
     }

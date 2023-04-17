@@ -12,7 +12,7 @@ const sleep = (ms) => {
 
 const writeErrorLog = () => {
     try {
-        appendFileSync(LOG_FILE_PATH, `[INFO]|${Date.now()}|Unknown|Unknown|DashcamApiRepaired|0|0|0|\r\n`);
+        appendFileSync(LOG_FILE_PATH, `[INFO]|${Date.now()}|Unknown|Unknown|DashcamApiRepaired|0|0|0||0\r\n`);
     } catch (e) {
         console.log(e);
     }

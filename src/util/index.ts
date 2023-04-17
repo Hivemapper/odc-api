@@ -1,17 +1,24 @@
 import { Request } from 'express';
-import { ICameraConfig, ICameraFile, IMU } from '../types';
+import { CameraResolution, ICameraConfig, ICameraFile, IMU } from '../types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
+import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
 import {
   access,
   constants,
   readFile,
+  readFileSync,
   stat,
   Stats,
   writeFile,
   writeFileSync,
 } from 'fs';
-import { CACHED_CAMERA_CONFIG, WEBSERVER_LOG_PATH } from 'config';
+import {
+  CACHED_CAMERA_CONFIG,
+  CACHED_RES_CONFIG,
+  NEW_IMAGER_CONFIG_PATH,
+  WEBSERVER_LOG_PATH,
+} from 'config';
 import { exec } from 'child_process';
 
 let sessionId: string;
@@ -151,23 +158,30 @@ const defaultCameraConfig: ICameraConfig = {
 export const getCpuLoad = (callback: (load: number) => void) => {
   try {
     exec(
-      `uptime | awk '{print $7}'`,
+      `top -b -d1 -n1 | grep CPU:`,
       {
         encoding: 'utf-8',
       },
       (error, stdout) => {
-        let cpuLoad = 0;
         if (!error) {
           try {
-            const parsed = Math.round(Number(stdout.replace(',', '')));
-            if (parsed) {
-              cpuLoad = parsed;
+            const parts = stdout.split(' ');
+            const idleIndex = parts.indexOf('idle');
+            if (idleIndex !== -1) {
+              const cpuIdle = Number(parts[idleIndex - 1].replace('%', ''));
+              if (cpuIdle && cpuIdle < 100) {
+                callback(100 - cpuIdle);
+              } else {
+                callback(0);
+              }
+              return;
             }
           } catch {
             callback(0);
+            return;
           }
         }
-        callback(cpuLoad);
+        callback(0);
       },
     );
   } catch {
@@ -214,6 +228,51 @@ export const getCameraConfig = async (): Promise<ICameraConfig | undefined> => {
   }
 };
 
+export const getNewCameraConfig = async (): Promise<
+  ICameraConfig | undefined
+> => {
+  let exists = await fileExists(CACHED_RES_CONFIG);
+  if (exists) {
+    try {
+      const data = readFileSync(CACHED_RES_CONFIG, {
+        encoding: 'utf-8',
+      });
+      if (data) {
+        exists = await fileExists(NEW_IMAGER_CONFIG_PATH);
+        if (exists) {
+          try {
+            const configJSON = readFileSync(NEW_IMAGER_CONFIG_PATH, {
+              encoding: 'utf-8',
+            });
+            if (configJSON) {
+              try {
+                const cameraConfig = JSON.parse(configJSON.toString());
+                if (cameraConfig?.directory) {
+                  if (data === '2K') {
+                    cameraConfig.directory.output = '';
+                    cameraConfig.directory.downsampleStreamDir =
+                      '/mnt/data/pic';
+                  } else if (data === '4K') {
+                    cameraConfig.directory.output = '/mnt/data/pic';
+                    cameraConfig.directory.downsampleStreamDir = '';
+                  }
+                }
+                return cameraConfig;
+              } catch (e: unknown) {
+                console.log('Error parsing camera config', e);
+              }
+            }
+          } catch (e: unknown) {
+            console.log('Error reading camera config', e);
+          }
+        }
+      }
+    } catch (e: unknown) {
+      console.log('Error reading camera config', e);
+    }
+  }
+};
+
 export const setCameraConfig = async (newCameraConfig: ICameraConfig) => {
   writeFileSync(
     CACHED_CAMERA_CONFIG,
@@ -223,6 +282,13 @@ export const setCameraConfig = async (newCameraConfig: ICameraConfig) => {
     },
   );
   UpdateCameraConfigService.execute();
+};
+
+export const setCameraResolution = async (newCameraRes: CameraResolution) => {
+  writeFileSync(CACHED_RES_CONFIG, newCameraRes, {
+    encoding: 'utf-8',
+  });
+  UpdateCameraResolutionService.execute();
 };
 
 export const getStats = (filePath: string, callback: any) => {

@@ -130,6 +130,8 @@ export interface ICameraConfig {
   };
 }
 
+export type CameraResolution = '2K' | '4K';
+
 export interface InstrumentationData {
   event: string;
   size?: number;

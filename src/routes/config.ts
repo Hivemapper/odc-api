@@ -1,6 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { ICameraConfig } from 'types';
-import { setCameraConfig, getCameraConfig } from 'util/index';
+import {
+  setCameraConfig,
+  getCameraConfig,
+  setCameraResolution,
+} from 'util/index';
+import { Instrumentation } from 'util/instrumentation';
 const router = Router();
 
 // New version of camera config API:
@@ -52,6 +57,36 @@ let dummyConfig: ICameraConfig = {
     },
   },
 };
+
+router.post('/2k', async (req: Request, res: Response) => {
+  try {
+    setCameraResolution('2K');
+    res.json({
+      output: 'done',
+    });
+    Instrumentation.add({
+      event: 'DashcamResolutionUpdated',
+      message: '2K',
+    });
+  } catch (error: any) {
+    res.json({ error });
+  }
+});
+
+router.post('/4k', async (req: Request, res: Response) => {
+  try {
+    setCameraResolution('4K');
+    res.json({
+      output: 'done',
+    });
+    Instrumentation.add({
+      event: 'DashcamResolutionUpdated',
+      message: '4K',
+    });
+  } catch (error: any) {
+    res.json({ error });
+  }
+});
 
 router.post('/cameraconfig', async (req: Request, res: Response) => {
   try {

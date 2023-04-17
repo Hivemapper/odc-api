@@ -7,6 +7,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamReceivedFirstGpsLock',
   'DashcamFetchedFirstGpsFile',
   'DashcamFetchedFirstImages',
+  'DashcamResolutionUpdated',
   'DashcamLost3dLock',
   'DashcamGot3dLock',
   'DashcamAppConnected',
