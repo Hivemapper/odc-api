@@ -41,7 +41,7 @@ export const HeartBeatService: IService = {
     try {
       exec('touch ' + HEALTH_MARKER_PATH);
       if (isFirmwareUpdate && isLedControlledByDashcam) {
-        updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
+        updateLED(COLORS.WHITE, COLORS.WHITE, COLORS.WHITE);
         return;
       }
       // systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1

@@ -99,7 +99,6 @@ router.get('/last', async (req: Request, res: Response) => {
 router.get('/quality', async (req: Request, res: Response) => {
   try {
     if (CAMERA_TYPE === CameraType.HdcS) {
-      // TODO: placeholder
       return res.json({ quality: 70 });
     }
     res.json({ quality: getQuality() });

@@ -38,7 +38,7 @@ export const CRON_CONFIG = '/mnt/data/cron_config';
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
-export const MAX_DOWNLOAD_DEBT = 10737418240;
+export const MAX_DOWNLOAD_DEBT = 10737418240 * 2;
 
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 

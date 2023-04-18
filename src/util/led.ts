@@ -4,8 +4,8 @@ import { readFile, writeFile } from 'fs';
 
 export const COLORS: { [key: string]: ILED } = {
   RED: {
-    red: 25,
-    blue: 0,
+    red: 0,
+    blue: 10,
     green: 0,
     on: true,
   },
@@ -17,8 +17,8 @@ export const COLORS: { [key: string]: ILED } = {
   },
   GREEN: {
     red: 0,
-    blue: 0,
-    green: 25,
+    blue: 25,
+    green: 0,
     on: true,
   },
   PURPLE: {
@@ -40,9 +40,9 @@ export const COLORS: { [key: string]: ILED } = {
     on: true,
   },
   WHITE: {
-    red: 25,
-    blue: 25,
-    green: 25,
+    red: 20,
+    blue: 20,
+    green: 20,
     on: true,
   },
 };
@@ -92,7 +92,11 @@ export const updateLED = async (
         },
         (err: NodeJS.ErrnoException | null, data: string) => {
           if (data && !err) {
-            leds = JSON.parse(data).leds;
+            try {
+              leds = JSON.parse(data).leds;
+            } catch (e: unknown) {
+              //
+            }
           }
 
           const frames = framesLED ? { ...leds[0], ...framesLED } : leds[0];
