@@ -79,3 +79,8 @@ export type FramesMetadata = GnssMetadata & {
   gyro_y: number;
   gyro_z: number;
 };
+
+export type MotionModelCursor = {
+  gnssFilePath: string;
+  imuFilePath: string;
+};

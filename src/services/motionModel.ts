@@ -10,7 +10,6 @@ import {
 import { GnssMetadata } from 'types/motionModel';
 import { sleep } from 'util/index';
 import { concatFrames } from 'util/framekm';
-const MOTION_MODEL_CURSOR = '/mnt/data/mm_cursor.log';
 const ITERATION_DELAY = 10000;
 
 export const lastProcessed = null;

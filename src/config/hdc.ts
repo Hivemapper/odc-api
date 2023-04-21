@@ -23,6 +23,7 @@ export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../mnt/data/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const CACHED_CAMERA_CONFIG = '/../../../mnt/data/camera.conf';
+export const MOTION_MODEL_CURSOR = '/mnt/data/mm_cursor.log';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
 export const NEW_IMAGER_CONFIG_PATH =
