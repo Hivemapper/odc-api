@@ -1,4 +1,5 @@
 import { map, eachSeries } from 'async';
+import { exec, ExecException } from 'child_process';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import { writeFile, readFile, appendFile, Stats, mkdir } from 'fs';
 import { getStats, sleep } from 'util/index';
@@ -25,7 +26,6 @@ export const concatFrames = async (
   );
   const bytesMap: { [key: string]: number } = {};
   let totalBytes = 0;
-  let framesParsed = 0;
 
   return new Promise(async (resolve, reject) => {
     // USING NON-BLOCKING IO,
@@ -41,75 +41,36 @@ export const concatFrames = async (
 
     // 2. PACK IT ALTOGETHER INTO A SINGLE CHUNK USING NON-BLOCKING I/O FUNCTION
     try {
-      eachSeries(
-        fileStats as Stats[],
-        function (fileStat: any, callback) {
-          if (
-            fileStat &&
-            fileStat.size > MIN_PER_FRAME_BYTES &&
-            fileStat.size < MAX_PER_FRAME_BYTES
-          ) {
-            try {
-              readFile(
-                FRAMES_ROOT_FOLDER + '/' + fileStat.name,
-                (err, payload: any) => {
-                  if (err) {
-                    callback(null);
-                  } else {
-                    if (!framesParsed) {
-                      try {
-                        writeFile(
-                          FRAMEKM_ROOT_FOLDER + '/' + framekmName,
-                          payload,
-                          async err => {
-                            if (!err) {
-                              bytesMap[fileStat.name] = fileStat.size;
-                              totalBytes += fileStat.size;
-                            }
-                            await sleep(100);
-                            callback(null);
-                          },
-                        );
-                        framesParsed++;
-                      } catch (e: unknown) {
-                        callback(null);
-                      }
-                    } else {
-                      try {
-                        appendFile(
-                          FRAMEKM_ROOT_FOLDER + '/' + framekmName,
-                          payload,
-                          err => {
-                            if (!err) {
-                              bytesMap[fileStat.name] = fileStat.size;
-                              totalBytes += fileStat.size;
-                            }
-                            callback(null);
-                          },
-                        );
-                      } catch (e: unknown) {
-                        callback(null);
-                      }
-                    }
-                  }
-                },
-              );
-            } catch (e: unknown) {
-              console.log(e);
-              callback(null);
-            }
-          } else {
-            callback(null);
-          }
-        },
-        () => {
+      const validFrames = fileStats.filter(
+        (file: Stats) =>
+          file.size > MIN_PER_FRAME_BYTES && file.size < MAX_PER_FRAME_BYTES,
+      );
+      const fileNames = validFrames
+        .map(
+          (file: Stats & { name: string }) =>
+            FRAMES_ROOT_FOLDER + '/' + file.name,
+        )
+        .join(' ');
+      const concatCommand = `cat ${fileNames} > ${
+        FRAMEKM_ROOT_FOLDER + '/' + framekmName
+      }`;
+      exec(concatCommand, async (error: ExecException | null) => {
+        if (!error) {
+          validFrames.map((file: Stats & { name: string }) => {
+            bytesMap[file.name] = file.size;
+            totalBytes += file.size;
+          });
+          await sleep(500);
           resolve(bytesMap);
           Instrumentation.add({
             event: 'DashcamPackedFrameKm',
             size: totalBytes,
           });
-        },
-      );
+        } else {
+          reject(error);
+          console.log(error);
+        }
+      });
     } catch (e: unknown) {
       reject(e);
       console.log(e);
