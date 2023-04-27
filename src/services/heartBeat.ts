@@ -5,6 +5,7 @@ import { IService } from 'types';
 import { Instrumentation } from 'util/instrumentation';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
 import { COLORS, updateLED } from '../util/led';
+import { jsonrepair } from 'jsonrepair';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -54,17 +55,14 @@ export const HeartBeatService: IService = {
           const cameraResponse = error ? '' : stdout;
 
           let imgLED: any;
-          if (isPreviewInProgress && isDev()) {
-            imgLED = COLORS.WHITE;
-          } else {
-            const isCameraActive = cameraResponse.indexOf('active') === 0;
-            imgLED = isCameraActive ? COLORS.GREEN : COLORS.RED;
 
-            if (!isCameraActive && wasCameraActive) {
-              console.log('CAMERA TURNED OFF!!!');
-            }
-            wasCameraActive = isCameraActive;
+          const isCameraActive = cameraResponse.indexOf('active') === 0;
+          imgLED = isCameraActive ? COLORS.GREEN : COLORS.RED;
+
+          if (!isCameraActive && wasCameraActive) {
+            console.log('CAMERA TURNED OFF!!!');
           }
+          wasCameraActive = isCameraActive;
 
           // previousCameraResponse = cameraResponse;
 
@@ -79,14 +77,19 @@ export const HeartBeatService: IService = {
                 let gpsSample: any = null;
                 if (data) {
                   try {
-                    gpsSample = JSON.parse(data);
+                    gpsSample = JSON.parse(jsonrepair(data));
                   } catch (e: unknown) {
                     console.log('Latest.log Parse Error:', e);
                   }
                 }
 
                 if (gpsSample) {
-                  if (gpsSample.fix === '3D') {
+                  if (
+                    gpsSample.fix === '3D' &&
+                    gpsSample.dop &&
+                    Number(gpsSample.dop) &&
+                    gpsSample.dop.hdop < 5
+                  ) {
                     gpsLED = COLORS.GREEN;
                     lastSuccessfulFix = Date.now();
                     setLockTime();
@@ -120,8 +123,7 @@ export const HeartBeatService: IService = {
                     if (
                       cameraResponse.indexOf('active') === 0 &&
                       !ifTimeSet() &&
-                      !got3dOnce &&
-                      !isPreviewInProgress
+                      !got3dOnce
                     ) {
                       exec(CMD.STOP_CAMERA);
                       console.log(

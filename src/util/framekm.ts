@@ -66,7 +66,7 @@ export const concatFrames = async (
                               bytesMap[fileStat.name] = fileStat.size;
                               totalBytes += fileStat.size;
                             }
-                            await sleep(100);
+                            await sleep(200);
                             callback(null);
                           },
                         );
@@ -79,11 +79,12 @@ export const concatFrames = async (
                         appendFile(
                           FRAMEKM_ROOT_FOLDER + '/' + framekmName,
                           payload,
-                          err => {
+                          async err => {
                             if (!err) {
                               bytesMap[fileStat.name] = fileStat.size;
                               totalBytes += fileStat.size;
                             }
+                            await sleep(200);
                             callback(null);
                           },
                         );
