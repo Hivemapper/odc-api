@@ -17,6 +17,7 @@ export const lastProcessed = null;
 
 const execute = async () => {
   try {
+    console.log('Motion model: Iterating');
     const gnssChunks: GnssMetadata[][] = await getNextGnss();
     for (const gnss of gnssChunks) {
       if (isGnssEligibleForMotionModel(gnss)) {

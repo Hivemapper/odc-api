@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFile } from 'fs';
+import { existsSync, readFile, rmSync } from 'fs';
 import { GnssDopKpi } from 'types/instrumentation';
 import * as THREE from 'three';
 import {
@@ -34,11 +34,8 @@ const BEST_MAX_BETWEEN_FRAMES = 4.75;
 const MIN_SPEED = 0.275; // meter seconds
 const MAX_SPEED = 40; // ms!! If you want to convert to kmh, then * 3.6
 const MAX_DISTANCE_BETWEEN_POINTS = 50;
-const DAY_MSECS = 24 * 60 * 60 * 1000;
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 3;
-const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
-const MIN_PER_FRAME_BYTES = 25 * 1000;
 const POTENTIAL_CORNER_ANGLE = 70;
 
 const config = {
@@ -94,12 +91,20 @@ let parsedCursor: MotionModelCursor = {
 export const syncCursors = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
-      exec(
-        'cat ' + JSON.stringify(parsedCursor) + ' > ' + MOTION_MODEL_CURSOR,
-        (error: ExecException | null, stdout: string, stderr: string) => {
-          resolve();
-        },
-      );
+      if (parsedCursor.gnssFilePath) {
+        console.log('Syncing cursors');
+        exec(
+          "echo '" +
+            JSON.stringify(parsedCursor) +
+            "' > " +
+            MOTION_MODEL_CURSOR,
+          (error: ExecException | null, stdout: string, stderr: string) => {
+            resolve();
+          },
+        );
+      } else {
+        resolve();
+      }
     } catch (e: unknown) {
       reject(e);
     }
@@ -113,7 +118,7 @@ const getLastGnssName = (): Promise<string> => {
       readFile(
         MOTION_MODEL_CURSOR,
         { encoding: 'utf-8' },
-        (err: NodeJS.ErrnoException | null, data: string) => {
+        async (err: NodeJS.ErrnoException | null, data: string) => {
           if (!err && data) {
             try {
               parsedCursor = JSON.parse(jsonrepair(data));
@@ -124,6 +129,11 @@ const getLastGnssName = (): Promise<string> => {
             }
           } else {
             console.log('Error reading Motion Model Cursor file', err);
+            try {
+              await rmSync(MOTION_MODEL_CURSOR);
+            } catch (e: unknown) {
+              console.log('Error cleaning up Sync file');
+            }
             resolve('');
           }
         },
@@ -137,13 +147,22 @@ const getLastGnssName = (): Promise<string> => {
 const getNextGnssName = (last: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     exec(
-      `ls -1rt \`find ${GPS_ROOT_FOLDER}/ -type f -newer ${GPS_ROOT_FOLDER}/${last}\` | head -1`,
+      `ls -1rt \`find ${GPS_ROOT_FOLDER}/ -type f -name '*.json' -newer ${last}\` | head -1`,
       { encoding: 'utf-8' },
       (error: ExecException | null, stdout: string) => {
-        if (stdout && !error) {
-          parsedCursor.gnssFilePath = stdout;
-          resolve(stdout);
-        } else {
+        try {
+          if (stdout && !error) {
+            const nextCandidate = String(stdout).split('\n')[0];
+            if (nextCandidate.indexOf('.json') !== -1) {
+              parsedCursor.gnssFilePath = nextCandidate;
+              resolve(parsedCursor.gnssFilePath);
+            } else {
+              resolve('');
+            }
+          } else {
+            resolve('');
+          }
+        } catch (e: unknown) {
           resolve('');
         }
       },
@@ -158,17 +177,31 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     let pathToGpsFile = '';
     // 1. get next after file or: if time set, then take closer
     const last = await getLastGnssName();
-    if (!last) {
+    let existLastFile = false;
+    if (last) {
+      existLastFile = await existsSync(last);
+    }
+    if (!last || !existLastFile) {
+      console.log('No cursor mark... creating one');
       const exists = existsSync(MOTION_MODEL_CURSOR);
-      if (Date.now() > DEFAULT_TIME && !exists) {
-        const lastGpsFilePath = execSync(`ls ${GPS_ROOT_FOLDER} | tail -1`, {
-          encoding: 'utf-8',
-        });
-        const lastFileTimestamp = getDateFromFilename(
-          lastGpsFilePath.split('/').pop() || '',
-        ).getTime();
+      if (
+        Date.now() > DEFAULT_TIME &&
+        (!exists || (exists && !existLastFile))
+      ) {
+        let lastGpsFilePath = execSync(
+          `ls ${GPS_ROOT_FOLDER} | grep '.json' | tail -1`,
+          {
+            encoding: 'utf-8',
+          },
+        );
+        lastGpsFilePath = String(lastGpsFilePath).split('\n')[0];
+        console.log('Last candidate: ' + lastGpsFilePath);
+        const lastFileTimestamp =
+          getDateFromFilename(lastGpsFilePath).getTime();
         if (lastFileTimestamp > Date.now() - 300000) {
-          pathToGpsFile = lastGpsFilePath;
+          console.log('So last will be: ' + lastGpsFilePath);
+          pathToGpsFile = GPS_ROOT_FOLDER + '/' + lastGpsFilePath;
+          parsedCursor.gnssFilePath = pathToGpsFile;
         } else {
           resolve([]);
           return;
@@ -178,7 +211,9 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         return;
       }
     } else {
+      console.log('Last file is ' + last);
       pathToGpsFile = await getNextGnssName(last);
+      console.log('Next file is: ' + pathToGpsFile);
     }
     if (!pathToGpsFile) {
       resolve([]);
@@ -191,9 +226,10 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         const gpsChunks: GnssMetadata[][] = [];
         let gps: GnssMetadata[] = [];
         let sequentialBadRecords = 0;
-        if (data) {
+        if (!err && data) {
           try {
             let gnssRecords = JSON.parse(jsonrepair(data));
+            console.log(gnssRecords?.[0]);
             if (Array.isArray(gnssRecords) && gnssRecords?.length) {
               console.log(
                 `${gnssRecords.length} GPS records found in this file`,
@@ -281,7 +317,6 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
           }
         }
         resolve(gpsChunks);
-        // TODO: Update Motion Cursor
       },
     );
   });
@@ -295,8 +330,6 @@ export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
     !isGpsTooOld(gnss)
   );
 };
-
-const MAX_PENDING_TIME = 1000 * 60 * 60 * 24 * 10; // 10 days
 
 export function isCarParkedBasedOnGnss(gpsData: GnssMetadata[]) {
   return !gpsData.some((gps: GnssMetadata) => gps.speed > 3);

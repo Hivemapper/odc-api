@@ -10,7 +10,7 @@ export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
 export const FRAMEKM_ROOT_FOLDER = __dirname + '/../../../mnt/data/framekm';
 export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
-export const GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
+export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../mnt/data/gps/latest.log';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
