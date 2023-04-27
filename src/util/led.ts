@@ -1,6 +1,7 @@
 import { LED_CONFIG_PATH } from 'config';
 import { ILED } from '../types';
 import { readFile, writeFile } from 'fs';
+import { jsonrepair } from 'jsonrepair';
 
 export const COLORS: { [key: string]: ILED } = {
   RED: {
@@ -93,7 +94,7 @@ export const updateLED = async (
         (err: NodeJS.ErrnoException | null, data: string) => {
           if (data && !err) {
             try {
-              leds = JSON.parse(data).leds;
+              leds = JSON.parse(jsonrepair(data)).leds;
             } catch (e: unknown) {
               //
             }

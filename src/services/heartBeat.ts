@@ -1,6 +1,7 @@
 import { exec, ExecException } from 'child_process';
 import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
 import { readFile } from 'fs';
+import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { Instrumentation } from 'util/instrumentation';
 import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
@@ -79,7 +80,7 @@ export const HeartBeatService: IService = {
                 let gpsSample: any = null;
                 if (data) {
                   try {
-                    gpsSample = JSON.parse(data);
+                    gpsSample = JSON.parse(jsonrepair(data));
                   } catch (e: unknown) {
                     console.log('Latest.log Parse Error:', e);
                   }

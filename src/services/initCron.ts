@@ -4,6 +4,7 @@ import { fileExists } from 'util/index';
 import { scheduleCronJobs } from 'util/cron';
 import { exec } from 'child_process';
 import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
+import { jsonrepair } from 'jsonrepair';
 
 export const InitCronService: IService = {
   execute: async () => {
@@ -14,7 +15,7 @@ export const InitCronService: IService = {
         readFile(CRON_CONFIG, (err, data) => {
           if (err) throw err;
           try {
-            const cronJobs = JSON.parse(data.toString());
+            const cronJobs = JSON.parse(jsonrepair(data.toString()));
             scheduleCronJobs(cronJobs);
           } catch (e: unknown) {
             console.log('Error parsing cron config', e);

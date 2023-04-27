@@ -7,6 +7,7 @@ import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { Instrumentation } from 'util/instrumentation';
+import { jsonrepair } from 'jsonrepair';
 
 const router = Router();
 
@@ -60,7 +61,7 @@ router.get('/sample', async (req: Request, res: Response) => {
       (err: NodeJS.ErrnoException | null, data: string) => {
         let sample = {};
         if (data && !err) {
-          sample = JSON.parse(data);
+          sample = JSON.parse(jsonrepair(data));
         }
 
         res.json(sample);

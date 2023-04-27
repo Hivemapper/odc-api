@@ -6,6 +6,7 @@ import {
   isCarParkedBasedOnImu,
   isGnssEligibleForMotionModel,
   selectImages,
+  syncCursors,
 } from 'util/motionModel';
 import { GnssMetadata } from 'types/motionModel';
 import { sleep } from 'util/index';
@@ -31,6 +32,7 @@ const execute = async () => {
         }
       }
     }
+    await syncCursors();
     await sleep(ITERATION_DELAY);
     execute();
   } catch (e: unknown) {

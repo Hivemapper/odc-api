@@ -26,6 +26,7 @@ import { exec, ExecException, execSync } from 'child_process';
 import { GPS_ROOT_FOLDER, MOTION_MODEL_CURSOR } from 'config';
 import { DEFAULT_TIME } from './lock';
 import { getDateFromFilename } from 'util/index';
+import { jsonrepair } from 'jsonrepair';
 
 const BEST_MIN_BETWEEN_FRAMES = 4;
 const BEST_MAX_BETWEEN_FRAMES = 4.75;
@@ -90,6 +91,21 @@ let parsedCursor: MotionModelCursor = {
   imuFilePath: '',
 };
 
+export const syncCursors = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    try {
+      exec(
+        'cat ' + JSON.stringify(parsedCursor) + ' > ' + MOTION_MODEL_CURSOR,
+        (error: ExecException | null, stdout: string, stderr: string) => {
+          resolve();
+        },
+      );
+    } catch (e: unknown) {
+      reject(e);
+    }
+  });
+};
+
 const getLastGnssName = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     const exists = existsSync(MOTION_MODEL_CURSOR);
@@ -100,7 +116,7 @@ const getLastGnssName = (): Promise<string> => {
         (err: NodeJS.ErrnoException | null, data: string) => {
           if (!err && data) {
             try {
-              parsedCursor = JSON.parse(data);
+              parsedCursor = JSON.parse(jsonrepair(data));
               resolve(parsedCursor.gnssFilePath || '');
             } catch (e: unknown) {
               console.log('Error parsing Cursor file', e);
@@ -125,6 +141,7 @@ const getNextGnssName = (last: string): Promise<string> => {
       { encoding: 'utf-8' },
       (error: ExecException | null, stdout: string) => {
         if (stdout && !error) {
+          parsedCursor.gnssFilePath = stdout;
           resolve(stdout);
         } else {
           resolve('');
@@ -142,7 +159,8 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     // 1. get next after file or: if time set, then take closer
     const last = await getLastGnssName();
     if (!last) {
-      if (Date.now() > DEFAULT_TIME) {
+      const exists = existsSync(MOTION_MODEL_CURSOR);
+      if (Date.now() > DEFAULT_TIME && !exists) {
         const lastGpsFilePath = execSync(`ls ${GPS_ROOT_FOLDER} | tail -1`, {
           encoding: 'utf-8',
         });
@@ -175,7 +193,7 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         let sequentialBadRecords = 0;
         if (data) {
           try {
-            let gnssRecords = JSON.parse(data);
+            let gnssRecords = JSON.parse(jsonrepair(data));
             if (Array.isArray(gnssRecords) && gnssRecords?.length) {
               console.log(
                 `${gnssRecords.length} GPS records found in this file`,

@@ -20,6 +20,7 @@ import {
   WEBSERVER_LOG_PATH,
 } from 'config';
 import { exec } from 'child_process';
+import { jsonrepair } from 'jsonrepair';
 
 let sessionId: string;
 
@@ -246,7 +247,9 @@ export const getNewCameraConfig = async (): Promise<
             });
             if (configJSON) {
               try {
-                const cameraConfig = JSON.parse(configJSON.toString());
+                const cameraConfig = JSON.parse(
+                  jsonrepair(configJSON.toString()),
+                );
                 if (cameraConfig?.directory) {
                   if (data === '2K') {
                     cameraConfig.directory.output = '';
