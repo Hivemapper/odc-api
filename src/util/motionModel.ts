@@ -1,4 +1,4 @@
-import { existsSync, readFile, rmSync } from 'fs';
+import { existsSync, mkdir, readFile, rmSync, writeFileSync } from 'fs';
 import { GnssDopKpi } from 'types/instrumentation';
 import * as THREE from 'three';
 import {
@@ -24,8 +24,10 @@ import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { ICameraFile } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
 import {
+  CAMERA_TYPE,
   FRAMES_ROOT_FOLDER,
   GPS_ROOT_FOLDER,
+  METADATA_ROOT_FOLDER,
   MOTION_MODEL_CURSOR,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
@@ -39,11 +41,13 @@ const MIN_SPEED = 0.275; // meter seconds
 const MAX_SPEED = 40; // ms!! If you want to convert to kmh, then * 3.6
 const MAX_DISTANCE_BETWEEN_POINTS = 50;
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
-const MIN_FRAMES_TO_EXTRACT = 3;
+const MIN_FRAMES_TO_EXTRACT = 1;
 const POTENTIAL_CORNER_ANGLE = 70;
+export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
+export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const config = {
-  DX: 4,
+  DX: 6,
   GnssFilter: {
     hdop: 7,
     '3dLock': true,
@@ -742,7 +746,7 @@ export const selectImages = (
   frameKM: FramesMetadata[],
 ): Promise<FrameKMOutput[]> => {
   return new Promise((resolve, reject) => {
-    const results = [];
+    const results: FrameKMOutput[] = [];
     const dateStart = frameKM[0].systemTime || frameKM[0].t;
     const dateEnd =
       frameKM[frameKM.length - 1].systemTime || frameKM[frameKM.length - 1].t;
@@ -799,7 +803,7 @@ export const selectImages = (
 
     if (!images.length) {
       console.log('No images selected');
-      resolve([{ chunkName: '', metadata: [] }]);
+      resolve([{ chunkName: '', metadata: [], images: [] }]);
       return;
     }
 
@@ -930,7 +934,7 @@ export const selectImages = (
 
     if (!subChunks.length) {
       console.log('No chunks were packed for provided frames and gpsData');
-      resolve([{ chunkName: '', metadata: [] }]);
+      resolve([{ chunkName: '', metadata: [], images: [] }]);
       return;
     }
 
@@ -952,6 +956,7 @@ export const selectImages = (
         results.push({
           chunkName,
           metadata: chunk.points,
+          images: chunk.images,
         });
       }
     }
@@ -960,25 +965,86 @@ export const selectImages = (
   });
 };
 
+export const packMetadata = async (
+  name: string,
+  framesMetadata: FramesMetadata[],
+  images: ICameraFile[],
+  bytesMap: { [key: string]: number },
+) => {
+  // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
+  try {
+    await new Promise(resolve => {
+      mkdir(METADATA_ROOT_FOLDER, resolve);
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
+  let numBytes = 0;
+  const validatedFrames: FramesMetadata[] = [];
+  for (let i = 0; i < images.length; i++) {
+    const image: ICameraFile = images[i];
+    const bytes = bytesMap[image.path];
+    if (bytes && bytes > MIN_PER_FRAME_BYTES && bytes < MAX_PER_FRAME_BYTES) {
+      framesMetadata[i].bytes = bytes;
+      framesMetadata[i].name = image.path;
+      // @ts-ignore
+      delete framesMetadata[i].systemTime;
+      framesMetadata[i].t = Math.round(framesMetadata[i].t);
+      framesMetadata[i].satellites = Math.round(framesMetadata[i].satellites);
+
+      validatedFrames.push(framesMetadata[i]);
+      numBytes += bytes;
+    }
+  }
+  if (numBytes) {
+    const metadataJSON = {
+      bundle: {
+        name,
+        numFrames: validatedFrames.length,
+        size: numBytes,
+        deviceType: CAMERA_TYPE,
+        quality: 80,
+        loraDeviceId: undefined,
+        keyframeDistance: config.DX,
+        resolution: '2k',
+        version: '1.6',
+      },
+      frames: validatedFrames,
+    };
+    try {
+      writeFileSync(
+        METADATA_ROOT_FOLDER + '/' + name + '.json',
+        JSON.stringify(metadataJSON),
+        { encoding: 'utf-8' },
+      );
+      console.log('Metadata written for ' + name);
+    } catch (e: unknown) {
+      console.log('Error writing Metadata file');
+    }
+  } else {
+    console.log('No bytes for: ' + name);
+  }
+};
+
 const getDistanceRangeBasedOnSpeed = (speed: number) => {
   const dx = config.DX;
   // speed in meters per seconds
   if (speed < 20) {
     // means camera producing 1 frame per 2 meters max, so we can hit the best approx for DX
     return {
-      MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 1.5,
+      MIN_DISTANCE: dx - 1,
+      MAX_DISTANCE: dx + 2,
     };
   } else if (speed < 25) {
     // distance between two frames is close to 5 meters, but still less
     return {
-      MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 1.7,
+      MIN_DISTANCE: dx - 1,
+      MAX_DISTANCE: dx + 2,
     };
   } else if (speed < 30) {
     return {
       MIN_DISTANCE: dx,
-      MAX_DISTANCE: dx + 2.7,
+      MAX_DISTANCE: dx + 3,
     };
   } else if (speed < 40) {
     return {
@@ -988,8 +1054,8 @@ const getDistanceRangeBasedOnSpeed = (speed: number) => {
   } else {
     // return default, if speed provided is not valid
     return {
-      MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 1.5,
+      MIN_DISTANCE: dx - 1,
+      MAX_DISTANCE: dx + 2,
     };
   }
 };

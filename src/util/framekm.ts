@@ -1,12 +1,10 @@
 import { map } from 'async';
-import { exec, ExecException } from 'child_process';
+import { spawn } from 'child_process';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import { Stats, mkdir } from 'fs';
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-
-const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
-const MIN_PER_FRAME_BYTES = 25 * 1000;
+import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from './motionModel';
 
 export const concatFrames = async (
   frames: string[],
@@ -45,6 +43,9 @@ export const concatFrames = async (
         (file: Stats) =>
           file.size > MIN_PER_FRAME_BYTES && file.size < MAX_PER_FRAME_BYTES,
       );
+      if (validFrames.length < 2) {
+        reject('Not enough frames for: ' + framekmName);
+      }
       const fileNames = validFrames
         .map(
           (file: Stats & { name: string }) =>
@@ -54,8 +55,16 @@ export const concatFrames = async (
       const concatCommand = `cat ${fileNames} > ${
         FRAMEKM_ROOT_FOLDER + '/' + framekmName
       }`;
-      exec(concatCommand, async (error: ExecException | null) => {
-        if (!error) {
+      const options: any = {
+        shell: true,
+        stdio: ['ignore', 'pipe', 'inherit'],
+      };
+      const child = spawn(concatCommand, options);
+      child.on('close', async code => {
+        if (code !== 0) {
+          reject(code);
+          console.log(code);
+        } else {
           validFrames.map((file: Stats & { name: string }) => {
             bytesMap[file.name] = file.size;
             totalBytes += file.size;
@@ -66,9 +75,6 @@ export const concatFrames = async (
             event: 'DashcamPackedFrameKm',
             size: totalBytes,
           });
-        } else {
-          reject(error);
-          console.log(error);
         }
       });
     } catch (e: unknown) {

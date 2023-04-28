@@ -5,6 +5,7 @@ import {
   getNextImu,
   isCarParkedBasedOnImu,
   isGnssEligibleForMotionModel,
+  packMetadata,
   selectImages,
   syncCursors,
 } from 'util/motionModel';
@@ -35,12 +36,22 @@ const execute = async () => {
                 console.log(
                   'Ready to pack ' + frameKm.metadata.length + ' frames',
                 );
-                await concatFrames(
-                  frameKm.metadata.map(
-                    (item: FramesMetadata) => item.name || '',
-                  ),
-                  frameKm.chunkName,
-                );
+                try {
+                  const bytesMap = await concatFrames(
+                    frameKm.metadata.map(
+                      (item: FramesMetadata) => item.name || '',
+                    ),
+                    frameKm.chunkName,
+                  );
+                  await packMetadata(
+                    frameKm.chunkName,
+                    frameKm.metadata,
+                    frameKm.images,
+                    bytesMap,
+                  );
+                } catch (e: unknown) {
+                  console.log(e);
+                }
               }
             }
           }
