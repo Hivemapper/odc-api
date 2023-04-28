@@ -1,7 +1,7 @@
-import { map, eachSeries } from 'async';
+import { map } from 'async';
 import { exec, ExecException } from 'child_process';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
-import { writeFile, readFile, appendFile, Stats, mkdir } from 'fs';
+import { Stats, mkdir } from 'fs';
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
 

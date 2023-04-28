@@ -23,9 +23,13 @@ import {
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { ICameraFile } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
-import { GPS_ROOT_FOLDER, MOTION_MODEL_CURSOR } from 'config';
+import {
+  FRAMES_ROOT_FOLDER,
+  GPS_ROOT_FOLDER,
+  MOTION_MODEL_CURSOR,
+} from 'config';
 import { DEFAULT_TIME } from './lock';
-import { getDateFromFilename } from 'util/index';
+import { getDateFromFilename, getDateFromUnicodeTimastamp } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 
 const BEST_MIN_BETWEEN_FRAMES = 4;
@@ -39,7 +43,7 @@ const MIN_FRAMES_TO_EXTRACT = 3;
 const POTENTIAL_CORNER_ANGLE = 70;
 
 const config = {
-  DX: 8,
+  DX: 4,
   GnssFilter: {
     hdop: 7,
     '3dLock': true,
@@ -257,6 +261,9 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
               }
 
               let prevPoint: any;
+              console.log(
+                `${goodRecords.length} Good GPS records found in this file`,
+              );
               gnssRecords.map((gnss: GNSS, index: number) => {
                 const t = gnss?.timestamp
                   ? new Date(gnss.timestamp).getTime()
@@ -316,6 +323,11 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
             console.log('Error parsing GPS JSON');
           }
         }
+        // re-order gps records by time, just in case
+        if (gps.length) {
+          gps.sort((a, b) => a.t - b.t);
+          gpsChunks.push(gps);
+        }
         resolve(gpsChunks);
       },
     );
@@ -323,6 +335,12 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
 };
 
 export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
+  console.log(
+    'Eligible?',
+    isEnoughLight(gnss),
+    !isCarParkedBasedOnGnss(gnss),
+    !isGpsTooOld(gnss),
+  );
   return (
     gnss.length &&
     isEnoughLight(gnss) &&
@@ -709,6 +727,17 @@ const findCorner = (
   return u;
 };
 
+function formatUnixTimestamp(unixTimestamp: number) {
+  const dateObj = new Date(unixTimestamp);
+  const year = dateObj.getFullYear();
+  const month = ('0' + (dateObj.getMonth() + 1)).slice(-2);
+  const day = ('0' + dateObj.getDate()).slice(-2);
+  const hours = ('0' + dateObj.getHours()).slice(-2);
+  const minutes = ('0' + dateObj.getMinutes()).slice(-2);
+  const seconds = ('0' + dateObj.getSeconds()).slice(-2);
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 export const selectImages = (
   frameKM: FramesMetadata[],
 ): Promise<FrameKMOutput[]> => {
@@ -725,15 +754,26 @@ export const selectImages = (
       );
     }
 
-    let images: ICameraFile[] = [];
-
-    // TODO: Fetch Names
-    //   let hdcRes = await buildHdcRequest({
-    //     url:
-    //       url + '?since=' + Math.round(dateStart) + '&until=' + Math.round(dateEnd),
-    //   });
-    images = [];
-
+    const now = Date.now();
+    const imagesList = execSync(
+      `touch -d "$(date -d '${formatUnixTimestamp(
+        dateStart,
+      )}' '+%Y%m%d%H%M.%S')" /tmp/start_timestamp && touch -d "$(date -d '${formatUnixTimestamp(
+        dateEnd,
+      )}' '+%Y%m%d%H%M.%S')" /tmp/end_timestamp && find ${FRAMES_ROOT_FOLDER} -type f -newer /tmp/start_timestamp ! -newer /tmp/end_timestamp`,
+      { encoding: 'utf-8' },
+    );
+    console.log('Operation took: ' + (Date.now() - now));
+    const images: ICameraFile[] = imagesList
+      .split('\n')
+      .filter((filename: string) => filename.indexOf('.jpg') !== -1)
+      .map(filename => {
+        const path = filename.split('/').pop() || '';
+        return {
+          path,
+          date: getDateFromUnicodeTimastamp(path).getTime(),
+        };
+      });
     console.log(
       'Fetched ' +
         images.length +
@@ -758,7 +798,9 @@ export const selectImages = (
     }
 
     if (!images.length) {
-      return resolve([{ chunkName: '', metadata: [] }]);
+      console.log('No images selected');
+      resolve([{ chunkName: '', metadata: [] }]);
+      return;
     }
 
     console.log('==========');
@@ -805,6 +847,7 @@ export const selectImages = (
         );
 
         distance = latLonToECEFDistance(prevPoint, pointForFrame);
+        console.log('distance:', distance);
 
         if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
@@ -875,6 +918,7 @@ export const selectImages = (
     }
 
     if (imagesToDownload.length) {
+      console.log('Images selected: ' + imagesToDownload.length);
       subChunks.push({
         images: imagesToDownload,
         points: gpsForImages,
@@ -886,7 +930,8 @@ export const selectImages = (
 
     if (!subChunks.length) {
       console.log('No chunks were packed for provided frames and gpsData');
-      return { chunkName: '', gpsData: [] };
+      resolve([{ chunkName: '', metadata: [] }]);
+      return;
     }
 
     for (let i = 0; i < subChunks.length; i++) {
@@ -899,11 +944,19 @@ export const selectImages = (
           .split('.')[0];
         chunkName = 'km_' + formattedTime + '_' + i;
 
-        results.push({ chunkName, metadata: chunk.points });
+        chunk.images.map(
+          (image: ICameraFile, i: number) =>
+            (chunk.points[i].name = image.path),
+        );
+        // TODO: Return true metadata
+        results.push({
+          chunkName,
+          metadata: chunk.points,
+        });
       }
     }
 
-    return results;
+    resolve(results);
   });
 };
 
