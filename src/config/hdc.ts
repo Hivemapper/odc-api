@@ -6,8 +6,8 @@ import { CameraType } from 'types';
 export const PORT = 5000;
 
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
-export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
-export const FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
+export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
+export const FRAMES_ROOT_FOLDER = '/tmp/recording/pic';
 export const FRAMEKM_ROOT_FOLDER = __dirname + '/../../../mnt/data/framekm';
 export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';

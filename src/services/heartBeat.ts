@@ -91,9 +91,10 @@ export const HeartBeatService: IService = {
                     gpsSample.fix === '3D' &&
                     gpsSample.dop &&
                     Number(gpsSample.dop.hdop) &&
-                    gpsSample.dop.hdop < 4
+                    gpsSample.dop.hdop < 5
                   ) {
                     gpsLED = COLORS.GREEN;
+                    imgLED = COLORS.GREEN;
                     lastSuccessfulFix = Date.now();
                     setLockTime();
                     setCameraTime();
@@ -147,9 +148,7 @@ export const HeartBeatService: IService = {
                 // if (appDisconnectionPeriod < 15000) {
                 //   appLED = COLORS.GREEN;
                 // }
-                if (!got3dOnce) {
-                  imgLED = COLORS.RED;
-                }
+
                 if (isLedControlledByDashcam) {
                   updateLED(imgLED, gpsLED, appLED);
                 }
