@@ -87,7 +87,12 @@ export const HeartBeatService: IService = {
                 }
 
                 if (gpsSample) {
-                  if (gpsSample.fix === '3D') {
+                  if (
+                    gpsSample.fix === '3D' &&
+                    gpsSample.dop &&
+                    Number(gpsSample.dop.hdop) &&
+                    gpsSample.dop.hdop < 4
+                  ) {
                     gpsLED = COLORS.GREEN;
                     lastSuccessfulFix = Date.now();
                     setLockTime();
@@ -132,14 +137,16 @@ export const HeartBeatService: IService = {
                   }
                 }
 
-                const appDisconnectionPeriod = mostRecentPing
-                  ? Math.abs(Date.now() - mostRecentPing)
-                  : 30000;
+                const appLED = COLORS.GREEN;
 
-                let appLED = COLORS.RED;
-                if (appDisconnectionPeriod < 15000) {
-                  appLED = COLORS.GREEN;
-                }
+                // const appDisconnectionPeriod = mostRecentPing
+                //   ? Math.abs(Date.now() - mostRecentPing)
+                //   : 30000;
+
+                // let appLED = COLORS.RED;
+                // if (appDisconnectionPeriod < 15000) {
+                //   appLED = COLORS.GREEN;
+                // }
                 if (!got3dOnce) {
                   imgLED = COLORS.RED;
                 }

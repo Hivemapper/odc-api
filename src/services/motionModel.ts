@@ -10,15 +10,18 @@ import {
   syncCursors,
 } from 'util/motionModel';
 import { FramesMetadata, GnssMetadata } from 'types/motionModel';
-import { sleep } from 'util/index';
+import { promiseWithTimeout, sleep } from 'util/index';
 import { concatFrames } from 'util/framekm';
-const ITERATION_DELAY = 10000;
+import { rmSync } from 'fs';
+import { MOTION_MODEL_CURSOR } from 'config';
+const ITERATION_DELAY = 5000;
 
 export const lastProcessed = null;
 
+let failedIterations = 0;
+
 const execute = async () => {
   try {
-    // /mnt/data/gps/2023-04-27T23:28:52.129Z.json
     console.log('Motion model: Iterating');
     const gnssChunks: GnssMetadata[][] = await getNextGnss();
     console.log('GPS chunks:', gnssChunks.length);
@@ -30,24 +33,33 @@ const execute = async () => {
           const points = createMotionModel(gnss, imu);
           console.log(points.length);
           for (const chunk of points) {
-            const frameKms = await selectImages(chunk);
+            const frameKms = await promiseWithTimeout(
+              selectImages(chunk),
+              10000,
+            );
             for (const frameKm of frameKms) {
               if (frameKm.metadata.length) {
                 console.log(
                   'Ready to pack ' + frameKm.metadata.length + ' frames',
                 );
                 try {
-                  const bytesMap = await concatFrames(
-                    frameKm.metadata.map(
-                      (item: FramesMetadata) => item.name || '',
+                  const bytesMap = await promiseWithTimeout(
+                    concatFrames(
+                      frameKm.metadata.map(
+                        (item: FramesMetadata) => item.name || '',
+                      ),
+                      frameKm.chunkName,
                     ),
-                    frameKm.chunkName,
+                    15000,
                   );
-                  await packMetadata(
-                    frameKm.chunkName,
-                    frameKm.metadata,
-                    frameKm.images,
-                    bytesMap,
+                  await promiseWithTimeout(
+                    packMetadata(
+                      frameKm.chunkName,
+                      frameKm.metadata,
+                      frameKm.images,
+                      bytesMap,
+                    ),
+                    5000,
                   );
                 } catch (e: unknown) {
                   console.log(e);
@@ -59,11 +71,24 @@ const execute = async () => {
       }
     }
     await syncCursors();
+    failedIterations = 0;
     await sleep(ITERATION_DELAY);
     execute();
   } catch (e: unknown) {
     console.log('Should repair');
-    await sleep(ITERATION_DELAY);
+    failedIterations++;
+    if (failedIterations > 1) {
+      if (failedIterations > 10) {
+        rmSync(MOTION_MODEL_CURSOR);
+      } else {
+        try {
+          await syncCursors();
+        } catch (e: unknown) {
+          console.log('Problem syncing cursors');
+        }
+      }
+      await sleep(ITERATION_DELAY);
+    }
     execute();
   }
 };

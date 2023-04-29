@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { MAX_DOWNLOAD_DEBT } from 'config';
 import { IService } from '../types';
 
@@ -9,10 +9,14 @@ export const TrackDownloadDebt: IService = {
         if (!error) {
           const total = Number(stdout.split('\t')[0]);
           if (total && total > MAX_DOWNLOAD_DEBT) {
-            // delete oldest 20 chunks
-            exec(
-              `ls /mnt/data/framekm -1t | tail -20 | xargs printf -- '/mnt/data/framekm/%s\n' | xargs rm -f`,
+            const child = spawn(
+              `ls /mnt/data/framekm -1t | tail -50 | xargs printf -- '/mnt/data/framekm/%s\n' | xargs rm -f`,
             );
+            child.on('close', () => {
+              spawn(
+                `ls /mnt/data/metadata -1t | tail -50 | xargs printf -- '/mnt/data/framekm/%s\n' | xargs rm -f`,
+              );
+            });
           }
         }
       });
@@ -20,5 +24,5 @@ export const TrackDownloadDebt: IService = {
       console.log(e);
     }
   },
-  interval: 277777,
+  interval: 477777,
 };

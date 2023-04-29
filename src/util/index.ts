@@ -311,3 +311,21 @@ export const fileExists = (filepath: string) => {
     });
   });
 };
+
+export async function promiseWithTimeout(racePromise: any, timeout: number) {
+  let timer: any = null;
+  const wait = (ms: number) =>
+    new Promise((resolve, reject) => {
+      timer = setTimeout(() => {
+        reject();
+      }, ms);
+      return timer;
+    });
+  return await Promise.race([
+    racePromise.finally((value: any) => {
+      clearTimeout(timer);
+      return value;
+    }),
+    wait(timeout),
+  ]);
+}

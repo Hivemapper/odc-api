@@ -22,7 +22,7 @@ import {
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { ICameraFile } from 'types';
-import { exec, ExecException, execSync } from 'child_process';
+import { exec, ExecException, execSync, spawn } from 'child_process';
 import {
   CAMERA_TYPE,
   FRAMES_ROOT_FOLDER,
@@ -31,7 +31,11 @@ import {
   MOTION_MODEL_CURSOR,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
-import { getDateFromFilename, getDateFromUnicodeTimastamp } from 'util/index';
+import {
+  getDateFromFilename,
+  getDateFromUnicodeTimastamp,
+  promiseWithTimeout,
+} from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 
 const BEST_MIN_BETWEEN_FRAMES = 4;
@@ -179,8 +183,6 @@ const getNextGnssName = (last: string): Promise<string> => {
 };
 
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
-  // if the file name is less than DEFAULT_TIME: do not return anything, we don't want to process the logs created when lock wasn't there
-
   return new Promise(async (resolve, reject) => {
     let pathToGpsFile = '';
     // 1. get next after file or: if time set, then take closer
@@ -243,7 +245,9 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
                 `${gnssRecords.length} GPS records found in this file`,
               );
               gnssRecords = gnssRecords.filter(
-                (record: GNSS) => record.satellites,
+                (record: GNSS) =>
+                  record?.satellites &&
+                  new Date(record?.systemtime).getTime() > DEFAULT_TIME,
               );
 
               const goodRecords: GNSS[] = gnssRecords.filter((gnss: GNSS) =>
@@ -731,7 +735,7 @@ const findCorner = (
   return u;
 };
 
-function formatUnixTimestamp(unixTimestamp: number) {
+const formatUnixTimestamp = (unixTimestamp: number) => {
   const dateObj = new Date(unixTimestamp);
   const year = dateObj.getFullYear();
   const month = ('0' + (dateObj.getMonth() + 1)).slice(-2);
@@ -740,12 +744,80 @@ function formatUnixTimestamp(unixTimestamp: number) {
   const minutes = ('0' + dateObj.getMinutes()).slice(-2);
   const seconds = ('0' + dateObj.getSeconds()).slice(-2);
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
+};
+
+const getImagesForDateRange = async (
+  from: number,
+  to: number,
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const startTimestampCmd = `date -d '${formatUnixTimestamp(
+      from,
+    )}' '+%Y%m%d%H%M.%S'`;
+    const endTimestampCmd = `date -d '${formatUnixTimestamp(
+      to,
+    )}' '+%Y%m%d%H%M.%S'`;
+
+    const now = Date.now();
+    const touchStartCmd = `touch -d "$(${startTimestampCmd})" /tmp/start_timestamp`;
+    const touchEndCmd = `touch -d "$(${endTimestampCmd})" /tmp/end_timestamp`;
+
+    const findCmd = `find ${FRAMES_ROOT_FOLDER} -type f -newer /tmp/start_timestamp ! -newer /tmp/end_timestamp`;
+
+    const options: any = {
+      shell: true,
+      stdio: ['ignore', 'pipe', 'inherit'],
+    };
+
+    const touchStart = spawn(touchStartCmd, options);
+
+    touchStart.on('error', err => {
+      console.error(`Failed to execute touch start command: ${err}`);
+      reject();
+    });
+
+    touchStart.on('close', code => {
+      if (code !== 0) {
+        console.error(`Touch start command exited with code ${code}`);
+      } else {
+        const touchEnd = spawn(touchEndCmd, options);
+
+        touchEnd.on('error', err => {
+          console.error(`Failed to execute touch end command: ${err}`);
+          reject();
+        });
+
+        touchEnd.on('close', code => {
+          if (code !== 0) {
+            console.error(`Touch end command exited with code ${code}`);
+            reject();
+          } else {
+            const find = spawn(findCmd, options);
+
+            find.on('error', err => {
+              console.error(`Failed to execute find command: ${err}`);
+              reject();
+            });
+
+            find.stdout.setEncoding('utf8');
+            find.stdout.on('data', data => {
+              resolve(data.toString());
+            });
+
+            find.on('close', () => {
+              console.log('Operation took: ' + (Date.now() - now));
+            });
+          }
+        });
+      }
+    });
+  });
+};
 
 export const selectImages = (
   frameKM: FramesMetadata[],
 ): Promise<FrameKMOutput[]> => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const results: FrameKMOutput[] = [];
     const dateStart = frameKM[0].systemTime || frameKM[0].t;
     const dateEnd =
@@ -758,16 +830,20 @@ export const selectImages = (
       );
     }
 
-    const now = Date.now();
-    const imagesList = execSync(
-      `touch -d "$(date -d '${formatUnixTimestamp(
-        dateStart,
-      )}' '+%Y%m%d%H%M.%S')" /tmp/start_timestamp && touch -d "$(date -d '${formatUnixTimestamp(
-        dateEnd,
-      )}' '+%Y%m%d%H%M.%S')" /tmp/end_timestamp && find ${FRAMES_ROOT_FOLDER} -type f -newer /tmp/start_timestamp ! -newer /tmp/end_timestamp`,
-      { encoding: 'utf-8' },
-    );
-    console.log('Operation took: ' + (Date.now() - now));
+    let imagesList = '';
+    try {
+      imagesList = await promiseWithTimeout(
+        getImagesForDateRange(dateStart, dateEnd),
+        10000,
+      );
+    } catch (e: unknown) {
+      console.log(e);
+    }
+    if (!imagesList) {
+      console.log('ImageList output is empty');
+      resolve([{ chunkName: '', metadata: [], images: [] }]);
+      return;
+    }
     const images: ICameraFile[] = imagesList
       .split('\n')
       .filter((filename: string) => filename.indexOf('.jpg') !== -1)
@@ -777,7 +853,8 @@ export const selectImages = (
           path,
           date: getDateFromUnicodeTimastamp(path).getTime(),
         };
-      });
+      })
+      .sort((a, b) => a.date - b.date);
     console.log(
       'Fetched ' +
         images.length +
@@ -851,7 +928,6 @@ export const selectImages = (
         );
 
         distance = latLonToECEFDistance(prevPoint, pointForFrame);
-        console.log('distance:', distance);
 
         if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
@@ -922,7 +998,6 @@ export const selectImages = (
     }
 
     if (imagesToDownload.length) {
-      console.log('Images selected: ' + imagesToDownload.length);
       subChunks.push({
         images: imagesToDownload,
         points: gpsForImages,
