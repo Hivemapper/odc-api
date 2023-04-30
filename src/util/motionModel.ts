@@ -746,7 +746,7 @@ const formatUnixTimestamp = (unixTimestamp: number) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-const getImagesForDateRange = async (
+export const getImagesForDateRange = async (
   from: number,
   to: number,
 ): Promise<string> => {
@@ -792,6 +792,7 @@ const getImagesForDateRange = async (
             console.error(`Touch end command exited with code ${code}`);
             reject();
           } else {
+            let result = '';
             const find = spawn(findCmd, options);
 
             find.on('error', err => {
@@ -801,11 +802,12 @@ const getImagesForDateRange = async (
 
             find.stdout.setEncoding('utf8');
             find.stdout.on('data', data => {
-              resolve(data.toString());
+              result += data.toString() + '/n';
             });
 
             find.on('close', () => {
               console.log('Operation took: ' + (Date.now() - now));
+              resolve(result);
             });
           }
         });
@@ -846,7 +848,10 @@ export const selectImages = (
     }
     const images: ICameraFile[] = imagesList
       .split('\n')
-      .filter((filename: string) => filename.indexOf('.jpg') !== -1)
+      .filter(
+        (filename: string) =>
+          filename.indexOf('.jpg') !== -1 && filename.indexOf('.tmp') === -1,
+      )
       .map(filename => {
         const path = filename.split('/').pop() || '';
         return {

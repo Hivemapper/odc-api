@@ -5,8 +5,6 @@ import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
-import { UpdateCameraConfigService } from 'services/updateCameraConfig';
-import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
 import { MotionModelServise } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
