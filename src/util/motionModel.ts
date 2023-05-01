@@ -1,4 +1,12 @@
-import { existsSync, mkdir, readFile, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdir,
+  readdir,
+  readFile,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { GnssDopKpi } from 'types/instrumentation';
 import * as THREE from 'three';
 import {
@@ -47,6 +55,7 @@ const MAX_DISTANCE_BETWEEN_POINTS = 50;
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 1;
 const POTENTIAL_CORNER_ANGLE = 70;
+export const MAX_FAILED_ITERATIONS = 10;
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
@@ -182,6 +191,10 @@ const getNextGnssName = (last: string): Promise<string> => {
   });
 };
 
+let emptyIterationCounter = 0;
+let prevGnssFile = '';
+let prevGpsRecord: GNSS | undefined = undefined;
+
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
     let pathToGpsFile = '';
@@ -225,10 +238,60 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
       pathToGpsFile = await getNextGnssName(last);
       console.log('Next file is: ' + pathToGpsFile);
     }
-    if (!pathToGpsFile) {
+
+    if (!pathToGpsFile || pathToGpsFile === prevGnssFile) {
+      emptyIterationCounter++;
+      if (emptyIterationCounter > 5) {
+        // After 5 empty iterations, we start to be suspicious on the weird filesystem state
+        // Let's check the last GPS file stats (name timestamp and modified date timestamp)
+        // Compare it with each other, system time and the time of last GPS record
+        // It all should be in sync
+        const now = Date.now();
+        let lastFileTimestamp = now;
+        let lastFileStats = null;
+        if (last) {
+          lastFileTimestamp = getDateFromFilename(
+            String(last).split('/').pop() || '',
+          ).getTime();
+          lastFileStats = statSync(last);
+        }
+
+        const week = 1000 * 60 * 60 * 24 * 7;
+        const isFilenameOutdated =
+          lastFileTimestamp < now - week || lastFileTimestamp > now + week;
+        const prevGpsRecordTimestamp = new Date(
+          prevGpsRecord?.timestamp || '',
+        ).getTime();
+        const isGpsDataOutOfSyncWithFileDate =
+          prevGpsRecord &&
+          lastFileStats &&
+          prevGpsRecordTimestamp < lastFileStats.mtime.getTime() - week &&
+          prevGpsRecordTimestamp > lastFileStats.mtime.getTime() + week;
+
+        if (
+          isFilenameOutdated ||
+          isGpsDataOutOfSyncWithFileDate ||
+          emptyIterationCounter > MAX_FAILED_ITERATIONS
+        ) {
+          console.log(
+            'Repairing Motion model',
+            isFilenameOutdated,
+            isGpsDataOutOfSyncWithFileDate,
+            emptyIterationCounter > MAX_FAILED_ITERATIONS,
+          );
+          parsedCursor.gnssFilePath = '';
+          emptyIterationCounter = 0;
+          if (last) {
+            rmSync(last);
+          }
+        }
+      }
       resolve([]);
       return;
+    } else {
+      emptyIterationCounter = 0;
     }
+    prevGnssFile = pathToGpsFile;
     readFile(
       pathToGpsFile,
       { encoding: 'utf-8' },
@@ -239,8 +302,8 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         if (!err && data) {
           try {
             let gnssRecords = JSON.parse(jsonrepair(data));
-            console.log(gnssRecords?.[0]);
             if (Array.isArray(gnssRecords) && gnssRecords?.length) {
+              prevGpsRecord = gnssRecords[0];
               console.log(
                 `${gnssRecords.length} GPS records found in this file`,
               );
@@ -395,6 +458,7 @@ export const isImuValid = (imuData: ImuMetadata): boolean => {
 };
 
 export function isEnoughLight(gpsData: GnssMetadata[]) {
+  return true;
   if (!gpsData.length) {
     return false;
   }
@@ -746,7 +810,7 @@ const formatUnixTimestamp = (unixTimestamp: number) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-export const getImagesForDateRange = async (
+export const getImagesForDateRangeLegacy = async (
   from: number,
   to: number,
 ): Promise<string> => {
@@ -816,6 +880,44 @@ export const getImagesForDateRange = async (
   });
 };
 
+export const getImagesForDateRange = async (from: number, to: number) => {
+  return new Promise(resolve => {
+    try {
+      readdir(
+        FRAMES_ROOT_FOLDER,
+        (err: NodeJS.ErrnoException | null, files: string[]) => {
+          try {
+            const jpgFiles: ICameraFile[] = files
+              .filter(
+                (filename: string) =>
+                  filename.indexOf('.jpg') !== -1 &&
+                  filename.indexOf('.tmp') === -1,
+              )
+              .map(filename => {
+                return {
+                  path: filename,
+                  date: getDateFromUnicodeTimastamp(filename).getTime(),
+                };
+              });
+
+            const filteredFiles = jpgFiles.filter((file: ICameraFile) => {
+              return !(file.date < from || file.date > to);
+            });
+
+            resolve(filteredFiles);
+          } catch (error) {
+            console.log(error);
+            resolve([]);
+          }
+        },
+      );
+    } catch (error) {
+      console.log(error);
+      resolve([]);
+    }
+  });
+};
+
 export const selectImages = (
   frameKM: FramesMetadata[],
 ): Promise<FrameKMOutput[]> => {
@@ -832,34 +934,17 @@ export const selectImages = (
       );
     }
 
-    let imagesList = '';
+    let images = [];
     try {
-      imagesList = await promiseWithTimeout(
+      console.log('Date range is: ', dateStart, dateEnd);
+      images = await promiseWithTimeout(
         getImagesForDateRange(dateStart, dateEnd),
         10000,
       );
     } catch (e: unknown) {
       console.log(e);
     }
-    if (!imagesList) {
-      console.log('ImageList output is empty');
-      resolve([{ chunkName: '', metadata: [], images: [] }]);
-      return;
-    }
-    const images: ICameraFile[] = imagesList
-      .split('\n')
-      .filter(
-        (filename: string) =>
-          filename.indexOf('.jpg') !== -1 && filename.indexOf('.tmp') === -1,
-      )
-      .map(filename => {
-        const path = filename.split('/').pop() || '';
-        return {
-          path,
-          date: getDateFromUnicodeTimastamp(path).getTime(),
-        };
-      })
-      .sort((a, b) => a.date - b.date);
+
     console.log(
       'Fetched ' +
         images.length +

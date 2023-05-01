@@ -8,13 +8,15 @@ import {
   packMetadata,
   selectImages,
   syncCursors,
+  MAX_FAILED_ITERATIONS,
 } from 'util/motionModel';
 import { FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
 import { concatFrames } from 'util/framekm';
 import { rmSync } from 'fs';
 import { MOTION_MODEL_CURSOR } from 'config';
-const ITERATION_DELAY = 5000;
+import { ifTimeSet } from 'util/lock';
+const ITERATION_DELAY = 5100;
 
 export const lastProcessed = null;
 
@@ -22,6 +24,12 @@ let failedIterations = 0;
 
 const execute = async () => {
   try {
+    if (!ifTimeSet()) {
+      console.log('Ignoring motion model iteration, time is not set yet.');
+      await sleep(ITERATION_DELAY);
+      execute();
+      return;
+    }
     console.log('Motion model: Iterating');
     const gnssChunks: GnssMetadata[][] = await getNextGnss();
     console.log('GPS chunks:', gnssChunks.length);
@@ -78,7 +86,7 @@ const execute = async () => {
     console.log('Should repair');
     failedIterations++;
     if (failedIterations > 1) {
-      if (failedIterations > 10) {
+      if (failedIterations > MAX_FAILED_ITERATIONS) {
         rmSync(MOTION_MODEL_CURSOR);
       } else {
         try {
