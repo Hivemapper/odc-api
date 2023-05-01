@@ -16,6 +16,19 @@ export type FrameKMOutput = {
   images: ICameraFile[];
 };
 
+export type MotionModelConfig = {
+  DX: number;
+  GnssFilter: {
+    hdop?: number;
+    pdop?: number;
+    cep?: number;
+    '3dLock': boolean;
+    minSatellites: number;
+  };
+  MaxPendingTime: number;
+  IsCornerDetectionEnabled: boolean;
+};
+
 export type GNSS = {
   timestamp: string;
   systemtime: string;

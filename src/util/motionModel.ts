@@ -16,6 +16,7 @@ import {
   GNSS,
   GnssMetadata,
   ImuMetadata,
+  MotionModelConfig,
   MotionModelCursor,
 } from 'types/motionModel';
 import { timeIsMostLikelyLight } from './daylight';
@@ -59,7 +60,7 @@ export const MAX_FAILED_ITERATIONS = 10;
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
-const config = {
+let config: MotionModelConfig = {
   DX: 6,
   GnssFilter: {
     hdop: 7,
@@ -71,7 +72,9 @@ const config = {
 };
 
 // TODO:
-export const loadConfig = () => {};
+export const loadConfig = (_config: MotionModelConfig) => {
+  config = _config;
+};
 
 const isValidGnssMetadata = (gnss: GNSS): boolean => {
   let isValid = true;

@@ -5,6 +5,7 @@ import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
+import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { MotionModelServise } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
@@ -68,6 +69,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(MotionModelServise);
+    serviceRunner.add(UpdateMotionModelConfigService);
 
     serviceRunner.run();
   } catch (e: unknown) {

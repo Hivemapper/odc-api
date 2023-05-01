@@ -1,4 +1,6 @@
+import { MOTION_MODEL_CONFIG } from 'config';
 import { Router, Request, Response } from 'express';
+import { writeFile } from 'fs';
 import { ICameraConfig } from 'types';
 import {
   setCameraConfig,
@@ -6,7 +8,27 @@ import {
   setCameraResolution,
 } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
+import { loadConfig } from 'util/motionModel';
 const router = Router();
+
+router.post('/motionmodel', async (req: Request, res: Response) => {
+  try {
+    loadConfig(req.body.config);
+    writeFile(
+      MOTION_MODEL_CONFIG,
+      JSON.stringify(req.body.config),
+      {
+        encoding: 'utf-8',
+      },
+      () => {},
+    );
+    res.json({
+      output: 'done',
+    });
+  } catch (error: any) {
+    res.json({ error });
+  }
+});
 
 // New version of camera config API:
 router.post('/camera', async (req: Request, res: Response) => {
