@@ -3,8 +3,10 @@ import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
 import { readFile } from 'fs';
 import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
+import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
+import { setLockTime, setCameraTime, ifTimeSet, DEFAULT_TIME } from 'util/lock';
+import { isEnoughLightForGnss } from 'util/motionModel';
 import { COLORS, updateLED } from '../util/led';
 
 // let previousCameraResponse = '';
@@ -16,6 +18,7 @@ let wasCameraActive = false;
 let wasGpsGood = false;
 let got3dOnce = false;
 let isLedControlledByDashcam = true;
+let lastGpsPoint: GNSS | null = null;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -107,6 +110,7 @@ export const HeartBeatService: IService = {
                         event: 'DashcamGot3dLock',
                       });
                     }
+                    lastGpsPoint = gpsSample;
                     wasGpsGood = true;
                     got3dOnce = true;
                   } else {
@@ -148,6 +152,13 @@ export const HeartBeatService: IService = {
                 // if (appDisconnectionPeriod < 15000) {
                 //   appLED = COLORS.GREEN;
                 // }
+                if (
+                  lastGpsPoint &&
+                  Date.now() > DEFAULT_TIME &&
+                  !isEnoughLightForGnss(lastGpsPoint)
+                ) {
+                  imgLED = COLORS.RED;
+                }
 
                 if (isLedControlledByDashcam) {
                   updateLED(imgLED, gpsLED, appLED);

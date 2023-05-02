@@ -461,7 +461,6 @@ export const isImuValid = (imuData: ImuMetadata): boolean => {
 };
 
 export function isEnoughLight(gpsData: GnssMetadata[]) {
-  return true;
   if (!gpsData.length) {
     return false;
   }
@@ -469,6 +468,19 @@ export function isEnoughLight(gpsData: GnssMetadata[]) {
     new Date(gpsData[0].t),
     gpsData[0].lon,
     gpsData[0].lat,
+  );
+
+  return sufficientDaylight;
+}
+
+export function isEnoughLightForGnss(gnss: GNSS) {
+  if (!gnss || !gnss.timestamp) {
+    return true;
+  }
+  const sufficientDaylight = timeIsMostLikelyLight(
+    new Date(gnss.timestamp),
+    gnss.longitude,
+    gnss.latitude,
   );
 
   return sufficientDaylight;
@@ -1114,7 +1126,7 @@ export const selectImages = (
           .replace(/[-:]/g, '')
           .replace('T', '_')
           .split('.')[0];
-        chunkName = 'km_' + formattedTime + '_' + i;
+        chunkName = 'km_' + formattedTime + '_' + chunk.images.length + '_' + i;
 
         chunk.images.map(
           (image: ICameraFile, i: number) =>
@@ -1133,12 +1145,25 @@ export const selectImages = (
   });
 };
 
+export const getNumFramesFromChunkName = (name: string) => {
+  if (name) {
+    const parts = name.split('_');
+    if (parts.length > 3) {
+      return Number(parts[3]);
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+};
+
 export const packMetadata = async (
   name: string,
   framesMetadata: FramesMetadata[],
   images: ICameraFile[],
   bytesMap: { [key: string]: number },
-) => {
+): Promise<FramesMetadata[]> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
     await new Promise(resolve => {
@@ -1186,11 +1211,14 @@ export const packMetadata = async (
         { encoding: 'utf-8' },
       );
       console.log('Metadata written for ' + name);
+      return metadataJSON.frames;
     } catch (e: unknown) {
       console.log('Error writing Metadata file');
+      return [];
     }
   } else {
     console.log('No bytes for: ' + name);
+    return [];
   }
 };
 

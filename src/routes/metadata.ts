@@ -6,6 +6,7 @@ import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { Instrumentation } from 'util/instrumentation';
+import { getNumFramesFromChunkName } from 'util/motionModel';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.get('/', async (req: Request, res: Response) => {
         return {
           path: filename,
           date: getDateFromFramekmName(filename).getTime(),
+          size: getNumFramesFromChunkName(filename),
         };
       });
 
