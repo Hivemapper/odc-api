@@ -12,6 +12,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamResolutionUpdated',
   'DashcamLost3dLock',
   'DashcamGot3dLock',
+  'DashcamRejectedGps',
   'DashcamDop',
   'DashcamFps',
   'DashcamImuFreq',

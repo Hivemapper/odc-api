@@ -25,7 +25,6 @@ import {
   ecefToLLA,
   interpolate,
   latLonDistance,
-  latLonToECEF,
   latLonToECEFDistance,
   normaliseLatLon,
 } from './geomath';
@@ -55,7 +54,6 @@ const MAX_SPEED = 40; // ms!! If you want to convert to kmh, then * 3.6
 const MAX_DISTANCE_BETWEEN_POINTS = 50;
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 1;
-const POTENTIAL_CORNER_ANGLE = 70;
 export const MAX_FAILED_ITERATIONS = 10;
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -64,11 +62,13 @@ let config: MotionModelConfig = {
   DX: 6,
   GnssFilter: {
     hdop: 7,
+    pdop: 7,
     '3dLock': true,
     minSatellites: 4,
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   IsCornerDetectionEnabled: true,
+  IsLightCheckDisabled: false,
 };
 
 // TODO:
@@ -409,18 +409,34 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
 };
 
 export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
-  console.log(
-    'Eligible?',
-    isEnoughLight(gnss),
-    !isCarParkedBasedOnGnss(gnss),
-    !isGpsTooOld(gnss),
-  );
-  return (
-    gnss.length &&
-    isEnoughLight(gnss) &&
-    !isCarParkedBasedOnGnss(gnss) &&
-    !isGpsTooOld(gnss)
-  );
+  const notTooDark = isEnoughLight(gnss);
+  const isCarParked = isCarParkedBasedOnGnss(gnss);
+  const isTooOld = isGpsTooOld(gnss);
+
+  console.log('Eligible?', notTooDark, !isCarParked, !isTooOld);
+
+  if (!gnss.length) {
+    Instrumentation.add({
+      event: 'DashcamRejectedGps',
+      message: 'badQuality',
+    });
+  } else if (!notTooDark) {
+    Instrumentation.add({
+      event: 'DashcamRejectedGps',
+      message: 'notEnoughLight',
+    });
+  } else if (isCarParked) {
+    Instrumentation.add({
+      event: 'DashcamRejectedGps',
+      message: 'carNotMoving',
+    });
+  } else if (isTooOld) {
+    Instrumentation.add({
+      event: 'DashcamRejectedGps',
+      message: 'dataTooOld',
+    });
+  }
+  return gnss.length && notTooDark && !isCarParked && !isTooOld;
 };
 
 export function isCarParkedBasedOnGnss(gpsData: GnssMetadata[]) {
@@ -461,6 +477,9 @@ export const isImuValid = (imuData: ImuMetadata): boolean => {
 };
 
 export function isEnoughLight(gpsData: GnssMetadata[]) {
+  if (config.IsLightCheckDisabled) {
+    return true;
+  }
   if (!gpsData.length) {
     return false;
   }

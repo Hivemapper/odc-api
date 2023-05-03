@@ -56,12 +56,11 @@ export const HeartBeatService: IService = {
         },
         (error: ExecException | null, stdout: string) => {
           const cameraResponse = error ? '' : stdout;
-
+          const isCameraActive = cameraResponse.indexOf('active') === 0;
           let imgLED: any;
           if (isPreviewInProgress && isDev()) {
             imgLED = COLORS.WHITE;
           } else {
-            const isCameraActive = cameraResponse.indexOf('active') === 0;
             imgLED = isCameraActive ? COLORS.GREEN : COLORS.RED;
 
             if (!isCameraActive && wasCameraActive) {
@@ -100,7 +99,11 @@ export const HeartBeatService: IService = {
                     imgLED = COLORS.GREEN;
                     lastSuccessfulFix = Date.now();
                     setLockTime();
-                    setCameraTime();
+
+                    if (!isCameraActive) {
+                      console.log('Starting the camera');
+                      exec(CMD.START_CAMERA);
+                    }
                     if (!got3dOnce) {
                       Instrumentation.add({
                         event: 'DashcamReceivedFirstGpsLock',

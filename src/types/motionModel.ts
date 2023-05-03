@@ -27,6 +27,7 @@ export type MotionModelConfig = {
   };
   MaxPendingTime: number;
   IsCornerDetectionEnabled: boolean;
+  IsLightCheckDisabled: boolean;
 };
 
 export type GNSS = {
