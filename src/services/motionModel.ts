@@ -19,8 +19,6 @@ import { ifTimeSet } from 'util/lock';
 const ITERATION_DELAY = 5100;
 
 export const lastProcessed = null;
-
-let previousPoints: FramesMetadata[] = [];
 let failedIterations = 0;
 
 const execute = async () => {
@@ -39,8 +37,7 @@ const execute = async () => {
         const imu = await getNextImu(gnss);
         if (!isCarParkedBasedOnImu(imu)) {
           console.log('Creating a motion model');
-          const chunks = createMotionModel(gnss, imu, previousPoints);
-          previousPoints = [];
+          const chunks = createMotionModel(gnss, imu);
           for (const chunk of chunks) {
             const frameKms = await promiseWithTimeout(
               selectImages(chunk),
@@ -61,7 +58,7 @@ const execute = async () => {
                     ),
                     15000,
                   );
-                  const framesMetadata = await promiseWithTimeout(
+                  await promiseWithTimeout(
                     packMetadata(
                       frameKm.chunkName,
                       frameKm.metadata,
@@ -70,7 +67,6 @@ const execute = async () => {
                     ),
                     5000,
                   );
-                  previousPoints = framesMetadata.slice(0, 3);
                 } catch (e: unknown) {
                   console.log(e);
                 }

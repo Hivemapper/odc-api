@@ -582,17 +582,10 @@ export const createMotionModel = (
 
   let totalSamples = 0;
   const samplesToTakePerFrameKm: any[] = frameKms
-    .map((frameKm, i) => {
-      let lastFrames = [];
-      if (i === 0) {
-        lastFrames = prevSamples;
-      } else {
-        lastFrames = frameKms[i - 1];
-      }
-
+    .map(frameKm => {
       let samplesToTake: FramesMetadata[] = [];
       try {
-        samplesToTake = getPointsToSample(frameKm, imuData, lastFrames);
+        samplesToTake = getPointsToSample(frameKm, imuData);
       } catch (e: any) {
         console.log('dashcam: sampling failed: ' + e);
       }
@@ -606,38 +599,36 @@ export const createMotionModel = (
   return totalSamples > MIN_FRAMES_TO_EXTRACT ? samplesToTakePerFrameKm : [];
 };
 
+let existingKeyFrames: FramesMetadata[] = [];
+
 export const getPointsToSample = (
   gpsData: FramesMetadata[],
   imuData: ImuMetadata,
-  existingKeyFrames: FramesMetadata[] = [],
 ) => {
   // Catmull-Rom is a cubic interpolation,
   // which requires 4 points
   // to achieve a continuous first derivative.
   // We cannot invent history, but we can look
   // back in time if possible.
-  // Some fallbacks supported for 3 points
-  if (gpsData.length + Math.min(2, existingKeyFrames.length) < 3) {
+  if (gpsData.length + Math.min(2, existingKeyFrames.length) < 2) {
     return [];
   }
 
   let points: FramesMetadata[] = gpsData;
-  let offset = 0;
+  const offset = 0;
+  const dx = config.DX;
+  let previous = [];
 
   if (existingKeyFrames.length > 0) {
     const n = existingKeyFrames.length;
-    const m = Math.max(n - 3, 0);
-
-    const previous = existingKeyFrames.slice(m, n - 1);
-    points = previous.concat(points);
-
-    const lastPoint = new THREE.Vector3(0, 0, 0);
-    const nextPoint = new THREE.Vector3(0, 0, 0);
-    latLonToECEF(points[0].lon, points[0].lat, points[0].alt, lastPoint);
-    for (let i = 1; i <= previous.length; i++) {
-      latLonToECEF(points[i].lon, points[i].lat, points[i].alt, nextPoint);
-      offset += lastPoint.distanceTo(nextPoint);
-      lastPoint.copy(nextPoint);
+    previous = existingKeyFrames.slice(n - 3);
+    const last = previous[previous.length - 1];
+    const next = gpsData[0];
+    const dist = latLonDistance(last.lat, next.lat, last.lon, next.lon);
+    if (dist < 50) {
+      points = previous.concat(points);
+    } else {
+      previous = [];
     }
   }
 
@@ -645,31 +636,30 @@ export const getPointsToSample = (
   const spaceCurve = catmullRomCurve(points, ['lon', 'lat', 'alt'], true);
   const totalDistance = spaceCurve.getLength();
   const pointsToSample: FramesMetadata[] = [];
-  const curvePoints: CurveData[] = [];
+  let curvePoints: CurveData[] = [];
 
-  const dx = config.DX;
-  const { IsCornerDetectionEnabled } = config;
+  // const { IsCornerDetectionEnabled } = config;
 
   if (totalDistance) {
     console.log('total distance: ' + totalDistance + ', DX: ' + dx);
-    let prevTangent = null;
+    // let prevTangent = null;
     for (let u = offset; u <= totalDistance; u += dx) {
-      if (IsCornerDetectionEnabled) {
-        const v = u / totalDistance;
-        // Compare tangent of current point with previous point to detect the potential corner
-        const currTangent = spaceCurve.getTangentAt(v);
-        let angle = 0;
-        if (prevTangent) {
-          angle = Math.abs((prevTangent.angleTo(currTangent) * 180) / Math.PI);
-        }
-        prevTangent = currTangent;
-        if (angle > POTENTIAL_CORNER_ANGLE) {
-          u = findCorner(spaceCurve, u, dx, totalDistance, angle);
-        }
-      }
+      // if (IsCornerDetectionEnabled) {
+      //   const v = u / totalDistance;
+      //   const currTangent = spaceCurve.getTangentAt(v);
+      //   let angle = 0;
+      //   if (prevTangent) {
+      //     angle = Math.abs((prevTangent.angleTo(currTangent) * 180) / Math.PI);
+      //   }
+      //   prevTangent = currTangent;
+      //   if (angle > POTENTIAL_CORNER_ANGLE) {
+      //     u = findCorner(spaceCurve, u, dx, totalDistance, angle);
+      //   }
+      // }
       curvePoints.push(getPoint(spaceCurve, u / totalDistance));
     }
   }
+  curvePoints = curvePoints.slice(previous.length);
 
   if (points.length < 3 || curvePoints.length < 3) {
     return [];
@@ -692,8 +682,10 @@ export const getPointsToSample = (
     const { lon, lat, alt, v } = curvePoints[curveCursor];
 
     const cursorDistance = totalDistance * v;
-
-    if (cursorDistance < distance && cursorDistance >= prevDistance) {
+    if (
+      (cursorDistance < distance && cursorDistance >= prevDistance) ||
+      (cursorDistance === 0 && distance !== prevDistance)
+    ) {
       const indx = (cursorDistance - prevDistance) / (distance - prevDistance);
       const point = interpolate(
         points[pointsArrayCursor - 1],
@@ -768,6 +760,7 @@ export const getPointsToSample = (
     console.log('Missing IMU data');
   }
   console.log(`dashcam: points sampled: ${pointsToSample?.length}`);
+  existingKeyFrames = pointsToSample;
   return pointsToSample;
 };
 
