@@ -5,12 +5,19 @@ import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { setLockTime, setCameraTime, ifTimeSet, DEFAULT_TIME } from 'util/lock';
+import {
+  setLockTime,
+  setCameraTime,
+  ifTimeSet,
+  DEFAULT_TIME,
+  setSystemTime,
+} from 'util/lock';
 import { isEnoughLightForGnss } from 'util/motionModel';
 import { COLORS, updateLED } from '../util/led';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
+let refreshedTimeAndCameraOnce = false;
 let lastSuccessfulFix = 0;
 let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
@@ -19,6 +26,9 @@ let wasGpsGood = false;
 let got3dOnce = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
+
+let successChecksInARow = 0;
+let isCameraTimeInProgress = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -95,16 +105,6 @@ export const HeartBeatService: IService = {
                     Number(gpsSample.dop.hdop) &&
                     gpsSample.dop.hdop < 5
                   ) {
-                    gpsLED = COLORS.GREEN;
-                    imgLED = COLORS.GREEN;
-                    lastSuccessfulFix = Date.now();
-                    setLockTime();
-                    setCameraTime();
-
-                    // if (!isCameraActive) {
-                    //   console.log('Starting the camera');
-                    //   exec(CMD.START_CAMERA);
-                    // }
                     if (!got3dOnce) {
                       Instrumentation.add({
                         event: 'DashcamReceivedFirstGpsLock',
@@ -115,9 +115,56 @@ export const HeartBeatService: IService = {
                       });
                     }
                     lastGpsPoint = gpsSample;
+                    lastSuccessfulFix = Date.now();
+                    setLockTime();
                     wasGpsGood = true;
                     got3dOnce = true;
+
+                    successChecksInARow++;
+                    if (successChecksInARow > 2) {
+                      successChecksInARow = 0;
+                      gpsLED = COLORS.GREEN;
+                      const timeToSet = gpsSample.timestamp
+                        ? new Date(gpsSample.timestamp).getTime()
+                        : 0;
+                      if (
+                        !isCameraTimeInProgress &&
+                        timeToSet &&
+                        timeToSet > DEFAULT_TIME &&
+                        (Date.now() < DEFAULT_TIME ||
+                          !refreshedTimeAndCameraOnce)
+                      ) {
+                        isCameraTimeInProgress = true;
+                        refreshedTimeAndCameraOnce = true;
+
+                        const timeout = setTimeout(() => {
+                          isCameraTimeInProgress = false;
+                        }, 20000);
+                        setSystemTime(timeToSet, Date.now(), () => {
+                          exec(CMD.STOP_CAMERA, () => {
+                            setTimeout(() => {
+                              exec(
+                                CMD.START_CAMERA,
+                                (error: ExecException | null) => {
+                                  clearTimeout(timeout);
+                                  isCameraTimeInProgress = false;
+                                  if (!error) {
+                                    console.log('Camera restarted');
+                                  } else {
+                                    exec(CMD.START_CAMERA);
+                                    console.log(
+                                      'Camera restarted after second attempt.',
+                                    );
+                                  }
+                                },
+                              );
+                            }, 1000);
+                          });
+                        });
+                      }
+                    }
                   } else {
+                    successChecksInARow = 0;
                     const gpsLostPeriod = lastSuccessfulFix
                       ? Math.abs(Date.now() - lastSuccessfulFix)
                       : 70000;

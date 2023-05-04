@@ -71,7 +71,7 @@ export const setLockTime = () => {
   }
 };
 
-const setSystemTime = (
+export const setSystemTime = (
   timeToSetMs: number,
   now: number,
   successCallback: () => void,
@@ -82,37 +82,39 @@ const setSystemTime = (
     setTimeout(() => {
       // DelayDiff is very important - if operation of setting the time takes time itself,
       // we need to take this delay into account
-      const delayDiff = Date.now() - now;
-      const finalDate = new Date(timeToSetMs + delayDiff);
+      // const delayDiff = Date.now() - now;
+      // const finalDate = new Date(timeToSetMs + delayDiff);
+      const finalDate = new Date(timeToSetMs);
       const timeToSet = finalDate
         .toISOString()
         .replace(/T/, ' ')
         .replace(/\..+/, '')
         .split(' ');
 
-      exec(
-        `timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`,
-        (error: ExecException | null) => {
-          console.log(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`);
-          // 60000ms is a sanity check, of course the diff should be much smaller
-          // but if now the diff with time is smaller than a minute, meaning we're for sure switched from Jan 18
-          if (!error && Math.abs(Date.now() - finalDate.getTime()) < 60000) {
+      exec(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`, () => {
+        console.log(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`);
+        // 60000ms is a sanity check, of course the diff should be much smaller
+        // but if now the diff with time is smaller than a minute, meaning we're for sure switched from Jan 18
+        setTimeout(() => {
+          if (Math.abs(Date.now() - timeToSetMs) < 60000) {
             console.log('Successfully set');
             successCallback();
           } else {
             console.log('Not set... Retrying.');
             setSystemTime(timeToSetMs, now, successCallback);
           }
-        },
-      );
-    }, 2000);
+        }, 1000);
+      });
+    }, 1000);
   });
 };
 
 export const setCameraTime = () => {
+  console.log('Trying to set camera time');
   if (!isCameraTimeInProgress && !isTimeSet) {
     isCameraTimeInProgress = true;
 
+    console.log('Setting camera time...');
     try {
       exec(
         'ubxtool -p NAV-PVT | grep time',

@@ -349,12 +349,13 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
                       )
                     : config.DX;
                 // in seconds
-                const prevTime = prevPoint
-                  ? new Date(prevPoint.timestamp).getTime()
-                  : 0;
-                const timeDiff = prevTime ? (t - prevTime) / 1000 : 0;
+                // const prevTime = prevPoint
+                //   ? new Date(prevPoint.timestamp).getTime()
+                //   : 0;
+                // const timeDiff = prevTime ? (t - prevTime) / 1000 : 0;
                 // speed in m/s
-                const speed = timeDiff ? distance / timeDiff : MIN_SPEED;
+                // const speed = timeDiff ? distance / timeDiff : MIN_SPEED;
+                const speed = gnss.speed;
 
                 if (
                   t &&
@@ -441,7 +442,7 @@ export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
 };
 
 export function isCarParkedBasedOnGnss(gpsData: GnssMetadata[]) {
-  return !gpsData.some((gps: GnssMetadata) => gps.speed > 3);
+  return !gpsData.some((gps: GnssMetadata) => gps.speed > 4);
 }
 
 export const isCarParkedBasedOnImu = (imu: ImuMetadata) => {
@@ -537,7 +538,6 @@ const getFrameDataFromGps = (gps: GnssMetadata): FramesMetadata => {
 export const createMotionModel = (
   gpsData: GnssMetadata[],
   imuData: ImuMetadata,
-  prevSamples: FramesMetadata[] = [],
 ): FramesMetadata[][] => {
   if (gpsData.length < 2) {
     console.log('Not enough gps data');
@@ -780,7 +780,7 @@ export const getPointsToSample = (
     console.log('Missing IMU data');
   }
   console.log(`dashcam: points sampled: ${pointsToSample?.length}`);
-  // existingKeyFrames = pointsToSample;
+  existingKeyFrames = pointsToSample;
   return pointsToSample;
 };
 
@@ -951,10 +951,15 @@ export const selectImages = (
 ): Promise<FrameKMOutput[]> => {
   return new Promise(async (resolve, reject) => {
     const results: FrameKMOutput[] = [];
+    if (!frameKM.length) {
+      console.log('No points to work with');
+      resolve([{ chunkName: '', metadata: [], images: [] }]);
+      return;
+    }
     const dateStart = frameKM[0].systemTime || frameKM[0].t;
     const dateEnd =
       (frameKM[frameKM.length - 1].systemTime ||
-        frameKM[frameKM.length - 1].t) + 200;
+        frameKM[frameKM.length - 1].t) + 1000;
 
     if (frameKM[0].systemTime) {
       console.log(
@@ -980,15 +985,16 @@ export const selectImages = (
         ' images for current FrameKM GPS timestamp filtering',
     );
 
-    if (dateEnd - dateStart > 10000) {
-      // Log AvgFps, only if date range is at least 10 SEC, to make it more accurate
+    let fps = 0;
+    if (dateEnd - dateStart > 2000) {
+      // Log AvgFps, only if date range is at least 2 SEC, to make it more accurate
       const secs = (dateEnd - dateStart) / 1000;
-
+      fps = Math.round(images.length / secs);
       Instrumentation.add({
         event: 'DashcamFps',
         start: Math.round(dateStart),
         end: Math.round(dateEnd),
-        size: Math.round(images.length / secs),
+        size: fps,
       });
     } else {
       console.log(
@@ -1036,7 +1042,12 @@ export const selectImages = (
       );
       const distanceRange = getDistanceRangeBasedOnSpeed(prevPoint.speed / 3.6);
 
-      if (frameTimestamp >= prevTime && frameTimestamp <= nextTime + 100) {
+      if (nextTime < prevTime) {
+        gpsCursor++;
+      } else if (
+        (frameTimestamp >= prevTime && frameTimestamp <= nextTime + 200) ||
+        gpsCursor === frameKM.length - 1
+      ) {
         // normalising GPS coordinates for this time difference
         let pointForFrame = normaliseLatLon(
           prevPoint,
@@ -1048,24 +1059,41 @@ export const selectImages = (
           prevPoint.lat,
           pointForFrame.lat,
           prevPoint.lon,
-          prevPoint.lon,
-        );
-        console.log(
-          'iterating',
-          prevTime,
-          frameTimestamp,
-          nextTime,
-          totalDistance,
-          distance,
-          distanceRange.MIN_DISTANCE,
-          prevPoint.speed,
+          pointForFrame.lon,
         );
 
         if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
             imagesToDownload = [images[imageCursor]];
             gpsForImages = [pointForFrame];
-            console.log('Got the first image!');
+          } else {
+            // Let's check if the next frame could be the better candidate to go into motion model
+            if (nextFrameTimestamp) {
+              const candidateFrame = normaliseLatLon(
+                prevPoint,
+                nextPoint,
+                nextFrameTimestamp,
+              );
+
+              distance = latLonDistance(
+                prevPoint.lat,
+                candidateFrame.lat,
+                prevPoint.lon,
+                candidateFrame.lon,
+              );
+              if (
+                distance >= distanceRange.BEST_MIN_DISTANCE &&
+                distance <= distanceRange.MAX_DISTANCE
+              ) {
+                imageCursor++;
+                pointForFrame = { ...candidateFrame };
+                gpsForImages.push(pointForFrame);
+                imagesToDownload.push(images[imageCursor]);
+                if (gpsCursor !== frameKM.length - 1) {
+                  gpsCursor++;
+                }
+              }
+            }
           }
           imageCursor++;
         } else if (distance > distanceRange.MAX_DISTANCE) {
@@ -1088,11 +1116,7 @@ export const selectImages = (
           imageCursor++;
         } else {
           // Let's check if the next frame could be the better candidate to go into motion model
-          if (
-            nextFrameTimestamp &&
-            nextFrameTimestamp >= prevTime &&
-            nextFrameTimestamp <= nextTime
-          ) {
+          if (nextFrameTimestamp) {
             const candidateFrame = normaliseLatLon(
               prevPoint,
               nextPoint,
@@ -1107,7 +1131,7 @@ export const selectImages = (
             );
             if (
               distance >= distanceRange.BEST_MIN_DISTANCE &&
-              distance <= distanceRange.BEST_MAX_DISTANCE
+              distance <= distanceRange.MAX_DISTANCE
             ) {
               imageCursor++;
               pointForFrame = { ...candidateFrame };
@@ -1117,31 +1141,13 @@ export const selectImages = (
           gpsForImages.push(pointForFrame);
           imagesToDownload.push(images[imageCursor]);
           imageCursor++;
-          gpsCursor++;
+          if (gpsCursor !== frameKM.length - 1) {
+            gpsCursor++;
+          }
         }
       } else if (frameTimestamp < prevTime) {
-        console.log(
-          'iterating',
-          prevTime,
-          frameTimestamp,
-          nextTime,
-          totalDistance,
-          0,
-          distanceRange.MIN_DISTANCE,
-          prevPoint.speed,
-        );
         imageCursor++;
       } else {
-        console.log(
-          'iterating',
-          prevTime,
-          frameTimestamp,
-          nextTime,
-          totalDistance,
-          -1,
-          distanceRange.MIN_DISTANCE,
-          prevPoint.speed,
-        );
         gpsCursor++;
       }
     }
@@ -1151,6 +1157,7 @@ export const selectImages = (
         images: imagesToDownload,
         points: gpsForImages,
       });
+      existingKeyFrames = gpsForImages;
     }
 
     // LOOP FOR DOWNLOADING CHUNKS
@@ -1160,6 +1167,30 @@ export const selectImages = (
       console.log('No chunks were packed for provided frames and gpsData');
       resolve([{ chunkName: '', metadata: [], images: [] }]);
       return;
+    }
+
+    try {
+      Instrumentation.add({
+        event: 'DashcamMotionModelReport',
+        size: frameKM.length,
+        message: JSON.stringify({
+          points: frameKM.length,
+          framesFound: subChunks.reduce(
+            (acc, obj) => acc + obj?.images?.length || 0,
+            0,
+          ),
+          dateStart,
+          dateEnd,
+          firstImageTs: images?.[0]?.date,
+          lastImageTs: images?.[images.length - 1]?.date,
+          chunks: subChunks.length,
+          fps,
+          lat: frameKM?.[0]?.lat,
+          lon: frameKM?.[0]?.lon,
+        }),
+      });
+    } catch (e: unknown) {
+      console.log('Error adding the log');
     }
 
     for (let i = 0; i < subChunks.length; i++) {
@@ -1183,7 +1214,7 @@ export const selectImages = (
           images: chunk.images,
         });
 
-        existingKeyFrames = chunk.points;
+        // existingKeyFrames = chunk.points;
       }
     }
 
@@ -1224,14 +1255,13 @@ export const packMetadata = async (
     const image: ICameraFile = images[i];
     const bytes = bytesMap[image.path];
     if (bytes && bytes > MIN_PER_FRAME_BYTES && bytes < MAX_PER_FRAME_BYTES) {
-      framesMetadata[i].bytes = bytes;
-      framesMetadata[i].name = image.path;
-      // @ts-ignore
-      delete framesMetadata[i].systemTime;
-      framesMetadata[i].t = Math.round(framesMetadata[i].t);
-      framesMetadata[i].satellites = Math.round(framesMetadata[i].satellites);
-
-      validatedFrames.push(framesMetadata[i]);
+      const { systemTime, ...frame } = framesMetadata[i];
+      frame.bytes = bytes;
+      frame.name = image.path;
+      frame.t = Math.round(framesMetadata[i].t);
+      frame.satellites = Math.round(framesMetadata[i].satellites);
+      //@ts-ignore
+      validatedFrames.push(frame);
       numBytes += bytes;
     }
   }
@@ -1274,22 +1304,22 @@ const getDistanceRangeBasedOnSpeed = (speed: number) => {
   if (speed < 20) {
     // means camera producing 1 frame per 2 meters max, so we can hit the best approx for DX
     return {
-      MIN_DISTANCE: dx - 1,
-      MAX_DISTANCE: dx + 2,
-      BEST_MIN_DISTANCE: dx - 0.5,
-      BEST_MAX_DISTANCE: dx + 1,
+      MIN_DISTANCE: dx - 0.5,
+      MAX_DISTANCE: dx + 1.5,
+      BEST_MIN_DISTANCE: dx - 0.2,
+      BEST_MAX_DISTANCE: dx + 0.5,
     };
   } else if (speed < 25) {
     // distance between two frames is close to 5 meters, but still less
     return {
-      MIN_DISTANCE: dx - 1,
+      MIN_DISTANCE: dx - 0.5,
       MAX_DISTANCE: dx + 2,
-      BEST_MIN_DISTANCE: dx - 0.5,
+      BEST_MIN_DISTANCE: dx - 0.1,
       BEST_MAX_DISTANCE: dx + 1,
     };
   } else if (speed < 30) {
     return {
-      MIN_DISTANCE: dx - 1,
+      MIN_DISTANCE: dx,
       MAX_DISTANCE: dx + 3,
       BEST_MIN_DISTANCE: dx,
       BEST_MAX_DISTANCE: dx + 1.5,

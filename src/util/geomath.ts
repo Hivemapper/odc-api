@@ -52,15 +52,10 @@ export function interpolate(
   keys: (keyof FramesMetadata)[],
   res: FramesMetadata,
 ): FramesMetadata {
-  if (indx > 1 || indx < 0) {
+  if (indx < 0) {
     // We should keep it in [0, 1] range. Otherwise it's a math error
-    indx = indx > 1 ? 1 : 0;
-    console.log(
-      'Potential math calc error during normalisation:',
-      first,
-      second,
-      indx,
-    );
+    indx = 0;
+    console.log('Potential math calc error during normalisation');
   }
   if (indx === 0) {
     return { ...first };

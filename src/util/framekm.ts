@@ -41,7 +41,9 @@ export const concatFrames = async (
     try {
       const validFrames = fileStats.filter(
         (file: Stats) =>
-          file.size > MIN_PER_FRAME_BYTES && file.size < MAX_PER_FRAME_BYTES,
+          file &&
+          file.size > MIN_PER_FRAME_BYTES &&
+          file.size < MAX_PER_FRAME_BYTES,
       );
       if (validFrames.length < 2) {
         reject('Not enough frames for: ' + framekmName);
