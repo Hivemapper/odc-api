@@ -58,15 +58,17 @@ const execute = async () => {
                     ),
                     15000,
                   );
-                  await promiseWithTimeout(
-                    packMetadata(
-                      frameKm.chunkName,
-                      frameKm.metadata,
-                      frameKm.images,
-                      bytesMap,
-                    ),
-                    5000,
-                  );
+                  if (bytesMap && Object.keys(bytesMap).length) {
+                    await promiseWithTimeout(
+                      packMetadata(
+                        frameKm.chunkName,
+                        frameKm.metadata,
+                        frameKm.images,
+                        bytesMap,
+                      ),
+                      5000,
+                    );
+                  }
                 } catch (e: unknown) {
                   console.log(e);
                 }

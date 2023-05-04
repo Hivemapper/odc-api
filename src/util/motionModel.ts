@@ -25,7 +25,6 @@ import {
   ecefToLLA,
   interpolate,
   latLonDistance,
-  latLonToECEFDistance,
   normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
@@ -46,11 +45,8 @@ import {
 } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 
-const BEST_MIN_BETWEEN_FRAMES = 4;
-const BEST_MAX_BETWEEN_FRAMES = 4.75;
-
-const MIN_SPEED = 0.275; // meter seconds
-const MAX_SPEED = 40; // ms!! If you want to convert to kmh, then * 3.6
+const MIN_SPEED = 0.275; // meter per seconds
+const MAX_SPEED = 40; // meter per seconds
 const MAX_DISTANCE_BETWEEN_POINTS = 50;
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 1;
@@ -68,7 +64,7 @@ let config: MotionModelConfig = {
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   IsCornerDetectionEnabled: true,
-  IsLightCheckDisabled: false,
+  IsLightCheckDisabled: true,
 };
 
 // TODO:
@@ -345,7 +341,12 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
                 // in meters
                 const distance =
                   prevPoint && gnss.latitude
-                    ? latLonToECEFDistance(prevPoint, gnss)
+                    ? latLonDistance(
+                        prevPoint.latitude,
+                        gnss.latitude,
+                        prevPoint.longitude,
+                        gnss.longitude,
+                      )
                     : config.DX;
                 // in seconds
                 const prevTime = prevPoint
@@ -652,7 +653,7 @@ export const getPointsToSample = (
   }
 
   //console.log('dashcam: points for spline: ' + points.length);
-  const spaceCurve = catmullRomCurve(points, ['lon', 'lat', 'alt'], true);
+  const spaceCurve = catmullRomCurve(points, ['lon', 'lat', undefined], true);
   const totalDistance = spaceCurve.getLength();
   const pointsToSample: FramesMetadata[] = [];
   let curvePoints: CurveData[] = [];
@@ -695,10 +696,10 @@ export const getPointsToSample = (
     pointsArrayCursor < points.length &&
     curveCursor < curvePoints.length
   ) {
-    const curve = catmullRomCurve(searchArray, ['lon', 'lat', 'alt'], true);
+    const curve = catmullRomCurve(searchArray, ['lon', 'lat', undefined], true);
     const distance = curve.getLength();
     const prevDistance = prevCurve?.getLength() || 0;
-    const { lon, lat, alt, v } = curvePoints[curveCursor];
+    const { lon, lat, v } = curvePoints[curveCursor];
 
     const cursorDistance = totalDistance * v;
     if (
@@ -714,6 +715,7 @@ export const getPointsToSample = (
           'speed',
           'satellites',
           't',
+          'alt',
           'systemTime',
           'dilution',
           'xdop',
@@ -728,7 +730,6 @@ export const getPointsToSample = (
           ...points[pointsArrayCursor],
           lon,
           lat,
-          alt,
         },
       );
       pointsToSample.push(point);
@@ -779,7 +780,7 @@ export const getPointsToSample = (
     console.log('Missing IMU data');
   }
   console.log(`dashcam: points sampled: ${pointsToSample?.length}`);
-  existingKeyFrames = pointsToSample;
+  // existingKeyFrames = pointsToSample;
   return pointsToSample;
 };
 
@@ -952,7 +953,8 @@ export const selectImages = (
     const results: FrameKMOutput[] = [];
     const dateStart = frameKM[0].systemTime || frameKM[0].t;
     const dateEnd =
-      frameKM[frameKM.length - 1].systemTime || frameKM[frameKM.length - 1].t;
+      (frameKM[frameKM.length - 1].systemTime ||
+        frameKM[frameKM.length - 1].t) + 200;
 
     if (frameKM[0].systemTime) {
       console.log(
@@ -1026,17 +1028,15 @@ export const selectImages = (
       const prevTime = prevPoint.systemTime;
       const nextTime = nextPoint.systemTime;
 
-      let distance = latLonToECEFDistance(prevPoint, nextPoint);
+      const totalDistance = latLonDistance(
+        prevPoint.lat,
+        nextPoint.lat,
+        prevPoint.lon,
+        nextPoint.lon,
+      );
       const distanceRange = getDistanceRangeBasedOnSpeed(prevPoint.speed / 3.6);
 
-      if (
-        distance < distanceRange.MAX_DISTANCE &&
-        gpsCursor !== frameKM.length - 1 &&
-        gpsForImages.length
-      ) {
-        // Making the brackets wider
-        gpsCursor++;
-      } else if (frameTimestamp >= prevTime && frameTimestamp <= nextTime) {
+      if (frameTimestamp >= prevTime && frameTimestamp <= nextTime + 100) {
         // normalising GPS coordinates for this time difference
         let pointForFrame = normaliseLatLon(
           prevPoint,
@@ -1044,12 +1044,28 @@ export const selectImages = (
           frameTimestamp,
         );
 
-        distance = latLonToECEFDistance(prevPoint, pointForFrame);
+        let distance = latLonDistance(
+          prevPoint.lat,
+          pointForFrame.lat,
+          prevPoint.lon,
+          prevPoint.lon,
+        );
+        console.log(
+          'iterating',
+          prevTime,
+          frameTimestamp,
+          nextTime,
+          totalDistance,
+          distance,
+          distanceRange.MIN_DISTANCE,
+          prevPoint.speed,
+        );
 
         if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
             imagesToDownload = [images[imageCursor]];
             gpsForImages = [pointForFrame];
+            console.log('Got the first image!');
           }
           imageCursor++;
         } else if (distance > distanceRange.MAX_DISTANCE) {
@@ -1083,33 +1099,49 @@ export const selectImages = (
               nextFrameTimestamp,
             );
 
-            distance = latLonToECEFDistance(prevPoint, candidateFrame);
+            distance = latLonDistance(
+              prevPoint.lat,
+              candidateFrame.lat,
+              prevPoint.lon,
+              candidateFrame.lon,
+            );
             if (
-              distance >= BEST_MIN_BETWEEN_FRAMES &&
-              distance <= BEST_MAX_BETWEEN_FRAMES
+              distance >= distanceRange.BEST_MIN_DISTANCE &&
+              distance <= distanceRange.BEST_MAX_DISTANCE
             ) {
               imageCursor++;
               pointForFrame = { ...candidateFrame };
             }
           }
 
-          if (gpsForImages.length > 60) {
-            // cut the chunk
-            subChunks.push({
-              images: imagesToDownload,
-              points: gpsForImages,
-            });
-            imagesToDownload = [images[imageCursor]];
-            gpsForImages = [pointForFrame];
-          } else {
-            gpsForImages.push(pointForFrame);
-            imagesToDownload.push(images[imageCursor]);
-          }
+          gpsForImages.push(pointForFrame);
+          imagesToDownload.push(images[imageCursor]);
           imageCursor++;
+          gpsCursor++;
         }
       } else if (frameTimestamp < prevTime) {
+        console.log(
+          'iterating',
+          prevTime,
+          frameTimestamp,
+          nextTime,
+          totalDistance,
+          0,
+          distanceRange.MIN_DISTANCE,
+          prevPoint.speed,
+        );
         imageCursor++;
       } else {
+        console.log(
+          'iterating',
+          prevTime,
+          frameTimestamp,
+          nextTime,
+          totalDistance,
+          -1,
+          distanceRange.MIN_DISTANCE,
+          prevPoint.speed,
+        );
         gpsCursor++;
       }
     }
@@ -1150,6 +1182,8 @@ export const selectImages = (
           metadata: chunk.points,
           images: chunk.images,
         });
+
+        existingKeyFrames = chunk.points;
       }
     }
 
@@ -1242,28 +1276,38 @@ const getDistanceRangeBasedOnSpeed = (speed: number) => {
     return {
       MIN_DISTANCE: dx - 1,
       MAX_DISTANCE: dx + 2,
+      BEST_MIN_DISTANCE: dx - 0.5,
+      BEST_MAX_DISTANCE: dx + 1,
     };
   } else if (speed < 25) {
     // distance between two frames is close to 5 meters, but still less
     return {
       MIN_DISTANCE: dx - 1,
       MAX_DISTANCE: dx + 2,
+      BEST_MIN_DISTANCE: dx - 0.5,
+      BEST_MAX_DISTANCE: dx + 1,
     };
   } else if (speed < 30) {
     return {
-      MIN_DISTANCE: dx,
+      MIN_DISTANCE: dx - 1,
       MAX_DISTANCE: dx + 3,
+      BEST_MIN_DISTANCE: dx,
+      BEST_MAX_DISTANCE: dx + 1.5,
     };
   } else if (speed < 40) {
     return {
-      MIN_DISTANCE: dx,
+      MIN_DISTANCE: dx - 0.5,
       MAX_DISTANCE: dx + 4,
+      BEST_MIN_DISTANCE: dx,
+      BEST_MAX_DISTANCE: dx + 2,
     };
   } else {
     // return default, if speed provided is not valid
     return {
       MIN_DISTANCE: dx - 1,
       MAX_DISTANCE: dx + 2,
+      BEST_MIN_DISTANCE: dx - 0.5,
+      BEST_MAX_DISTANCE: dx + 1,
     };
   }
 };

@@ -99,11 +99,12 @@ export const HeartBeatService: IService = {
                     imgLED = COLORS.GREEN;
                     lastSuccessfulFix = Date.now();
                     setLockTime();
+                    setCameraTime();
 
-                    if (!isCameraActive) {
-                      console.log('Starting the camera');
-                      exec(CMD.START_CAMERA);
-                    }
+                    // if (!isCameraActive) {
+                    //   console.log('Starting the camera');
+                    //   exec(CMD.START_CAMERA);
+                    // }
                     if (!got3dOnce) {
                       Instrumentation.add({
                         event: 'DashcamReceivedFirstGpsLock',
