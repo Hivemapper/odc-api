@@ -16,16 +16,17 @@ import { concatFrames } from 'util/framekm';
 import { rmSync } from 'fs';
 import { MOTION_MODEL_CURSOR } from 'config';
 import { ifTimeSet } from 'util/lock';
-const ITERATION_DELAY = 5100;
+const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
 let failedIterations = 0;
 
 const execute = async () => {
+  let iterationDelay = ITERATION_DELAY;
   try {
     if (!ifTimeSet()) {
       console.log('Ignoring motion model iteration, time is not set yet.');
-      await sleep(ITERATION_DELAY);
+      await sleep(iterationDelay);
       execute();
       return;
     }
@@ -34,6 +35,8 @@ const execute = async () => {
     console.log('GPS chunks:', gnssChunks.length);
     for (const gnss of gnssChunks) {
       if (isGnssEligibleForMotionModel(gnss)) {
+        await sleep(3000); // let IMU logger wrap the fresh file
+        iterationDelay -= 3000; // make the iteration delay smaller since we already spent some time on waiting for IMU
         const imu = await getNextImu(gnss);
         if (!isCarParkedBasedOnImu(imu)) {
           console.log('Creating a motion model');
@@ -80,7 +83,7 @@ const execute = async () => {
     }
     await syncCursors();
     failedIterations = 0;
-    await sleep(ITERATION_DELAY);
+    await sleep(iterationDelay);
     execute();
   } catch (e: unknown) {
     console.log('Should repair');
@@ -95,7 +98,7 @@ const execute = async () => {
           console.log('Problem syncing cursors');
         }
       }
-      await sleep(ITERATION_DELAY);
+      await sleep(iterationDelay);
     }
     execute();
   }

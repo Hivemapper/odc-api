@@ -3,6 +3,7 @@ import {
   mkdir,
   readdir,
   readFile,
+  readFileSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -28,12 +29,13 @@ import {
   normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
-import { ICameraFile } from 'types';
+import { ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync, spawn } from 'child_process';
 import {
   CAMERA_TYPE,
   FRAMES_ROOT_FOLDER,
   GPS_ROOT_FOLDER,
+  IMU_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
   MOTION_MODEL_CURSOR,
 } from 'config';
@@ -65,6 +67,7 @@ let config: MotionModelConfig = {
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   IsCornerDetectionEnabled: true,
+  isImuMovementDetectionEnabled: false,
   IsLightCheckDisabled: false,
 };
 
@@ -447,6 +450,10 @@ export function isCarParkedBasedOnGnss(gpsData: GnssMetadata[]) {
 }
 
 export const isCarParkedBasedOnImu = (imu: ImuMetadata) => {
+  if (!config.isImuMovementDetectionEnabled) {
+    return false;
+  }
+
   const accel = imu.accelerometer;
   if (accel && accel.length) {
     const accX = accel.map(acc => acc.x);
@@ -517,10 +524,101 @@ export function isGpsTooOld(gpsData: GnssMetadata[]) {
 
 export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
   // TODO: Implement
-  return Promise.resolve({
+  const imuData: ImuMetadata = {
     accelerometer: [],
     magnetometer: [],
     gyroscope: [],
+  };
+  return new Promise(resolve => {
+    if (!gnss || !gnss.length) {
+      resolve(imuData);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      resolve(imuData);
+    }, 5000);
+    // Backward compatibility support for old 't' field
+    // We add 10 seconds from both end to resolve unsync between the log files
+    const since = (gnss[0].systemTime || gnss[0].t) - 10000;
+    const until =
+      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 10000;
+
+    try {
+      readdir(
+        IMU_ROOT_FOLDER,
+        (err: NodeJS.ErrnoException | null, files: string[]) => {
+          try {
+            const imuFiles: string[] = files.filter((filename: string) => {
+              if (
+                filename.indexOf('.json') === -1 ||
+                filename.indexOf('.tmp') !== -1
+              ) {
+                return false;
+              }
+              const fileDate = getDateFromFilename(filename).getTime();
+              return fileDate >= since && fileDate <= until;
+            });
+            let imuRecords: IMU[] = [];
+            for (const imuFile of imuFiles) {
+              console.log(imuFile);
+              try {
+                const imu = readFileSync(IMU_ROOT_FOLDER + '/' + imuFile, {
+                  encoding: 'utf-8',
+                });
+                let output = '';
+                try {
+                  output = jsonrepair(imu);
+                } catch (er: unknown) {
+                  console.log('Imu parsing error: ' + er);
+                }
+                if (output) {
+                  const parsedImu = JSON.parse(output);
+                  if (Array.isArray(parsedImu)) {
+                    imuRecords = imuRecords.concat(parsedImu);
+                  }
+                }
+              } catch (err: unknown) {
+                console.log('Caught here: ', err);
+              }
+            }
+            console.log(
+              `Selected ${imuRecords.length} imuRecords for ${
+                until - since
+              } msecs`,
+            );
+            imuRecords.map((imu: IMU) => {
+              const imuTimestamp = new Date(imu.time).getTime();
+              if (imuTimestamp >= since && imuTimestamp <= until) {
+                if (imu.accel) {
+                  imuData.accelerometer.push({
+                    x: Number(imu.accel.x) || 0,
+                    y: Number(imu.accel.y) || 0,
+                    z: Number(imu.accel.z) || 0,
+                    ts: imuTimestamp,
+                  });
+                }
+                if (imu.gyro) {
+                  imuData.gyroscope.push({
+                    x: Number(imu.gyro.x) || 0,
+                    y: Number(imu.gyro.y) || 0,
+                    z: Number(imu.gyro.z) || 0,
+                    ts: imuTimestamp,
+                  });
+                }
+              }
+            });
+            clearTimeout(timeout);
+            resolve(imuData);
+          } catch (e: unknown) {
+            clearTimeout(timeout);
+            resolve(imuData);
+          }
+        },
+      );
+    } catch (error: unknown) {
+      clearTimeout(timeout);
+      resolve(imuData);
+    }
   });
 };
 
@@ -826,87 +924,6 @@ const findCorner = (
     }
   }
   return u;
-};
-
-const formatUnixTimestamp = (unixTimestamp: number) => {
-  const dateObj = new Date(unixTimestamp);
-  const year = dateObj.getFullYear();
-  const month = ('0' + (dateObj.getMonth() + 1)).slice(-2);
-  const day = ('0' + dateObj.getDate()).slice(-2);
-  const hours = ('0' + dateObj.getHours()).slice(-2);
-  const minutes = ('0' + dateObj.getMinutes()).slice(-2);
-  const seconds = ('0' + dateObj.getSeconds()).slice(-2);
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
-
-export const getImagesForDateRangeLegacy = async (
-  from: number,
-  to: number,
-): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const startTimestampCmd = `date -d '${formatUnixTimestamp(
-      from,
-    )}' '+%Y%m%d%H%M.%S'`;
-    const endTimestampCmd = `date -d '${formatUnixTimestamp(
-      to,
-    )}' '+%Y%m%d%H%M.%S'`;
-
-    const now = Date.now();
-    const touchStartCmd = `touch -d "$(${startTimestampCmd})" /tmp/start_timestamp`;
-    const touchEndCmd = `touch -d "$(${endTimestampCmd})" /tmp/end_timestamp`;
-
-    const findCmd = `find ${FRAMES_ROOT_FOLDER} -type f -newer /tmp/start_timestamp ! -newer /tmp/end_timestamp`;
-
-    const options: any = {
-      shell: true,
-      stdio: ['ignore', 'pipe', 'inherit'],
-    };
-
-    const touchStart = spawn(touchStartCmd, options);
-
-    touchStart.on('error', err => {
-      console.error(`Failed to execute touch start command: ${err}`);
-      reject();
-    });
-
-    touchStart.on('close', code => {
-      if (code !== 0) {
-        console.error(`Touch start command exited with code ${code}`);
-      } else {
-        const touchEnd = spawn(touchEndCmd, options);
-
-        touchEnd.on('error', err => {
-          console.error(`Failed to execute touch end command: ${err}`);
-          reject();
-        });
-
-        touchEnd.on('close', code => {
-          if (code !== 0) {
-            console.error(`Touch end command exited with code ${code}`);
-            reject();
-          } else {
-            let result = '';
-            const find = spawn(findCmd, options);
-
-            find.on('error', err => {
-              console.error(`Failed to execute find command: ${err}`);
-              reject();
-            });
-
-            find.stdout.setEncoding('utf8');
-            find.stdout.on('data', data => {
-              result += data.toString() + '/n';
-            });
-
-            find.on('close', () => {
-              console.log('Operation took: ' + (Date.now() - now));
-              resolve(result);
-            });
-          }
-        });
-      }
-    });
-  });
 };
 
 export const getImagesForDateRange = async (from: number, to: number) => {

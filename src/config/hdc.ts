@@ -14,7 +14,7 @@ export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../mnt/data/gps/latest.log';
-export const IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
+export const IMU_ROOT_FOLDER = '/mnt/data/imu';
 export const LORA_RESPONSE_FOLDER = __dirname + '/../../../mnt/data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';

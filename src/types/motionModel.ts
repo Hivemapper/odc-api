@@ -26,6 +26,7 @@ export type MotionModelConfig = {
     minSatellites: number;
   };
   MaxPendingTime: number;
+  isImuMovementDetectionEnabled: boolean;
   IsCornerDetectionEnabled: boolean;
   IsLightCheckDisabled: boolean;
 };
@@ -54,6 +55,21 @@ export type GNSS = {
   dop?: Dilution;
 };
 
+export interface IMU {
+  accel: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  gyro: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  temp: number;
+  time: string;
+}
+
 export type GnssMetadata = Dilution & {
   lat: number;
   lon: number;
@@ -66,9 +82,9 @@ export type GnssMetadata = Dilution & {
 };
 
 export type ImuMetadata = {
-  accelerometer?: IXYZPoint[];
-  magnetometer?: IXYZPoint[];
-  gyroscope?: IXYZPoint[];
+  accelerometer: IXYZPoint[];
+  magnetometer: IXYZPoint[];
+  gyroscope: IXYZPoint[];
 };
 
 export interface IXYZPoint {
