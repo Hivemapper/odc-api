@@ -75,10 +75,7 @@ router.get('/info', async (req: Request, res: Response) => {
     ...deviceInfo,
     dashcam: CAMERA_TYPE,
     api_version: API_VERSION,
-    build_date:
-      versionInfo && versionInfo.build_date
-        ? new Date(versionInfo.build_date).toISOString()
-        : undefined,
+    build_date: new Date(1683315177520).toISOString(),
   });
 
   try {

@@ -44,6 +44,7 @@ import {
   promiseWithTimeout,
 } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
+import { tmpFrameName } from 'routes/recordings';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -64,7 +65,7 @@ let config: MotionModelConfig = {
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   IsCornerDetectionEnabled: true,
-  IsLightCheckDisabled: true,
+  IsLightCheckDisabled: false,
 };
 
 // TODO:
@@ -919,7 +920,8 @@ export const getImagesForDateRange = async (from: number, to: number) => {
               .filter(
                 (filename: string) =>
                   filename.indexOf('.jpg') !== -1 &&
-                  filename.indexOf('.tmp') === -1,
+                  filename.indexOf('.tmp') === -1 &&
+                  filename !== tmpFrameName,
               )
               .map(filename => {
                 return {

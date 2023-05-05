@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { exec, execSync, spawn } from 'child_process';
 import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 import { appendFile, writeFile } from 'fs';
 import {
@@ -147,34 +147,37 @@ export const resolveCondition = async (
     }
     if (condition.cmd) {
       try {
-        exec(
-          condition.cmd,
-          {
-            encoding: 'utf-8',
-          },
-          (error, stdout) => {
-            if (log) {
-              console.log(condition.cmd);
-              console.log(stdout || error);
-            }
-            if (
-              stdout &&
-              conditionMatches(stdout, condition.method, condition.value)
-            ) {
-              if (condition.and) {
-                resolveCondition(condition.and, log, resolve);
-              } else {
-                resolve(true);
-              }
+        const child = spawn(condition.cmd || '', { shell: true });
+        let output = '';
+        child.stdout.setEncoding('utf8');
+        child.stdout.on('data', data => {
+          output += data.toString();
+        });
+        child.on('close', async code => {
+          if (code !== 0) {
+            console.log('Failed with code: ', code);
+          }
+          if (output && log) {
+            console.log(condition.cmd);
+            console.log(output);
+          }
+          if (
+            output &&
+            conditionMatches(output, condition.method, condition.value)
+          ) {
+            if (condition.and) {
+              resolveCondition(condition.and, log, resolve);
             } else {
-              if (condition.or) {
-                resolveCondition(condition.or, log, resolve);
-              } else {
-                resolve(false);
-              }
+              resolve(true);
             }
-          },
-        );
+          } else {
+            if (condition.or) {
+              resolveCondition(condition.or, log, resolve);
+            } else {
+              resolve(false);
+            }
+          }
+        });
       } catch (e: unknown) {
         console.log('Failed executing command', e);
       }
@@ -211,26 +214,30 @@ export const createCronJobExecutor = (
       cacheExecutionForDevice(config.id);
     }
     try {
-      exec(
-        cmd as string,
-        {
-          encoding: 'utf-8',
-        },
-        (error, stdout) => {
-          if (config.log) {
-            console.log(cmd);
-            console.log(stdout);
-          }
-          if (config.frequency.oncePerDevice) {
-            cacheExecutionForDevice(config.id);
-          }
-          if (Array.isArray(command) && command.length) {
-            executeOneOrMany(command);
-          } else {
-            isRunning = false;
-          }
-        },
-      );
+      console.log('Command executed: ' + cmd);
+      const child = spawn(cmd || '', { shell: true });
+      let output = '';
+      child.stdout.setEncoding('utf8');
+      child.stdout.on('data', data => {
+        output += data.toString();
+      });
+      child.on('close', async code => {
+        console.log('Command finished: ' + cmd);
+        if (code !== 0) {
+          console.log('Failed with code: ', code);
+        }
+        if (output && config.log) {
+          console.log(output);
+        }
+        if (config.frequency.oncePerDevice) {
+          cacheExecutionForDevice(config.id);
+        }
+        if (Array.isArray(command) && command.length) {
+          executeOneOrMany(command);
+        } else {
+          isRunning = false;
+        }
+      });
     } catch (e: unknown) {
       console.log('Failed executing command', e);
     }

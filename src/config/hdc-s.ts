@@ -13,7 +13,7 @@ export const FRAMEKM_ROOT_FOLDER =
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../data/recording/gps';
-export const METADATA_ROOT_FOLDER = '/data/metadata';
+export const METADATA_ROOT_FOLDER = '/data/recording/metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../data/recording/gps/latest.log';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
