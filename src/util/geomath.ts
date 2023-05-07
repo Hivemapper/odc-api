@@ -72,6 +72,13 @@ export function interpolate(
   return res;
 }
 
+export function latLonToECEFDist(p0: THREE.Vector3, p1: THREE.Vector3) {
+  latLonToECEF(p0.x, p0.y, p0.z, p0);
+  latLonToECEF(p1.x, p1.y, p1.z, p1);
+
+  return p0.distanceTo(p1);
+}
+
 export function normaliseLatLon(
   first: FramesMetadata,
   second: FramesMetadata,

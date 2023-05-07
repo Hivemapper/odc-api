@@ -26,6 +26,7 @@ import {
   ecefToLLA,
   interpolate,
   latLonDistance,
+  latLonToECEFDist,
   normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
@@ -56,6 +57,9 @@ const MIN_FRAMES_TO_EXTRACT = 1;
 export const MAX_FAILED_ITERATIONS = 10;
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
+
+const MIN_DISTANCE_BETWEEN_FRAMES = 1;
+const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
 
 let config: MotionModelConfig = {
   DX: 6,
@@ -1214,24 +1218,50 @@ export const selectImages = (
 
     for (let i = 0; i < subChunks.length; i++) {
       const chunk = subChunks[i];
-      if (chunk.images.length > 1) {
-        const formattedTime = new Date(chunk.points[0].t)
-          .toISOString()
-          .replace(/[-:]/g, '')
-          .replace('T', '_')
-          .split('.')[0];
-        chunkName = 'km_' + formattedTime + '_' + chunk.images.length + '_' + i;
+      const validChunk: { images: ICameraFile[]; points: FramesMetadata[] } = {
+        images: [],
+        points: [],
+      };
+      validChunk.images.push(chunk.images[0]);
+      validChunk.points.push(chunk.points[0]);
 
-        chunk.images.map(
-          (image: ICameraFile, i: number) =>
-            (chunk.points[i].name = image.path),
-        );
-        // TODO: Return true metadata
-        results.push({
-          chunkName,
-          metadata: chunk.points,
-          images: chunk.images,
-        });
+      if (chunk.images.length > 1) {
+        // First, sanitise the data
+        const p0 = new THREE.Vector3();
+        const p1 = new THREE.Vector3();
+        for (let i = 1; i < chunk.images.length; i++) {
+          const lastFrame = validChunk.points[validChunk.points.length - 1];
+          const curFrame = chunk.points[i];
+          if (curFrame.t - lastFrame.t >= MIN_TIME_BETWEEN_FRAMES) {
+            p0.set(lastFrame.lat, lastFrame.lon, lastFrame.alt);
+            p1.set(curFrame.lat, curFrame.lon, curFrame.alt);
+            const delta = latLonToECEFDist(p0, p1);
+            if (delta >= MIN_DISTANCE_BETWEEN_FRAMES) {
+              validChunk.images.push(chunk.images[i]);
+              validChunk.points.push(chunk.points[i]);
+            }
+          }
+        }
+        if (validChunk.images.length > 1) {
+          const formattedTime = new Date(validChunk.points[0].t)
+            .toISOString()
+            .replace(/[-:]/g, '')
+            .replace('T', '_')
+            .split('.')[0];
+          chunkName =
+            'km_' + formattedTime + '_' + validChunk.images.length + '_' + i;
+
+          validChunk.images.map(
+            (image: ICameraFile, i: number) =>
+              (validChunk.points[i].name = image.path),
+          );
+          // TODO: Return true metadata
+          results.push({
+            chunkName,
+            metadata: validChunk.points,
+            images: validChunk.images,
+          });
+        }
 
         // existingKeyFrames = chunk.points;
       }
