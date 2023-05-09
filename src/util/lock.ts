@@ -2,72 +2,19 @@ import { exec, ExecException } from 'child_process';
 import { CMD } from 'config';
 
 let lockTime = 0;
-let msss = 0;
-let gnssIds: number[] = [];
+const msss = 0;
+const gnssIds: number[] = [];
 let isTimeSet = false;
 let isCameraTimeInProgress = false;
-let isLockTimeInProgress = false;
 export const DEFAULT_TIME = 1672000000000;
 
 export const ifTimeSet = () => {
   return isTimeSet || Date.now() > DEFAULT_TIME;
 };
 
-export const setLockTime = () => {
-  if (!isLockTimeInProgress && !lockTime) {
-    isLockTimeInProgress = true;
-    try {
-      exec(
-        'ubxtool -p NAV-STATUS | grep ttff',
-        { encoding: 'utf-8' },
-        (error: ExecException | null, stdout: string) => {
-          let output = error ? '' : stdout;
-          const elems = output.split(',');
-          if (elems.length && elems[0].indexOf('ttff') !== -1) {
-            const ttff = elems[0].split(' ').pop();
-            if (ttff) {
-              if (elems[1]) {
-                const ms = elems[1].split(' ').pop();
-                msss = Number(ms);
-              }
-              try {
-                exec(
-                  'ubxtool -p NAV-SIG | grep gnssId',
-                  { encoding: 'utf-8' },
-                  (error: ExecException | null, stdout: string) => {
-                    output = error ? '' : stdout;
-                    // collect ssids
-                    gnssIds = [];
-                    output.split('\n').map(sat => {
-                      const parts = sat.split(' ');
-                      const gnssIndex = parts.findIndex(
-                        elem => elem.indexOf('gnssId') !== -1,
-                      );
-                      if (gnssIndex !== -1) {
-                        const gnssToAdd = Number(parts[gnssIndex + 1]);
-                        if (gnssIds.indexOf(gnssToAdd) === -1) {
-                          gnssIds.push(gnssToAdd);
-                        }
-                      }
-                    });
-                    lockTime = Number(ttff);
-                    console.log('Set ttff: ' + ttff);
-                    isLockTimeInProgress = false;
-                  },
-                );
-              } catch (e: unknown) {
-                isLockTimeInProgress = false;
-                console.log(e);
-              }
-            }
-          }
-          isLockTimeInProgress = false;
-        },
-      );
-    } catch (e: unknown) {
-      isLockTimeInProgress = false;
-      console.log(e);
-    }
+export const setLockTime = (ttff: number) => {
+  if (!lockTime) {
+    lockTime = ttff;
   }
 };
 

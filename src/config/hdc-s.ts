@@ -44,7 +44,6 @@ export const CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
-export const MAX_DOWNLOAD_DEBT = 1073741824; // 1GB for now
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 

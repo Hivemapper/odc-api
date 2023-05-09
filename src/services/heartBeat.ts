@@ -5,9 +5,13 @@ import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { setLockTime, ifTimeSet, DEFAULT_TIME, setSystemTime } from 'util/lock';
+import { setLockTime, ifTimeSet, DEFAULT_TIME } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/motionModel';
 import { COLORS, updateLED } from '../util/led';
+import {
+  isCameraRunningOutOfSpace,
+  setIsAppConnectionRequired,
+} from './trackDownloadDebt';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -95,7 +99,8 @@ export const HeartBeatService: IService = {
                     gpsSample.fix === '3D' &&
                     gpsSample.dop &&
                     Number(gpsSample.dop.hdop) &&
-                    gpsSample.dop.hdop < 5
+                    gpsSample.dop.hdop < 5 &&
+                    gpsSample.ttff
                   ) {
                     if (!got3dOnce) {
                       Instrumentation.add({
@@ -108,46 +113,36 @@ export const HeartBeatService: IService = {
                     }
                     lastGpsPoint = gpsSample;
                     lastSuccessfulFix = Date.now();
-                    setLockTime();
+                    setLockTime(gpsSample.ttff);
                     wasGpsGood = true;
                     got3dOnce = true;
 
                     gpsLED = COLORS.GREEN;
-                    const timeToSet = gpsSample.timestamp
-                      ? new Date(gpsSample.timestamp).getTime()
-                      : 0;
+
                     if (
                       !isCameraTimeInProgress &&
-                      timeToSet &&
-                      timeToSet > DEFAULT_TIME &&
-                      (Date.now() < DEFAULT_TIME || !refreshedTimeAndCameraOnce)
+                      !refreshedTimeAndCameraOnce
                     ) {
                       isCameraTimeInProgress = true;
                       refreshedTimeAndCameraOnce = true;
 
-                      const timeout = setTimeout(() => {
-                        isCameraTimeInProgress = false;
-                      }, 20000);
-                      setSystemTime(timeToSet, Date.now(), () => {
-                        exec(CMD.STOP_CAMERA, () => {
-                          setTimeout(() => {
-                            exec(
-                              CMD.START_CAMERA,
-                              (error: ExecException | null) => {
-                                clearTimeout(timeout);
-                                isCameraTimeInProgress = false;
-                                if (!error) {
-                                  console.log('Camera restarted');
-                                } else {
-                                  exec(CMD.START_CAMERA);
-                                  console.log(
-                                    'Camera restarted after second attempt.',
-                                  );
-                                }
-                              },
-                            );
-                          }, 1000);
-                        });
+                      exec(CMD.STOP_CAMERA, () => {
+                        setTimeout(() => {
+                          exec(
+                            CMD.START_CAMERA,
+                            (error: ExecException | null) => {
+                              isCameraTimeInProgress = false;
+                              if (!error) {
+                                console.log('Camera restarted');
+                              } else {
+                                exec(CMD.START_CAMERA);
+                                console.log(
+                                  'Camera restarted after second attempt.',
+                                );
+                              }
+                            },
+                          );
+                        }, 1000);
                       });
                     }
                   } else {
@@ -156,6 +151,13 @@ export const HeartBeatService: IService = {
                       : 70000;
                     if (gpsLostPeriod > 60000) {
                       gpsLED = COLORS.RED;
+                    } else if (
+                      got3dOnce &&
+                      gpsSample?.dop &&
+                      Number(gpsSample.dop.hdop) &&
+                      gpsSample.dop.hdop > 5
+                    ) {
+                      gpsLED = COLORS.DIM_GREEN;
                     }
 
                     if (wasGpsGood) {
@@ -181,20 +183,24 @@ export const HeartBeatService: IService = {
 
                 const appLED = COLORS.GREEN;
 
-                // const appDisconnectionPeriod = mostRecentPing
-                //   ? Math.abs(Date.now() - mostRecentPing)
-                //   : 30000;
+                const appDisconnectionPeriod = mostRecentPing
+                  ? Math.abs(Date.now() - mostRecentPing)
+                  : 30000;
 
-                // let appLED = COLORS.RED;
-                // if (appDisconnectionPeriod < 15000) {
-                //   appLED = COLORS.GREEN;
-                // }
+                if (appDisconnectionPeriod < 15000) {
+                  setIsAppConnectionRequired(false);
+                }
+
                 if (
                   lastGpsPoint &&
                   Date.now() > DEFAULT_TIME &&
                   !isEnoughLightForGnss(lastGpsPoint)
                 ) {
                   imgLED = COLORS.RED;
+                }
+
+                if (isCameraRunningOutOfSpace()) {
+                  imgLED = COLORS.YELLOW;
                 }
 
                 if (isLedControlledByDashcam) {

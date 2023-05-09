@@ -26,7 +26,6 @@ import {
   ecefToLLA,
   interpolate,
   latLonDistance,
-  latLonToECEFDist,
   normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
@@ -576,7 +575,12 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
                   console.log('Imu parsing error: ' + er);
                 }
                 if (output) {
-                  const parsedImu = JSON.parse(output);
+                  let parsedImu = null;
+                  try {
+                    parsedImu = JSON.parse(output);
+                  } catch (e: unknown) {
+                    console.log('Caught JSON parse, didnt break');
+                  }
                   if (Array.isArray(parsedImu)) {
                     imuRecords = imuRecords.concat(parsedImu);
                   }
@@ -1085,6 +1089,15 @@ export const selectImages = (
           pointForFrame.lon,
         );
 
+        console.log(
+          prevTime,
+          frameTimestamp,
+          nextTime,
+          totalDistance,
+          distance,
+          prevPoint.speed,
+        );
+
         if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
             imagesToDownload = [images[imageCursor]];
@@ -1180,7 +1193,11 @@ export const selectImages = (
         images: imagesToDownload,
         points: gpsForImages,
       });
-      existingKeyFrames = gpsForImages;
+      existingKeyFrames = [
+        ...gpsForImages.map(frame => {
+          return { ...frame };
+        }),
+      ];
     }
 
     // LOOP FOR DOWNLOADING CHUNKS
@@ -1227,18 +1244,19 @@ export const selectImages = (
 
       if (chunk.images.length > 1) {
         // First, sanitise the data
-        const p0 = new THREE.Vector3();
-        const p1 = new THREE.Vector3();
-        for (let i = 1; i < chunk.images.length; i++) {
+        for (let k = 1; k < chunk.images.length; k++) {
           const lastFrame = validChunk.points[validChunk.points.length - 1];
-          const curFrame = chunk.points[i];
+          const curFrame = chunk.points[k];
           if (curFrame.t - lastFrame.t >= MIN_TIME_BETWEEN_FRAMES) {
-            p0.set(lastFrame.lat, lastFrame.lon, lastFrame.alt);
-            p1.set(curFrame.lat, curFrame.lon, curFrame.alt);
-            const delta = latLonToECEFDist(p0, p1);
+            const delta = latLonDistance(
+              lastFrame.lat,
+              curFrame.lat,
+              lastFrame.lon,
+              curFrame.lon,
+            );
             if (delta >= MIN_DISTANCE_BETWEEN_FRAMES) {
-              validChunk.images.push(chunk.images[i]);
-              validChunk.points.push(chunk.points[i]);
+              validChunk.images.push(chunk.images[k]);
+              validChunk.points.push(chunk.points[k]);
             }
           }
         }
@@ -1263,7 +1281,11 @@ export const selectImages = (
           });
         }
 
-        // existingKeyFrames = chunk.points;
+        existingKeyFrames = [
+          ...chunk.points.map(frame => {
+            return { ...frame };
+          }),
+        ];
       }
     }
 

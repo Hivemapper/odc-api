@@ -17,15 +17,20 @@ export const InitCronService: IService = {
           try {
             const cronJobs = JSON.parse(jsonrepair(data.toString()));
             if (CAMERA_TYPE === CameraType.Hdc) {
-              cronJobs.push({
-                cmd: 'rm -r /mnt/data/pic',
-                frequency: {
-                  oncePerDevice: true,
-                  delay: 300000,
-                },
-                id: 'cleanup_old_img_cache_once',
-                log: true,
-              });
+              const isAdded = cronJobs.some(
+                (job: any) => job?.id === 'cleanup_old_img_cache_once',
+              );
+              if (!isAdded) {
+                cronJobs.push({
+                  cmd: 'rm -r /mnt/data/pic',
+                  frequency: {
+                    oncePerDevice: true,
+                    delay: 300000,
+                  },
+                  id: 'cleanup_old_img_cache_once',
+                  log: true,
+                });
+              }
             }
             scheduleCronJobs(cronJobs);
           } catch (e: unknown) {

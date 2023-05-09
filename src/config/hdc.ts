@@ -8,7 +8,7 @@ export const PORT = 5000;
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
 export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
 export const FRAMES_ROOT_FOLDER = '/tmp/recording/pic';
-export const FRAMEKM_ROOT_FOLDER = __dirname + '/../../../mnt/data/framekm';
+export const FRAMEKM_ROOT_FOLDER = __dirname + '/mnt/data/framekm';
 export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
@@ -19,6 +19,7 @@ export const LORA_RESPONSE_FOLDER = __dirname + '/../../../mnt/data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
+export const FRAMEKM_CLEANUP_SCRIPT = '/opt/dashcam/bin/cleanup_framekm.sh';
 export const ACL_FILES_PATH = '/mnt/data';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../mnt/data/camera-node.log';
@@ -41,7 +42,6 @@ export const CRON_CONFIG = '/mnt/data/cron_config';
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
-export const MAX_DOWNLOAD_DEBT = 10737418240 * 2;
 
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 

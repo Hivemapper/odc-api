@@ -11,15 +11,21 @@ export const COLORS: { [key: string]: ILED } = {
     on: true,
   },
   YELLOW: {
-    red: 25,
-    blue: 0,
-    green: 8,
+    red: 18,
+    blue: 2,
+    green: 12,
     on: true,
   },
   GREEN: {
     red: 3,
     blue: 25,
     green: 3,
+    on: true,
+  },
+  DIM_GREEN: {
+    red: 2,
+    blue: 16,
+    green: 2,
     on: true,
   },
   PURPLE: {
