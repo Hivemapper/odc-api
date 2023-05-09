@@ -62,6 +62,9 @@ export const concatFrames = async (
         stdio: ['ignore', 'pipe', 'inherit'],
       };
       const child = spawn(concatCommand, options);
+      child.on('error', err => {
+        console.log('Error concatenating frames: ' + err);
+      });
       child.on('close', async code => {
         if (code !== 0) {
           reject(code);

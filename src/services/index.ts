@@ -11,7 +11,7 @@ class ServiceRunner {
         const interval = setInterval(() => {
           try {
             service.execute();
-            if (service.delay && !service.interval) {
+            if (service.delay) {
               clearInterval(interval);
             }
           } catch (e: unknown) {

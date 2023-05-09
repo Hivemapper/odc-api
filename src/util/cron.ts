@@ -221,6 +221,9 @@ export const createCronJobExecutor = (
       child.stdout.on('data', data => {
         output += data.toString();
       });
+      child.on('error', err => {
+        console.log('Error executing command: ' + err);
+      });
       child.on('close', async code => {
         console.log('Command finished: ' + cmd);
         if (code !== 0) {

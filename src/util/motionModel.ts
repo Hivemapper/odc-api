@@ -30,7 +30,7 @@ import {
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { ICameraFile, IMU } from 'types';
-import { exec, ExecException, execSync, spawn } from 'child_process';
+import { exec, ExecException, execSync } from 'child_process';
 import {
   CAMERA_TYPE,
   FRAMES_ROOT_FOLDER,

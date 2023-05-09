@@ -25,9 +25,9 @@ export const TrackDownloadDebt: IService = {
         if (!error) {
           const total = Number(stdout.split('\t')[0]);
           console.log('FrameKM occupied ' + total + ' bytes');
-          if (total && total > (HIGHWATER_MARK_GB - 1) * 1024 * 1024) {
+          if (total && total > (HIGHWATER_MARK_GB - 1) * 1024 * 1024 * 1024) {
             isAppConnectionRequired = true;
-            if (total > HIGHWATER_MARK_GB * 1024 * 1024) {
+            if (total > HIGHWATER_MARK_GB * 1024 * 1024 * 1024) {
               try {
                 const cleanupScript = spawn(FRAMEKM_CLEANUP_SCRIPT, [
                   FRAMEKM_ROOT_FOLDER,
@@ -37,6 +37,10 @@ export const TrackDownloadDebt: IService = {
 
                 cleanupScript.stdout.on('data', data => {
                   console.log(data.toString());
+                });
+
+                cleanupScript.on('error', err => {
+                  console.log('Error executing script: ' + err);
                 });
 
                 cleanupScript.on('close', code => {
