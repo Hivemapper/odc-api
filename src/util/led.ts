@@ -5,9 +5,9 @@ import { jsonrepair } from 'jsonrepair';
 
 export const COLORS: { [key: string]: ILED } = {
   RED: {
-    red: 4,
-    blue: 5,
-    green: 4,
+    red: 1,
+    blue: 2,
+    green: 1,
     on: true,
   },
   YELLOW: {
@@ -20,12 +20,6 @@ export const COLORS: { [key: string]: ILED } = {
     red: 3,
     blue: 25,
     green: 3,
-    on: true,
-  },
-  DIM_GREEN: {
-    red: 2,
-    blue: 16,
-    green: 2,
     on: true,
   },
   PURPLE: {

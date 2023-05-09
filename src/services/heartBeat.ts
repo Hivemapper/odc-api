@@ -151,13 +151,6 @@ export const HeartBeatService: IService = {
                       : 70000;
                     if (gpsLostPeriod > 60000) {
                       gpsLED = COLORS.RED;
-                    } else if (
-                      got3dOnce &&
-                      gpsSample?.dop &&
-                      Number(gpsSample.dop.hdop) &&
-                      gpsSample.dop.hdop > 5
-                    ) {
-                      gpsLED = COLORS.DIM_GREEN;
                     }
 
                     if (wasGpsGood) {
