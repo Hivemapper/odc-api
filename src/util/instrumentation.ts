@@ -70,6 +70,15 @@ export const getGnssDopKpi = (
     count: 0,
     filtered: 0,
   };
+  const ephKpi: DopKpi = {
+    min: 999,
+    max: 999,
+    mean: 999,
+    median: 999,
+    sum: 999,
+    count: 0,
+    filtered: 0,
+  };
   const gnssKpi: GnssDopKpi = {
     xdop: { ...dopKpi },
     ydop: { ...dopKpi },
@@ -78,6 +87,7 @@ export const getGnssDopKpi = (
     vdop: { ...dopKpi },
     tdop: { ...dopKpi },
     gdop: { ...dopKpi },
+    eph: { ...ephKpi },
   };
 
   const getMedian = (arr: number[]) => {
@@ -93,9 +103,23 @@ export const getGnssDopKpi = (
   try {
     if (gnssArray.length) {
       const dopArray = gnssArray.map(gnss => gnss.dop);
-      const dopKeys = ['xdop', 'ydop', 'pdop', 'hdop', 'vdop', 'tdop', 'gdop'];
+      const dopKeys = [
+        'xdop',
+        'ydop',
+        'pdop',
+        'hdop',
+        'vdop',
+        'tdop',
+        'gdop',
+        'eph',
+      ];
       for (const key of dopKeys) {
-        let dop = dopArray.map(d => d?.[key as keyof Dilution] || 99);
+        let dop = [];
+        if (key !== 'eph') {
+          dop = dopArray.map(d => d?.[key as keyof Dilution] || 99);
+        } else {
+          dop = gnssArray.map(g => g?.eph || 999);
+        }
         if (dop.length) {
           dop = dop.sort((a: number, b: number) => a - b);
           const min = dop[0];

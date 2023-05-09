@@ -53,6 +53,7 @@ export type GNSS = {
   dilution?: number;
   // flags: [number, number, number];
   dop?: Dilution;
+  eph?: number;
 };
 
 export interface IMU {
@@ -79,6 +80,7 @@ export type GnssMetadata = Dilution & {
   systemTime: number;
   satellites: number;
   dilution: number;
+  eph: number;
 };
 
 export type ImuMetadata = {

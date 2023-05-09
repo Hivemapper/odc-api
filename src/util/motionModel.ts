@@ -103,6 +103,9 @@ const isValidGnssMetadata = (gnss: GNSS): boolean => {
       case 'gdop':
         isValid = isValid && !!gnss.dop && gnss.dop[key] <= value;
         break;
+      case 'eph':
+        isValid = isValid && !!gnss.eph && gnss.eph <= value;
+        break;
       default:
         break;
     }
@@ -387,6 +390,7 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
                       vdop: gnss.dop?.vdop || 99,
                       tdop: gnss.dop?.tdop || 99,
                       gdop: gnss.dop?.gdop || 99,
+                      eph: gnss.eph || 999,
                     });
                     prevPoint = { ...gnss };
                     sequentialBadRecords = 0;
@@ -832,6 +836,7 @@ export const getPointsToSample = (
           'vdop',
           'tdop',
           'gdop',
+          'eph',
         ],
         {
           ...points[pointsArrayCursor],
@@ -1347,7 +1352,7 @@ export const packMetadata = async (
         loraDeviceId: undefined,
         keyframeDistance: config.DX,
         resolution: '2k',
-        version: '1.6',
+        version: '1.7',
       },
       frames: validatedFrames,
     };

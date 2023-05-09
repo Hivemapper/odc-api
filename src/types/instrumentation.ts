@@ -16,4 +16,5 @@ export type GnssDopKpi = {
   vdop: DopKpi;
   tdop: DopKpi;
   gdop: DopKpi;
+  eph: DopKpi;
 };
