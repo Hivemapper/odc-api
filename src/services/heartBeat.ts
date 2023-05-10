@@ -1,4 +1,4 @@
-import { exec, ExecException, execSync } from 'child_process';
+import { exec, ExecException, execSync, spawnSync } from 'child_process';
 import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
 import { readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
@@ -47,10 +47,16 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 
 const isCameraBridgeServiceActive = (): boolean => {
   try {
-    const result = execSync(`systemctl is-active camera-bridge`, {
+    const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
       encoding: 'utf-8',
     });
-    return result.indexOf('active') === 0;
+
+    if (result.error) {
+      console.log('failed to check if camera running:', result.error);
+      return false;
+    }
+
+    return result.stdout.trim() === 'active';
   } catch (e) {
     console.log('failed to check if camera running:', e);
   }
