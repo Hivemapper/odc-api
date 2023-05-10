@@ -20,6 +20,7 @@ export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const FRAMEKM_CLEANUP_SCRIPT = '/opt/dashcam/bin/cleanup_framekm.sh';
+export const DATA_INTEGRITY_SCRIPT = '/opt/dashcam/bin/data_integrity_check.sh';
 export const ACL_FILES_PATH = '/mnt/data';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../mnt/data/camera-node.log';

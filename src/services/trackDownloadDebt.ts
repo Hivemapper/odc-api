@@ -5,6 +5,7 @@ import {
   METADATA_ROOT_FOLDER,
 } from 'config';
 import { IService } from '../types';
+import { isIntegrityCheckDone } from './integrityCheck';
 const HIGHWATER_MARK_GB = 20;
 
 let isAppConnectionRequired = false;
@@ -27,7 +28,10 @@ export const TrackDownloadDebt: IService = {
           console.log('FrameKM occupied ' + total + ' bytes');
           if (total && total > (HIGHWATER_MARK_GB - 1) * 1024 * 1024 * 1024) {
             isAppConnectionRequired = true;
-            if (total > HIGHWATER_MARK_GB * 1024 * 1024 * 1024) {
+            if (
+              total > HIGHWATER_MARK_GB * 1024 * 1024 * 1024 &&
+              isIntegrityCheckDone()
+            ) {
               try {
                 const cleanupScript = spawn(FRAMEKM_CLEANUP_SCRIPT, [
                   FRAMEKM_ROOT_FOLDER,

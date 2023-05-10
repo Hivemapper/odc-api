@@ -8,6 +8,7 @@ import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { MotionModelServise } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
+import { IntegrityCheckServive } from 'services/integrityCheck';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
@@ -65,6 +66,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(HeartBeatService);
     // serviceRunner.add(UpdateCameraConfigService);
     // serviceRunner.add(UpdateCameraResolutionService);
+    serviceRunner.add(IntegrityCheckServive);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);

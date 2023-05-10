@@ -16,6 +16,7 @@ import { concatFrames } from 'util/framekm';
 import { rmSync } from 'fs';
 import { MOTION_MODEL_CURSOR } from 'config';
 import { ifTimeSet } from 'util/lock';
+import { isIntegrityCheckDone } from './integrityCheck';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
@@ -26,6 +27,14 @@ const execute = async () => {
   try {
     if (!ifTimeSet()) {
       console.log('Ignoring motion model iteration, time is not set yet.');
+      await sleep(iterationDelay);
+      execute();
+      return;
+    }
+    if (!isIntegrityCheckDone()) {
+      console.log(
+        'Integrity check is not done, waiting for the system to be ready',
+      );
       await sleep(iterationDelay);
       execute();
       return;
