@@ -1094,15 +1094,6 @@ export const selectImages = (
           pointForFrame.lon,
         );
 
-        console.log(
-          prevTime,
-          frameTimestamp,
-          nextTime,
-          totalDistance,
-          distance,
-          prevPoint.speed,
-        );
-
         if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
             imagesToDownload = [images[imageCursor]];
