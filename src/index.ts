@@ -66,7 +66,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(HeartBeatService);
     // serviceRunner.add(UpdateCameraConfigService);
     // serviceRunner.add(UpdateCameraResolutionService);
-    // serviceRunner.add(IntegrityCheckServive);
+    serviceRunner.add(IntegrityCheckServive);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);

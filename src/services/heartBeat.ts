@@ -72,7 +72,6 @@ const fetchGNSSLatestSample = () => {
     });
     try {
       gpsSample = JSON.parse(jsonrepair(data));
-      console.log('Heart beat: read gps sample json:', gpsSample);
     } catch (e) {
       console.log('Latest.log Parse Error:', e);
     }
@@ -101,7 +100,6 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
     gpsSample.dop.hdop < 5;
-  console.log('Heart beat: is gps lock:', lock, gpsSample);
   return lock;
 };
 
@@ -109,13 +107,6 @@ export const HeartBeatService: IService = {
   execute: async () => {
     try {
       createHealthMarker();
-
-      console.log(
-        'HeartBeatService: isFirmwareUpdate:',
-        isFirmwareUpdate,
-        ' isLedControlledByDashcam:',
-        isLedControlledByDashcam,
-      );
 
       if (isFirmwareUpdate && isLedControlledByDashcam) {
         updateLED(COLORS.WHITE, COLORS.WHITE, COLORS.WHITE);
@@ -202,12 +193,6 @@ export const HeartBeatService: IService = {
         }
 
         if (isLedControlledByDashcam) {
-          console.log(
-            'HeartBeatService: updateLED:',
-            cameraLED,
-            gpsLED,
-            appLED,
-          );
           updateLED(cameraLED, gpsLED, appLED);
         }
       } catch (e: unknown) {

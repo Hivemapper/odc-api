@@ -20,7 +20,9 @@ export const IntegrityCheckServive: IService = {
     }, 60000);
     try {
       try {
-        const cleanupScript = spawn(DATA_INTEGRITY_SCRIPT, [
+        console.log('Running data integrity check');
+        const cleanupScript = spawn('sh', [
+          DATA_INTEGRITY_SCRIPT,
           FRAMEKM_ROOT_FOLDER,
           METADATA_ROOT_FOLDER,
           WEBSERVER_LOG_PATH,

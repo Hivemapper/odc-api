@@ -30,12 +30,11 @@ export const TrackDownloadDebt: IService = {
             isAppConnectionRequired = true;
             if (
               total > HIGHWATER_MARK_GB * 1024 * 1024 * 1024 &&
-              isIntegrityCheckDone() &&
-              false
-              // temporarily disabled
+              isIntegrityCheckDone()
             ) {
               try {
-                const cleanupScript = spawn(FRAMEKM_CLEANUP_SCRIPT, [
+                const cleanupScript = spawn('sh', [
+                  FRAMEKM_CLEANUP_SCRIPT,
                   FRAMEKM_ROOT_FOLDER,
                   METADATA_ROOT_FOLDER,
                   String(HIGHWATER_MARK_GB),
