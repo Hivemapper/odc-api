@@ -1,13 +1,4 @@
-import {
-  existsSync,
-  mkdir,
-  readdir,
-  readFile,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'fs';
+import { existsSync, mkdir, readdir, readFile, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import { GnssDopKpi } from 'types/instrumentation';
 import * as THREE from 'three';
 import {
@@ -21,13 +12,7 @@ import {
   MotionModelCursor,
 } from 'types/motionModel';
 import { timeIsMostLikelyLight } from './daylight';
-import {
-  catmullRomCurve,
-  ecefToLLA,
-  interpolate,
-  latLonDistance,
-  normaliseLatLon,
-} from './geomath';
+import { catmullRomCurve, ecefToLLA, interpolate, latLonDistance, normaliseLatLon } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
@@ -40,11 +25,7 @@ import {
   MOTION_MODEL_CURSOR,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
-import {
-  getDateFromFilename,
-  getDateFromUnicodeTimastamp,
-  promiseWithTimeout,
-} from 'util/index';
+import { getDateFromFilename, getDateFromUnicodeTimastamp, promiseWithTimeout } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 
@@ -509,17 +490,15 @@ export function isEnoughLight(gpsData: GnssMetadata[]) {
   return sufficientDaylight;
 }
 
-export function isEnoughLightForGnss(gnss: GNSS) {
+export function isEnoughLightForGnss(gnss: GNSS | null){
   if (!gnss || !gnss.timestamp) {
     return true;
   }
-  const sufficientDaylight = timeIsMostLikelyLight(
+  return timeIsMostLikelyLight(
     new Date(gnss.timestamp),
     gnss.longitude,
     gnss.latitude,
   );
-
-  return sufficientDaylight;
 }
 
 export function isGpsTooOld(gpsData: GnssMetadata[]) {
