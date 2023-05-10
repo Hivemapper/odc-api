@@ -163,7 +163,7 @@ export const HeartBeatService: IService = {
           }
           isLock = false;
 
-          if (isCameraActive) {
+          if (isCameraActive && !hasBeenLockOnce) {
             exec(CMD.STOP_CAMERA);
             console.log(
               'Camera intentionally stopped cause Lock is not there yet',
