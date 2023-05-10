@@ -47,15 +47,12 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 
 const isCameraBridgeServiceActive = (): boolean => {
   try {
-    const result = execSync(
-      `systemctl is-active camera-bridge`,
-      {
-        encoding: 'utf-8',
-      });
-    return  result.indexOf('active') === 0;
-
+    const result = execSync(`systemctl is-active camera-bridge`, {
+      encoding: 'utf-8',
+    });
+    return result.indexOf('active') === 0;
   } catch (e) {
-    console.log('failed to check if camera running:', e)
+    console.log('failed to check if camera running:', e);
   }
   return false;
 };
@@ -64,12 +61,9 @@ const fetchGNSSLatestSample = () => {
   let gpsSample: any = null;
 
   try {
-    const data = readFileSync(
-      GPS_LATEST_SAMPLE,
-      {
-        encoding: 'utf-8',
-      },
-    );
+    const data = readFileSync(GPS_LATEST_SAMPLE, {
+      encoding: 'utf-8',
+    });
     try {
       gpsSample = JSON.parse(jsonrepair(data));
       console.log('Heart beat: read gps sample json:', gpsSample);
@@ -83,14 +77,11 @@ const fetchGNSSLatestSample = () => {
 };
 
 const startCamera = () => {
-  exec(
-    CMD.START_CAMERA,
-    (error: ExecException | null) => {
-      if (!error) {
-        console.log('Camera restarted');
-      }
-    },
-  );
+  exec(CMD.START_CAMERA, (error: ExecException | null) => {
+    if (!error) {
+      console.log('Camera restarted');
+    }
+  });
 };
 
 const createHealthMarker = () => {
@@ -98,13 +89,12 @@ const createHealthMarker = () => {
 };
 
 const isGpsLock = (gpsSample: any) => {
-  const lock = (
+  const lock =
     gpsSample &&
     gpsSample.fix === '3D' &&
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
-    gpsSample.dop.hdop < 5
-  );
+    gpsSample.dop.hdop < 5;
   console.log('Heart beat: is gps lock:', lock, gpsSample);
   return lock;
 };
@@ -114,7 +104,12 @@ export const HeartBeatService: IService = {
     try {
       createHealthMarker();
 
-      console.log('HeartBeatService: isFirmwareUpdate:', isFirmwareUpdate, ' isLedControlledByDashcam:', isLedControlledByDashcam);
+      console.log(
+        'HeartBeatService: isFirmwareUpdate:',
+        isFirmwareUpdate,
+        ' isLedControlledByDashcam:',
+        isLedControlledByDashcam,
+      );
 
       if (isFirmwareUpdate && isLedControlledByDashcam) {
         updateLED(COLORS.WHITE, COLORS.WHITE, COLORS.WHITE);
@@ -147,7 +142,6 @@ export const HeartBeatService: IService = {
           if (!isCameraActive) {
             startCamera();
           }
-
         } else {
           const gpsLostPeriod = lastSuccessfulLock
             ? Math.abs(Date.now() - lastSuccessfulLock)
@@ -181,7 +175,6 @@ export const HeartBeatService: IService = {
           setIsAppConnectionRequired(false);
         }
 
-
         let cameraLED: any = null;
         if (isPreviewInProgress && isDev()) {
           cameraLED = COLORS.WHITE;
@@ -189,7 +182,12 @@ export const HeartBeatService: IService = {
           if (isCameraRunningOutOfSpace()) {
             cameraLED = COLORS.YELLOW;
           } else {
-            cameraLED = isCameraActive && isEnoughLightForGnss(lastGpsPoint) ? COLORS.GREEN : COLORS.RED;
+            cameraLED =
+              isCameraActive &&
+              lastGpsPoint &&
+              isEnoughLightForGnss(lastGpsPoint)
+                ? COLORS.GREEN
+                : COLORS.RED;
             if (!isCameraActive && wasCameraActive) {
               console.log('CAMERA TURNED OFF!!!');
             }
@@ -198,7 +196,12 @@ export const HeartBeatService: IService = {
         }
 
         if (isLedControlledByDashcam) {
-          console.log('HeartBeatService: updateLED:', cameraLED, gpsLED, appLED);
+          console.log(
+            'HeartBeatService: updateLED:',
+            cameraLED,
+            gpsLED,
+            appLED,
+          );
           updateLED(cameraLED, gpsLED, appLED);
         }
       } catch (e: unknown) {
@@ -210,4 +213,3 @@ export const HeartBeatService: IService = {
   },
   interval: 3000,
 };
-

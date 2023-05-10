@@ -7,7 +7,7 @@ import {
 } from 'config';
 import { IService } from 'types';
 
-let integrityCheckDone = false;
+let integrityCheckDone = true;
 
 export const isIntegrityCheckDone = () => {
   return integrityCheckDone;
