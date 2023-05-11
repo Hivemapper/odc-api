@@ -6,23 +6,28 @@ import { CameraType } from 'types';
 export const PORT = 5000;
 
 export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
-export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
-export const FRAMES_ROOT_FOLDER = __dirname + '/../../../mnt/data/pic';
-export const FRAMEKM_ROOT_FOLDER = __dirname + '/../../../mnt/data/framekm';
+export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
+export const FRAMES_ROOT_FOLDER = '/tmp/recording/pic';
+export const FRAMEKM_ROOT_FOLDER = '/mnt/data/framekm';
 export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
-export const GPS_ROOT_FOLDER = __dirname + '/../../../mnt/data/gps';
+export const GPS_ROOT_FOLDER = '/mnt/data/gps';
+export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../mnt/data/gps/latest.log';
-export const IMU_ROOT_FOLDER = __dirname + '/../../../mnt/data/imu';
+export const IMU_ROOT_FOLDER = '/mnt/data/imu';
 export const LORA_RESPONSE_FOLDER = __dirname + '/../../../mnt/data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
+export const FRAMEKM_CLEANUP_SCRIPT = '/opt/dashcam/bin/cleanup_framekm.sh';
+export const DATA_INTEGRITY_SCRIPT = '/opt/dashcam/bin/data_integrity_check.sh';
 export const ACL_FILES_PATH = '/mnt/data';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../mnt/data/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const CACHED_CAMERA_CONFIG = '/../../../mnt/data/camera.conf';
+export const MOTION_MODEL_CURSOR = '/mnt/data/mm_cursor.log';
+export const MOTION_MODEL_CONFIG = '/mnt/data/mm_config.json';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
 export const NEW_IMAGER_CONFIG_PATH =
@@ -38,7 +43,6 @@ export const CRON_CONFIG = '/mnt/data/cron_config';
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
-export const MAX_DOWNLOAD_DEBT = 10737418240;
 
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 

@@ -1,5 +1,7 @@
 import { API_VERSION } from 'config';
 import { InstrumentationData } from 'types';
+import { DopKpi, GnssDopKpi } from 'types/instrumentation';
+import { Dilution, GNSS } from 'types/motionModel';
 import { getSessionId, getCpuLoad, getTimeFromBoot } from 'util/index';
 
 const VALID_DASHCAM_EVENTS = new Set([
@@ -10,6 +12,11 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamResolutionUpdated',
   'DashcamLost3dLock',
   'DashcamGot3dLock',
+  'DashcamRejectedGps',
+  'DashcamMotionModelReport',
+  'DashcamDop',
+  'DashcamFps',
+  'DashcamImuFreq',
   'DashcamAppConnected',
   'DashcamApiRepaired',
   'DashcamPreviewImage',
@@ -49,3 +56,92 @@ export class InstrumentationClass {
 }
 
 export const Instrumentation = new InstrumentationClass();
+
+export const getGnssDopKpi = (
+  gnssArray: GNSS[],
+  validRecords: GNSS[],
+): GnssDopKpi => {
+  const dopKpi: DopKpi = {
+    min: 99,
+    max: 99,
+    mean: 99,
+    median: 99,
+    sum: 99,
+    count: 0,
+    filtered: 0,
+  };
+  const ephKpi: DopKpi = {
+    min: 999,
+    max: 999,
+    mean: 999,
+    median: 999,
+    sum: 999,
+    count: 0,
+    filtered: 0,
+  };
+  const gnssKpi: GnssDopKpi = {
+    xdop: { ...dopKpi },
+    ydop: { ...dopKpi },
+    pdop: { ...dopKpi },
+    hdop: { ...dopKpi },
+    vdop: { ...dopKpi },
+    tdop: { ...dopKpi },
+    gdop: { ...dopKpi },
+    eph: { ...ephKpi },
+  };
+
+  const getMedian = (arr: number[]) => {
+    // CAREFUL: ASSUMPTION THAT ARRAY IS SORTED ALREADY
+    const midpoint = Math.floor(arr.length / 2); // 2.
+    const median =
+      arr.length % 2 === 1
+        ? arr[midpoint]
+        : (arr[midpoint - 1] + arr[midpoint]) / 2;
+    return median;
+  };
+
+  try {
+    if (gnssArray.length) {
+      const dopArray = gnssArray.map(gnss => gnss.dop);
+      const dopKeys = [
+        'xdop',
+        'ydop',
+        'pdop',
+        'hdop',
+        'vdop',
+        'tdop',
+        'gdop',
+        'eph',
+      ];
+      for (const key of dopKeys) {
+        let dop = [];
+        if (key !== 'eph') {
+          dop = dopArray.map(d => d?.[key as keyof Dilution] || 99);
+        } else {
+          dop = gnssArray.map(g => g?.eph || 999);
+        }
+        if (dop.length) {
+          dop = dop.sort((a: number, b: number) => a - b);
+          const min = dop[0];
+          const max = dop[dop.length - 1];
+          const median = getMedian(dop);
+          const sum = dop.reduce((a, b) => a + b, 0);
+          const count = dop.length;
+
+          gnssKpi[key as keyof GnssDopKpi] = {
+            min,
+            max,
+            median,
+            sum: Number(Number(sum).toFixed(2)),
+            count,
+            mean: Number(Number(sum / count).toFixed(2)),
+            filtered: validRecords.length,
+          };
+        }
+      }
+    }
+  } catch (e: unknown) {
+    console.log('Error parsing DOP data');
+  }
+  return gnssKpi;
+};

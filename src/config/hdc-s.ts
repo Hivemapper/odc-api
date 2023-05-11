@@ -13,6 +13,7 @@ export const FRAMEKM_ROOT_FOLDER =
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../data/recording/gps';
+export const METADATA_ROOT_FOLDER = '/data/recording/metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../data/recording/gps/latest.log';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
@@ -21,9 +22,13 @@ export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
 export const NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../data/wifi.cfg';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
+export const FRAMEKM_CLEANUP_SCRIPT = '/opt/dashcam/bin/cleanup_framekm.sh';
+export const DATA_INTEGRITY_SCRIPT = '/opt/dashcam/bin/data_integrity_check.sh';
 export const ACL_FILES_PATH = '/data';
 export const CACHED_CAMERA_CONFIG = '/data/camera.config';
 export const HEALTH_MARKER_PATH = '/data/healthy.txt';
+export const MOTION_MODEL_CURSOR = '/data/mm_cursor.log';
+export const MOTION_MODEL_CONFIG = '/data/mm_config.json';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../data/recording/camera-node.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
@@ -41,7 +46,6 @@ export const CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
-export const MAX_DOWNLOAD_DEBT = 1073741824; // 1GB for now
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 

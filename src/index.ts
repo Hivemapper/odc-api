@@ -5,9 +5,10 @@ import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
-import { UpdateCameraConfigService } from 'services/updateCameraConfig';
-import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
+import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
+import { MotionModelServise } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
+import { IntegrityCheckServive } from 'services/integrityCheck';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
@@ -63,11 +64,14 @@ export async function initAppServer(): Promise<Application> {
 
   try {
     serviceRunner.add(HeartBeatService);
-    serviceRunner.add(UpdateCameraConfigService);
-    serviceRunner.add(UpdateCameraResolutionService);
+    // serviceRunner.add(UpdateCameraConfigService);
+    // serviceRunner.add(UpdateCameraResolutionService);
+    serviceRunner.add(IntegrityCheckServive);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
+    serviceRunner.add(MotionModelServise);
+    serviceRunner.add(UpdateMotionModelConfigService);
 
     serviceRunner.run();
   } catch (e: unknown) {

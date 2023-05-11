@@ -5,21 +5,21 @@ import { jsonrepair } from 'jsonrepair';
 
 export const COLORS: { [key: string]: ILED } = {
   RED: {
-    red: 25,
-    blue: 0,
-    green: 0,
+    red: 1,
+    blue: 2,
+    green: 1,
     on: true,
   },
   YELLOW: {
-    red: 25,
-    blue: 0,
-    green: 8,
+    red: 18,
+    blue: 2,
+    green: 12,
     on: true,
   },
   GREEN: {
-    red: 0,
-    blue: 0,
-    green: 25,
+    red: 3,
+    blue: 25,
+    green: 3,
     on: true,
   },
   PURPLE: {
@@ -41,9 +41,9 @@ export const COLORS: { [key: string]: ILED } = {
     on: true,
   },
   WHITE: {
-    red: 25,
-    blue: 25,
-    green: 25,
+    red: 20,
+    blue: 20,
+    green: 20,
     on: true,
   },
 };
@@ -93,7 +93,11 @@ export const updateLED = async (
         },
         (err: NodeJS.ErrnoException | null, data: string) => {
           if (data && !err) {
-            leds = JSON.parse(jsonrepair(data)).leds;
+            try {
+              leds = JSON.parse(jsonrepair(data)).leds;
+            } catch (e: unknown) {
+              //
+            }
           }
 
           const frames = framesLED ? { ...leds[0], ...framesLED } : leds[0];

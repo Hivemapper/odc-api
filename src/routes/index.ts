@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { mkdir, readFileSync, stat, Stats, writeFile, writeFileSync } from 'fs';
-import { exec, execSync } from 'child_process';
+import { exec, execSync, spawn } from 'child_process';
 
 import {
   API_VERSION,
@@ -21,6 +21,7 @@ import aclRouter from './acl';
 import configRouter from './config';
 import kpiRouter from './kpi';
 import framekmRouter from './framekm';
+import metadataRouter from './metadata';
 import utilRouter from './util';
 import ledRouter from './led';
 import networkRouter from './network';
@@ -48,6 +49,7 @@ router.use('/acl', aclRouter);
 router.use('/config', configRouter);
 router.use('/kpi', kpiRouter);
 router.use('/framekm', framekmRouter);
+router.use('/metadata', metadataRouter);
 router.use('/util', utilRouter);
 router.use('/led', ledRouter);
 router.use('/instrumentation', instrumentationRouter);
@@ -205,13 +207,42 @@ router.post('/cmd', async (req, res) => {
 
 router.post('/cmd/sync', async (req, res) => {
   try {
-    const output = execSync(req.body.cmd, {
-      encoding: 'utf-8',
-    });
-    console.log(output);
-    res.json({
-      output,
-    });
+    const command = req?.body?.cmd || '';
+    if (command === 'rauc install /tmp/update.raucb') {
+      const command = 'rauc';
+      const args = ['install', '/tmp/update.raucb'];
+
+      const options: any = {
+        stdio: ['inherit', 'pipe', 'inherit'],
+      };
+
+      const child = spawn(command, args, options);
+      let output = '';
+
+      child.stdout.setEncoding('utf8');
+      child.stdout.on('data', data => {
+        output += data.toString();
+      });
+
+      child.on('error', error => {
+        res.json({ error });
+      });
+
+      child.on('close', () => {
+        output += ' succeeded';
+        res.json({
+          output,
+        });
+      });
+    } else {
+      const output = execSync(req.body.cmd, {
+        encoding: 'utf-8',
+      });
+      console.log(output);
+      res.json({
+        output,
+      });
+    }
   } catch (error: unknown) {
     res.json({ error });
   }

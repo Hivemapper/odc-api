@@ -1,16 +1,13 @@
 import { GPS_LATEST_SAMPLE, GPS_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
-import { readdirSync, readFile } from 'fs';
+import { readdirSync, readFile, writeFileSync } from 'fs';
 import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getLockTime } from 'util/lock';
-import { Instrumentation } from 'util/instrumentation';
+import { jsonrepair } from 'jsonrepair';
 
 const router = Router();
-
-let firstFileFetched = false;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -33,13 +30,6 @@ router.get('/', async (req: Request, res: Response) => {
 
     const filteredFiles = filterBySinceUntil(gpsFiles, req);
 
-    if (!firstFileFetched && getLockTime().lockTime && filteredFiles.length) {
-      firstFileFetched = true;
-      Instrumentation.add({
-        event: 'DashcamFetchedFirstGpsFile',
-      });
-    }
-
     res.json(filteredFiles);
     setMostRecentPing(Date.now());
   } catch (error) {
@@ -60,7 +50,7 @@ router.get('/sample', async (req: Request, res: Response) => {
       (err: NodeJS.ErrnoException | null, data: string) => {
         let sample = {};
         if (data && !err) {
-          sample = JSON.parse(data);
+          sample = JSON.parse(jsonrepair(data));
         }
 
         res.json(sample);
@@ -163,6 +153,19 @@ router.get('/spoofdetstate', async (req: Request, res: Response) => {
   } catch (e) {
     res.json({});
   }
+});
+
+router.post('/mgaano', (req, res) => {
+  console.log('/mgaano: receiving mga ano data');
+  try {
+    const data = Buffer.from(req.body.mgaanodata, 'base64');
+    console.log('/mgaano: decoded data length: ', data.length);
+    writeFileSync('/mnt/data/mgaoffline.ubx', data);
+    console.log('/mgaano:  decoded data length saved');
+  } catch (e) {
+    res.json({ err: e });
+  }
+  res.json({});
 });
 
 export default router;

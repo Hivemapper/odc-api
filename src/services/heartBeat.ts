@@ -1,21 +1,29 @@
-import { exec, ExecException } from 'child_process';
+import { exec, ExecException, execSync, spawnSync } from 'child_process';
 import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
-import { readFile } from 'fs';
-import { IService } from 'types';
-import { Instrumentation } from 'util/instrumentation';
-import { setLockTime, setCameraTime, ifTimeSet } from 'util/lock';
-import { COLORS, updateLED } from '../util/led';
+import { readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
+import { IService } from 'types';
+import { GNSS } from 'types/motionModel';
+import { Instrumentation } from 'util/instrumentation';
+import { setLockTime } from 'util/lock';
+import { isEnoughLightForGnss } from 'util/motionModel';
+import { COLORS, updateLED } from '../util/led';
+import {
+  isCameraRunningOutOfSpace,
+  setIsAppConnectionRequired,
+} from './trackDownloadDebt';
+import * as console from 'console';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
-let lastSuccessfulFix = 0;
+let lastSuccessfulLock = 0;
 let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
 let wasCameraActive = false;
-let wasGpsGood = false;
-let got3dOnce = false;
+let isLock = false;
+let hasBeenLockOnce = false;
 let isLedControlledByDashcam = true;
+let lastGpsPoint: GNSS | null = null;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -37,123 +45,161 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
   isLedControlledByDashcam = state;
 };
 
+const isCameraBridgeServiceActive = (): boolean => {
+  try {
+    const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
+      encoding: 'utf-8',
+    });
+
+    if (result.error) {
+      console.log('failed to check if camera running:', result.error);
+      return false;
+    }
+
+    return result.stdout.trim() === 'active';
+  } catch (e) {
+    console.log('failed to check if camera running:', e);
+  }
+  return false;
+};
+
+const fetchGNSSLatestSample = () => {
+  let gpsSample: any = null;
+
+  try {
+    const data = readFileSync(GPS_LATEST_SAMPLE, {
+      encoding: 'utf-8',
+    });
+    try {
+      gpsSample = JSON.parse(jsonrepair(data));
+    } catch (e) {
+      console.log('Latest.log Parse Error:', e);
+    }
+  } catch (e) {
+    console.log('failed to read ', GPS_LATEST_SAMPLE);
+  }
+  return gpsSample;
+};
+
+const startCamera = () => {
+  exec(CMD.START_CAMERA, (error: ExecException | null) => {
+    if (!error) {
+      console.log('Camera restarted');
+    }
+  });
+};
+
+const createHealthMarker = () => {
+  exec('touch ' + HEALTH_MARKER_PATH);
+};
+
+const isGpsLock = (gpsSample: any) => {
+  const lock =
+    gpsSample &&
+    gpsSample.fix === '3D' &&
+    gpsSample.dop &&
+    Number(gpsSample.dop.hdop) &&
+    gpsSample.dop.hdop < 5;
+  return lock;
+};
+
 export const HeartBeatService: IService = {
   execute: async () => {
     try {
-      exec('touch ' + HEALTH_MARKER_PATH);
+      createHealthMarker();
+
       if (isFirmwareUpdate && isLedControlledByDashcam) {
-        updateLED(COLORS.PURPLE, COLORS.PURPLE, COLORS.PURPLE);
+        updateLED(COLORS.WHITE, COLORS.WHITE, COLORS.WHITE);
         return;
       }
-      // systemctl is-active camera-bridge && ls ${FRAMES_ROOT_FOLDER} | tail -1
-      exec(
-        `systemctl is-active camera-bridge`,
-        {
-          encoding: 'utf-8',
-        },
-        (error: ExecException | null, stdout: string) => {
-          const cameraResponse = error ? '' : stdout;
 
-          let imgLED: any;
+      const isCameraActive = isCameraBridgeServiceActive();
 
-          const isCameraActive = cameraResponse.indexOf('active') === 0;
-          imgLED = isCameraActive ? COLORS.GREEN : COLORS.RED;
+      let gpsLED: any = null;
+      try {
+        const gpsSample = fetchGNSSLatestSample();
+        if (isGpsLock(gpsSample)) {
+          if (!hasBeenLockOnce) {
+            Instrumentation.add({
+              event: 'DashcamReceivedFirstGpsLock',
+            });
+          } else if (!isLock) {
+            Instrumentation.add({
+              event: 'DashcamGot3dLock',
+            });
+          }
+          if (gpsSample.ttff) {
+            setLockTime(gpsSample.ttff);
+          }
 
-          if (!isCameraActive && wasCameraActive) {
-            console.log('CAMERA TURNED OFF!!!');
+          lastGpsPoint = gpsSample;
+          lastSuccessfulLock = Date.now();
+          isLock = true;
+          hasBeenLockOnce = true;
+
+          gpsLED = COLORS.GREEN;
+          if (!isCameraActive) {
+            startCamera();
+          }
+        } else {
+          const gpsLostPeriod = lastSuccessfulLock
+            ? Math.abs(Date.now() - lastSuccessfulLock)
+            : 70000;
+          if (gpsLostPeriod > 60000) {
+            gpsLED = COLORS.RED;
+          }
+
+          if (isLock) {
+            Instrumentation.add({
+              event: 'DashcamLost3dLock',
+            });
+          }
+          isLock = false;
+
+          if (isCameraActive && !hasBeenLockOnce) {
+            exec(CMD.STOP_CAMERA);
+            console.log(
+              'Camera intentionally stopped cause Lock is not there yet',
+            );
+          }
+        }
+
+        const appLED = COLORS.GREEN;
+
+        const appDisconnectionPeriod = mostRecentPing
+          ? Math.abs(Date.now() - mostRecentPing)
+          : 30000;
+
+        if (appDisconnectionPeriod < 15000) {
+          setIsAppConnectionRequired(false);
+        }
+
+        let cameraLED: any = null;
+        if (isPreviewInProgress && isDev()) {
+          cameraLED = COLORS.WHITE;
+        } else {
+          if (isCameraRunningOutOfSpace()) {
+            cameraLED = COLORS.YELLOW;
+          } else {
+            cameraLED =
+              isCameraActive &&
+              lastGpsPoint &&
+              isEnoughLightForGnss(lastGpsPoint)
+                ? COLORS.GREEN
+                : COLORS.RED;
+            if (!isCameraActive && wasCameraActive) {
+              console.log('CAMERA TURNED OFF!!!');
+            }
           }
           wasCameraActive = isCameraActive;
+        }
 
-          // previousCameraResponse = cameraResponse;
-
-          let gpsLED: any = null;
-          try {
-            readFile(
-              GPS_LATEST_SAMPLE,
-              {
-                encoding: 'utf-8',
-              },
-              (err: NodeJS.ErrnoException | null, data: string) => {
-                let gpsSample: any = null;
-                if (data) {
-                  try {
-                    gpsSample = JSON.parse(jsonrepair(data));
-                  } catch (e: unknown) {
-                    console.log('Latest.log Parse Error:', e);
-                  }
-                }
-
-                if (gpsSample) {
-                  if (
-                    gpsSample.fix === '3D' &&
-                    gpsSample.dop &&
-                    Number(gpsSample.dop) &&
-                    gpsSample.dop.hdop < 5
-                  ) {
-                    gpsLED = COLORS.GREEN;
-                    lastSuccessfulFix = Date.now();
-                    setLockTime();
-                    setCameraTime();
-                    if (!got3dOnce) {
-                      Instrumentation.add({
-                        event: 'DashcamReceivedFirstGpsLock',
-                      });
-                    } else if (!wasGpsGood) {
-                      Instrumentation.add({
-                        event: 'DashcamGot3dLock',
-                      });
-                    }
-                    wasGpsGood = true;
-                    got3dOnce = true;
-                  } else {
-                    const gpsLostPeriod = lastSuccessfulFix
-                      ? Math.abs(Date.now() - lastSuccessfulFix)
-                      : 70000;
-                    if (gpsLostPeriod > 60000) {
-                      gpsLED = COLORS.RED;
-                    }
-
-                    if (wasGpsGood) {
-                      Instrumentation.add({
-                        event: 'DashcamLost3dLock',
-                      });
-                    }
-                    wasGpsGood = false;
-
-                    if (
-                      cameraResponse.indexOf('active') === 0 &&
-                      !ifTimeSet() &&
-                      !got3dOnce
-                    ) {
-                      exec(CMD.STOP_CAMERA);
-                      console.log(
-                        'Camera intentionally stopped cause Lock is not there yet',
-                      );
-                    }
-                  }
-                }
-
-                const appDisconnectionPeriod = mostRecentPing
-                  ? Math.abs(Date.now() - mostRecentPing)
-                  : 30000;
-
-                let appLED = COLORS.RED;
-                if (appDisconnectionPeriod < 15000) {
-                  appLED = COLORS.GREEN;
-                }
-                if (!got3dOnce) {
-                  imgLED = COLORS.RED;
-                }
-                if (isLedControlledByDashcam) {
-                  updateLED(imgLED, gpsLED, appLED);
-                }
-              },
-            );
-          } catch (e: unknown) {
-            console.log(e);
-          }
-        },
-      );
+        if (isLedControlledByDashcam) {
+          updateLED(cameraLED, gpsLED, appLED);
+        }
+      } catch (e: unknown) {
+        console.log(e);
+      }
     } catch (e: unknown) {
       console.log('LED service failed with error', e);
     }

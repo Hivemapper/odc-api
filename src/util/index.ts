@@ -20,6 +20,7 @@ import {
   WEBSERVER_LOG_PATH,
 } from 'config';
 import { exec } from 'child_process';
+import { jsonrepair } from 'jsonrepair';
 
 let sessionId: string;
 
@@ -30,6 +31,30 @@ export const getDateFromFilename = (filename: string) => {
     time.pop();
     parts[1] = time.join('.');
     return new Date(parts.join('T'));
+  } catch (e) {
+    return new Date();
+  }
+};
+
+export const getDateFromFramekmName = (filename: string) => {
+  try {
+    const parts = filename.split('_');
+    const date = parts[1];
+    const time = parts[2];
+    return new Date(
+      date.substring(0, 4) +
+        '-' +
+        date.substring(4, 6) +
+        '-' +
+        date.substring(6, 8) +
+        'T' +
+        time.substring(0, 2) +
+        ':' +
+        time.substring(2, 4) +
+        ':' +
+        time.substring(4, 6) +
+        '.000Z',
+    );
   } catch (e) {
     return new Date();
   }
@@ -246,7 +271,9 @@ export const getNewCameraConfig = async (): Promise<
             });
             if (configJSON) {
               try {
-                const cameraConfig = JSON.parse(configJSON.toString());
+                const cameraConfig = JSON.parse(
+                  jsonrepair(configJSON.toString()),
+                );
                 if (cameraConfig?.directory) {
                   if (data === '2K') {
                     cameraConfig.directory.output = '';
@@ -308,3 +335,21 @@ export const fileExists = (filepath: string) => {
     });
   });
 };
+
+export async function promiseWithTimeout(racePromise: any, timeout: number) {
+  let timer: any = null;
+  const wait = (ms: number) =>
+    new Promise((resolve, reject) => {
+      timer = setTimeout(() => {
+        reject();
+      }, ms);
+      return timer;
+    });
+  return await Promise.race([
+    racePromise.finally((value: any) => {
+      clearTimeout(timer);
+      return value;
+    }),
+    wait(timeout),
+  ]);
+}

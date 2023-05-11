@@ -11,6 +11,7 @@ import { CameraType, ICameraFile } from '../types';
 import { exec, ExecException } from 'child_process';
 import { Instrumentation } from 'util/instrumentation';
 
+export const tmpFrameName = 'cam0pipe.jpg';
 const router = Router();
 
 let firstFileFetched = false;
@@ -75,13 +76,17 @@ router.get('/pic/:name', (req: Request, res: Response) => {
 router.get('/last', async (req: Request, res: Response) => {
   try {
     exec(
-      `ls ${FRAMES_ROOT_FOLDER} | tail -1`,
+      `ls ${FRAMES_ROOT_FOLDER} | tail -2`,
       {
         encoding: 'utf-8',
       },
       (error: ExecException | null, stdout: string) => {
         if (!error) {
-          const filename = stdout.split('\n')[0];
+          const names = stdout.split('\n');
+          let filename = names[0];
+          if (filename === tmpFrameName && names.length > 1) {
+            filename = names[2];
+          }
           res.json({
             path: filename,
             date: getDateFromUnicodeTimastamp(filename).getTime(),
@@ -99,7 +104,6 @@ router.get('/last', async (req: Request, res: Response) => {
 router.get('/quality', async (req: Request, res: Response) => {
   try {
     if (CAMERA_TYPE === CameraType.HdcS) {
-      // TODO: placeholder
       return res.json({ quality: 70 });
     }
     res.json({ quality: getQuality() });
