@@ -1,4 +1,13 @@
-import { existsSync, mkdir, readdir, readFile, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdir,
+  readdir,
+  readFile,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { GnssDopKpi } from 'types/instrumentation';
 import * as THREE from 'three';
 import {
@@ -12,7 +21,13 @@ import {
   MotionModelCursor,
 } from 'types/motionModel';
 import { timeIsMostLikelyLight } from './daylight';
-import { catmullRomCurve, ecefToLLA, interpolate, latLonDistance, normaliseLatLon } from './geomath';
+import {
+  catmullRomCurve,
+  ecefToLLA,
+  interpolate,
+  latLonDistance,
+  normaliseLatLon,
+} from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
@@ -25,7 +40,11 @@ import {
   MOTION_MODEL_CURSOR,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
-import { getDateFromFilename, getDateFromUnicodeTimastamp, promiseWithTimeout } from 'util/index';
+import {
+  getDateFromFilename,
+  getDateFromUnicodeTimastamp,
+  promiseWithTimeout,
+} from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 
@@ -44,10 +63,11 @@ const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
 let config: MotionModelConfig = {
   DX: 6,
   GnssFilter: {
-    hdop: 7,
+    hdop: 6,
     pdop: 7,
     '3dLock': true,
     minSatellites: 4,
+    eph: 15,
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   IsCornerDetectionEnabled: true,
@@ -490,8 +510,8 @@ export function isEnoughLight(gpsData: GnssMetadata[]) {
   return sufficientDaylight;
 }
 
-export function isEnoughLightForGnss(gnss: GNSS | null){
-  if (!gnss || !gnss.timestamp) {
+export function isEnoughLightForGnss(gnss: GNSS | null) {
+  if (!gnss || !gnss.timestamp || config.IsLightCheckDisabled) {
     return true;
   }
   return timeIsMostLikelyLight(

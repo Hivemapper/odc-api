@@ -24,6 +24,7 @@ export type MotionModelConfig = {
     cep?: number;
     '3dLock': boolean;
     minSatellites: number;
+    eph?: number;
   };
   MaxPendingTime: number;
   isImuMovementDetectionEnabled: boolean;
