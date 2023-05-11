@@ -128,7 +128,9 @@ export const HeartBeatService: IService = {
               event: 'DashcamGot3dLock',
             });
           }
-          setLockTime(gpsSample.ttff);
+          if (gpsSample.ttff) {
+            setLockTime(gpsSample.ttff);
+          }
 
           lastGpsPoint = gpsSample;
           lastSuccessfulLock = Date.now();

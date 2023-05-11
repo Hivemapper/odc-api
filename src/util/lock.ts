@@ -10,12 +10,12 @@ export const ifTimeSet = () => {
   return isTimeSet;
 };
 
-export const setLockTime = (gpsSample: any) => {
-  lockTime = gpsSample.ttff_millis;
+export const setLockTime = (ttff: number) => {
+  lockTime = ttff;
 };
 
 export const getLockTime = () => {
   return {
-        lockTime,
-      }
+    lockTime,
+  };
 };
