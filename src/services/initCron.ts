@@ -15,24 +15,35 @@ export const InitCronService: IService = {
         readFile(CRON_CONFIG, (err, data) => {
           if (err) throw err;
           try {
-            const cronJobs = JSON.parse(jsonrepair(data.toString()));
-            if (CAMERA_TYPE === CameraType.Hdc) {
-              const isAdded = cronJobs.some(
-                (job: any) => job?.id === 'cleanup_old_img_cache_once',
-              );
-              if (!isAdded) {
-                cronJobs.push({
-                  cmd: 'rm -r /mnt/data/pic',
-                  frequency: {
-                    oncePerDevice: true,
-                    delay: 300000,
-                  },
-                  id: 'cleanup_old_img_cache_once',
-                  log: true,
-                });
+            let fileContents = '[]';
+            const output = data.toString();
+            if (output) {
+              try {
+                fileContents = jsonrepair(output);
+              } catch (err: unknown) {
+                console.log(err);
               }
             }
-            scheduleCronJobs(cronJobs);
+            const cronJobs = JSON.parse(fileContents);
+            if (Array.isArray(cronJobs)) {
+              if (CAMERA_TYPE === CameraType.Hdc) {
+                const isAdded = cronJobs.some(
+                  (job: any) => job?.id === 'cleanup_old_img_cache_once',
+                );
+                if (!isAdded) {
+                  cronJobs.push({
+                    cmd: 'rm -r /mnt/data/pic',
+                    frequency: {
+                      oncePerDevice: true,
+                      delay: 300000,
+                    },
+                    id: 'cleanup_old_img_cache_once',
+                    log: true,
+                  });
+                }
+              }
+              scheduleCronJobs(cronJobs);
+            }
           } catch (e: unknown) {
             console.log('Error parsing cron config', e);
           }

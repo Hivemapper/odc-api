@@ -6,6 +6,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  writeFile,
   writeFileSync,
 } from 'fs';
 import { GnssDopKpi } from 'types/instrumentation';
@@ -37,6 +38,7 @@ import {
   GPS_ROOT_FOLDER,
   IMU_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
+  MOTION_MODEL_CONFIG,
   MOTION_MODEL_CURSOR,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
@@ -75,9 +77,41 @@ let config: MotionModelConfig = {
   IsLightCheckDisabled: false,
 };
 
-// TODO:
-export const loadConfig = (_config: MotionModelConfig) => {
-  config = _config;
+export const loadConfig = (
+  _config: MotionModelConfig,
+  updateFile?: boolean,
+) => {
+  if (isValidConfig(_config)) {
+    config = _config;
+    if (updateFile) {
+      writeFile(
+        MOTION_MODEL_CONFIG,
+        JSON.stringify(config),
+        {
+          encoding: 'utf-8',
+        },
+        () => {},
+      );
+    }
+  } else {
+    console.log('trying to load invalid dashcam configuration: ', _config);
+  }
+};
+
+export const getConfig = () => {
+  return config;
+};
+
+export const isValidConfig = (_config: MotionModelConfig) => {
+  return (
+    _config &&
+    Number(_config.DX) &&
+    Number(_config.MaxPendingTime) &&
+    typeof _config.IsCornerDetectionEnabled === 'boolean' &&
+    typeof _config.isImuMovementDetectionEnabled === 'boolean' &&
+    typeof _config.IsLightCheckDisabled === 'boolean' &&
+    typeof _config.GnssFilter === 'object'
+  );
 };
 
 const isValidGnssMetadata = (gnss: GNSS): boolean => {

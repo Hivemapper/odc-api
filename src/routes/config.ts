@@ -1,6 +1,4 @@
-import { MOTION_MODEL_CONFIG } from 'config';
 import { Router, Request, Response } from 'express';
-import { writeFile } from 'fs';
 import { ICameraConfig } from 'types';
 import {
   setCameraConfig,
@@ -8,20 +6,20 @@ import {
   setCameraResolution,
 } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
-import { loadConfig } from 'util/motionModel';
+import { getConfig, loadConfig } from 'util/motionModel';
 const router = Router();
+
+router.get('/motionmodel', async (req: Request, res: Response) => {
+  try {
+    res.json(getConfig());
+  } catch (error: unknown) {
+    res.json({ error });
+  }
+});
 
 router.post('/motionmodel', async (req: Request, res: Response) => {
   try {
-    loadConfig(req.body.config);
-    writeFile(
-      MOTION_MODEL_CONFIG,
-      JSON.stringify(req.body.config),
-      {
-        encoding: 'utf-8',
-      },
-      () => {},
-    );
+    if (req?.body?.config) loadConfig(req.body.config, true);
     res.json({
       output: 'done',
     });

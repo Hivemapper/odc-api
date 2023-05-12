@@ -19,7 +19,7 @@ import {
   NEW_IMAGER_CONFIG_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 
 let sessionId: string;
@@ -333,6 +333,64 @@ export const fileExists = (filepath: string) => {
     access(filepath, constants.F_OK, error => {
       resolve(!error);
     });
+  });
+};
+
+export const getOldestFileDateInDirectory = (path: string): Promise<number> => {
+  return new Promise(resolve => {
+    const timeout = setTimeout(() => {
+      resolve(0);
+    }, 10000);
+
+    try {
+      const findOldestFile = spawn(`ls -rt ${path} | head -n 1`, {
+        shell: true,
+      });
+
+      let oldestFile = '';
+      findOldestFile.stdout.on('data', data => {
+        oldestFile += data.toString().trim();
+      });
+
+      findOldestFile.on('close', () => {
+        if (!oldestFile) {
+          resolve(0);
+          clearTimeout(timeout);
+          return;
+        }
+
+        const getDate = spawn(`date -r ${path}/${oldestFile} +%s`, {
+          shell: true,
+        });
+
+        getDate.stdout.on('data', data => {
+          const oldestTimestamp = parseInt(data.toString().trim(), 10);
+          clearTimeout(timeout);
+          if (oldestTimestamp) {
+            resolve(oldestTimestamp * 1000);
+          } else {
+            resolve(0);
+          }
+        });
+
+        getDate.stderr.on('data', () => {
+          resolve(0);
+          clearTimeout(timeout);
+          return;
+        });
+      });
+
+      findOldestFile.stderr.on('data', () => {
+        resolve(0);
+        clearTimeout(timeout);
+        return;
+      });
+    } catch (error) {
+      resolve(0);
+      clearTimeout(timeout);
+      console.log(error);
+      return;
+    }
   });
 };
 
