@@ -26,6 +26,11 @@ export type MotionModelConfig = {
     minSatellites: number;
     eph?: number;
   };
+  ImuFilter: {
+    threshold: number;
+    alpha: number;
+    params: number[];
+  };
   MaxPendingTime: number;
   isImuMovementDetectionEnabled: boolean;
   IsCornerDetectionEnabled: boolean;

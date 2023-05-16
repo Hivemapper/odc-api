@@ -3,7 +3,6 @@ import {
   createMotionModel,
   getNextGnss,
   getNextImu,
-  isCarParkedBasedOnImu,
   isGnssEligibleForMotionModel,
   packMetadata,
   selectImages,
@@ -17,6 +16,7 @@ import { rmSync } from 'fs';
 import { MOTION_MODEL_CURSOR } from 'config';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
+import { isCarParkedBasedOnImu } from 'util/imu';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
@@ -95,7 +95,7 @@ const execute = async () => {
     await sleep(iterationDelay);
     execute();
   } catch (e: unknown) {
-    console.log('Should repair');
+    console.log('Should repair', e);
     failedIterations++;
     if (failedIterations > 1) {
       if (failedIterations > MAX_FAILED_ITERATIONS) {

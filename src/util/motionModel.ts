@@ -62,6 +62,12 @@ export const MIN_PER_FRAME_BYTES = 25 * 1000;
 const MIN_DISTANCE_BETWEEN_FRAMES = 1;
 const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
 
+const defaultImu = {
+  threshold: 0.1,
+  alpha: 0.5,
+  params: [1, 1, 1, 0, 1],
+};
+
 let config: MotionModelConfig = {
   DX: 6,
   GnssFilter: {
@@ -75,6 +81,7 @@ let config: MotionModelConfig = {
   IsCornerDetectionEnabled: true,
   isImuMovementDetectionEnabled: false,
   IsLightCheckDisabled: false,
+  ImuFilter: defaultImu,
 };
 
 export const loadConfig = (
@@ -98,20 +105,23 @@ export const loadConfig = (
   }
 };
 
-export const getConfig = () => {
+export const getConfig = (): MotionModelConfig => {
   return config;
 };
 
 export const isValidConfig = (_config: MotionModelConfig) => {
-  return (
+  const isValid =
     _config &&
     Number(_config.DX) &&
     Number(_config.MaxPendingTime) &&
     typeof _config.IsCornerDetectionEnabled === 'boolean' &&
     typeof _config.isImuMovementDetectionEnabled === 'boolean' &&
     typeof _config.IsLightCheckDisabled === 'boolean' &&
-    typeof _config.GnssFilter === 'object'
-  );
+    typeof _config.GnssFilter === 'object';
+  if (isValid && !_config.ImuFilter) {
+    _config.ImuFilter = defaultImu;
+  }
+  return isValid;
 };
 
 const isValidGnssMetadata = (gnss: GNSS): boolean => {
@@ -490,31 +500,6 @@ export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
 export function isCarParkedBasedOnGnss(gpsData: GnssMetadata[]) {
   return !gpsData.some((gps: GnssMetadata) => gps.speed > 4);
 }
-
-export const isCarParkedBasedOnImu = (imu: ImuMetadata) => {
-  if (!config.isImuMovementDetectionEnabled) {
-    return false;
-  }
-
-  const accel = imu.accelerometer;
-  if (accel && accel.length) {
-    const accX = accel.map(acc => acc.x);
-    const minX = Math.min(...accX);
-    const maxX = Math.max(...accX);
-
-    const accY = accel.map(acc => acc.y);
-    const minY = Math.min(...accY);
-    const maxY = Math.max(...accY);
-
-    const accZ = accel.map(acc => acc.z);
-    const minZ = Math.min(...accZ);
-    const maxZ = Math.max(...accZ);
-
-    return maxX - minX > 0.1 || maxY - minY > 0.1 || maxZ - minZ > 0.1;
-  } else {
-    return false;
-  }
-};
 
 export const isImuValid = (imuData: ImuMetadata): boolean => {
   return (
