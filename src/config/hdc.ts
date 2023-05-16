@@ -11,6 +11,8 @@ export const FRAMES_ROOT_FOLDER = '/tmp/recording/pic';
 export const FRAMEKM_ROOT_FOLDER = '/mnt/data/framekm';
 export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
+export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
+export const GPS_MGA_OFFLINE_HASH = '/mnt/data/mgaoffline.hash';
 export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../mnt/data/gps/latest.log';
@@ -45,8 +47,11 @@ export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
 
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
+export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE = '/mnt/data/camera_bridge_config.json';
+export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/mnt/data/camera_bridge_config.hash';
 
 export const CMD = {
+  RESTART_CAMERA: 'systemctl restart camera-bridge',
   START_CAMERA: 'systemctl start camera-bridge',
   STOP_CAMERA: 'systemctl stop camera-bridge',
   START_PREVIEW: 'systemctl start camera-preview',

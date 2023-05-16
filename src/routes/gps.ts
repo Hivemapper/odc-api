@@ -1,11 +1,18 @@
-import { GPS_LATEST_SAMPLE, GPS_ROOT_FOLDER } from '../config';
+import {
+  CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE,
+  GPS_LATEST_SAMPLE,
+  GPS_MGA_OFFLINE_FILE,
+  GPS_MGA_OFFLINE_HASH,
+  GPS_ROOT_FOLDER,
+} from '../config';
 import { Request, Response, Router } from 'express';
-import { readdirSync, readFile, writeFileSync } from 'fs';
+import { readdirSync, readFile, readFileSync, rmSync, writeFileSync } from 'fs';
 import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
-import { setMostRecentPing } from 'services/heartBeat';
+import { isCameraBridgeServiceActive, restartCamera, setMostRecentPing } from 'services/heartBeat';
 import { jsonrepair } from 'jsonrepair';
+import console from 'console';
 
 const router = Router();
 
@@ -39,7 +46,6 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// TODO
 router.get('/sample', async (req: Request, res: Response) => {
   try {
     readFile(
@@ -155,16 +161,47 @@ router.get('/spoofdetstate', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/mgaano', (req, res) => {
-  console.log('/mgaano: receiving mga ano data');
+router.post('/mgaoffine', (req, res) => {
+  console.log('POST: /mgaoffine: receiving mga ano data');
   try {
-    const data = Buffer.from(req.body.mgaanodata, 'base64');
-    console.log('/mgaano: decoded data length: ', data.length);
-    writeFileSync('/mnt/data/mgaoffline.ubx', data);
-    console.log('/mgaano:  decoded data length saved');
+    const data = Buffer.from(req.body['data'], 'base64');
+    console.log('POST: /mgaoffine: decoded data length: ', data.length);
+    writeFileSync(GPS_MGA_OFFLINE_FILE, data);
+    console.log('POST: /mgaoffine: decoded data length saved');
+
+    writeFileSync(GPS_MGA_OFFLINE_HASH, req.body.hash, { encoding: 'utf-8' });
+    console.log('POST: /mgaoffine: hash written to file');
   } catch (e) {
     res.json({ err: e });
   }
+  res.json({});
+});
+
+router.get('/mgaoffine/hash', async (req: Request, res: Response) => {
+  try {
+    const hash = readFileSync(GPS_MGA_OFFLINE_HASH, { encoding: 'utf-8' });
+    res.json({ hash });
+  } catch (error: unknown) {
+    res.json({ error, hash: '' });
+  }
+});
+
+router.delete('/mgaoffine', async (req: Request, res: Response) => {
+  console.log('DELETE: /mgaoffine: deleting');
+  try {
+
+    rmSync(GPS_MGA_OFFLINE_FILE);
+    console.log('DELETE: /mgaoffine: file deleted');
+  } catch (e) {
+    console.log('DELETE: /mgaoffine: file error: ' + e);
+  }
+  try {
+    rmSync(GPS_MGA_OFFLINE_HASH);
+    console.log('DELETE: /mgaoffine: hash file deleted');
+  } catch (e) {
+    console.log('DELETE: /mgaoffine: hash file error: ' + e);
+  }
+
   res.json({});
 });
 
