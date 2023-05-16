@@ -1,12 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { ICameraConfig } from 'types';
-import {
-  setCameraConfig,
-  getCameraConfig,
-  setCameraResolution,
-} from 'util/index';
-import { Instrumentation } from 'util/instrumentation';
 import { getConfig, loadConfig } from 'util/motionModel';
+import { readFileSync, rmSync, writeFileSync } from 'fs';
+import { CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE } from '../config';
+
+import { isCameraBridgeServiceActive, restartCamera } from '../services/heartBeat';
+import * as console from 'console';
+
 const router = Router();
 
 router.get('/motionmodel', async (req: Request, res: Response) => {
@@ -23,107 +22,73 @@ router.post('/motionmodel', async (req: Request, res: Response) => {
     res.json({
       output: 'done',
     });
-  } catch (error: any) {
-    res.json({ error });
+  } catch (e) {
+    res.json({ e });
   }
 });
 
-// New version of camera config API:
-router.post('/camera', async (req: Request, res: Response) => {
+
+router.post('/camera_bridge', async (req: Request, res: Response) => {
+  console.log('POST: /camera_bridge: receiving config');
   try {
-    await setCameraConfig(req.body.config);
-    res.json({
-      output: 'done',
+
+    const config_data = Buffer.from(req.body['data'], 'base64');
+    writeFileSync(CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE, config_data, {
+      encoding: 'utf-8',
     });
-  } catch (error: any) {
-    res.json({ error });
+    console.log('POST: /camera_bridge: config written to file');
+
+    writeFileSync(CAMERA_BRIDGE_CONFIG_FILE_HASH, req.body.hash, { encoding: 'utf-8' });
+    console.log('POST: /camera_bridge: config hash written to file');
+
+    const active = isCameraBridgeServiceActive();
+    console.log('POST: /camera_bridge: camera bridge service active: ' + active);
+    if (active) {
+      restartCamera();
+      console.log('POST: /camera_bridge: camera bridge service restarted');
+    }
+  } catch (e) {
+    res.json({ err: e });
   }
+  res.json({});
 });
 
-router.get('/camera', async (req: Request, res: Response) => {
+router.delete('/camera_bridge', async (req: Request, res: Response) => {
+  console.log('DELETE: /camera_bridge: deleting config');
   try {
-    const config = await getCameraConfig();
-    res.json(config);
+
+    rmSync(CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE);
+    console.log('DELETE: /camera_bridge: config file deleted');
+  } catch (e) {
+    console.log('DELETE: /camera_bridge: config file error: ' + e);
+  }
+  try {
+    rmSync(CAMERA_BRIDGE_CONFIG_FILE_HASH);
+    console.log('DELETE: /camera_bridge: config hash file deleted');
+  } catch (e) {
+    console.log('DELETE: /camera_bridge: config hash file error: ' + e);
+  }
+
+  try {
+    const active = isCameraBridgeServiceActive();
+    console.log('POST: /camera_bridge: camera bridge service active: ' + active);
+    if (active) {
+      restartCamera();
+      console.log('POST: /camera_bridge: camera bridge service restarted');
+    }
+
+  } catch (e) {
+    res.json({ err: e });
+  }
+  res.json({});
+});
+
+router.get('/camera_bridge/hash', async (req: Request, res: Response) => {
+  try {
+    const hash = readFileSync(CAMERA_BRIDGE_CONFIG_FILE_HASH, { encoding: 'utf-8' });
+    res.json({ hash });
   } catch (error: unknown) {
-    res.json({ error });
-  }
-});
-
-// TODO: deprecated, remove once refactored on the App
-let dummyConfig: ICameraConfig = {
-  recording: {
-    directory: {
-      prefix: '',
-      output: '/mnt/data/pic/',
-      minfreespace: 64000000,
-      output2: '/media/usb0/recording/',
-      minfreespace2: 32000000,
-      maxusedspace: 16106127360,
-    },
-  },
-  camera: {
-    encoding: {
-      fps: 10,
-      width: 2048,
-      height: 1536,
-      codec: 'mjpeg',
-      quality: 90,
-    },
-    adjustment: {
-      hflip: false,
-      vflip: false,
-      denoise: 'off',
-      rotation: 180,
-    },
-  },
-};
-
-router.post('/2k', async (req: Request, res: Response) => {
-  try {
-    setCameraResolution('2K');
-    res.json({
-      output: 'done',
-    });
-    Instrumentation.add({
-      event: 'DashcamResolutionUpdated',
-      message: '2K',
-    });
-  } catch (error: any) {
-    res.json({ error });
-  }
-});
-
-router.post('/4k', async (req: Request, res: Response) => {
-  try {
-    setCameraResolution('4K');
-    res.json({
-      output: 'done',
-    });
-    Instrumentation.add({
-      event: 'DashcamResolutionUpdated',
-      message: '4K',
-    });
-  } catch (error: any) {
-    res.json({ error });
-  }
-});
-
-router.post('/cameraconfig', async (req: Request, res: Response) => {
-  try {
-    dummyConfig = req.body.config;
-    res.json({
-      output: 'done',
-    });
-  } catch (error: any) {
-    res.json({ error });
-  }
-});
-
-router.get('/cameraconfig', async (req: Request, res: Response) => {
-  try {
-    res.json(dummyConfig);
-  } catch (error: unknown) {
-    res.json({ error });
+    res.json({ error, hash: '' });
   }
 });
 

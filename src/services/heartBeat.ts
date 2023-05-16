@@ -45,7 +45,7 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
   isLedControlledByDashcam = state;
 };
 
-const isCameraBridgeServiceActive = (): boolean => {
+export const isCameraBridgeServiceActive = (): boolean => {
   try {
     const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
       encoding: 'utf-8',
@@ -55,8 +55,8 @@ const isCameraBridgeServiceActive = (): boolean => {
       console.log('failed to check if camera running:', result.error);
       return false;
     }
-
-    return result.stdout.trim() === 'active';
+    const res = result.stdout.trim()
+    return res === 'active';
   } catch (e) {
     console.log('failed to check if camera running:', e);
   }
@@ -81,8 +81,16 @@ const fetchGNSSLatestSample = () => {
   return gpsSample;
 };
 
-const startCamera = () => {
+export const startCamera = () => {
   exec(CMD.START_CAMERA, (error: ExecException | null) => {
+    if (!error) {
+      console.log('Camera restarted');
+    }
+  });
+};
+
+export const restartCamera = () => {
+  exec(CMD.RESTART_CAMERA, (error: ExecException | null) => {
     if (!error) {
       console.log('Camera restarted');
     }
