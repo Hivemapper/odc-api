@@ -1,5 +1,4 @@
 import {
-  CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE,
   GPS_LATEST_SAMPLE,
   GPS_MGA_OFFLINE_FILE,
   GPS_MGA_OFFLINE_HASH,
@@ -10,7 +9,7 @@ import { readdirSync, readFile, readFileSync, rmSync, writeFileSync } from 'fs';
 import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
-import { isCameraBridgeServiceActive, restartCamera, setMostRecentPing } from 'services/heartBeat';
+import { setMostRecentPing } from 'services/heartBeat';
 import { jsonrepair } from 'jsonrepair';
 import console from 'console';
 
