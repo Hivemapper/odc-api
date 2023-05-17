@@ -55,7 +55,7 @@ export const isCameraBridgeServiceActive = (): boolean => {
       console.log('failed to check if camera running:', result.error);
       return false;
     }
-    const res = result.stdout.trim()
+    const res = result.stdout.trim();
     return res === 'active';
   } catch (e) {
     console.log('failed to check if camera running:', e);
@@ -107,7 +107,9 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.fix === '3D' &&
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
-    gpsSample.dop.hdop < 5;
+    gpsSample.dop.hdop < 5 &&
+    Number(gpsSample.eph) &&
+    gpsSample.eph < 30;
   return lock;
 };
 

@@ -1,6 +1,13 @@
 import { map } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
-import { Stats, mkdir, stat, createReadStream, createWriteStream } from 'fs';
+import {
+  Stats,
+  mkdir,
+  stat,
+  createReadStream,
+  createWriteStream,
+  writeFileSync,
+} from 'fs';
 import { promisify } from 'util';
 import { pipeline } from 'stream';
 
@@ -68,11 +75,12 @@ export const concatFrames = async (
     }
 
     const outputFilePath = FRAMEKM_ROOT_FOLDER + '/' + framekmName;
-    const writeStream = createWriteStream(outputFilePath);
 
     try {
+      writeFileSync(outputFilePath, '');
       for (const file of validFrames) {
         const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
+        const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
         const readStream = createReadStream(filePath);
         await asyncPipeline(readStream, writeStream);
         bytesMap[file.name] = file.size;
@@ -86,6 +94,8 @@ export const concatFrames = async (
       if (size !== totalBytes) {
         console.log(
           'Concatenated file size does not match totalBytes, retrying...',
+          size,
+          totalBytes,
         );
         await sleep(retryDelay);
         return concatFrames(frames, framekmName, retryCount + 1);
