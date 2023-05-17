@@ -86,7 +86,7 @@ router.delete('/camera_bridge', async (req: Request, res: Response) => {
 router.get('/camera_bridge/hash', async (req: Request, res: Response) => {
   try {
     const hash = readFileSync(CAMERA_BRIDGE_CONFIG_FILE_HASH, { encoding: 'utf-8' });
-    res.json({ hash });
+    res.json({ hash: hash.trim() });
   } catch (error: unknown) {
     res.json({ error, hash: '' });
   }
