@@ -179,8 +179,10 @@ router.post('/mgaoffine', (req, res) => {
 
 router.get('/mgaoffine/hash', async (req: Request, res: Response) => {
   try {
-    const hash = readFileSync(GPS_MGA_OFFLINE_HASH, { encoding: 'utf-8' });
-    res.json({ hash });
+    let hash = readFileSync(GPS_MGA_OFFLINE_HASH, { encoding: 'utf-8' });
+    hash = hash.trim();
+    console.log("hash: '" + hash + "'");
+    res.json({ hash } );
   } catch (error: unknown) {
     res.json({ error, hash: '' });
   }
