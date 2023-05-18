@@ -17,6 +17,7 @@ import { MOTION_MODEL_CURSOR } from 'config';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
+import { Instrumentation } from 'util/instrumentation';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
@@ -61,6 +62,7 @@ const execute = async () => {
                   'Ready to pack ' + frameKm.metadata.length + ' frames',
                 );
                 try {
+                  const start = Date.now();
                   const bytesMap = await promiseWithTimeout(
                     concatFrames(
                       frameKm.metadata.map(
@@ -70,7 +72,13 @@ const execute = async () => {
                     ),
                     15000,
                   );
+                  let totalBytes = 0;
                   if (bytesMap && Object.keys(bytesMap).length) {
+                    totalBytes = (Object.values(bytesMap) as number[]).reduce(
+                      (acc: number, curr: number | undefined) =>
+                        acc + (Number(curr) || 0),
+                      0,
+                    );
                     await promiseWithTimeout(
                       packMetadata(
                         frameKm.chunkName,
@@ -81,8 +89,25 @@ const execute = async () => {
                       5000,
                     );
                   }
-                } catch (e: unknown) {
-                  console.log(e);
+                  Instrumentation.add({
+                    event: 'DashcamPackedFrameKm',
+                    size: totalBytes,
+                    message: JSON.stringify({
+                      name: frameKm.chunkName,
+                      numFrames: frameKm.images?.length,
+                      duration: Date.now() - start,
+                    }),
+                  });
+                } catch (error: unknown) {
+                  Instrumentation.add({
+                    event: 'DashcamFailedPackingFrameKm',
+                    message: JSON.stringify({
+                      name: frameKm.chunkName,
+                      reason: 'Motion Model Error',
+                      error,
+                    }),
+                  });
+                  console.log(error);
                 }
               }
             }

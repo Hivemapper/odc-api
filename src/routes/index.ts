@@ -29,7 +29,7 @@ import previewRouter from './preview';
 import instrumentationRouter from './instrumentation';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
-import { getSessionId } from 'util/index';
+import { getSessionId, readLast2MB } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
@@ -137,9 +137,7 @@ router.post('/cron', (req, res) => {
 router.get('/log', async (req: Request, res: Response) => {
   let log = '';
   try {
-    log = readFileSync(WEBSERVER_LOG_PATH, {
-      encoding: 'utf-8',
-    });
+    log = await readLast2MB(WEBSERVER_LOG_PATH);
     if (log) {
       stat(
         WEBSERVER_LOG_PATH,

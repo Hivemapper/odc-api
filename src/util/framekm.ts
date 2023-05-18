@@ -47,6 +47,7 @@ export const concatFrames = async (
     Instrumentation.add({
       event: 'DashcamFailedPackingFrameKm',
       size: totalBytes,
+      message: JSON.stringify({ name: framekmName, reason: 'Max retries' }),
     });
     return bytesMap;
   }
@@ -70,7 +71,14 @@ export const concatFrames = async (
         file.size < MAX_PER_FRAME_BYTES,
     );
     if (validFrames.length < 2) {
-      console.log('Not enough frames for: ' + framekmName);
+      Instrumentation.add({
+        event: 'DashcamFailedPackingFrameKm',
+        size: totalBytes,
+        message: JSON.stringify({
+          name: framekmName,
+          reason: 'Not enough frames',
+        }),
+      });
       return bytesMap;
     }
 
@@ -107,12 +115,13 @@ export const concatFrames = async (
       return concatFrames(frames, framekmName, retryCount + 1);
     }
 
-    Instrumentation.add({
-      event: 'DashcamPackedFrameKm',
-      size: totalBytes,
-    });
     return bytesMap;
   } catch (error) {
+    Instrumentation.add({
+      event: 'DashcamFailedPackingFrameKm',
+      size: totalBytes,
+      message: JSON.stringify({ name: framekmName, reason: 'Error', error }),
+    });
     return bytesMap;
   }
 };

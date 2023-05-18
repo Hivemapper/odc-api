@@ -30,7 +30,7 @@ import {
   normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
-import { ICameraFile, IMU } from 'types';
+import { CameraType, ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
 import {
   CAMERA_TYPE,
@@ -79,7 +79,7 @@ let config: MotionModelConfig = {
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   IsCornerDetectionEnabled: true,
-  isImuMovementDetectionEnabled: false,
+  isImuMovementDetectionEnabled: true,
   IsLightCheckDisabled: false,
   ImuFilter: defaultImu,
 };
@@ -121,6 +121,8 @@ export const isValidConfig = (_config: MotionModelConfig) => {
   if (isValid && !_config.ImuFilter) {
     _config.ImuFilter = defaultImu;
   }
+  _config.isImuMovementDetectionEnabled = true;
+  _config.IsLightCheckDisabled = false;
   return isValid;
 };
 
@@ -149,7 +151,10 @@ const isValidGnssMetadata = (gnss: GNSS): boolean => {
         isValid = isValid && !!gnss.dop && gnss.dop[key] <= value;
         break;
       case 'eph':
-        isValid = isValid && !!gnss.eph && gnss.eph <= value;
+        isValid =
+          isValid &&
+          ((!!gnss.eph && gnss.eph <= value) ||
+            CAMERA_TYPE === CameraType.HdcS);
         break;
       default:
         break;

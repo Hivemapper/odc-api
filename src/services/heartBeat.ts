@@ -1,11 +1,17 @@
 import { exec, ExecException, execSync, spawnSync } from 'child_process';
-import { CMD, GPS_LATEST_SAMPLE, HEALTH_MARKER_PATH, isDev } from 'config';
+import {
+  CAMERA_TYPE,
+  CMD,
+  GPS_LATEST_SAMPLE,
+  HEALTH_MARKER_PATH,
+  isDev,
+} from 'config';
 import { readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
-import { IService } from 'types';
+import { CameraType, IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { setLockTime } from 'util/lock';
+import { setLockTime, setSystemTime } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/motionModel';
 import { COLORS, updateLED } from '../util/led';
 import {
@@ -108,8 +114,8 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
     gpsSample.dop.hdop < 5 &&
-    Number(gpsSample.eph) &&
-    gpsSample.eph < 30;
+    ((Number(gpsSample.eph) && gpsSample.eph < 30) ||
+      CAMERA_TYPE === CameraType.HdcS);
   return lock;
 };
 
@@ -131,8 +137,18 @@ export const HeartBeatService: IService = {
         if (isGpsLock(gpsSample)) {
           if (!hasBeenLockOnce) {
             Instrumentation.add({
-              event: 'DashcamReceivedFirstGpsLock',
+              event: 'GpsLock',
+              size: Number(gpsSample.ttff),
             });
+            if (CAMERA_TYPE === CameraType.HdcS) {
+              // TODO: It's here only cause the system clock is not yet implemented on Hdc-S. Urgently remove once done
+              setSystemTime(
+                new Date(gpsSample.timestamp || '').getTime(),
+                () => {
+                  restartCamera();
+                },
+              );
+            }
           } else if (!isLock) {
             Instrumentation.add({
               event: 'DashcamGot3dLock',
