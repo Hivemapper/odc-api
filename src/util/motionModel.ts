@@ -78,9 +78,9 @@ let config: MotionModelConfig = {
     eph: 15,
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
-  IsCornerDetectionEnabled: true,
-  isImuMovementDetectionEnabled: true,
-  IsLightCheckDisabled: false,
+  isCornerDetectionEnabled: true,
+  isImuMovementDetectionEnabled: false,
+  isLightCheckDisabled: false,
   ImuFilter: defaultImu,
 };
 
@@ -114,15 +114,15 @@ export const isValidConfig = (_config: MotionModelConfig) => {
     _config &&
     Number(_config.DX) &&
     Number(_config.MaxPendingTime) &&
-    typeof _config.IsCornerDetectionEnabled === 'boolean' &&
+    typeof _config.isCornerDetectionEnabled === 'boolean' &&
     typeof _config.isImuMovementDetectionEnabled === 'boolean' &&
-    typeof _config.IsLightCheckDisabled === 'boolean' &&
+    typeof _config.isLightCheckDisabled === 'boolean' &&
     typeof _config.GnssFilter === 'object';
   if (isValid && !_config.ImuFilter) {
     _config.ImuFilter = defaultImu;
   }
-  _config.isImuMovementDetectionEnabled = true;
-  _config.IsLightCheckDisabled = false;
+  _config.isImuMovementDetectionEnabled = false;
+  _config.isLightCheckDisabled = false;
   return isValid;
 };
 
@@ -519,7 +519,7 @@ export const isImuValid = (imuData: ImuMetadata): boolean => {
 };
 
 export function isEnoughLight(gpsData: GnssMetadata[]) {
-  if (config.IsLightCheckDisabled) {
+  if (config.isLightCheckDisabled) {
     return true;
   }
   if (!gpsData.length) {
@@ -535,7 +535,7 @@ export function isEnoughLight(gpsData: GnssMetadata[]) {
 }
 
 export function isEnoughLightForGnss(gnss: GNSS | null) {
-  if (!gnss || !gnss.timestamp || config.IsLightCheckDisabled) {
+  if (!gnss || !gnss.timestamp || config.isLightCheckDisabled) {
     return true;
   }
   return timeIsMostLikelyLight(
@@ -792,13 +792,13 @@ export const getPointsToSample = (
   const pointsToSample: FramesMetadata[] = [];
   let curvePoints: CurveData[] = [];
 
-  // const { IsCornerDetectionEnabled } = config;
+  // const { isCornerDetectionEnabled } = config;
 
   if (totalDistance) {
     console.log('total distance: ' + totalDistance + ', DX: ' + dx);
     // let prevTangent = null;
     for (let u = offset; u <= totalDistance; u += dx) {
-      // if (IsCornerDetectionEnabled) {
+      // if (isCornerDetectionEnabled) {
       //   const v = u / totalDistance;
       //   const currTangent = spaceCurve.getTangentAt(v);
       //   let angle = 0;

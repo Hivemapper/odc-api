@@ -33,8 +33,8 @@ export type MotionModelConfig = {
   };
   MaxPendingTime: number;
   isImuMovementDetectionEnabled: boolean;
-  IsCornerDetectionEnabled: boolean;
-  IsLightCheckDisabled: boolean;
+  isCornerDetectionEnabled: boolean;
+  isLightCheckDisabled: boolean;
 };
 
 export type GNSS = {
