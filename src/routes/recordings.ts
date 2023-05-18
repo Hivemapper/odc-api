@@ -76,7 +76,7 @@ router.get('/pic/:name', (req: Request, res: Response) => {
 router.get('/last', async (req: Request, res: Response) => {
   try {
     exec(
-      `ls ${FRAMES_ROOT_FOLDER} | tail -2`,
+      `ls -t ${FRAMES_ROOT_FOLDER}/*.jpg | head -2`,
       {
         encoding: 'utf-8',
       },
