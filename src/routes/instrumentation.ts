@@ -6,8 +6,11 @@ import { deleteLogsIfTooBig } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
 const router = Router();
 
+const MAX_EVENTS_COUNT = 30000;
+
 router.get('/', async (req: Request, res: Response) => {
   let events = '';
+  let counter = 0;
   try {
     const fileStream = createReadStream(WEBSERVER_LOG_PATH);
 
@@ -22,6 +25,16 @@ router.get('/', async (req: Request, res: Response) => {
       // Each line in input.txt will be successively available here as `line`.
       if (line.indexOf('[INFO]') !== -1) {
         events = events + line + '\r\n';
+        counter++;
+
+        if (counter >= MAX_EVENTS_COUNT) {
+          try {
+            fileStream.destroy(); // close the stream
+          } catch (error: unknown) {
+            console.log(error);
+          }
+          break;
+        }
       }
     }
 

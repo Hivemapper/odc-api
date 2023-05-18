@@ -4,13 +4,10 @@ import { existsSync, readdirSync, rmSync } from 'fs';
 import { filterBySinceUntil, getDateFromFramekmName } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getLockTime } from 'util/lock';
-import { Instrumentation } from 'util/instrumentation';
 import { getNumFramesFromChunkName } from 'util/motionModel';
 
+const MAX_RESPONSE_SIZE = 30000;
 const router = Router();
-
-let firstFileFetched = false;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -18,6 +15,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     const metadataFiles: ICameraFile[] = files
       .filter((filename: string) => filename.indexOf('.json') !== -1)
+      .slice(0, MAX_RESPONSE_SIZE)
       .map(filename => {
         return {
           path: filename,
@@ -27,13 +25,6 @@ router.get('/', async (req: Request, res: Response) => {
       });
 
     const filteredFiles = filterBySinceUntil(metadataFiles, req);
-
-    if (!firstFileFetched && getLockTime().lockTime && filteredFiles.length) {
-      firstFileFetched = true;
-      Instrumentation.add({
-        event: 'DashcamFetchedFirstGpsFile',
-      });
-    }
 
     res.json(filteredFiles);
     setMostRecentPing(Date.now());

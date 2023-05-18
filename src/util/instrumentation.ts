@@ -26,6 +26,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamPackedFrameKm',
   'DashcamFirmwareUploaded',
   'DashcamLog',
+  'GpsLock',
 ]);
 
 export class InstrumentationClass {

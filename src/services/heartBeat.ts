@@ -131,7 +131,8 @@ export const HeartBeatService: IService = {
         if (isGpsLock(gpsSample)) {
           if (!hasBeenLockOnce) {
             Instrumentation.add({
-              event: 'DashcamReceivedFirstGpsLock',
+              event: 'GpsLock',
+              size: Number(gpsSample.ttff),
             });
           } else if (!isLock) {
             Instrumentation.add({
