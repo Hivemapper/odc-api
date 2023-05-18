@@ -94,6 +94,7 @@ const execute = async () => {
                     size: totalBytes,
                     message: JSON.stringify({
                       name: frameKm.chunkName,
+                      numFrames: frameKm.images?.length,
                       duration: Date.now() - start,
                     }),
                   });

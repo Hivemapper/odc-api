@@ -46,10 +46,16 @@ export const CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
+export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
+  '/data/camera_bridge_config.json';
+export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/data/camera_bridge_config.hash';
+export const GPS_MGA_OFFLINE_FILE = '/data/mgaoffline.ubx';
+export const GPS_MGA_OFFLINE_HASH = '/data/mgaoffline.hash';
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 
 export const CMD = {
+  RESTART_CAMERA: 'systemctl restart camera-bridge',
   START_CAMERA: 'systemctl start camera-bridge',
   STOP_CAMERA: 'systemctl stop camera-bridge',
   START_PREVIEW: 'systemctl start camera-preview',
