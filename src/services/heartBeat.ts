@@ -171,7 +171,7 @@ export const HeartBeatService: IService = {
           const gpsLostPeriod = lastSuccessfulLock
             ? Math.abs(Date.now() - lastSuccessfulLock)
             : 70000;
-          if (gpsLostPeriod > 60000) {
+          if (gpsLostPeriod > 12000) {
             gpsLED = COLORS.RED;
           }
 
