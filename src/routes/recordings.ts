@@ -87,6 +87,7 @@ router.get('/last', async (req: Request, res: Response) => {
           if (filename === tmpFrameName && names.length > 1) {
             filename = names[2];
           }
+          filename = filename.split('/').pop() || '';
           res.json({
             path: filename,
             date: getDateFromUnicodeTimastamp(filename).getTime(),
