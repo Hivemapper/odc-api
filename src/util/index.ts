@@ -415,22 +415,26 @@ export async function promiseWithTimeout(racePromise: any, timeout: number) {
 }
 
 export async function readLast2MB(filePath: string) {
-  const { size } = statSync(filePath);
-  const start = size - 2 * 1024 * 1024;
-  if (start < 0) {
-    // File is less than 2MB. Return the whole content.
-    return readFileSync(filePath, {
-      encoding: 'utf-8',
-    });
-  } else {
-    const stream = createReadStream(filePath, {
-      start,
-      encoding: 'utf8',
-    });
-    let content = '';
-    for await (const chunk of stream) {
-      content += chunk;
+  try {
+    const { size } = statSync(filePath);
+    const start = size - 2 * 1024 * 1024;
+    if (start < 0) {
+      // File is less than 2MB. Return the whole content.
+      return readFileSync(filePath, {
+        encoding: 'utf-8',
+      });
+    } else {
+      const stream = createReadStream(filePath, {
+        start,
+      });
+      let content = '';
+      for await (const chunk of stream) {
+        content += chunk.toString('utf8');
+      }
+      return content;
     }
-    return content;
+  } catch (e: unknown) {
+    console.log(e);
+    return '';
   }
 }

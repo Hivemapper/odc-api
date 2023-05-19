@@ -63,7 +63,7 @@ const MIN_DISTANCE_BETWEEN_FRAMES = 1;
 const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
 
 const defaultImu = {
-  threshold: 0.1,
+  threshold: 0.05,
   alpha: 0.5,
   params: [1, 1, 1, 0, 1],
 };
@@ -72,7 +72,6 @@ let config: MotionModelConfig = {
   DX: 6,
   GnssFilter: {
     hdop: 6,
-    pdop: 7,
     '3dLock': true,
     minSatellites: 4,
     eph: 15,

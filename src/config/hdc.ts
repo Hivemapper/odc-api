@@ -29,7 +29,7 @@ export const WEBSERVER_LOG_PATH =
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 export const CACHED_CAMERA_CONFIG = '/../../../mnt/data/camera.conf';
 export const MOTION_MODEL_CURSOR = '/mnt/data/mm_cursor.log';
-export const MOTION_MODEL_CONFIG = '/mnt/data/mm_config.json';
+export const MOTION_MODEL_CONFIG = '/mnt/data/dashcam_config.json';
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/dashcam/bin/config.json';
 export const NEW_IMAGER_CONFIG_PATH =
@@ -47,8 +47,10 @@ export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const PREVIEW_ROUTE = ':9001/?action=stream';
 
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
-export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE = '/mnt/data/camera_bridge_config.json';
-export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/mnt/data/camera_bridge_config.hash';
+export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
+  '/mnt/data/camera_bridge_config.json';
+export const CAMERA_BRIDGE_CONFIG_FILE_HASH =
+  '/mnt/data/camera_bridge_config.hash';
 
 export const CMD = {
   RESTART_CAMERA: 'systemctl restart camera-bridge',

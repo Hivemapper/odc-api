@@ -113,7 +113,7 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.fix === '3D' &&
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
-    gpsSample.dop.hdop < 5 &&
+    gpsSample.dop.hdop < 6 &&
     ((Number(gpsSample.eph) && gpsSample.eph < 30) ||
       CAMERA_TYPE === CameraType.HdcS);
   return lock;
