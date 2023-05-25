@@ -4,8 +4,8 @@ import {
   FRAMEKM_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
 } from 'config';
-import e from 'express';
 import { getOldestFileDateInDirectory } from 'util/index';
+import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME } from 'util/lock';
 import { getConfig } from 'util/motionModel';
 import { IService } from '../types';
@@ -23,6 +23,10 @@ export const setIsAppConnectionRequired = (
   isAppConnectionRequired = _isAppConnectionRequired;
 };
 
+let firedYellowLightEvent = false;
+let firedCleanupEvent = false;
+let firedOldFileEvent = false;
+
 export const TrackDownloadDebt: IService = {
   execute: async () => {
     try {
@@ -34,6 +38,13 @@ export const TrackDownloadDebt: IService = {
           // App connection is required if user collected a lot of data, it is time to start purging it from dashcam
           if (total && total > (HIGHWATER_MARK_GB - 1) * 1024 * 1024 * 1024) {
             isAppConnectionRequired = true;
+            if (!firedYellowLightEvent) {
+              firedYellowLightEvent = true;
+              Instrumentation.add({
+                event: 'DashcamShowedOutOfSpaceWarning',
+                size: total,
+              });
+            }
             if (
               total > HIGHWATER_MARK_GB * 1024 * 1024 * 1024 &&
               isIntegrityCheckDone()
@@ -51,10 +62,26 @@ export const TrackDownloadDebt: IService = {
                 });
 
                 cleanupScript.on('error', err => {
+                  if (!firedCleanupEvent) {
+                    firedCleanupEvent = true;
+                    Instrumentation.add({
+                      event: 'DashcamRemovedOldFiles',
+                      size: total,
+                      message: 'Failed executing script',
+                    });
+                  }
                   console.log('Error executing script: ' + err);
                 });
 
                 cleanupScript.on('close', code => {
+                  if (!firedCleanupEvent) {
+                    firedCleanupEvent = true;
+                    Instrumentation.add({
+                      event: 'DashcamRemovedOldFiles',
+                      size: total,
+                      message: 'Successfully executed',
+                    });
+                  }
                   console.log(`cleanup script exited with code ${code}`);
                 });
               } catch (error: unknown) {
@@ -68,9 +95,28 @@ export const TrackDownloadDebt: IService = {
             );
             const now = Date.now();
             const diff = now - oldestFileTs;
-            isAppConnectionRequired =
+            console.log(
+              'The oldest file date: ' + new Date(oldestFileTs),
+              diff,
+            );
+
+            const isFileTooOld =
+              now > DEFAULT_TIME &&
               oldestFileTs > DEFAULT_TIME &&
               diff > getConfig().MaxPendingTime - 1000 * 60 * 60 * 24;
+            if (isFileTooOld && !firedOldFileEvent) {
+              firedOldFileEvent = true;
+              Instrumentation.add({
+                event: 'DashcamShowedOldFilesWarning',
+                size: total,
+                message: JSON.stringify({
+                  diff,
+                  now,
+                  oldestFileTs,
+                }),
+              });
+            }
+            isAppConnectionRequired = false;
           }
         }
       });

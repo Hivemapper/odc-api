@@ -1167,6 +1167,9 @@ export const selectImages = (
           }
           imagesToDownload = [images[imageCursor]];
           gpsForImages = [pointForFrame];
+          if (gpsCursor !== frameKM.length - 1) {
+            gpsCursor++;
+          }
           imageCursor++;
         } else {
           // Let's check if the next frame could be the better candidate to go into motion model
@@ -1402,31 +1405,31 @@ const getDistanceRangeBasedOnSpeed = (speed: number) => {
     // distance between two frames is close to 5 meters, but still less
     return {
       MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 2,
+      MAX_DISTANCE: dx + 3,
       BEST_MIN_DISTANCE: dx - 0.1,
-      BEST_MAX_DISTANCE: dx + 1,
+      BEST_MAX_DISTANCE: dx + 1.5,
     };
   } else if (speed < 30) {
     return {
       MIN_DISTANCE: dx,
-      MAX_DISTANCE: dx + 3,
+      MAX_DISTANCE: dx + 4,
       BEST_MIN_DISTANCE: dx,
-      BEST_MAX_DISTANCE: dx + 1.5,
+      BEST_MAX_DISTANCE: dx + 2,
     };
   } else if (speed < 40) {
     return {
       MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 4,
+      MAX_DISTANCE: dx + 4.5,
       BEST_MIN_DISTANCE: dx,
-      BEST_MAX_DISTANCE: dx + 2,
+      BEST_MAX_DISTANCE: dx + 2.5,
     };
   } else {
     // return default, if speed provided is not valid
     return {
       MIN_DISTANCE: dx - 1,
-      MAX_DISTANCE: dx + 2,
+      MAX_DISTANCE: dx + 3,
       BEST_MIN_DISTANCE: dx - 0.5,
-      BEST_MAX_DISTANCE: dx + 1,
+      BEST_MAX_DISTANCE: dx + 1.5,
     };
   }
 };
