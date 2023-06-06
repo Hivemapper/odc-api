@@ -170,7 +170,7 @@ let parsedCursor: MotionModelCursor = {
 export const syncCursors = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
-      if (parsedCursor.gnssFilePath) {
+      if (parsedCursor?.gnssFilePath) {
         console.log('Syncing cursors');
         exec(
           "echo '" +
@@ -200,11 +200,18 @@ const getLastGnssName = (): Promise<string> => {
         async (err: NodeJS.ErrnoException | null, data: string) => {
           if (!err && data) {
             try {
-              parsedCursor = JSON.parse(jsonrepair(data));
+              parsedCursor = JSON.parse(jsonrepair(data)) || {};
               resolve(parsedCursor.gnssFilePath || '');
             } catch (e: unknown) {
               console.log('Error parsing Cursor file', e);
               resolve('');
+            }
+            // Fixing weird things
+            if (typeof parsedCursor !== 'object') {
+              parsedCursor = {
+                gnssFilePath: '',
+                imuFilePath: '',
+              };
             }
           } else {
             console.log('Error reading Motion Model Cursor file', err);
@@ -233,7 +240,10 @@ const getNextGnssName = (last: string): Promise<string> => {
           if (stdout && !error) {
             const nextCandidate = String(stdout).split('\n')[0];
             if (nextCandidate.indexOf('.json') !== -1) {
-              parsedCursor.gnssFilePath = nextCandidate;
+              parsedCursor = {
+                gnssFilePath: nextCandidate,
+                imuFilePath: '',
+              };
               resolve(parsedCursor.gnssFilePath);
             } else {
               resolve('');
@@ -282,7 +292,10 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         if (lastFileTimestamp > Date.now() - 300000) {
           console.log('So last will be: ' + lastGpsFilePath);
           pathToGpsFile = GPS_ROOT_FOLDER + '/' + lastGpsFilePath;
-          parsedCursor.gnssFilePath = pathToGpsFile;
+          parsedCursor = {
+            gnssFilePath: pathToGpsFile,
+            imuFilePath: '',
+          };
         } else {
           resolve([]);
           return;
@@ -337,7 +350,10 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
             isGpsDataOutOfSyncWithFileDate,
             emptyIterationCounter > MAX_FAILED_ITERATIONS,
           );
-          parsedCursor.gnssFilePath = '';
+          parsedCursor = {
+            gnssFilePath: '',
+            imuFilePath: '',
+          };
           emptyIterationCounter = 0;
           if (last) {
             rmSync(last);
@@ -1099,7 +1115,7 @@ export const selectImages = (
       if (nextTime < prevTime) {
         gpsCursor++;
       } else if (
-        (frameTimestamp >= prevTime && frameTimestamp <= nextTime + 200) ||
+        (frameTimestamp >= prevTime && frameTimestamp <= nextTime + 50) ||
         gpsCursor === frameKM.length - 1
       ) {
         // normalising GPS coordinates for this time difference
