@@ -206,15 +206,16 @@ router.post('/cmd', async (req, res) => {
 router.post('/cmd/sync', async (req, res) => {
   try {
     const command = req?.body?.cmd || '';
-    if (command === 'rauc install /tmp/update.raucb') {
-      const command = 'rauc';
-      const args = ['install', '/tmp/update.raucb'];
+    if (command === 'rauc install /tmp/update.raucb' || 'mender -install /tmp/update.raucb') {
+      const cmdArgs = command.split(' ');
+      const installer = cmdArgs[0];
+      const args = [cmdArgs[1], cmdArgs[2]];
 
       const options: any = {
         stdio: ['inherit', 'pipe', 'inherit'],
       };
 
-      const child = spawn(command, args, options);
+      const child = spawn(installer, args, options);
       let output = '';
 
       child.stdout.setEncoding('utf8');
