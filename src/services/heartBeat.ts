@@ -30,6 +30,7 @@ let isLock = false;
 let hasBeenLockOnce = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
+let isTimeUpdateInProgress = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -135,20 +136,11 @@ export const HeartBeatService: IService = {
       try {
         const gpsSample = fetchGNSSLatestSample();
         if (isGpsLock(gpsSample)) {
-          if (!hasBeenLockOnce) {
+          if (!hasBeenLockOnce ) {
             Instrumentation.add({
               event: 'GpsLock',
               size: Number(gpsSample.ttff),
             });
-            if (CAMERA_TYPE === CameraType.HdcS) {
-              // TODO: It's here only cause the system clock is not yet implemented on Hdc-S. Urgently remove once done
-              setSystemTime(
-                new Date(gpsSample.timestamp || '').getTime(),
-                () => {
-                  restartCamera();
-                },
-              );
-            }
           } else if (!isLock) {
             Instrumentation.add({
               event: 'DashcamGot3dLock',
@@ -156,6 +148,23 @@ export const HeartBeatService: IService = {
           }
           if (gpsSample.ttff) {
             setLockTime(gpsSample.ttff);
+          }
+          const gpsTime = new Date(gpsSample.timestamp || '').getTime();
+
+          // TODO: It's here only cause the system clock is not yet implemented on Hdc-S. Urgently remove once done
+          if (CAMERA_TYPE === CameraType.HdcS && gpsTime > Date.now() + 1000 * 60 * 60 && !isTimeUpdateInProgress) {
+            isTimeUpdateInProgress = true;
+            console.log('Updating the time: ' + gpsTime, Date.now());
+            setSystemTime(
+              gpsTime,
+              () => {
+                isTimeUpdateInProgress = false;
+                restartCamera();
+              },
+              () => {
+                isTimeUpdateInProgress = false;
+              }
+            );
           }
 
           lastGpsPoint = gpsSample;

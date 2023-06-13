@@ -25,8 +25,14 @@ export const getLockTime = () => {
 export const setSystemTime = (
   timeToSetMs: number,
   successCallback: () => void,
+  errorCallback: () => void,
+  retries = 0
 ) => {
   console.log('Setting time...');
+  if (retries > 3) {
+    console.log('Failed setting time');
+    return;
+  }
 
   exec('timedatectl set-ntp 0', () => {
     setTimeout(() => {
@@ -47,7 +53,7 @@ export const setSystemTime = (
             successCallback();
           } else {
             console.log('Not set... Retrying.');
-            setSystemTime(timeToSetMs, successCallback);
+            setSystemTime(timeToSetMs, successCallback, errorCallback, retries++);
           }
         },
       );
