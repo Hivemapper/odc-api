@@ -49,6 +49,7 @@ import {
 } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
+import console from 'console';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -190,7 +191,7 @@ export const syncCursors = (): Promise<void> => {
   });
 };
 
-const getLastGnssName = (): Promise<string> => {
+const getGnssNameFromCursor = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     const exists = existsSync(MOTION_MODEL_CURSOR);
     if (exists) {
@@ -267,13 +268,14 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
     let pathToGpsFile = '';
     // 1. get next after file or: if time set, then take closer
-    const last = await getLastGnssName();
+    const cursor = await getGnssNameFromCursor();
     let existLastFile = false;
-    if (last) {
-      existLastFile = await existsSync(last);
+    if (cursor) {
+      existLastFile = await existsSync(cursor);
     }
-    if (!last || !existLastFile) {
-      console.log('No cursor mark... creating one');
+    console.log('Last cursor: ' + cursor + ' file exists: ' + existLastFile)
+    if (!cursor || !existLastFile) {
+      console.log('No cursor mark...');
       const exists = existsSync(MOTION_MODEL_CURSOR);
       if (
         Date.now() > DEFAULT_TIME &&
@@ -289,7 +291,7 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         console.log('Last candidate: ' + lastGpsFilePath);
         const lastFileTimestamp =
           getDateFromFilename(lastGpsFilePath).getTime();
-        if (lastFileTimestamp > Date.now() - 300000) {
+        if (lastGpsFilePath !== '' && lastFileTimestamp > Date.now() - 300000) {
           console.log('So last will be: ' + lastGpsFilePath);
           pathToGpsFile = GPS_ROOT_FOLDER + '/' + lastGpsFilePath;
           parsedCursor = {
@@ -305,8 +307,8 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         return;
       }
     } else {
-      console.log('Last file is ' + last);
-      pathToGpsFile = await getNextGnssName(last);
+      console.log('Last file is ' + cursor);
+      pathToGpsFile = await getNextGnssName(cursor);
       console.log('Next file is: ' + pathToGpsFile);
     }
 
@@ -320,11 +322,11 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         const now = Date.now();
         let lastFileTimestamp = now;
         let lastFileStats = null;
-        if (last) {
+        if (cursor) {
           lastFileTimestamp = getDateFromFilename(
-            String(last).split('/').pop() || '',
+            String(cursor).split('/').pop() || '',
           ).getTime();
-          lastFileStats = statSync(last);
+          lastFileStats = statSync(cursor);
         }
 
         const week = 1000 * 60 * 60 * 24 * 7;
@@ -355,8 +357,8 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
             imuFilePath: '',
           };
           emptyIterationCounter = 0;
-          if (last) {
-            rmSync(last);
+          if (cursor) {
+            rmSync(cursor);
           }
         }
       }
