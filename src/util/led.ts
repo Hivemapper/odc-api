@@ -1,7 +1,8 @@
-import { LED_CONFIG_PATH } from 'config';
-import { ILED } from '../types';
+import { CAMERA_TYPE, LED_CONFIG_PATH } from 'config';
+import { CameraType, ILED } from '../types';
 import { readFile, writeFile } from 'fs';
 import { jsonrepair } from 'jsonrepair';
+import { exec } from 'child_process';
 
 export const COLORS: { [key: string]: ILED } = {
   RED: {
@@ -80,52 +81,68 @@ export const updateLED = async (
   appLED: ILED,
 ) => {
   try {
-    let leds: ILED[] = [
-      { index: 0, ...COLORS.RED },
-      { index: 1, ...COLORS.RED },
-      { index: 2, ...COLORS.RED },
-    ];
-    try {
-      readFile(
-        LED_CONFIG_PATH,
-        {
-          encoding: 'utf-8',
-        },
-        (err: NodeJS.ErrnoException | null, data: string) => {
-          if (data && !err) {
-            try {
-              leds = JSON.parse(jsonrepair(data)).leds;
-            } catch (e: unknown) {
-              //
+    if (CAMERA_TYPE === CameraType.HdcS) {
+      if (framesLED === COLORS.YELLOW) {
+        updateLEDHdcS(255, 255, 0);
+      } else if (gpsLED === COLORS.RED || framesLED === COLORS.RED) {
+        updateLEDHdcS(255, 255, 255);
+      } else {
+        updateLEDHdcS(0, 0, 255);
+      }
+    } else {
+      let leds: ILED[] = [
+        { index: 0, ...COLORS.RED },
+        { index: 1, ...COLORS.RED },
+        { index: 2, ...COLORS.RED },
+      ];
+      try {
+        readFile(
+          LED_CONFIG_PATH,
+          {
+            encoding: 'utf-8',
+          },
+          (err: NodeJS.ErrnoException | null, data: string) => {
+            if (data && !err) {
+              try {
+                leds = JSON.parse(jsonrepair(data)).leds;
+              } catch (e: unknown) {
+                //
+              }
             }
-          }
-
-          const frames = framesLED ? { ...leds[0], ...framesLED } : leds[0];
-          const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
-          const app = appLED ? { ...leds[2], ...appLED } : leds[2];
-
-          writeFile(
-            LED_CONFIG_PATH,
-            JSON.stringify({
-              leds: [frames, gps, app],
-            }),
-            {
-              encoding: 'utf-8',
-            },
-            () => {
-              currentLEDs = {
-                framesLED: getColorByLed(frames),
-                gpsLED: getColorByLed(gps),
-                appLED: getColorByLed(app),
-              };
-            },
-          );
-        },
-      );
-    } catch (e) {
-      console.log('No file for LED. Creating one');
+  
+            const frames = framesLED ? { ...leds[0], ...framesLED } : leds[0];
+            const gps = gpsLED ? { ...leds[1], ...gpsLED } : leds[1];
+            const app = appLED ? { ...leds[2], ...appLED } : leds[2];
+  
+            writeFile(
+              LED_CONFIG_PATH,
+              JSON.stringify({
+                leds: [frames, gps, app],
+              }),
+              {
+                encoding: 'utf-8',
+              },
+              () => {
+                currentLEDs = {
+                  framesLED: getColorByLed(frames),
+                  gpsLED: getColorByLed(gps),
+                  appLED: getColorByLed(app),
+                };
+              },
+            );
+          },
+        );
+      } catch (e) {
+        console.log('No file for LED. Creating one');
+      }
     }
   } catch (e) {
     console.log('Error updating LEDs', e);
   }
 };
+
+export const updateLEDHdcS = (red: number, green: number, blue: number) => {
+  if (red >= 0 && red <= 255 && green >= 0 && green <= 255 && blue >= 0 && blue <= 255) {
+    exec(`echo ${red} > /sys/class/leds/led_2_red/brightness; echo ${green} > /sys/class/leds/led_2_green/brightness; echo ${blue} > /sys/class/leds/led_2_blue/brightness;`);
+  }
+}

@@ -1,6 +1,6 @@
 import { WEBSERVER_LOG_PATH } from 'config';
 import { Request, Response, Router } from 'express';
-import { createReadStream, writeFileSync } from 'fs';
+import { createReadStream, existsSync, writeFileSync } from 'fs';
 import { createInterface } from 'readline';
 import { deleteLogsIfTooBig } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
@@ -12,7 +12,15 @@ router.get('/', async (req: Request, res: Response) => {
   let events = '';
   let counter = 0;
   try {
+    if (!existsSync(WEBSERVER_LOG_PATH)) {
+      res.json({
+        events: '',
+      });
+    }
     const fileStream = createReadStream(WEBSERVER_LOG_PATH);
+    fileStream.on('error', (e) => { 
+      console.log(e); 
+    });
 
     const rl = createInterface({
       input: fileStream,
@@ -65,7 +73,15 @@ router.post('/clear', async (req: Request, res: Response) => {
   try {
     if (req.body.from) {
       let rest = '';
+      if (!existsSync(WEBSERVER_LOG_PATH)) {
+        res.json({
+          done: true,
+        });
+      }
       const fileStream = createReadStream(WEBSERVER_LOG_PATH);
+      fileStream.on('error', (e) => { 
+        console.log(e); 
+      });
 
       const rl = createInterface({
         input: fileStream,
