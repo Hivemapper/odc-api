@@ -153,8 +153,7 @@ const isValidGnssMetadata = (gnss: GNSS): boolean => {
       case 'eph':
         isValid =
           isValid &&
-          ((!!gnss.eph && gnss.eph <= value) ||
-            CAMERA_TYPE === CameraType.HdcS);
+          (!!gnss.eph && gnss.eph <= value);
         break;
       default:
         break;

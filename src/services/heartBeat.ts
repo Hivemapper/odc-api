@@ -115,8 +115,7 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
     gpsSample.dop.hdop < 6 &&
-    ((Number(gpsSample.eph) && gpsSample.eph < 30) ||
-      CAMERA_TYPE === CameraType.HdcS);
+    (Number(gpsSample.eph) && gpsSample.eph < 30);
   return lock;
 };
 
@@ -150,22 +149,6 @@ export const HeartBeatService: IService = {
             setLockTime(gpsSample.ttff);
           }
           const gpsTime = new Date(gpsSample.timestamp || '').getTime();
-
-          // TODO: It's here only cause the system clock is not yet implemented on Hdc-S. Urgently remove once done
-          if (CAMERA_TYPE === CameraType.HdcS && gpsTime > Date.now() + 1000 * 60 * 60 && !isTimeUpdateInProgress) {
-            isTimeUpdateInProgress = true;
-            console.log('Updating the time: ' + gpsTime, Date.now());
-            setSystemTime(
-              gpsTime,
-              () => {
-                isTimeUpdateInProgress = false;
-                restartCamera();
-              },
-              () => {
-                isTimeUpdateInProgress = false;
-              }
-            );
-          }
 
           lastGpsPoint = gpsSample;
           lastSuccessfulLock = Date.now();
