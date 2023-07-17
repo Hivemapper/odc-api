@@ -134,29 +134,31 @@ const isValidGnssMetadata = (gnss: GNSS): boolean => {
   }
 
   for (const [key, value] of Object.entries(config.GnssFilter)) {
-    switch (key) {
-      case '3dLock':
-        isValid = isValid && gnss.fix === '3D';
-        break;
-      case 'minSatellites':
-        isValid = isValid && gnss.satellites && gnss.satellites.used >= value;
-        break;
-      case 'xdop':
-      case 'ydop':
-      case 'pdop':
-      case 'hdop':
-      case 'vdop':
-      case 'tdop':
-      case 'gdop':
-        isValid = isValid && !!gnss.dop && gnss.dop[key] <= value;
-        break;
-      case 'eph':
-        isValid =
-          isValid &&
-          (!!gnss.eph && gnss.eph <= value);
-        break;
-      default:
-        break;
+    if (typeof value === 'number') {
+      switch (key) {
+        case '3dLock':
+          isValid = isValid && gnss.fix === '3D';
+          break;
+        case 'minSatellites':
+          isValid = isValid && gnss.satellites && gnss.satellites.used >= value;
+          break;
+        case 'xdop':
+        case 'ydop':
+        case 'pdop':
+        case 'hdop':
+        case 'vdop':
+        case 'tdop':
+        case 'gdop':
+          isValid = isValid && !!gnss.dop && gnss.dop[key] <= value;
+          break;
+        case 'eph':
+          isValid =
+            isValid &&
+            (!!gnss.eph && gnss.eph <= value);
+          break;
+        default:
+          break;
+      }
     }
   }
   return isValid;
@@ -1409,44 +1411,50 @@ export const packMetadata = async (
 
 const getDistanceRangeBasedOnSpeed = (speed: number) => {
   const dx = config.DX;
+
+  // We use brackets around DX to help the distance between points being not so strict to respect FPS of the camera
+  // Obviously, for bigger FPS we can be more strict on DX to be close to perfect
+  // HDC supports 10FPS, so we need bigger brackets around DX to catch the image made close to particular timestamp
+  const BRACKET_INDEX = CAMERA_TYPE === CameraType.HdcS ? 0.2 : 0.5;
+  
   // speed in meters per seconds
   if (speed < 20) {
     // means camera producing 1 frame per 2 meters max, so we can hit the best approx for DX
     return {
-      MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 1.5,
+      MIN_DISTANCE: dx - BRACKET_INDEX,
+      MAX_DISTANCE: dx + BRACKET_INDEX * 3,
       BEST_MIN_DISTANCE: dx - 0.2,
-      BEST_MAX_DISTANCE: dx + 0.5,
+      BEST_MAX_DISTANCE: dx + BRACKET_INDEX,
     };
   } else if (speed < 25) {
     // distance between two frames is close to 5 meters, but still less
     return {
-      MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 3,
+      MIN_DISTANCE: dx - BRACKET_INDEX,
+      MAX_DISTANCE: dx + BRACKET_INDEX * 6,
       BEST_MIN_DISTANCE: dx - 0.1,
-      BEST_MAX_DISTANCE: dx + 1.5,
+      BEST_MAX_DISTANCE: dx + BRACKET_INDEX * 3,
     };
   } else if (speed < 30) {
     return {
       MIN_DISTANCE: dx,
-      MAX_DISTANCE: dx + 4,
+      MAX_DISTANCE: dx + BRACKET_INDEX * 8,
       BEST_MIN_DISTANCE: dx,
-      BEST_MAX_DISTANCE: dx + 2,
+      BEST_MAX_DISTANCE: dx + BRACKET_INDEX * 4,
     };
   } else if (speed < 40) {
     return {
-      MIN_DISTANCE: dx - 0.5,
-      MAX_DISTANCE: dx + 4.5,
+      MIN_DISTANCE: dx - BRACKET_INDEX,
+      MAX_DISTANCE: dx + BRACKET_INDEX * 9,
       BEST_MIN_DISTANCE: dx,
-      BEST_MAX_DISTANCE: dx + 2.5,
+      BEST_MAX_DISTANCE: dx + BRACKET_INDEX * 5,
     };
   } else {
     // return default, if speed provided is not valid
     return {
-      MIN_DISTANCE: dx - 1,
-      MAX_DISTANCE: dx + 3,
-      BEST_MIN_DISTANCE: dx - 0.5,
-      BEST_MAX_DISTANCE: dx + 1.5,
+      MIN_DISTANCE: dx - BRACKET_INDEX * 2,
+      MAX_DISTANCE: dx + BRACKET_INDEX * 6,
+      BEST_MIN_DISTANCE: dx - BRACKET_INDEX,
+      BEST_MAX_DISTANCE: dx + BRACKET_INDEX * 3,
     };
   }
 };
