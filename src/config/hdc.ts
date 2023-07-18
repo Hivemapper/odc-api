@@ -9,6 +9,7 @@ export const PUBLIC_FOLDER = __dirname + '/../../../mnt/data';
 export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/recording';
 export const FRAMES_ROOT_FOLDER = '/tmp/recording/pic';
 export const FRAMEKM_ROOT_FOLDER = '/mnt/data/framekm';
+export const RAW_DATA_ROOT_FOLDER = '/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = __dirname + '/../../../mnt/data/request';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
