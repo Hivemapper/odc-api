@@ -1,0 +1,7 @@
+### Fetch file names from the RAW_DATA_ROOT_FOLDER
+GET http://192.168.0.10:5000/datalogger/raw
+Content-Type: application/json
+
+### Fetch the content of one file in RAW_DATA_ROOT_FOLDER
+GET http://192.168.0.10:5000/datalogger/raw/imu.gz
+Content-Type: application/x-gzip
