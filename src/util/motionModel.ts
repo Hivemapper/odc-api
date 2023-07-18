@@ -44,7 +44,7 @@ import {
 import { DEFAULT_TIME } from './lock';
 import {
   getDateFromFilename,
-  getDateFromUnicodeTimastamp,
+  getDateFromUnicodeTimestamp,
   promiseWithTimeout,
 } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
@@ -997,7 +997,7 @@ export const getImagesForDateRange = async (from: number, to: number) => {
               .map(filename => {
                 return {
                   path: filename,
-                  date: getDateFromUnicodeTimastamp(filename).getTime(),
+                  date: getDateFromUnicodeTimestamp(filename).getTime(),
                 };
               });
 

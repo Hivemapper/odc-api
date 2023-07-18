@@ -18,6 +18,7 @@ import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
 import { Instrumentation } from 'util/instrumentation';
+import { getRawImuData } from '../util/datalogger';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
@@ -88,6 +89,17 @@ const execute = async () => {
                       ),
                       5000,
                     );
+                    // if (lastTimeRawSnippetCreated < Date.now() - 60000 || frameKm.images.length > 10) {  // configurable)
+                    //   const from = new Date(frameKm.metadata[0].t);
+                    //   const to = new Date(frameKm.metadata[frameKm.metadata.length - 1].t);
+                    //   const name = `${frameKm.chunkName}.db.gz`;
+                    //   const rawData = getRawImuData(from.toISOString(), to.toISOString())
+                    //
+                    //   // do request to raw DB
+                    //   // pack it into /data/raw folder // configurable
+                    //
+                    //   // check size of the folder and delete old
+                    // }
                   }
                   Instrumentation.add({
                     event: 'DashcamPackedFrameKm',

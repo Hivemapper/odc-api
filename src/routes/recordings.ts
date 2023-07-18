@@ -4,7 +4,7 @@ import { existsSync, readdir, readFile } from 'fs';
 
 import {
   filterBySinceUntil,
-  getDateFromUnicodeTimastamp,
+  getDateFromUnicodeTimestamp,
   getQuality,
 } from '../util';
 import { CameraType, ICameraFile } from '../types';
@@ -27,7 +27,7 @@ router.get('/', async (req: Request, res: Response) => {
             .map(filename => {
               return {
                 path: filename,
-                date: getDateFromUnicodeTimastamp(filename).getTime(),
+                date: getDateFromUnicodeTimestamp(filename).getTime(),
               };
             });
 
@@ -90,7 +90,7 @@ router.get('/last', async (req: Request, res: Response) => {
           filename = filename.split('/').pop() || '';
           res.json({
             path: filename,
-            date: getDateFromUnicodeTimastamp(filename).getTime(),
+            date: getDateFromUnicodeTimestamp(filename).getTime(),
           });
         } else {
           res.json({ error });
