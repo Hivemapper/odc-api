@@ -169,6 +169,14 @@ let parsedCursor: MotionModelCursor = {
   imuFilePath: '',
 };
 
+export const resetCursors = async () => {
+  parsedCursor = {
+    gnssFilePath: '',
+    imuFilePath: '',
+  };
+  rmSync(MOTION_MODEL_CURSOR);
+}
+
 export const syncCursors = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
@@ -272,7 +280,7 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     const cursor = await getGnssNameFromCursor();
     let existLastFile = false;
     if (cursor) {
-      existLastFile = await existsSync(cursor);
+      existLastFile = existsSync(cursor);
     }
     console.log('Last cursor: ' + cursor + ' file exists: ' + existLastFile)
     if (!cursor || !existLastFile) {
@@ -1019,6 +1027,8 @@ export const getImagesForDateRange = async (from: number, to: number) => {
   });
 };
 
+let sequenceOf0FpsEvents = 0;
+
 export const selectImages = (
   frameKM: FramesMetadata[],
 ): Promise<FrameKMOutput[]> => {
@@ -1069,6 +1079,17 @@ export const selectImages = (
         end: Math.round(dateEnd),
         size: fps,
       });
+      if (fps === 0) {
+        console.log('0 FPS detected, potential candidate for repairment');
+        sequenceOf0FpsEvents++;
+        if (sequenceOf0FpsEvents > 5) {
+          console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
+          resetCursors();
+          sequenceOf0FpsEvents = 0;
+        }
+      } else {
+        sequenceOf0FpsEvents = 0;
+      }
     } else {
       console.log(
         'Difference between start and end is too small for measuring Fps',
