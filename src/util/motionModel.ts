@@ -82,6 +82,8 @@ let config: MotionModelConfig = {
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
   ImuFilter: defaultImu,
+  isRawImuAndGnssFetchDisabled: true,
+  RawImuAndGnssIntervalTime: 600000 // 10 minutes
 };
 
 export const loadConfig = (

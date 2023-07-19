@@ -35,6 +35,8 @@ export type MotionModelConfig = {
   isImuMovementDetectionEnabled: boolean;
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
+  isRawImuAndGnssFetchDisabled: boolean;
+  RawImuAndGnssIntervalTime: number;
 };
 
 export type GNSS = {

@@ -1,4 +1,7 @@
 import fetch from "node-fetch";
+import { mkdir, writeFileSync } from 'fs';
+import { FRAMEKM_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER } from '../config';
+import console from 'console';
 
 const HDC_DATA_LOGGER = "http://192.168.0.10:9001";
 
@@ -17,5 +20,23 @@ export async function getRawImuData(from: string, to: string) {
     return resp.blob();
   } catch (error) {
     console.error('failed to fetch raw imu data', error);
+  }
+}
+
+export async function writeRawData(dataBlob: Blob, filename: string) {
+  try {
+    await new Promise(resolve => {
+      mkdir(RAW_DATA_ROOT_FOLDER, resolve);
+    });
+  } catch (e: unknown) {
+    console.error(`creating directory ${RAW_DATA_ROOT_FOLDER}`, e);
+  }
+
+  const outputFilePath = RAW_DATA_ROOT_FOLDER + '/' + filename;
+
+  try {
+    writeFileSync(outputFilePath, '');
+  } catch (e: unknown) {
+    console.error(`creating file ${outputFilePath}`, e);
   }
 }
