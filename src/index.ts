@@ -6,7 +6,7 @@ import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
-import { MotionModelServise } from 'services/motionModel';
+import { MotionModelService } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckServive } from 'services/integrityCheck';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
@@ -70,7 +70,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
-    serviceRunner.add(MotionModelServise);
+    serviceRunner.add(MotionModelService);
     serviceRunner.add(UpdateMotionModelConfigService);
 
     serviceRunner.run();

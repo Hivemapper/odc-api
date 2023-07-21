@@ -19,6 +19,7 @@ import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
 import { Instrumentation } from 'util/instrumentation';
 import { getRawImuData, writeRawData } from '../util/datalogger';
+import console from 'console';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
@@ -91,12 +92,12 @@ const execute = async () => {
                       ),
                       5000,
                     );
-                    if (!config.isRawImuAndGnssFetchDisabled) {
-                      if (lastTimeRawSnippetCreated < Date.now() - config.RawImuAndGnssIntervalTime || frameKm.images.length > 10) {
-                        const from = new Date(frameKm.metadata[0].t);
-                        const to = new Date(frameKm.metadata[frameKm.metadata.length - 1].t);
+                    if (config.rawLogsConfiguration && config.rawLogsConfiguration.isEnabled) {
+                      if (lastTimeRawSnippetCreated < Date.now() - (config.rawLogsConfiguration.interval * 1000) || frameKm.images.length > 5) {
+                        const from = new Date(frameKm.metadata[0].t).toISOString().replace('T', ' ').replace('Z', '');
+                        const to = new Date(frameKm.metadata[frameKm.metadata.length - 1].t).toISOString().replace('T', ' ').replace('Z', '');
                         const name = `${frameKm.chunkName}.db.gz`;
-                        const rawData = await getRawImuData(from.toISOString(), to.toISOString());
+                        const rawData = await getRawImuData(from, to);
                         if (rawData) {
                           await writeRawData(rawData, name);
                         }
@@ -153,6 +154,6 @@ const execute = async () => {
   }
 };
 
-export const MotionModelServise: IService = {
+export const MotionModelService: IService = {
   execute,
 };

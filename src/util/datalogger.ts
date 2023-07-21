@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { mkdir, writeFileSync } from 'fs';
-import { FRAMEKM_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER } from '../config';
+import { RAW_DATA_ROOT_FOLDER } from '../config';
 import console from 'console';
 
 const HDC_DATA_LOGGER = "http://192.168.0.10:9001";
@@ -23,7 +23,7 @@ export async function getRawImuData(from: string, to: string) {
   }
 }
 
-export async function writeRawData(dataBlob: Blob, filename: string) {
+export async function writeRawData(blob: Blob, filename: string) {
   try {
     await new Promise(resolve => {
       mkdir(RAW_DATA_ROOT_FOLDER, resolve);
@@ -33,9 +33,11 @@ export async function writeRawData(dataBlob: Blob, filename: string) {
   }
 
   const outputFilePath = RAW_DATA_ROOT_FOLDER + '/' + filename;
-
   try {
-    writeFileSync(outputFilePath, '');
+    blob.arrayBuffer().then(data => {
+      const buffer = Buffer.from(data);
+      writeFileSync(outputFilePath, buffer);
+    })
   } catch (e: unknown) {
     console.error(`creating file ${outputFilePath}`, e);
   }
