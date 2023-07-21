@@ -3,5 +3,8 @@ GET http://192.168.0.10:5000/datalogger/raw
 Content-Type: application/json
 
 ### Fetch the content of one file in RAW_DATA_ROOT_FOLDER
-GET http://192.168.0.10:5000/datalogger/raw/imu.gz
+GET http://192.168.0.10:5000/datalogger/raw/km_20230721_153118_6_0.db.gz
 Content-Type: application/x-gzip
+
+### Delete the content of one file in RAW_DATA_ROOT_FOLDER
+DELETE http://192.168.0.10:5000/datalogger/raw/km_20230721_153002_9_0.db.gz.clone

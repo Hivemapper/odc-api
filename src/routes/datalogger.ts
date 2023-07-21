@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import console from 'console';
-import { readdirSync, statSync, createReadStream } from 'fs';
+import { readdirSync, statSync, createReadStream, existsSync, rmSync } from 'fs';
 import { RAW_DATA_ROOT_FOLDER } from '../config';
 
 const router = Router();
@@ -32,6 +32,21 @@ router.get('/raw/:name', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     console.error(`fetching file ${req.params.name}`)
     res.json('')
+  }
+});
+
+// Delete teh contents of the file named :name under RAW_DATA_ROOT_FOLDER
+router.delete('/raw/:name', async(req: Request, res: Response) => {
+  try {
+    const filepath = `${RAW_DATA_ROOT_FOLDER}/${req.params.name}`;
+    if (existsSync(filepath)) {
+      rmSync(filepath);
+    }
+    res.json({
+      deleted: true,
+    });
+  } catch (error: unknown) {
+    res.json({ error });
   }
 });
 
