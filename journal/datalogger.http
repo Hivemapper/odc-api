@@ -1,10 +1,10 @@
 ### Fetch file names from the RAW_DATA_ROOT_FOLDER
-GET http://192.168.0.10:5000/datalogger/raw
+GET http://192.168.0.10:5000/api/1/datalogger/raw
 Content-Type: application/json
 
 ### Fetch the content of one file in RAW_DATA_ROOT_FOLDER
-GET http://192.168.0.10:5000/datalogger/raw/km_20230721_153118_6_0.db.gz
+GET http://192.168.0.10:5000/api/1/datalogger/raw/km_20230721_153118_6_0.db.gz
 Content-Type: application/x-gzip
 
 ### Delete the content of one file in RAW_DATA_ROOT_FOLDER
-DELETE http://192.168.0.10:5000/datalogger/raw/km_20230721_153002_9_0.db.gz.clone
+DELETE http://192.168.0.10:5000/api/1/datalogger/raw/km_20230721_153002_9_0.db.gz_clone
