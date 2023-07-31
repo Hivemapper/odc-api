@@ -1085,6 +1085,12 @@ export const selectImages = (
         if (sequenceOf0FpsEvents > 5) {
           console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
           resetCursors();
+          Instrumentation.add({
+            event: 'DashcamRepairedCursors',
+            start: Math.round(dateStart),
+            end: Math.round(dateEnd),
+            size: fps,
+          });
           sequenceOf0FpsEvents = 0;
         }
       } else {
