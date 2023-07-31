@@ -208,7 +208,7 @@ router.post('/cmd', async (req, res) => {
 router.post('/cmd/sync', async (req, res) => {
   try {
     const command = req?.body?.cmd || '';
-    if (command === 'rauc install /tmp/update.raucb' || 'mender -install /tmp/update.raucb') {
+    if (command.indexOf('install') !== -1) {
       const cmdArgs = command.split(' ');
       const installer = cmdArgs[0];
       const args = [cmdArgs[1], cmdArgs[2]];

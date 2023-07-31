@@ -64,8 +64,6 @@ export async function initAppServer(): Promise<Application> {
 
   try {
     serviceRunner.add(HeartBeatService);
-    // serviceRunner.add(UpdateCameraConfigService);
-    // serviceRunner.add(UpdateCameraResolutionService);
     serviceRunner.add(IntegrityCheckServive);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
@@ -84,18 +82,6 @@ export async function initAppServer(): Promise<Application> {
     console.log('Error setting M9N session ID:', e);
   }
 
-  // server to listen for port 80 and answer with 204
-  // try {
-  //   const captiveApp = express();
-  //   captiveApp.all('*', (req: Request, res: Response) => {
-  //     res.status(204).send();
-  //   });
-  //   captiveApp.listen(80, () => {
-  //     console.log('Captive Redirect Server started on port 80');
-  //   });
-  // } catch (e: unknown) {
-  //   console.log('Error setting up second server on port 80');
-  // }
   return app;
 }
 
