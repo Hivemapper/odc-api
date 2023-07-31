@@ -12,8 +12,8 @@ import {
 import { FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
 import { concatFrames } from 'util/framekm';
-import { rmSync } from 'fs';
-import { MOTION_MODEL_CURSOR } from 'config';
+import { existsSync, mkdir, rmSync } from 'fs';
+import { MOTION_MODEL_CURSOR, RAW_DATA_ROOT_FOLDER } from 'config';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
@@ -93,6 +93,15 @@ const execute = async () => {
                       5000,
                     );
                     if (config.rawLogsConfiguration && config.rawLogsConfiguration.isEnabled) {
+                      if (!existsSync(RAW_DATA_ROOT_FOLDER)) {
+                        try {
+                          await new Promise(resolve => {
+                            mkdir(RAW_DATA_ROOT_FOLDER, resolve);
+                          });
+                        } catch (e: unknown) {
+                          console.log(e);
+                        }
+                      }
                       if (lastTimeRawSnippetCreated < Date.now() - (config.rawLogsConfiguration.interval * 1000) || frameKm.images.length > 5) {
                         const from = new Date(frameKm.metadata[0].t).toISOString().replace('T', ' ').replace('Z', '');
                         const to = new Date(frameKm.metadata[frameKm.metadata.length - 1].t).toISOString().replace('T', ' ').replace('Z', '');

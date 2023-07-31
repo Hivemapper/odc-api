@@ -1,15 +1,12 @@
 import { exec, spawn } from 'child_process';
-import {
-  FRAMEKM_CLEANUP_SCRIPT,
-  FRAMEKM_ROOT_FOLDER,
-  METADATA_ROOT_FOLDER,
-} from 'config';
+import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER } from 'config';
 import { getOldestFileDateInDirectory } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME } from 'util/lock';
 import { getConfig } from 'util/motionModel';
 import { IService } from '../types';
 import { isIntegrityCheckDone } from './integrityCheck';
+
 const HIGHWATER_MARK_GB = 20;
 
 let isAppConnectionRequired = false;
@@ -54,6 +51,7 @@ export const TrackDownloadDebt: IService = {
                   FRAMEKM_CLEANUP_SCRIPT,
                   FRAMEKM_ROOT_FOLDER,
                   METADATA_ROOT_FOLDER,
+                  RAW_DATA_ROOT_FOLDER,
                   String(HIGHWATER_MARK_GB),
                 ]);
 

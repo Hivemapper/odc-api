@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import {
   DATA_INTEGRITY_SCRIPT,
   FRAMEKM_ROOT_FOLDER,
-  METADATA_ROOT_FOLDER,
+  METADATA_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER,
   WEBSERVER_LOG_PATH,
 } from 'config';
 import { IService } from 'types';
@@ -25,6 +25,7 @@ export const IntegrityCheckServive: IService = {
           DATA_INTEGRITY_SCRIPT,
           FRAMEKM_ROOT_FOLDER,
           METADATA_ROOT_FOLDER,
+          RAW_DATA_ROOT_FOLDER,
           WEBSERVER_LOG_PATH,
         ]);
 
