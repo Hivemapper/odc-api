@@ -8,7 +8,7 @@ import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { MotionModelService } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
-import { IntegrityCheckServive } from 'services/integrityCheck';
+import { IntegrityCheckService } from 'services/integrityCheck';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
@@ -63,13 +63,13 @@ export async function initAppServer(): Promise<Application> {
   }
 
   try {
+    serviceRunner.add(UpdateMotionModelConfigService);
     serviceRunner.add(HeartBeatService);
-    serviceRunner.add(IntegrityCheckServive);
+    serviceRunner.add(IntegrityCheckService);
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(MotionModelService);
-    serviceRunner.add(UpdateMotionModelConfigService);
 
     serviceRunner.run();
   } catch (e: unknown) {

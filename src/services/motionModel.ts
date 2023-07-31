@@ -18,7 +18,7 @@ import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
 import { Instrumentation } from 'util/instrumentation';
-import { getRawImuData, writeRawData } from '../util/datalogger';
+import { getRawImuData, writeRawData } from 'util/datalogger';
 import console from 'console';
 const ITERATION_DELAY = 5400;
 

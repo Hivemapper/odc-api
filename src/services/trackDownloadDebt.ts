@@ -51,7 +51,6 @@ export const TrackDownloadDebt: IService = {
                   FRAMEKM_CLEANUP_SCRIPT,
                   FRAMEKM_ROOT_FOLDER,
                   METADATA_ROOT_FOLDER,
-                  RAW_DATA_ROOT_FOLDER,
                   String(HIGHWATER_MARK_GB),
                 ]);
 
