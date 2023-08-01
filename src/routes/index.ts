@@ -27,6 +27,7 @@ import ledRouter from './led';
 import networkRouter from './network';
 import previewRouter from './preview';
 import instrumentationRouter from './instrumentation';
+import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
 import { getSessionId, readLast2MB } from 'util/index';
@@ -55,6 +56,7 @@ router.use('/led', ledRouter);
 router.use('/instrumentation', instrumentationRouter);
 router.use('/network', networkRouter);
 router.use('/preview', previewRouter);
+router.use('/datalogger', dataloggerRouter)
 
 router.get('/init', configureOnBoot);
 

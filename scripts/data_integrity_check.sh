@@ -8,8 +8,8 @@ fi
 folder1="$1"
 folder2="$2"
 file_path="$3"
-max_file_size=$((2 * 1024 * 1024))
-min_file_size=$((100 * 1024))
+max_file_size=$((2 * 1024 * 1024)) # 2MB
+min_file_size=$((100 * 1024)) # 100KB
 
 # Remove all empty files from folder2
 find "$folder2" -type f -empty -exec rm -f {} +

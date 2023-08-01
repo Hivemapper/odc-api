@@ -19,7 +19,7 @@ import {
   GnssMetadata,
   ImuMetadata,
   MotionModelConfig,
-  MotionModelCursor,
+  MotionModelCursor, RawLogsConfiguration,
 } from 'types/motionModel';
 import { timeIsMostLikelyLight } from './daylight';
 import {
@@ -44,7 +44,7 @@ import {
 import { DEFAULT_TIME } from './lock';
 import {
   getDateFromFilename,
-  getDateFromUnicodeTimastamp,
+  getDateFromUnicodeTimestamp,
   promiseWithTimeout,
 } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
@@ -82,6 +82,14 @@ let config: MotionModelConfig = {
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
   ImuFilter: defaultImu,
+  rawLogsConfiguration: {
+    isEnabled: false,
+    interval: 300,
+    snapshotSize: 30,
+    includeGps: true,
+    includeImu: true,
+    maxCollectedBytes: 5000000,
+  },
 };
 
 export const loadConfig = (
@@ -117,7 +125,8 @@ export const isValidConfig = (_config: MotionModelConfig) => {
     typeof _config.isCornerDetectionEnabled === 'boolean' &&
     typeof _config.isImuMovementDetectionEnabled === 'boolean' &&
     typeof _config.isLightCheckDisabled === 'boolean' &&
-    typeof _config.GnssFilter === 'object';
+    typeof _config.GnssFilter === 'object' &&
+    isValidRawLogsConfiguration(_config.rawLogsConfiguration);
   if (isValid && !_config.ImuFilter) {
     _config.ImuFilter = defaultImu;
   }
@@ -125,6 +134,10 @@ export const isValidConfig = (_config: MotionModelConfig) => {
   _config.isLightCheckDisabled = false;
   return isValid;
 };
+
+const isValidRawLogsConfiguration = (conf: RawLogsConfiguration): boolean => {
+  return !conf || (typeof conf.interval ==='number' && typeof conf.isEnabled === 'boolean');
+}
 
 const isValidGnssMetadata = (gnss: GNSS): boolean => {
   let isValid = true;
@@ -1005,7 +1018,7 @@ export const getImagesForDateRange = async (from: number, to: number) => {
               .map(filename => {
                 return {
                   path: filename,
-                  date: getDateFromUnicodeTimastamp(filename).getTime(),
+                  date: getDateFromUnicodeTimestamp(filename).getTime(),
                 };
               });
 

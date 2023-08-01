@@ -13,7 +13,7 @@ export const isIntegrityCheckDone = () => {
   return integrityCheckDone;
 };
 
-export const IntegrityCheckServive: IService = {
+export const IntegrityCheckService: IService = {
   execute: async () => {
     const timeout = setTimeout(() => {
       integrityCheckDone = true;

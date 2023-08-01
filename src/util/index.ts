@@ -62,7 +62,7 @@ export const getDateFromFramekmName = (filename: string) => {
   }
 };
 
-export const getDateFromUnicodeTimastamp = (filename: string) => {
+export const getDateFromUnicodeTimestamp = (filename: string) => {
   try {
     const parts = filename.split('_');
     return new Date(Number(parts[0] + parts[1].substring(0, 3)));

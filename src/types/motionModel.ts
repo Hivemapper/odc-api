@@ -16,6 +16,15 @@ export type FrameKMOutput = {
   images: ICameraFile[];
 };
 
+export type RawLogsConfiguration = {
+  isEnabled: boolean;
+  interval: number; // if 0, will fire for every FrameKM
+  snapshotSize: 30, // will take last N seconds, if 0 - will match with FrameKM start-end
+  includeGps: true // whether to include GPS or not, true is default
+  includeImu: true // whether to include IMU or not, true is default
+  maxCollectedBytes: 5000000 // in bytes, default is 50 mgs
+}
+
 export type MotionModelConfig = {
   DX: number;
   GnssFilter: {
@@ -35,6 +44,7 @@ export type MotionModelConfig = {
   isImuMovementDetectionEnabled: boolean;
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
+  rawLogsConfiguration: RawLogsConfiguration;
 };
 
 export type GNSS = {

@@ -1,0 +1,13 @@
+### Fetch file names from the RAW_DATA_ROOT_FOLDER
+GET http://192.168.0.10:5000/api/1/datalogger/raw
+Content-Type: application/json
+
+### Fetch the content of one file in RAW_DATA_ROOT_FOLDER
+GET http://192.168.0.10:5000/public/raw/km_20230731_132151_19_0.db.gz
+Content-Type: application/x-gzip
+
+### Delete the content of one file in RAW_DATA_ROOT_FOLDER
+DELETE http://192.168.0.10:5000/api/1/datalogger/raw/km_20230721_153002_9_0.db.gz_clone
+
+### Fetch content of framekm
+GET http://192.168.0.10:5000/public/framekm/km_20230721_153039_4_0

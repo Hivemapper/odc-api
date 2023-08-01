@@ -7,21 +7,24 @@ import {
   packMetadata,
   selectImages,
   syncCursors,
-  MAX_FAILED_ITERATIONS,
+  MAX_FAILED_ITERATIONS, getConfig,
 } from 'util/motionModel';
 import { FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
 import { concatFrames } from 'util/framekm';
-import { rmSync } from 'fs';
-import { MOTION_MODEL_CURSOR } from 'config';
+import { existsSync, mkdir, rmSync } from 'fs';
+import { MOTION_MODEL_CURSOR, RAW_DATA_ROOT_FOLDER } from 'config';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
 import { Instrumentation } from 'util/instrumentation';
+import { getRawImuData, writeRawData } from 'util/datalogger';
+import console from 'console';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
 let failedIterations = 0;
+let lastTimeRawSnippetCreated = Date.now();
 
 const execute = async () => {
   let iterationDelay = ITERATION_DELAY;
@@ -88,6 +91,28 @@ const execute = async () => {
                       ),
                       5000,
                     );
+                    const config = getConfig();
+                    if (config.rawLogsConfiguration && config.rawLogsConfiguration.isEnabled) {
+                      if (!existsSync(RAW_DATA_ROOT_FOLDER)) {
+                        try {
+                          await new Promise(resolve => {
+                            mkdir(RAW_DATA_ROOT_FOLDER, resolve);
+                          });
+                        } catch (e: unknown) {
+                          console.log(e);
+                        }
+                      }
+                      if (lastTimeRawSnippetCreated < Date.now() - (config.rawLogsConfiguration.interval * 1000) || frameKm.images.length > 5) {
+                        const from = new Date(frameKm.metadata[0].t).toISOString().replace('T', ' ').replace('Z', '');
+                        const to = new Date(frameKm.metadata[frameKm.metadata.length - 1].t).toISOString().replace('T', ' ').replace('Z', '');
+                        const name = `${frameKm.chunkName}.db.gz`;
+                        const rawData = await getRawImuData(from, to);
+                        if (rawData) {
+                          await writeRawData(rawData, name);
+                        }
+                        lastTimeRawSnippetCreated = Date.now();
+                      }
+                    }
                   }
                   Instrumentation.add({
                     event: 'DashcamPackedFrameKm',
@@ -138,6 +163,6 @@ const execute = async () => {
   }
 };
 
-export const MotionModelServise: IService = {
+export const MotionModelService: IService = {
   execute,
 };

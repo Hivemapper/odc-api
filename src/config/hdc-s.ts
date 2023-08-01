@@ -10,6 +10,7 @@ export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../data/recording/pic';
 export const FRAMEKM_ROOT_FOLDER =
   __dirname + '/../../../data/recording/framekm';
+export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
 export const GPS_ROOT_FOLDER = __dirname + '/../../../data/recording/gps';
