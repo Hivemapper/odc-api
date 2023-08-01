@@ -35,7 +35,7 @@ router.get('/raw/:name', async (req: Request, res: Response) => {
   }
 });
 
-// Delete teh contents of the file named :name under RAW_DATA_ROOT_FOLDER
+// Delete the contents of the file named :name under RAW_DATA_ROOT_FOLDER
 router.delete('/raw/:name', async(req: Request, res: Response) => {
   try {
     const filepath = `${RAW_DATA_ROOT_FOLDER}/${req.params.name}`;
