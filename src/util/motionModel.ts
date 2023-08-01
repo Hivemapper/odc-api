@@ -83,7 +83,7 @@ let config: MotionModelConfig = {
   isLightCheckDisabled: false,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
-    isEnabled: true,
+    isEnabled: false,
     interval: 300,
     snapshotSize: 30,
     includeGps: true,
@@ -136,7 +136,7 @@ export const isValidConfig = (_config: MotionModelConfig) => {
 };
 
 const isValidRawLogsConfiguration = (conf: RawLogsConfiguration): boolean => {
-  return typeof conf.interval ==='number' && typeof conf.isEnabled === 'boolean';
+  return !conf || (typeof conf.interval ==='number' && typeof conf.isEnabled === 'boolean');
 }
 
 const isValidGnssMetadata = (gnss: GNSS): boolean => {

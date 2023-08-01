@@ -25,7 +25,6 @@ const ITERATION_DELAY = 5400;
 export const lastProcessed = null;
 let failedIterations = 0;
 let lastTimeRawSnippetCreated = Date.now();
-const config = getConfig();
 
 const execute = async () => {
   let iterationDelay = ITERATION_DELAY;
@@ -92,6 +91,7 @@ const execute = async () => {
                       ),
                       5000,
                     );
+                    const config = getConfig();
                     if (config.rawLogsConfiguration && config.rawLogsConfiguration.isEnabled) {
                       if (!existsSync(RAW_DATA_ROOT_FOLDER)) {
                         try {
