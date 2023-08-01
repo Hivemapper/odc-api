@@ -13,7 +13,7 @@ export const FRAMEKM_ROOT_FOLDER =
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
-export const GPS_ROOT_FOLDER = __dirname + '/../../../data/recording/gps';
+export const GPS_ROOT_FOLDER = '/data/recording/gps';
 export const METADATA_ROOT_FOLDER = '/data/recording/metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../data/recording/gps/latest.log';
@@ -52,6 +52,7 @@ export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
 export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/data/camera_bridge_config.hash';
 export const GPS_MGA_OFFLINE_FILE = '/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/data/mgaoffline.hash';
+export const DATA_LOGGER_SERVICE = 'hivemapper-data-logger';
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 

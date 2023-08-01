@@ -14,6 +14,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamGot3dLock',
   'DashcamRejectedGps',
   'DashcamRepairedCursors',
+  'DashcamRepairedGps',
   'DashcamMotionModelReport',
   'DashcamFailedPackingFrameKm',
   'DashcamShowedOutOfSpaceWarning',

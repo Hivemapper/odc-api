@@ -34,6 +34,7 @@ import { CameraType, ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
 import {
   CAMERA_TYPE,
+  DATA_LOGGER_SERVICE,
   FRAMES_ROOT_FOLDER,
   GPS_ROOT_FOLDER,
   IMU_ROOT_FOLDER,
@@ -1041,6 +1042,7 @@ export const getImagesForDateRange = async (from: number, to: number) => {
 };
 
 let sequenceOf0FpsEvents = 0;
+let repairedCursors = 0;
 
 export const selectImages = (
   frameKM: FramesMetadata[],
@@ -1096,15 +1098,28 @@ export const selectImages = (
         console.log('0 FPS detected, potential candidate for repairment');
         sequenceOf0FpsEvents++;
         if (sequenceOf0FpsEvents > 5) {
-          console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
-          resetCursors();
-          Instrumentation.add({
-            event: 'DashcamRepairedCursors',
-            start: Math.round(dateStart),
-            end: Math.round(dateEnd),
-            size: fps,
-          });
-          sequenceOf0FpsEvents = 0;
+          if (repairedCursors > 5) {
+            exec(`rm -r ${GPS_ROOT_FOLDER} && mkdir ${GPS_ROOT_FOLDER} && systemctl restart ${DATA_LOGGER_SERVICE}`);
+            Instrumentation.add({
+              event: 'DashcamRepairedGps',
+              start: Math.round(dateStart),
+              end: Math.round(dateEnd),
+              size: fps,
+            });
+            repairedCursors = 0;
+            sequenceOf0FpsEvents = 0;
+          } else {
+            console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
+            resetCursors();
+            Instrumentation.add({
+              event: 'DashcamRepairedCursors',
+              start: Math.round(dateStart),
+              end: Math.round(dateEnd),
+              size: fps,
+            });
+            sequenceOf0FpsEvents = 0;
+            repairedCursors++;
+          }
         }
       } else {
         sequenceOf0FpsEvents = 0;
