@@ -6,7 +6,7 @@ import console from 'console';
 const HDC_DATA_LOGGER = "http://192.168.0.10:9001";
 
 export async function getRawImuData(from: string, to: string) {
-  const GET_RAW_IMU_DATA = `${HDC_DATA_LOGGER}/imu?from=${encodeURI(
+  const GET_RAW_IMU_DATA = `${HDC_DATA_LOGGER}/rawData?from=${encodeURI(
     from,
   )}&to=${encodeURI(to)}`;
   console.log("calling endpoint: ", GET_RAW_IMU_DATA);
