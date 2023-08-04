@@ -1,6 +1,6 @@
 import { exec, ExecException } from 'child_process';
 
-export const DEFAULT_TIME = 1672000000000;
+export const DEFAULT_TIME = 1690848000000;
 let lockTime = 0;
 let isTimeSet = false;
 

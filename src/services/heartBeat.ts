@@ -1,6 +1,5 @@
-import { exec, ExecException, execSync, spawnSync } from 'child_process';
+import { exec, ExecException, spawnSync } from 'child_process';
 import {
-  CAMERA_TYPE,
   CMD,
   GPS_LATEST_SAMPLE,
   HEALTH_MARKER_PATH,
@@ -8,10 +7,10 @@ import {
 } from 'config';
 import { readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
-import { CameraType, IService } from 'types';
+import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { setLockTime, setSystemTime } from 'util/lock';
+import { setLockTime } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/motionModel';
 import { COLORS, updateLED } from '../util/led';
 import {
@@ -30,7 +29,6 @@ let isLock = false;
 let hasBeenLockOnce = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
-let isTimeUpdateInProgress = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;

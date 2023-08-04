@@ -93,6 +93,9 @@ let config: MotionModelConfig = {
   },
 };
 
+let sequenceOfOldGpsData = 0;
+let repairedCursors = 0;
+
 export const loadConfig = (
   _config: MotionModelConfig,
   updateFile?: boolean,
@@ -296,10 +299,11 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     if (cursor) {
       existLastFile = existsSync(cursor);
     }
+    let exists = false;
     console.log('Last cursor: ' + cursor + ' file exists: ' + existLastFile)
     if (!cursor || !existLastFile) {
       console.log('No cursor mark...');
-      const exists = existsSync(MOTION_MODEL_CURSOR);
+      exists = existsSync(MOTION_MODEL_CURSOR);
       if (
         Date.now() > DEFAULT_TIME &&
         (!exists || (exists && !existLastFile))
@@ -310,17 +314,23 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
             encoding: 'utf-8',
           },
         );
-        lastGpsFilePath = String(lastGpsFilePath).split('\n')[0];
+        lastGpsFilePath = String(lastGpsFilePath).split('\n')[0]?.trim();
         console.log('Last candidate: ' + lastGpsFilePath);
         const lastFileTimestamp =
           getDateFromFilename(lastGpsFilePath).getTime();
-        if (lastGpsFilePath !== '' && lastFileTimestamp > Date.now() - 300000) {
+        if (lastGpsFilePath && lastFileTimestamp > Date.now() - 300000) {
           console.log('So last will be: ' + lastGpsFilePath);
           pathToGpsFile = GPS_ROOT_FOLDER + '/' + lastGpsFilePath;
-          parsedCursor = {
-            gnssFilePath: pathToGpsFile,
-            imuFilePath: '',
-          };
+          exists = existsSync(pathToGpsFile);
+          if (exists) {
+            parsedCursor = {
+              gnssFilePath: pathToGpsFile,
+              imuFilePath: '',
+            };
+          } else {
+            resolve([]);
+            return;
+          }
         } else {
           resolve([]);
           return;
@@ -381,7 +391,14 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
           };
           emptyIterationCounter = 0;
           if (cursor) {
-            rmSync(cursor);
+            try {
+              const stats = statSync(cursor);
+              if (stats.isFile()) {
+                rmSync(cursor);
+              }
+            } catch (error: unknown) {
+              console.log(error);
+            }
           }
         }
       }
@@ -587,6 +604,7 @@ export function isEnoughLightForGnss(gnss: GNSS | null) {
 
 export function isGpsTooOld(gpsData: GnssMetadata[]) {
   const now = Date.now();
+  checkForPossibleDataRepairment(gpsData.length && gpsData[0]?.t ? gpsData[0].t : now);
   return gpsData.some(
     (gps: GnssMetadata) => gps.t < now - config.MaxPendingTime,
   );
@@ -662,23 +680,25 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
               } msecs`,
             );
             imuRecords.map((imu: IMU) => {
-              const imuTimestamp = new Date(imu.time).getTime();
-              if (imuTimestamp >= since && imuTimestamp <= until) {
-                if (imu.accel) {
-                  imuData.accelerometer.push({
-                    x: Number(imu.accel.x) || 0,
-                    y: Number(imu.accel.y) || 0,
-                    z: Number(imu.accel.z) || 0,
-                    ts: imuTimestamp,
-                  });
-                }
-                if (imu.gyro) {
-                  imuData.gyroscope.push({
-                    x: Number(imu.gyro.x) || 0,
-                    y: Number(imu.gyro.y) || 0,
-                    z: Number(imu.gyro.z) || 0,
-                    ts: imuTimestamp,
-                  });
+              if (imu && imu.time) {
+                const imuTimestamp = new Date(imu.time).getTime();
+                if (imuTimestamp >= since && imuTimestamp <= until) {
+                  if (imu.accel) {
+                    imuData.accelerometer.push({
+                      x: Number(imu.accel.x) || 0,
+                      y: Number(imu.accel.y) || 0,
+                      z: Number(imu.accel.z) || 0,
+                      ts: imuTimestamp,
+                    });
+                  }
+                  if (imu.gyro) {
+                    imuData.gyroscope.push({
+                      x: Number(imu.gyro.x) || 0,
+                      y: Number(imu.gyro.y) || 0,
+                      z: Number(imu.gyro.z) || 0,
+                      ts: imuTimestamp,
+                    });
+                  }
                 }
               }
             });
@@ -1041,8 +1061,31 @@ export const getImagesForDateRange = async (from: number, to: number) => {
   });
 };
 
-let sequenceOf0FpsEvents = 0;
-let repairedCursors = 0;
+export const checkForPossibleDataRepairment = (dateStart: number, dateEnd?: number) => {
+  sequenceOfOldGpsData++;
+  if (sequenceOfOldGpsData > 5) {
+    if (repairedCursors > 5) {
+      exec(`rm -r ${GPS_ROOT_FOLDER} && mkdir ${GPS_ROOT_FOLDER} && systemctl restart ${DATA_LOGGER_SERVICE} && systemctl restart camera-bridge`);
+      Instrumentation.add({
+        event: 'DashcamRepairedGps',
+        start: Math.round(dateStart),
+        end: Math.round(dateEnd || dateStart),
+      });
+      repairedCursors = 0;
+      sequenceOfOldGpsData = 0;
+    } else {
+      console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
+      resetCursors();
+      Instrumentation.add({
+        event: 'DashcamRepairedCursors',
+        start: Math.round(dateStart),
+        end: Math.round(dateEnd || dateStart),
+      });
+      sequenceOfOldGpsData = 0;
+      repairedCursors++;
+    }
+  }
+}
 
 export const selectImages = (
   frameKM: FramesMetadata[],
@@ -1096,33 +1139,9 @@ export const selectImages = (
       });
       if (fps === 0) {
         console.log('0 FPS detected, potential candidate for repairment');
-        sequenceOf0FpsEvents++;
-        if (sequenceOf0FpsEvents > 5) {
-          if (repairedCursors > 5) {
-            exec(`rm -r ${GPS_ROOT_FOLDER} && mkdir ${GPS_ROOT_FOLDER} && systemctl restart ${DATA_LOGGER_SERVICE}`);
-            Instrumentation.add({
-              event: 'DashcamRepairedGps',
-              start: Math.round(dateStart),
-              end: Math.round(dateEnd),
-              size: fps,
-            });
-            repairedCursors = 0;
-            sequenceOf0FpsEvents = 0;
-          } else {
-            console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
-            resetCursors();
-            Instrumentation.add({
-              event: 'DashcamRepairedCursors',
-              start: Math.round(dateStart),
-              end: Math.round(dateEnd),
-              size: fps,
-            });
-            sequenceOf0FpsEvents = 0;
-            repairedCursors++;
-          }
-        }
+        checkForPossibleDataRepairment(dateStart, dateEnd);
       } else {
-        sequenceOf0FpsEvents = 0;
+        sequenceOfOldGpsData = 0;
       }
     } else {
       console.log(
