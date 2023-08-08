@@ -30,6 +30,7 @@ export const CACHED_CAMERA_CONFIG = '/data/camera.config';
 export const HEALTH_MARKER_PATH = '/data/healthy.txt';
 export const MOTION_MODEL_CURSOR = '/data/mm_cursor.log';
 export const MOTION_MODEL_CONFIG = '/data/mm_config.json';
+export const PRIVACY_ZONES_CONFIG = '/data/ppz.json';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../var/log/odc-api.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';

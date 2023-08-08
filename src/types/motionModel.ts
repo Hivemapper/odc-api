@@ -45,6 +45,7 @@ export type MotionModelConfig = {
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
   rawLogsConfiguration: RawLogsConfiguration;
+  privacyRadius?: number;
 };
 
 export type GNSS = {

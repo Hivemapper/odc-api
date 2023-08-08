@@ -18,6 +18,7 @@ import {
   setIsAppConnectionRequired,
 } from './trackDownloadDebt';
 import * as console from 'console';
+import { isPrivateLocation } from 'util/privacy';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -162,7 +163,7 @@ export const HeartBeatService: IService = {
             ? Math.abs(Date.now() - lastSuccessfulLock)
             : 70000;
           if (gpsLostPeriod > 12000) {
-            gpsLED = COLORS.RED;
+            gpsLED = COLORS.DIM;
           }
 
           if (isLock) {
@@ -200,9 +201,9 @@ export const HeartBeatService: IService = {
             cameraLED =
               isCameraActive &&
               lastGpsPoint &&
-              isEnoughLightForGnss(lastGpsPoint)
-                ? COLORS.GREEN
-                : COLORS.RED;
+              isPrivateLocation(lastGpsPoint.latitude, lastGpsPoint.longitude)
+                ? COLORS.RED
+                : isEnoughLightForGnss(lastGpsPoint) ? COLORS.GREEN : COLORS.DIM;
             if (!isCameraActive && wasCameraActive) {
               console.log('CAMERA TURNED OFF!!!');
             }
