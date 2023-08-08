@@ -68,12 +68,16 @@ scp ./compiled/dashcam-api.js root@192.168.0.10:/tmp/
 ssh -t root@192.168.0.10
 ```
 
-Steps taken on dashcam:
+First, configure the service on your camera to run & keep alive Node process for ODC API file, here is an example of such a service configuration for HDC camera: 
+
+https://github.com/Hivemapper/hdc_firmware/blob/main/dashcam/package/camera-node/files/camera-node.service
+
+Once configured,
 ```sh
-systemctl stop camera-node
+systemctl stop <your camera service>
 rm /opt/dashcam/bin/dashcam-api.js
 mv /tmp/dashcam-api.js /opt/dashcam/bin/
-systemctl start camera-node
+systemctl start  <your camera service>
 ```
 And you can now test!
 
