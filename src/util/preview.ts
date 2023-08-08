@@ -36,10 +36,10 @@ export const startPreview = async () => {
   await execSync(CMD.START_CAMERA, {
     encoding: 'utf-8',
   });
-  await sleep(500);
-  await execSync(CMD.START_PREVIEW, {
-    encoding: 'utf-8',
-  });
+  // await sleep(500);
+  // await execSync(CMD.START_PREVIEW, {
+  //   encoding: 'utf-8',
+  // });
 };
 
 export const stopPreview = async () => {
@@ -47,9 +47,9 @@ export const stopPreview = async () => {
     clearTimeout(timer);
   }
   setPreviewStatus(false);
-  await execSync(CMD.STOP_PREVIEW, {
-    encoding: 'utf-8',
-  });
+  // await execSync(CMD.STOP_PREVIEW, {
+  //   encoding: 'utf-8',
+  // });
   try {
     writeFileSync(IMAGER_CONFIG_PATH, JSON.stringify(getCameraConfig()), {
       encoding: 'utf-8',

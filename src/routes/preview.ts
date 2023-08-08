@@ -1,4 +1,3 @@
-import { PREVIEW_ROUTE } from 'config';
 import { Request, Response, Router } from 'express';
 import { getPreviewStatus } from 'services/heartBeat';
 import { startPreview, stopPreview } from 'util/preview';
@@ -10,7 +9,7 @@ router.get('/start', async (req: Request, res: Response) => {
 
     res.json({
       status: 'started',
-      route: PREVIEW_ROUTE,
+      route: '/preview',
     });
   } catch (error: unknown) {
     res.json({
