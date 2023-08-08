@@ -34,7 +34,7 @@ export const IMAGER_CONFIG_PATH =
   '/opt/dashcam/bin/config.json';
 export const NEW_IMAGER_CONFIG_PATH =
   '/opt/dashcam/bin/camera_config.json';
-export const CACHED_RES_CONFIG = '/../../../mnt/data/res.conf';
+export const CACHED_RES_CONFIG = '/mnt/data/res.conf';
 export const IMAGER_BRIDGE_PATH =
   '/opt/dashcam/bin/bridge.sh';
 export const UPLOAD_PATH = '/tmp/';
