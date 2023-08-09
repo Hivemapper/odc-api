@@ -6,6 +6,12 @@ import { exec } from 'child_process';
 
 export const COLORS: { [key: string]: ILED } = {
   RED: {
+    red: 25,
+    blue: 0,
+    green: 0,
+    on: true,
+  },
+  DIM: {
     red: 1,
     blue: 2,
     green: 1,
@@ -50,9 +56,9 @@ export const COLORS: { [key: string]: ILED } = {
 };
 
 let currentLEDs = {
-  framesLED: 'RED',
-  gpsLED: 'RED',
-  appLED: 'RED',
+  framesLED: 'DIM',
+  gpsLED: 'DIM',
+  appLED: 'DIM',
 };
 
 export const getCurrentLEDs = () => {
@@ -60,7 +66,7 @@ export const getCurrentLEDs = () => {
 };
 
 const getColorByLed = (LED: ILED) => {
-  let result = 'RED';
+  let result = 'DIM';
   Object.keys(COLORS).map((color: string) => {
     if (
       COLORS[color] &&
@@ -84,16 +90,18 @@ export const updateLED = async (
     if (CAMERA_TYPE === CameraType.HdcS) {
       if (framesLED === COLORS.YELLOW) {
         updateLEDHdcS(255, 255, 0);
-      } else if (gpsLED === COLORS.RED || framesLED === COLORS.RED) {
+      } else if (framesLED === COLORS.RED) {
+        updateLEDHdcS(255, 0, 0);
+      } else if (gpsLED === COLORS.DIM || framesLED === COLORS.DIM) {
         updateLEDHdcS(255, 255, 255);
       } else {
         updateLEDHdcS(0, 0, 255);
       }
     } else {
       let leds: ILED[] = [
-        { index: 0, ...COLORS.RED },
-        { index: 1, ...COLORS.RED },
-        { index: 2, ...COLORS.RED },
+        { index: 0, ...COLORS.DIM },
+        { index: 1, ...COLORS.DIM },
+        { index: 2, ...COLORS.DIM },
       ];
       try {
         readFile(

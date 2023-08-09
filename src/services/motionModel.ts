@@ -20,6 +20,7 @@ import { isCarParkedBasedOnImu } from 'util/imu';
 import { Instrumentation } from 'util/instrumentation';
 import { getRawImuData, writeRawData } from 'util/datalogger';
 import console from 'console';
+import { isPrivateZonesInitialised } from './loadPrivacy';
 const ITERATION_DELAY = 5400;
 
 export const lastProcessed = null;
@@ -41,6 +42,10 @@ const execute = async () => {
       );
       await sleep(iterationDelay);
       execute();
+      return;
+    }
+    if (!isPrivateZonesInitialised()) {
+      console.log('Private zones are not initialised yet. Waiting');
       return;
     }
     console.log('Motion model: Iterating');

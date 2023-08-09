@@ -51,6 +51,7 @@ import {
 import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
+import { isPrivateLocation } from './privacy';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -91,6 +92,7 @@ let config: MotionModelConfig = {
     includeImu: true,
     maxCollectedBytes: 5000000,
   },
+  privacyRadius: 50,
 };
 
 let sequenceOfOldGpsData = 0;
@@ -1209,7 +1211,26 @@ export const selectImages = (
           pointForFrame.lon,
         );
 
-        if (distance < distanceRange.MIN_DISTANCE) {
+        if (isPrivateLocation(pointForFrame.lat, pointForFrame.lon)) {
+          if (imagesToDownload.length) {
+          // NEED TO CUT FRAMEKM HERE
+            console.log(
+              `cutting frameKM of size ${
+                imagesToDownload.length
+              } cause of private location`,
+            );
+            subChunks.push({
+              images: imagesToDownload,
+              points: gpsForImages,
+            });
+            imagesToDownload = [];
+            gpsForImages = [];
+          }
+          if (gpsCursor !== frameKM.length - 1) {
+            gpsCursor++;
+          }
+          imageCursor++;
+        } else if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
             imagesToDownload = [images[imageCursor]];
             gpsForImages = [pointForFrame];
