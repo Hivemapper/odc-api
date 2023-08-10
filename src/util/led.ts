@@ -7,50 +7,50 @@ import { exec } from 'child_process';
 export const COLORS: { [key: string]: ILED } = {
   RED: {
     red: 25,
-    blue: 0,
     green: 0,
+    blue: 0,
     on: true,
   },
   DIM: {
     red: 1,
-    blue: 2,
     green: 1,
+    blue: 2,
     on: true,
   },
   YELLOW: {
     red: 18,
-    blue: 2,
     green: 12,
+    blue: 2,
     on: true,
   },
   GREEN: {
     red: 3,
-    blue: 25,
     green: 3,
+    blue: 25,
     on: true,
   },
   PURPLE: {
     red: 15,
-    blue: 25,
     green: 5,
+    blue: 25,
     on: true,
   },
   BLUE: {
     red: 0,
-    blue: 25,
     green: 0,
+    blue: 25,
     on: true,
   },
   PINK: {
-    red: 25,
-    blue: 25,
-    green: 0,
+    red: 8,
+    green: 1,
+    blue: 1,
     on: true,
   },
   WHITE: {
     red: 20,
-    blue: 20,
     green: 20,
+    blue: 20,
     on: true,
   },
 };
@@ -90,7 +90,7 @@ export const updateLED = async (
     if (CAMERA_TYPE === CameraType.HdcS) {
       if (framesLED === COLORS.YELLOW) {
         updateLEDHdcS(255, 255, 0);
-      } else if (framesLED === COLORS.RED) {
+      } else if (framesLED === COLORS.RED || framesLED === COLORS.PINK) {
         updateLEDHdcS(255, 0, 0);
       } else if (gpsLED === COLORS.DIM || framesLED === COLORS.DIM) {
         updateLEDHdcS(255, 255, 255);

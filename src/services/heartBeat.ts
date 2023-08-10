@@ -19,6 +19,7 @@ import {
 } from './trackDownloadDebt';
 import * as console from 'console';
 import { isPrivateLocation } from 'util/privacy';
+import { fileExists } from 'util/index';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -69,17 +70,20 @@ export const isCameraBridgeServiceActive = (): boolean => {
   return false;
 };
 
-const fetchGNSSLatestSample = () => {
+const fetchGNSSLatestSample = async () => {
   let gpsSample: any = null;
 
   try {
-    const data = readFileSync(GPS_LATEST_SAMPLE, {
-      encoding: 'utf-8',
-    });
-    try {
-      gpsSample = JSON.parse(jsonrepair(data));
-    } catch (e) {
-      console.log('Latest.log Parse Error:', e);
+    const exists = await fileExists(GPS_LATEST_SAMPLE);
+    if (exists) {
+      const data = readFileSync(GPS_LATEST_SAMPLE, {
+        encoding: 'utf-8',
+      });
+      try {
+        gpsSample = JSON.parse(jsonrepair(data));
+      } catch (e) {
+        console.log('Latest.log Parse Error:', e);
+      }
     }
   } catch (e) {
     console.log('failed to read ', GPS_LATEST_SAMPLE);
@@ -114,7 +118,7 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
     gpsSample.dop.hdop < 6 &&
-    (Number(gpsSample.eph) && gpsSample.eph < 20);
+    (Number(gpsSample.eph) && gpsSample.eph < 25);
   return lock;
 };
 
@@ -132,7 +136,7 @@ export const HeartBeatService: IService = {
 
       let gpsLED: any = null;
       try {
-        const gpsSample = fetchGNSSLatestSample();
+        const gpsSample = await fetchGNSSLatestSample();
         if (isGpsLock(gpsSample)) {
           if (!hasBeenLockOnce ) {
             Instrumentation.add({
@@ -202,7 +206,7 @@ export const HeartBeatService: IService = {
               isCameraActive &&
               gpsSample && isGpsLock(gpsSample) ?
               isPrivateLocation(gpsSample.latitude, gpsSample.longitude)
-                ? COLORS.RED
+                ? COLORS.PINK
                 : isEnoughLightForGnss(lastGpsPoint) ? COLORS.GREEN : COLORS.DIM : 
               COLORS.DIM;
             if (!isCameraActive && wasCameraActive) {
@@ -222,5 +226,5 @@ export const HeartBeatService: IService = {
       console.log('LED service failed with error', e);
     }
   },
-  interval: 3000,
+  interval: 1000,
 };

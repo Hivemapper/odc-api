@@ -92,7 +92,7 @@ let config: MotionModelConfig = {
     includeImu: true,
     maxCollectedBytes: 5000000,
   },
-  privacyRadius: 50,
+  privacyRadius: 200,
 };
 
 let sequenceOfOldGpsData = 0;

@@ -2,7 +2,7 @@ import KDBush from 'kdbush';
 import { latLonToWebMercator } from './geomath';
 import { getConfig } from './motionModel';
 
-const DEFAULT_RADIUS = 50;
+const DEFAULT_RADIUS = 200;
 let privateZones: KDBush | undefined;
 
 export const isPrivateLocation = (lat: number, lon: number): boolean => {
