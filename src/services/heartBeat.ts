@@ -114,7 +114,7 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
     gpsSample.dop.hdop < 6 &&
-    (Number(gpsSample.eph) && gpsSample.eph < 30);
+    (Number(gpsSample.eph) && gpsSample.eph < 20);
   return lock;
 };
 
@@ -200,10 +200,11 @@ export const HeartBeatService: IService = {
           } else {
             cameraLED =
               isCameraActive &&
-              lastGpsPoint &&
-              isPrivateLocation(lastGpsPoint.latitude, lastGpsPoint.longitude)
+              gpsSample && isGpsLock(gpsSample) ?
+              isPrivateLocation(gpsSample.latitude, gpsSample.longitude)
                 ? COLORS.RED
-                : isEnoughLightForGnss(lastGpsPoint) ? COLORS.GREEN : COLORS.DIM;
+                : isEnoughLightForGnss(lastGpsPoint) ? COLORS.GREEN : COLORS.DIM : 
+              COLORS.DIM;
             if (!isCameraActive && wasCameraActive) {
               console.log('CAMERA TURNED OFF!!!');
             }

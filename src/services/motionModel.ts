@@ -46,6 +46,8 @@ const execute = async () => {
     }
     if (!isPrivateZonesInitialised()) {
       console.log('Private zones are not initialised yet. Waiting');
+      await sleep(iterationDelay);
+      execute();
       return;
     }
     console.log('Motion model: Iterating');

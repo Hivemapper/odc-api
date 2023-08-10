@@ -32,17 +32,20 @@ export const LoadPrivacyService: IService = {
             if (privacyZones?.length) {
               setPrivateZones(privacyZones);
             }
+            console.log('INITIALISED');
             isInitialised = true;
           } catch (e: unknown) {
             console.log('Error parsing privacy config', e);
-            isInitialised = false;
+            isInitialised = true;
           }
         });
       } catch (e: unknown) {
         console.log('Error initiating privacy config', e);
-        isInitialised = false;
+        console.log('INITIALISED');
+        isInitialised = true;
       }
     } else {
+      console.log('INITIALISED');
       isInitialised = true;
     }
   },

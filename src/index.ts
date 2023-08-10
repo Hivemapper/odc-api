@@ -9,6 +9,7 @@ import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig
 import { MotionModelService } from 'services/motionModel';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
+import { LoadPrivacyService } from 'services/loadPrivacy';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
@@ -70,6 +71,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(MotionModelService);
+    serviceRunner.add(LoadPrivacyService);
 
     serviceRunner.run();
   } catch (e: unknown) {
