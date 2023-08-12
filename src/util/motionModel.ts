@@ -1382,14 +1382,14 @@ export const selectImages = (
         for (let k = 1; k < chunk.images.length; k++) {
           const lastFrame = validChunk.points[validChunk.points.length - 1];
           const curFrame = chunk.points[k];
-          if (curFrame.t - lastFrame.t >= MIN_TIME_BETWEEN_FRAMES) {
+          if (curFrame.t - lastFrame.t > MIN_TIME_BETWEEN_FRAMES) {
             const delta = latLonDistance(
               lastFrame.lat,
               curFrame.lat,
               lastFrame.lon,
               curFrame.lon,
             );
-            if (delta >= MIN_DISTANCE_BETWEEN_FRAMES) {
+            if (delta > MIN_DISTANCE_BETWEEN_FRAMES) {
               validChunk.images.push(chunk.images[k]);
               validChunk.points.push(chunk.points[k]);
             }
