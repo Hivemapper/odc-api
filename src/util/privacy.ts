@@ -11,7 +11,8 @@ export const isPrivateLocation = (lat: number, lon: number): boolean => {
   }
   const config = getConfig();
   const { x, y } = latLonToWebMercator(lat, lon);
-  return privateZones ? !!privateZones.within(x, y, config?.privacyRadius || DEFAULT_RADIUS).length : false;
+  const radius = config?.privacyRadius || DEFAULT_RADIUS;
+  return privateZones ? !!privateZones.within(x, y, radius * 1.25).length : false;
 }
 
 export const setPrivateZones = (points: [number, number][]) => {
