@@ -184,33 +184,35 @@ const defaultCameraConfig: ICameraConfig = {
 
 export const getCpuLoad = (callback: (load: number) => void) => {
   try {
-    exec(
-      `top -b -d1 -n1 | grep CPU:`,
-      {
-        encoding: 'utf-8',
-      },
-      (error, stdout) => {
-        if (!error) {
-          try {
-            const parts = stdout.split(' ');
-            const idleIndex = parts.indexOf('idle');
-            if (idleIndex !== -1) {
-              const cpuIdle = Number(parts[idleIndex - 1].replace('%', ''));
-              if (cpuIdle && cpuIdle < 100) {
-                callback(100 - cpuIdle);
-              } else {
-                callback(0);
-              }
-              return;
-            }
-          } catch {
-            callback(0);
-            return;
-          }
-        }
-        callback(0);
-      },
-    );
+    // Temporarilu disable CPU load check till we have optimal tool for this
+    callback(0);
+    // exec(
+    //   `top -b -d1 -n1 | grep CPU:`,
+    //   {
+    //     encoding: 'utf-8',
+    //   },
+    //   (error, stdout) => {
+    //     if (!error) {
+    //       try {
+    //         const parts = stdout.split(' ');
+    //         const idleIndex = parts.indexOf('idle');
+    //         if (idleIndex !== -1) {
+    //           const cpuIdle = Number(parts[idleIndex - 1].replace('%', ''));
+    //           if (cpuIdle && cpuIdle < 100) {
+    //             callback(100 - cpuIdle);
+    //           } else {
+    //             callback(0);
+    //           }
+    //           return;
+    //         }
+    //       } catch {
+    //         callback(0);
+    //         return;
+    //       }
+    //     }
+    //     callback(0);
+    //   },
+    // );
   } catch {
     callback(0);
   }

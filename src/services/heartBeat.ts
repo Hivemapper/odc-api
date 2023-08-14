@@ -31,6 +31,7 @@ let isLock = false;
 let hasBeenLockOnce = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
+let lastTimeCheckWasPrivate = false;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -151,7 +152,6 @@ export const HeartBeatService: IService = {
           if (gpsSample.ttff) {
             setLockTime(gpsSample.ttff);
           }
-          const gpsTime = new Date(gpsSample.timestamp || '').getTime();
 
           lastGpsPoint = gpsSample;
           lastSuccessfulLock = Date.now();
@@ -163,12 +163,7 @@ export const HeartBeatService: IService = {
             startCamera();
           }
         } else {
-          const gpsLostPeriod = lastSuccessfulLock
-            ? Math.abs(Date.now() - lastSuccessfulLock)
-            : 70000;
-          if (gpsLostPeriod > 12000) {
-            gpsLED = COLORS.DIM;
-          }
+          gpsLED = COLORS.DIM;
 
           if (isLock) {
             Instrumentation.add({
@@ -201,14 +196,26 @@ export const HeartBeatService: IService = {
         } else {
           if (isCameraRunningOutOfSpace()) {
             cameraLED = COLORS.YELLOW;
+            lastTimeCheckWasPrivate = false;
           } else {
-            cameraLED =
-              isCameraActive &&
-              gpsSample && isGpsLock(gpsSample) ?
-              isPrivateLocation(gpsSample.latitude, gpsSample.longitude)
-                ? COLORS.PINK
-                : isEnoughLightForGnss(lastGpsPoint) ? COLORS.GREEN : COLORS.DIM : 
-              COLORS.DIM;
+            if (isCameraActive && gpsSample && isGpsLock(gpsSample)) {
+              if (isPrivateLocation(gpsSample.latitude, gpsSample.longitude)) {
+                lastTimeCheckWasPrivate = true;
+                cameraLED = COLORS.PINK;
+              } else {
+                lastTimeCheckWasPrivate = false;
+                if (isEnoughLightForGnss(lastGpsPoint)) {
+                  cameraLED = COLORS.GREEN;
+                } else {
+                  cameraLED = COLORS.DIM;
+                }
+              }
+            } else {
+              if (!lastTimeCheckWasPrivate) {
+                cameraLED = isCameraActive ? COLORS.GREEN : COLORS.DIM;
+              }
+            }
+
             if (!isCameraActive && wasCameraActive) {
               console.log('CAMERA TURNED OFF!!!');
             }
