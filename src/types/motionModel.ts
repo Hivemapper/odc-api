@@ -29,6 +29,7 @@ export type MotionModelConfig = {
   DX: number;
   GnssFilter: {
     hdop?: number;
+    gdop?: number;
     pdop?: number;
     cep?: number;
     '3dLock': boolean;

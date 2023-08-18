@@ -17,6 +17,16 @@ export const UpdateMotionModelConfigService: IService = {
           try {
             const configJSON = JSON.parse(jsonrepair(data.toString()));
             if (configJSON && configJSON.DX) {
+              // temporarily add default filter
+              if (!configJSON.disableDefault) {
+                configJSON.GnssFilter = {
+                  '3dLock': true,
+                  minSatellites: 4,
+                  hdop: 4,
+                  gdop: 6,
+                  eph: 10,
+                };
+              }
               loadConfig(configJSON);
             }
           } catch (e: unknown) {

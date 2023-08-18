@@ -74,10 +74,11 @@ const defaultImu = {
 let config: MotionModelConfig = {
   DX: 6,
   GnssFilter: {
-    hdop: 6,
     '3dLock': true,
     minSatellites: 4,
-    eph: 15,
+    hdop: 4,
+    gdop: 6,
+    eph: 10,
   },
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   isCornerDetectionEnabled: true,
@@ -606,10 +607,14 @@ export function isEnoughLightForGnss(gnss: GNSS | null) {
 
 export function isGpsTooOld(gpsData: GnssMetadata[]) {
   const now = Date.now();
-  checkForPossibleDataRepairment(gpsData.length && gpsData[0]?.t ? gpsData[0].t : now);
-  return gpsData.some(
+
+  const isDataTooOld = gpsData.some(
     (gps: GnssMetadata) => gps.t < now - config.MaxPendingTime,
   );
+  if (isDataTooOld) {
+    checkForPossibleDataRepairment(gpsData.length && gpsData[0]?.t ? gpsData[0].t : now);
+  }
+  return isDataTooOld;
 }
 
 export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
