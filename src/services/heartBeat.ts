@@ -33,6 +33,8 @@ let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
 let lastTimeCheckWasPrivate = false;
 
+const DIM_GPS_LIGHT_DELAY = 20000;
+
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
 };
@@ -163,7 +165,12 @@ export const HeartBeatService: IService = {
             startCamera();
           }
         } else {
-          gpsLED = COLORS.DIM;
+          const gpsLostPeriod = lastSuccessfulLock
+            ? Math.abs(Date.now() - lastSuccessfulLock)
+            : 70000;
+          if (gpsLostPeriod > DIM_GPS_LIGHT_DELAY) {
+            gpsLED = COLORS.DIM;
+          }
 
           if (isLock) {
             Instrumentation.add({
