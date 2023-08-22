@@ -33,6 +33,7 @@ export const MOTION_MODEL_CONFIG = '/data/mm_config.json';
 export const PRIVACY_ZONES_CONFIG = '/data/ppz.json';
 export const WEBSERVER_LOG_PATH =
   __dirname + '/../../../var/log/odc-api.log';
+export const EVENTS_LOG_PATH = '/data/events.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 // File containing the camera configuration
 export const IMAGER_CONFIG_PATH =

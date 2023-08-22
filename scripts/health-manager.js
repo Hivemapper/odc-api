@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const { existsSync, rmSync, appendFileSync } = require('fs');
 const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 const MOTION_MODEL_CURSOR = '/mnt/data/mm_cursor.log';
-const LOG_FILE_PATH = '/mnt/data/camera-node.log';
+const LOG_FILE_PATH = '/mnt/data/events.log';
 const LOOP_MS = 21000;
 
 const sleep = (ms) => {
@@ -13,7 +13,9 @@ const sleep = (ms) => {
 
 const writeErrorLog = () => {
     try {
-        appendFileSync(LOG_FILE_PATH, `[INFO]|${Date.now()}|Unknown|Unknown|DashcamApiRepaired|0|0|0||0\r\n`);
+        if (existsSync(LOG_FILE_PATH)) {
+            appendFileSync(LOG_FILE_PATH, `[INFO]|${Date.now()}|Unknown|Unknown|DashcamApiRepaired|0|0|0||0\r\n`);
+        }
     } catch (e) {
         console.log(e);
     }

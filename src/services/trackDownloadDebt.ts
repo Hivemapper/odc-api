@@ -2,7 +2,7 @@ import { exec, spawn } from 'child_process';
 import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER } from 'config';
 import { getOldestFileDateInDirectory } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
-import { DEFAULT_TIME } from 'util/lock';
+import { DEFAULT_TIME, ifTimeSet } from 'util/lock';
 import { getConfig } from 'util/motionModel';
 import { IService } from '../types';
 import { isIntegrityCheckDone } from './integrityCheck';
@@ -86,6 +86,12 @@ export const TrackDownloadDebt: IService = {
               }
             }
           } else {
+            isAppConnectionRequired = false;
+            
+            if (!ifTimeSet()) {
+              console.log('Time is not set yet, will check the oldest file timestamp later');
+              return;
+            }
             // App connection is also required if user has some very old files that are closed to expiration date
             const oldestFileTs = await getOldestFileDateInDirectory(
               FRAMEKM_ROOT_FOLDER,
@@ -113,7 +119,6 @@ export const TrackDownloadDebt: IService = {
                 }),
               });
             }
-            isAppConnectionRequired = false;
           }
         }
       });
@@ -121,5 +126,5 @@ export const TrackDownloadDebt: IService = {
       console.log(e);
     }
   },
-  interval: 300111,
+  interval: 100111,
 };

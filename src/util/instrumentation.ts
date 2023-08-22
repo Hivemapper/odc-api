@@ -1,8 +1,10 @@
-import { API_VERSION } from 'config';
+import { API_VERSION, EVENTS_LOG_PATH } from 'config';
 import { InstrumentationData } from 'types';
 import { DopKpi, GnssDopKpi } from 'types/instrumentation';
 import { Dilution, GNSS } from 'types/motionModel';
-import { getSessionId, getCpuLoad, getTimeFromBoot } from 'util/index';
+import { getSessionId, getCpuLoad, getTimeFromBoot, ensureFileExists } from 'util/index';
+import { promises } from 'fs';
+import lockfile from 'proper-lockfile';
 
 const VALID_DASHCAM_EVENTS = new Set([
   'DashcamLoaded',
@@ -21,6 +23,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamShowedOldFilesWarning',
   'DashcamRemovedOldFiles',
   'DashcamNotMoving',
+  'DashcamCommandExecuted',
   'DashcamDop',
   'DashcamFps',
   'DashcamImuFreq',
@@ -34,6 +37,25 @@ const VALID_DASHCAM_EVENTS = new Set([
   'GpsLock',
 ]);
 
+async function appendEventLog(event: string) {
+    await ensureFileExists(EVENTS_LOG_PATH);
+    // Random retries helps to not get into the same retry loop
+    // It can mess up the order a bit, but if two events fired at the same time - we don't care for now
+    const release = await lockfile.lock(EVENTS_LOG_PATH, { retries: [
+      Math.random() * 100,
+      Math.random() * 100,
+      Math.random() * 100,
+      Math.random() * 100,
+      Math.random() * 100,
+    ] });
+
+    try {
+        await promises.appendFile(EVENTS_LOG_PATH, '[INFO]' + event + '\r\n');
+    } finally {
+        await release();
+    }
+}
+
 export class InstrumentationClass {
   private isHotLoad: boolean;
   constructor() {
@@ -46,13 +68,14 @@ export class InstrumentationClass {
     }
     try {
       getCpuLoad((cpuLoad: number) => {
-        console.info(
+        const event = 
           `|${Date.now()}|${API_VERSION}|${getSessionId()}|${
             record.event
           }|${getTimeFromBoot()}|${record.size || 0}|${cpuLoad}|${
             record.message || ''
-          }|${this.isHotLoad ? 1 : 0}`,
-        );
+          }|${this.isHotLoad ? 1 : 0}`;
+        console.info(event);
+        appendEventLog(event);
       });
     } catch {
       //

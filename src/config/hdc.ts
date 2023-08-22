@@ -26,6 +26,7 @@ export const DATA_INTEGRITY_SCRIPT = '/opt/dashcam/bin/data_integrity_check.sh';
 export const ACL_FILES_PATH = '/mnt/data';
 export const WEBSERVER_LOG_PATH =
   '/mnt/data/camera-node.log';
+export const EVENTS_LOG_PATH = '/mnt/data/events.log';
 export const LED_CONFIG_PATH = '/tmp/led.json';
 export const CACHED_CAMERA_CONFIG = '/mnt/data/camera.conf';
 export const PRIVACY_ZONES_CONFIG = '/mnt/data/ppz.json';

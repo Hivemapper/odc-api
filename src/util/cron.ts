@@ -1,4 +1,4 @@
-import { exec, execSync, spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 import { appendFile, writeFile } from 'fs';
 import {
@@ -7,6 +7,7 @@ import {
   ICronJobCondition,
   ICronJobConfig,
 } from 'types';
+import { Instrumentation } from './instrumentation';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;
@@ -148,6 +149,12 @@ export const resolveCondition = async (
     if (condition.cmd) {
       try {
         const child = spawn(condition.cmd || '', { shell: true });
+        Instrumentation.add({
+          event: 'DashcamCommandExecuted',
+          message: JSON.stringify({
+            command: condition.cmd || '',
+          })
+        });
         let output = '';
         child.stdout.setEncoding('utf8');
         child.stdout.on('data', data => {
@@ -216,6 +223,13 @@ export const createCronJobExecutor = (
     try {
       console.log('Command executed: ' + cmd);
       const child = spawn(cmd || '', { shell: true });
+      Instrumentation.add({
+        event: 'DashcamCommandExecuted',
+        message: JSON.stringify({
+          command: cmd || '',
+          id: config.id
+        })
+      });
       let output = '';
       child.stdout.setEncoding('utf8');
       child.stdout.on('data', data => {

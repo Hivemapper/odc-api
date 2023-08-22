@@ -1,5 +1,6 @@
 import express, { Application } from 'express';
 import router from './routes';
+import { Server } from 'http';
 import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
 import { serviceRunner } from 'services';
@@ -36,8 +37,9 @@ export async function initAppServer(): Promise<Application> {
 
   app.use(router);
 
+  let server: Server;
   await new Promise<void>((resolve, reject) => {
-    app.listen(PORT, resolve);
+    server = app.listen(PORT, resolve);
   });
   console.log(
     `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
@@ -83,6 +85,49 @@ export async function initAppServer(): Promise<Application> {
   } catch (e: unknown) {
     console.log('Error setting M9N session ID:', e);
   }
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Promise Rejection:', reason);
+  });
+  
+  let isShuttingDown = false;
+
+  function gracefulShutdown(signal: string, err?: Error) {
+      if (isShuttingDown) {
+          console.log('Shutdown already in progress. Please wait...');
+          return;
+      }
+      isShuttingDown = true;
+  
+      if (err) {
+          console.error('Uncaught Exception:', err);
+      } else {
+          console.log(`${signal} signal received. Shutting down gracefully...`);
+      }
+  
+      const timeout = setTimeout(() => {
+          console.log('Forcefully shutting down.');
+          process.exit(1);
+      }, 5000);
+  
+      server?.close(() => {
+          clearTimeout(timeout);
+          console.log('Closed out remaining connections.');
+          process.exit(0);
+      });
+  }
+  
+  process.on('uncaughtException', (err) => {
+      gracefulShutdown('UncaughtException', err);
+  });
+  
+  process.on('SIGTERM', () => {
+      gracefulShutdown('SIGTERM');
+  });
+  
+  process.on('SIGINT', () => {
+      gracefulShutdown('SIGINT');
+  });
 
   return app;
 }

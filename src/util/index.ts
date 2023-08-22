@@ -6,6 +6,7 @@ import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
 import {
   access,
   constants,
+  promises,
   createReadStream,
   readFile,
   readFileSync,
@@ -21,7 +22,7 @@ import {
   NEW_IMAGER_CONFIG_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
-import { exec, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 
 let sessionId: string;
@@ -181,6 +182,25 @@ const defaultCameraConfig: ICameraConfig = {
     adjustment: { hflip: false, vflip: false, denoise: 'off', rotation: 180 },
   },
 };
+
+const fileExistsCache: { [key: string]: boolean } = {}; 
+
+export async function ensureFileExists(filePath: string) {
+    if (fileExistsCache[filePath]) return;
+
+    try {
+        await promises.access(filePath, constants.F_OK);
+        fileExistsCache[filePath] = true;  // If access is successful, update the cache.
+    } catch (error: any) {
+        // If the error indicates the file doesn't exist, create it.
+        if (error && error.code === 'ENOENT') {
+            await promises.writeFile(filePath, '');
+            fileExistsCache[filePath] = true;
+        } else {
+            console.error(error);
+        }
+    }
+}
 
 export const getCpuLoad = (callback: (load: number) => void) => {
   try {

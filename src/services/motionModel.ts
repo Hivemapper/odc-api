@@ -31,7 +31,6 @@ const execute = async () => {
   let iterationDelay = ITERATION_DELAY;
   try {
     if (!ifTimeSet()) {
-      console.log('Ignoring motion model iteration, time is not set yet.');
       await sleep(iterationDelay);
       execute();
       return;
