@@ -44,6 +44,9 @@ export const NETWORK_BOOT_CONFIG_PATH =
   '/mnt/data/wifi.cfg';
 export const DEVICE_INFO_LOG_FILE = '/tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
+export const ML_MODELS = {
+  PVC: '/mnt/data/models/pvc.onnx'
+}
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const DATA_LOGGER_SERVICE = 'data-logger';
