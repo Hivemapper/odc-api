@@ -41,6 +41,7 @@ import {
   METADATA_ROOT_FOLDER,
   MOTION_MODEL_CONFIG,
   MOTION_MODEL_CURSOR,
+  UNPROCESSED_METADATA_ROOT_FOLDER,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
 import {
@@ -84,6 +85,7 @@ let config: MotionModelConfig = {
   isCornerDetectionEnabled: true,
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
+  isDashcamMLEnabled: true,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,
@@ -1453,9 +1455,10 @@ export const packMetadata = async (
   bytesMap: { [key: string]: number },
 ): Promise<FramesMetadata[]> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
+  const metadataFolder = getConfig().isDashcamMLEnabled ? UNPROCESSED_METADATA_ROOT_FOLDER : METADATA_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
-      mkdir(METADATA_ROOT_FOLDER, resolve);
+      mkdir(metadataFolder, resolve);
     });
   } catch (e: unknown) {
     console.log(e);
@@ -1493,7 +1496,7 @@ export const packMetadata = async (
     };
     try {
       writeFileSync(
-        METADATA_ROOT_FOLDER + '/' + name + '.json',
+        metadataFolder + '/' + name + '.json',
         JSON.stringify(metadataJSON),
         { encoding: 'utf-8' },
       );

@@ -1,5 +1,5 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import {
   Stats,
   mkdir,
@@ -7,13 +7,17 @@ import {
   createReadStream,
   createWriteStream,
   writeFileSync,
+  promises,
+  existsSync,
+  rmdirSync,
+  renameSync,
 } from 'fs';
 import { promisify } from 'util';
 import { pipeline } from 'stream';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from './motionModel';
+import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES, getConfig } from './motionModel';
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
@@ -28,9 +32,11 @@ export const concatFrames = async (
   retryCount = 0,
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
+  const isDashcamMLEnabled = getConfig().isDashcamMLEnabled;
+  const frameKmFolder = isDashcamMLEnabled ? FRAMEKM_ROOT_FOLDER : UNPROCESSED_FRAMEKM_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
-      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
+      mkdir(frameKmFolder, resolve);
     });
   } catch (e: unknown) {
     console.log(e);
@@ -82,31 +88,57 @@ export const concatFrames = async (
       return bytesMap;
     }
 
-    const outputFilePath = FRAMEKM_ROOT_FOLDER + '/' + framekmName;
+    const outputFilePath = frameKmFolder + '/' + framekmName;
 
     try {
-      writeFileSync(outputFilePath, '');
-      for (const file of validFrames) {
-        const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
-        const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
-        const readStream = createReadStream(filePath);
-        await asyncPipeline(readStream, writeStream);
-        bytesMap[file.name] = file.size;
-        totalBytes += file.size;
-      }
-      await sleep(500);
-
-      // VERY IMPORTANT STEP
-      // Check file size to validate the full process
-      const { size } = await asyncStat(outputFilePath);
-      if (size !== totalBytes) {
-        console.log(
-          'Concatenated file size does not match totalBytes, retrying...',
-          size,
-          totalBytes,
-        );
-        await sleep(retryDelay);
-        return concatFrames(frames, framekmName, retryCount + 1);
+      if (isDashcamMLEnabled) {
+        const unprocessedTempFolder = frameKmFolder + '/_' + framekmName;
+        const unprocessedFolder = frameKmFolder + '/' + framekmName;
+        try {
+          if (existsSync(unprocessedTempFolder)) {
+            rmdirSync(unprocessedTempFolder, { recursive: true });
+          }
+          if (existsSync(unprocessedFolder)) {
+            rmdirSync(unprocessedFolder, { recursive: true });
+          }
+          await new Promise(resolve => {
+            mkdir(unprocessedTempFolder, resolve);
+          });
+        } catch (e: unknown) {
+          console.log(e);
+        }
+        for (const file of validFrames) {
+          const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
+          await promises.copyFile(filePath, unprocessedTempFolder + '/' + file.name);
+          bytesMap[file.name] = file.size;
+          totalBytes += file.size;
+        }
+        await sleep(200);
+        renameSync(unprocessedTempFolder, unprocessedFolder);
+      } else {
+        writeFileSync(outputFilePath, '');
+        for (const file of validFrames) {
+          const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
+          const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
+          const readStream = createReadStream(filePath);
+          await asyncPipeline(readStream, writeStream);
+          bytesMap[file.name] = file.size;
+          totalBytes += file.size;
+        }
+        await sleep(500);
+  
+        // VERY IMPORTANT STEP
+        // Check file size to validate the full process
+        const { size } = await asyncStat(outputFilePath);
+        if (size !== totalBytes) {
+          console.log(
+            'Concatenated file size does not match totalBytes, retrying...',
+            size,
+            totalBytes,
+          );
+          await sleep(retryDelay);
+          return concatFrames(frames, framekmName, retryCount + 1);
+        }
       }
     } catch (error) {
       console.log(`Error during concatenation:`, error);

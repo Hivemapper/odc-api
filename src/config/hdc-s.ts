@@ -8,13 +8,14 @@ export const PORT = 5000;
 export const PUBLIC_FOLDER = __dirname + '/../../../data/recording';
 export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
 export const FRAMES_ROOT_FOLDER = __dirname + '/../../../data/recording/pic';
-export const FRAMEKM_ROOT_FOLDER =
-  __dirname + '/../../../data/recording/framekm';
+export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
+export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
 export const GPS_ROOT_FOLDER = '/data/recording/gps';
 export const METADATA_ROOT_FOLDER = '/data/recording/metadata';
+export const UNPROCESSED_METADATA_ROOT_FOLDER = '/data/recording/unprocessed_metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../data/recording/gps/latest.log';
 export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
