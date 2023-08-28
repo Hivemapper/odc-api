@@ -33,7 +33,7 @@ export const concatFrames = async (
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   const isDashcamMLEnabled = getConfig().isDashcamMLEnabled;
-  const frameKmFolder = isDashcamMLEnabled ? FRAMEKM_ROOT_FOLDER : UNPROCESSED_FRAMEKM_ROOT_FOLDER;
+  const frameKmFolder = isDashcamMLEnabled ? UNPROCESSED_FRAMEKM_ROOT_FOLDER : FRAMEKM_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
       mkdir(frameKmFolder, resolve);
