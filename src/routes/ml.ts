@@ -2,7 +2,7 @@ import {
     ML_MODELS,
   } from '../config';
   import { Request, Response, Router } from 'express';
-  import { readFileSync, renameSync, writeFileSync } from 'fs';
+  import { existsSync, readFileSync, renameSync, writeFileSync } from 'fs';
 
   const router = Router();
   
@@ -24,8 +24,12 @@ import {
         res.json({ error: 'model type is not supported' });
         return;
       }
-      const hash = readFileSync(modelPath + '.hash', { encoding: 'utf-8' });
-      res.json({ hash: hash.trim() } );
+      if (existsSync(modelPath + '.hash')) {
+        const hash = readFileSync(modelPath + '.hash', { encoding: 'utf-8' });
+        res.json({ hash: hash.trim() } );
+      } else {
+        res.json({ hash: '' } );
+      }
     } catch (error: unknown) {
       res.json({ error });
     }
