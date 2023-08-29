@@ -45,8 +45,9 @@ export const CACHED_RES_CONFIG = '/data/res.config';
 export const UPLOAD_PATH = __dirname + '/../../../data/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/home/root/cron_config';
-export const ML_MODELS = {
-  PVC: '/data/models/pvc.onnx'
+export const ML_ROOT_FOLDER = '/data/models';
+export const ML_MODELS: Record<string, string> = {
+  PVC: 'pvc.onnx'
 }
 export const CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 export const IMAGER_BRIDGE_PATH =

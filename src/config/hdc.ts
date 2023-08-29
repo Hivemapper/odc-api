@@ -17,6 +17,7 @@ export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
 export const GPS_LATEST_SAMPLE =
   '/mnt/data/gps/latest.log';
 export const IMU_ROOT_FOLDER = '/mnt/data/imu';
+export const ML_ROOT_FOLDER = '/mnt/data/models';
 export const LORA_RESPONSE_FOLDER = '/mnt/data/lorawan';
 export const LORA_REQUEST_FOLDER = '/tmp/lorawan';
 export const BUILD_INFO_PATH = '/etc/version.json';
@@ -44,8 +45,8 @@ export const NETWORK_BOOT_CONFIG_PATH =
   '/mnt/data/wifi.cfg';
 export const DEVICE_INFO_LOG_FILE = '/tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
-export const ML_MODELS = {
-  PVC: '/mnt/data/models/pvc.onnx'
+export const ML_MODELS: Record<string, string> = {
+  PVC: 'pvc.onnx'
 }
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
