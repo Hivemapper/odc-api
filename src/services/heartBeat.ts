@@ -55,7 +55,7 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
   isLedControlledByDashcam = state;
 };
 
-export const isCameraBridgeServiceActive = (): boolean => {
+export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
   try {
     const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
       encoding: 'utf-8',
@@ -135,7 +135,7 @@ export const HeartBeatService: IService = {
         return;
       }
 
-      const isCameraActive = isCameraBridgeServiceActive();
+      const isCameraActive = await isCameraBridgeServiceActive();
 
       let gpsLED: any = null;
       try {
