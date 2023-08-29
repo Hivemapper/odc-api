@@ -41,7 +41,7 @@ router.post('/camera_bridge', async (req: Request, res: Response) => {
     writeFileSync(CAMERA_BRIDGE_CONFIG_FILE_HASH, req.body.hash, { encoding: 'utf-8' });
     console.log('POST: /camera_bridge: config hash written to file');
 
-    const active = isCameraBridgeServiceActive();
+    const active = await isCameraBridgeServiceActive();
     console.log('POST: /camera_bridge: camera bridge service active: ' + active);
     if (active) {
       restartCamera();
@@ -70,7 +70,7 @@ router.delete('/camera_bridge', async (req: Request, res: Response) => {
   }
 
   try {
-    const active = isCameraBridgeServiceActive();
+    const active = await isCameraBridgeServiceActive();
     console.log('POST: /camera_bridge: camera bridge service active: ' + active);
     if (active) {
       restartCamera();
