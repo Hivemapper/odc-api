@@ -48,6 +48,7 @@ export type MotionModelConfig = {
   isDashcamMLEnabled: boolean;
   rawLogsConfiguration: RawLogsConfiguration;
   privacyRadius?: number;
+  modelHashes?: Record<string, string>;
 };
 
 export type GNSS = {

@@ -1490,7 +1490,7 @@ export const packMetadata = async (
         loraDeviceId: undefined,
         keyframeDistance: config.DX,
         resolution: '2k',
-        version: '1.7',
+        version: '1.8',
       },
       frames: validatedFrames,
     };
