@@ -4,6 +4,7 @@ import {
   readdir,
   readFile,
   readFileSync,
+  renameSync,
   rmSync,
   statSync,
   writeFile,
@@ -1455,7 +1456,8 @@ export const packMetadata = async (
   bytesMap: { [key: string]: number },
 ): Promise<FramesMetadata[]> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
-  const metadataFolder = getConfig().isDashcamMLEnabled ? UNPROCESSED_METADATA_ROOT_FOLDER : METADATA_ROOT_FOLDER;
+  const isDashcamMLEnabled = getConfig().isDashcamMLEnabled;
+  const metadataFolder = isDashcamMLEnabled ? UNPROCESSED_METADATA_ROOT_FOLDER : METADATA_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
       mkdir(metadataFolder, resolve);
@@ -1501,6 +1503,12 @@ export const packMetadata = async (
         { encoding: 'utf-8' },
       );
       console.log('Metadata written for ' + name);
+      const unprocessedTempFolder = UNPROCESSED_METADATA_ROOT_FOLDER + '/_' + name;
+      if (isDashcamMLEnabled && existsSync(unprocessedTempFolder)) {
+        // Very important step: once files are copied and metadata ready,
+        // We can rename the FrameKM folder that will notify the listener that all the assets are ready for processing
+        renameSync(unprocessedTempFolder, UNPROCESSED_METADATA_ROOT_FOLDER +  + '/' + name);
+      }
       return metadataJSON.frames;
     } catch (e: unknown) {
       console.log('Error writing Metadata file');

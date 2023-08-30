@@ -114,7 +114,6 @@ export const concatFrames = async (
           totalBytes += file.size;
         }
         await sleep(200);
-        renameSync(unprocessedTempFolder, unprocessedFolder);
       } else {
         writeFileSync(outputFilePath, '');
         for (const file of validFrames) {
