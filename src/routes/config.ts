@@ -39,7 +39,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
-/* deprecated, do not remove or enhance */
+/* TODO: deprecated, do not remove or enhance */
 router.get('/motionmodel', async (req: Request, res: Response) => {
   try {
     res.json(getConfig());
@@ -48,7 +48,7 @@ router.get('/motionmodel', async (req: Request, res: Response) => {
   }
 });
 
-/* deprecated, do not remove or enhance */
+/* TODO: deprecated, do not remove or enhance */
 router.post('/motionmodel', async (req: Request, res: Response) => {
   try {
     if (req?.body?.config) loadConfig(req.body.config, true);
