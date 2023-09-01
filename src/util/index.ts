@@ -15,6 +15,7 @@ import {
   statSync,
   writeFile,
   writeFileSync,
+  rmSync,
 } from 'fs';
 import {
   CACHED_CAMERA_CONFIG,
@@ -22,7 +23,7 @@ import {
   NEW_IMAGER_CONFIG_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
-import { spawn } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 
 let sessionId: string;
@@ -434,6 +435,83 @@ export async function promiseWithTimeout(racePromise: any, timeout: number) {
     }),
     wait(timeout),
   ]);
+}
+
+export async function runCommand(cmd: string, args: string[] = []) {
+  const cli = `${cmd} ${args.join(' ')}`;
+  return new Promise<string>((resolve, reject) => {
+    exec(cli, (err, stdout, stderr) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout.concat(stderr));
+      }
+    });
+  });
+}
+
+export async function spawnProcess(
+  cmd: string,
+  args: string[],
+  flushOutput = false,
+  env?: Record<string, string | undefined>,
+  cwd?: string,
+  timeout = 1000 * 60 * 60 * 1.5,
+  errPatterns: string[] = [],
+) {
+  return new Promise<string>((resolve, reject) => {
+    let out = '';
+    const proc = spawn(cmd, args, {
+      cwd,
+      stdio: [],
+      env: env || process.env,
+    });
+
+    const killer = setTimeout(() => {
+      proc.kill('SIGINT');
+      reject('proc timeout');
+    }, timeout);
+
+    proc.stdout.setEncoding('utf8');
+    proc.stdout.on('data', (data: any) => {
+      const strOut = String(data);
+      const error = errPatterns.find(pattern => strOut.includes(pattern));
+      if (error) {
+        throw error;
+      }
+      if (flushOutput) {
+        console.log(strOut);
+      }
+      out += strOut;
+    });
+    proc.stderr.on('data', (data: any) => {
+      const strOut = String(data);
+      const error = errPatterns.find(pattern => strOut.includes(pattern));
+      if (error) {
+        throw error;
+      }
+      if (flushOutput) {
+        console.error(strOut);
+      }
+      out += strOut;
+    });
+    proc.on('error', (err: unknown) => {
+      clearTimeout(killer);
+      reject(err);
+    });
+    proc.on('close', () => {
+      clearTimeout(killer);
+      resolve(out);
+    });
+  });
+}
+
+export function tryToRemoveFile(path: string) {
+  try {
+    rmSync(path, { force: true });
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 export async function readLast2MB(filePath: string) {
