@@ -36,6 +36,11 @@ export type MotionModelConfig = {
     minSatellites: number;
     eph?: number;
   };
+  Privacy: {
+    numThreads: number,
+    confThreshold: number,
+    iouThreshold: number,
+  }
   ImuFilter: {
     threshold: number;
     alpha: number;

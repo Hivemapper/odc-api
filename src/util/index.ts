@@ -437,7 +437,7 @@ export async function promiseWithTimeout(racePromise: any, timeout: number) {
   ]);
 }
 
-export async function runCommand(cmd: string, args: string[] = []) {
+export async function runCommand(cmd: string, args: (string | number)[] = []) {
   const cli = `${cmd} ${args.join(' ')}`;
   return new Promise<string>((resolve, reject) => {
     exec(cli, (err, stdout, stderr) => {

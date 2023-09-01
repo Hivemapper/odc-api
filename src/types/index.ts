@@ -130,6 +130,18 @@ export interface ICameraConfig {
   };
 }
 
+export interface BoundingBox2D {
+  cx: number;
+  cy: number;
+  width: number;
+  height: number;
+}
+
+export interface Dimensions {
+  width: number;
+  height: number;
+}
+
 export type CameraResolution = '2K' | '4K';
 
 export interface InstrumentationData {
