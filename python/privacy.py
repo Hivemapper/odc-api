@@ -75,22 +75,23 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
   def worker():
     global current_image_index, expected_image_index
     while True:
+      
       image_name = q.get()
-      image_path = os.path.join(input_path, image_name)
-      output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
 
       with index_lock:
         my_index = current_image_index
         current_image_index += 1
       
+      image_path = os.path.join(input_path, image_name)
+      output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
+
       while my_index != expected_image_index:
           time.sleep(0.01)
 
       with write_lock:
-          with open('test', 'ab') as f:
+          with open('test', 'a') as f:
               # write image into final framekm file in order
               # f.write(image_data)
-          
           expected_image_index += 1
 
       predictions[image_name] = output
@@ -99,7 +100,7 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
   for i in range(num_threads):
       threading.Thread(target=worker, daemon=True).start()
 
-  input_names = os.listdir(input_path)
+  input_names = sorted(os.listdir(input_path))
   for name in input_names:
     q.put(name)
 
