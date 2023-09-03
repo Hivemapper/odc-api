@@ -7,8 +7,10 @@ import os
 import queue
 import threading
 import time
+import logging
 from yolov8.utils import nms, xywh2xyxy
 
+in_process=False
 DEFAULT_MODEL_PATH = 'todo'
 
 def load_img(image_path, width, height, tensor_type):
@@ -89,8 +91,7 @@ def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
     boxes *= np.array([img_width, img_height, img_width, img_height])
     return boxes
 
-def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_threshold, num_threads):
-  session = onnxruntime.InferenceSession(model_path, providers=onnxruntime.get_available_providers())
+def process(session, framekm_name, input_path, tensor_type, conf_threshold, iou_threshold, num_threads):
   inputs = session.get_inputs()
   outputs = session.get_outputs()
 
@@ -103,14 +104,17 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
   predictions = {}
 
   def worker():
-    global current_image_index, expected_image_index
     while True:
       
       image_name = q.get()
-      image_path = os.path.join(input_path, image_name)
-      output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
+      try:
+        image_path = os.path.join(input_path, image_name)
+        print('Processing', image_path)
+        inference_time, blur_time, output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
 
-      predictions[image_name] = output
+        predictions[image_name] = output
+      except Exception as e:
+        print(f"Error processing frame {image_name}. Error: {e}")
       q.task_done()
 
   for i in range(num_threads):
@@ -122,13 +126,42 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
 
   q.join()
 
-  with open(output_path, 'w') as f:
+  with open(os.path.join(input_path, framekm_name + '.json'), 'w') as f:
     json.dump(predictions, f)
+
+def scan(session, args):
+    # Scan the base_path for new folders and process them.
+    global in_process
+    base_path = args.input_path 
+    seen_folders = set()
+    current_folders = {f for f in os.listdir(base_path) if f.startswith('km_')}
+    new_folders = current_folders - seen_folders
+    print(new_folders)
+
+    if not in_process:  # Only process if not currently in process
+        for folder in new_folders:
+            folder_path = os.path.join(base_path, folder)
+            if os.path.isdir(folder_path):
+                in_process = True
+                try:
+                  process(
+                    session, 
+                    folder,
+                    folder_path,
+                    args.tensor_type,
+                    args.conf_threshold,
+                    args.iou_threshold,
+                    args.num_threads,
+                  )
+                except Exception as e:
+                    print(f"Error processing folder {folder_path}. Error: {e}")
+                in_process = False
+    
+    seen_folders.update(new_folders)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--input_path', type=str)
-  parser.add_argument('--output_path', type=str)
   parser.add_argument('--model_path', type=str, default=DEFAULT_MODEL_PATH)
   parser.add_argument('--tensor_type', type=str, default='float32')
   parser.add_argument('--conf_threshold', type=float, default=0.5)
@@ -136,13 +169,16 @@ if __name__ == '__main__':
   parser.add_argument('--num_threads', type=int, default=4)
 
   args = parser.parse_args()
+  session = onnxruntime.InferenceSession(args.model_path, providers=onnxruntime.get_available_providers())
 
-  main(
-    args.input_path,
-    args.output_path,
-    args.model_path,
-    args.tensor_type,
-    args.conf_threshold,
-    args.iou_threshold,
-    args.num_threads,
-  )
+  logging.basicConfig(level=logging.INFO)  # Setup basic logging
+  try:
+      logging.info('Starting watcher...')
+      while True:
+          scan(session, args)
+          time.sleep(3)
+  except KeyboardInterrupt:
+      logging.info('Watcher stopped by user. Bye!')
+  except Exception as e:
+      logging.error(f"An error occurred: {e}")
+      raise e
