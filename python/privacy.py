@@ -122,9 +122,9 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
   try:
     print('Starting watcher')
     in_process = False
-
+    seen_folders = set()
+    
     while True:
-      seen_folders = set()
       current_folders = {f for f in os.listdir(input_path) if f.startswith('km_')}
       new_folders = current_folders - seen_folders
 
