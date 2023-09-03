@@ -101,29 +101,62 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
 
   q = queue.Queue()
   predictions = {}
+  folder_path = input_path
 
   def worker():
-    global current_image_index, expected_image_index
     while True:
-      
       image_name = q.get()
-      image_path = os.path.join(input_path, image_name)
-      output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
-
-      predictions[image_name] = output
+      image_path = os.path.join(folder_path, image_name)
+      try:
+        output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
+        predictions[image_name] = output
+      except Exception as e:
+        print(f"Error processing frame {image_name}. Error: {e}")
       q.task_done()
 
+  # init threads
   for i in range(num_threads):
       threading.Thread(target=worker, daemon=True).start()
 
-  input_names = sorted(os.listdir(input_path))
-  for name in input_names:
-    q.put(name)
+  # init folder watcher
+  try:
+    print('Starting watcher')
+    in_process = False
 
-  q.join()
+    while True:
+      seen_folders = set()
+      current_folders = {f for f in os.listdir(input_path) if f.startswith('km_')}
+      new_folders = current_folders - seen_folders
 
-  with open(output_path, 'w') as f:
-    json.dump(predictions, f)
+      if not in_process:  # Only process if not currently in process
+          for folder in new_folders:
+              print('Started processing folder:', folder)
+              folder_path = os.path.join(input_path, folder)
+              # once new folder discovered, push all the items in the queue
+              in_process = True
+              predictions = {}
+              try:
+                input_names = sorted(os.listdir(folder_path))
+                for name in input_names:
+                  q.put(name)
+
+                q.join()
+                with open(os.path.join(folder_path, folder + '.json'), 'w') as f:
+                  json.dump(predictions, f)
+                print('Done processing folder:', folder)
+                os.rename(folder_path, '/mnt/data/unprocessed_framekm/ready_' + folder)
+
+              except Exception as e:
+                  print(f"Error processing folder {folder_path}. Error: {e}")
+              in_process = False  # Reset the flag once processing is done
+
+      seen_folders.update(new_folders)
+      time.sleep(3)
+  except KeyboardInterrupt:
+      print('Watcher stopped by user')
+  except Exception as e:
+      print(f"An error occurred: {e}")
+      raise e
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
