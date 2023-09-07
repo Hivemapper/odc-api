@@ -10,6 +10,10 @@ import time
 from yolov8.utils import nms, xywh2xyxy
 
 DEFAULT_MODEL_PATH = 'todo'
+CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
+blurring_time = 0
+sample_count = 0
+input_names = []
 
 def load_img(image_path, width, height, tensor_type):
   dtype = None
@@ -30,10 +34,12 @@ def load_img(image_path, width, height, tensor_type):
   return tensor, img
 
 def detect(image_path, session, width, height, output_names, input_names, tensor_type, conf_threshold, iou_threshold):
+  global blurring_time, sample_count
   tensor, img = load_img(image_path, width, height, tensor_type)
   start = time.perf_counter()
   outputs = session.run(output_names, {input_names[0]: tensor})
-  inference_time = int((time.perf_counter() - start) * 1000)
+  # inference_time += int((time.perf_counter() - start) * 1000)
+  sample_count += 1
   predictions = np.squeeze(outputs[0]).T
 
   # Filter out object confidence scores below threshold
@@ -51,8 +57,8 @@ def detect(image_path, session, width, height, output_names, input_names, tensor
   boxes = rescale_boxes(boxes, img.shape[1], img.shape[0], width, height)
   boxes = xywh2xyxy(boxes)
   indices = nms(xywh2xyxy(boxes), scores, iou_threshold)
-  blur_time = blur(img, image_path, boxes, indices)
-  return list(zip(predictions[:, :4][indices].tolist(), scores[indices].tolist(), class_ids[indices].tolist())), inference_time, blur_time 
+  blurring_time += blur(img, image_path, boxes, indices)
+  return list(zip(boxes[indices].tolist(), scores[indices].tolist(), class_ids[indices].tolist())) 
 
 def blur(img, image_path, boxes, indices):
   start = time.perf_counter()
@@ -79,7 +85,7 @@ def blur(img, image_path, boxes, indices):
   # Save
   result = cv2.add(composite_img, img_unmasked)
   result = cv2.cvtColor(result, cv2.COLOR_RGB2BGR)
-  cv2.imwrite(image_path, result)
+  cv2.imwrite(image_path, result, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
   return int((time.perf_counter() - start) * 1000)
 
 def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
@@ -90,6 +96,8 @@ def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
     return boxes
 
 def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_threshold, num_threads):
+  if not os.path.exists(model_path):
+    model_path = '/opt/dashcam/bin/ml/pvc.onnx'
   session = onnxruntime.InferenceSession(model_path, providers=onnxruntime.get_available_providers())
   inputs = session.get_inputs()
   outputs = session.get_outputs()
@@ -100,16 +108,32 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
   output_names = [output.name for output in outputs]
 
   q = queue.Queue()
-  predictions = {}
+
+  model_hash = 'bd6127e2e4dc5d4aafd996aaed558af6'
+  model_hash_path = model_path + '.hash'
+
+  if os.path.exists(model_hash_path):
+      with open(model_hash_path, 'r') as file:
+          model_hash = file.read().strip()
+
+  metadata = {
+    'hash': model_hash,
+    'inference_time': 0,
+    'blurring_time': 0,
+    'sample_count': 0,
+    'detections': {},
+  }
   folder_path = input_path
 
   def worker():
+    global input_names
     while True:
       image_name = q.get()
       image_path = os.path.join(folder_path, image_name)
       try:
         output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
-        predictions[image_name] = output
+        if len(output) and len(output[0]): 
+          metadata['detections'][input_names.index(image_name)] = [[CLASS_NAMES[inner[2]]] + inner[0] + [inner[1]] for inner in output]
       except Exception as e:
         print(f"Error processing frame {image_name}. Error: {e}")
       q.task_done()
@@ -123,31 +147,56 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
     print('Starting watcher')
     in_process = False
     seen_folders = set()
-    
+
+    if not os.path.exists(input_path):
+      os.makedirs(input_path)
+
     while True:
       current_folders = {f for f in os.listdir(input_path) if f.startswith('km_')}
       new_folders = current_folders - seen_folders
 
       if not in_process:  # Only process if not currently in process
           for folder in new_folders:
+              global blurring_time, sample_count, input_names
               print('Started processing folder:', folder)
               folder_path = os.path.join(input_path, folder)
               # once new folder discovered, push all the items in the queue
               in_process = True
-              predictions = {}
+              metadata['sample_count'] = 0
+              metadata['blurring_time'] = 0
+              metadata['inference_time'] = 0
+              metadata['start'] = int(time.time()*1000)
+              metadata['end'] = int(time.time()*1000)
+              metadata['detections'] = {}
+
+              blurring_time = 0
+              sample_count = 0
+              start = time.perf_counter()
               try:
                 input_names = sorted(os.listdir(folder_path))
                 for name in input_names:
                   q.put(name)
 
                 q.join()
-                with open(os.path.join(folder_path, folder + '.json'), 'w') as f:
-                  json.dump(predictions, f)
+                  
                 print('Done processing folder:', folder)
-                os.rename(folder_path, '/mnt/data/unprocessed_framekm/ready_' + folder)
+                if sample_count > 0:
+                  print('Sample count:', sample_count)
+                  metadata['sample_count'] = sample_count
+                  metadata['blurring_time'] = blurring_time / sample_count
+                  metadata['inference_time'] = (int(time.perf_counter() - start) * 1000 / sample_count) - metadata['blurring_time']
+                  metadata['end'] = int(time.time()*1000)
+                  print('Inference time:', metadata['inference_time'])
+                  print('Blurring time:', metadata['blurring_time'])
+
+                if not os.path.exists(output_path):
+                    os.makedirs(output_path)
+                with open(os.path.join(output_path, folder + '.json'), 'w') as f:
+                  json.dump(metadata, f)
+                os.rename(folder_path, os.path.join(input_path, 'ready_' + folder))
 
               except Exception as e:
-                  print(f"Error processing folder {folder_path}. Error: {e}")
+                print(f"Error processing folder {folder_path}. Error: {e}")
               in_process = False  # Reset the flag once processing is done
 
       seen_folders.update(new_folders)
