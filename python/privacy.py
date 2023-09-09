@@ -31,8 +31,6 @@ def combine_images(images, folder_path):
       x, y = coords[i]
       img[y:y+h2, x:x+w2] = orig_resized
 
-  img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
   return img
 
 def detect(folder_path, images, session, conf_threshold, nms_threshold):
@@ -66,14 +64,11 @@ def detect(folder_path, images, session, conf_threshold, nms_threshold):
      
   # apply blur
   for i, image_name in enumerate(images):
-    img_path = os.path.join(folder_path, image_name)
-    orig = cv2.imread(img_path)
     if len(grouped_boxes[i]) > 0:
+      img_path = os.path.join(folder_path, image_name)
+      orig = cv2.imread(img_path)
       result = blur(orig, grouped_boxes[i])
-    else:
-       result = orig
-
-    cv2.imwrite(os.path.join(folder_path, image_name), result, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+      cv2.imwrite(os.path.join(folder_path, image_name), result, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
 
   return res_output 
 
@@ -92,7 +87,7 @@ def blur(img, boxes):
   for box in boxes:
     box = box.astype(int)
     # filter out large boxes and boxes on the hood
-    if box[2] - box[0] > 0.8 * img.shape[1] and (box[1] > 0.5 * img.shape[0] or box[3] > 0.5 * img.shape[0]):
+    if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
       continue
     cv2.rectangle(mask, (box[0], box[1]), (box[2], box[3]), 255, -1)
 
@@ -128,6 +123,9 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
 
   metadata = {
     'hash': model_hash,
+    'inference_time': 0,
+    'blurring_time': 0,
+    'sample_count': 0,
     'detections': {},
   }
 
@@ -177,6 +175,7 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
 
               try:
                 input_names = [f for f in sorted(os.listdir(folder_path)) if f.endswith('.jpg')]
+                metadata['sample_count'] = len(input_names)
 
                 i = 0
                 while i < len(input_names):
@@ -195,7 +194,8 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
                     os.makedirs(output_path)
                 
                 metadata['end'] = int(time.time()*1000)
-                print('Took', int(metadata['end'] - metadata['start']), 'msecs')
+                metadata['inference_time'] = int((metadata['end'] - metadata['start']) / len(input_names))
+                print('Took', int(metadata['inference_time']), 'msecs')
 
                 with open(os.path.join(output_path, folder + '.json'), 'w') as f:
                   json.dump(metadata, f, cls=NumpyEncoder)
