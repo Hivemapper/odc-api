@@ -2,80 +2,99 @@ import argparse
 import cv2
 import json
 import numpy as np
-import onnxruntime
 import os
 import queue
 import threading
 import time
 from yolov8.utils import nms, xywh2xyxy
+from damoyolo.damoyolo_onnx import DAMOYOLO
 
 DEFAULT_MODEL_PATH = 'todo'
 CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
-blurring_time = 0
-sample_count = 0
+
+width = 2028
+height = 1024
+w2 = int(width/2)
+h2 = int(height/2)
+
 input_names = []
 
-def load_img(image_path, width, height, tensor_type):
-  dtype = None
-  if tensor_type == 'float32':
-    dtype = np.float32
-  elif tensor_type == 'float16':
-    dtype = np.float16
+def combine_images(images, folder_path):
+  img = np.zeros((height, width, 3), dtype=np.uint8)
 
-  img = cv2.imread(image_path)
+  coords = [(0, 0), (w2, 0), (0, h2), (w2, h2)]
+
+  for i, image_name in enumerate(images):
+      img_path = os.path.join(folder_path, image_name)
+      orig = cv2.imread(img_path)
+      orig_resized = cv2.resize(orig, (w2, h2))
+      x, y = coords[i]
+      img[y:y+h2, x:x+w2] = orig_resized
+
   img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-  #keep original image for blurring
-  resized_img = cv2.resize(img, (width, height), cv2.INTER_NEAREST)
 
-  resized_img = resized_img / 255.0
-  resized_img = resized_img.transpose(2, 0, 1)
-  tensor = resized_img[np.newaxis, :, :, :].astype(dtype)
+  return img
 
-  return tensor, img
+def detect(folder_path, images, session, conf_threshold, nms_threshold):
 
-def detect(image_path, session, width, height, output_names, input_names, tensor_type, conf_threshold, iou_threshold):
-  global blurring_time, sample_count
-  tensor, img = load_img(image_path, width, height, tensor_type)
-  start = time.perf_counter()
-  outputs = session.run(output_names, {input_names[0]: tensor})
-  # inference_time += int((time.perf_counter() - start) * 1000)
-  sample_count += 1
-  predictions = np.squeeze(outputs[0]).T
+  # combine images to 2x2 grid & execute
+  img = combine_images(images, folder_path)
+  boxes, scores, class_ids = session(img, nms_th=nms_threshold, score_th=conf_threshold)
 
-  # Filter out object confidence scores below threshold
-  scores = np.max(predictions[:, 4:], axis=1)
-  predictions = predictions[scores > conf_threshold, :]
-  scores = scores[scores > conf_threshold]
-
+  res_output = [[], [], [], []]
   if len(scores) == 0:
-      return [], [], []
+      return res_output
 
-  # Get the class with the highest confidence
-  class_ids = np.argmax(predictions[:, 4:], axis=1)
+  grouped_boxes = [[], [], [], []]
 
-  boxes = predictions[:, :4]
-  boxes = rescale_boxes(boxes, img.shape[1], img.shape[0], width, height)
-  boxes = xywh2xyxy(boxes)
-  indices = nms(xywh2xyxy(boxes), scores, iou_threshold)
-  blurring_time += blur(img, image_path, boxes, indices)
-  return list(zip(boxes[indices].tolist(), scores[indices].tolist(), class_ids[indices].tolist())) 
+  # split boxes between initial images
+  for box, score, class_id in zip(boxes, scores, class_ids):
+    image_index = 0
+    if box[0] < w2 and box[1] < h2:
+      box = np.array([box[0]*2, box[1]*2, box[2]*2, box[3]*2])
+    elif box[0] >= w2 and box[1] < h2:
+      box = np.array([(box[0] - w2)*2, box[1]*2, (box[2] - w2)*2, box[3]*2])
+      image_index = 1
+    elif box[0] < w2 and box[1] >= h2:
+      box = np.array([box[0]*2, (box[1] - h2)*2, box[2]*2, (box[3] - h2)*2])
+      image_index = 2
+    else:
+      box = np.array([(box[0] - w2)*2, (box[1] - h2)*2, (box[2] - w2)*2, (box[3] - h2)*2])
+      image_index = 3
+    grouped_boxes[image_index].append(box)
+    res_output[image_index].append([CLASS_NAMES[class_id]] + list(box) + [score])
+     
+  # apply blur
+  for i, image_name in enumerate(images):
+    img_path = os.path.join(folder_path, image_name)
+    orig = cv2.imread(img_path)
+    if len(grouped_boxes[i]) > 0:
+      result = blur(orig, grouped_boxes[i])
+    else:
+       result = orig
 
-def blur(img, image_path, boxes, indices):
-  start = time.perf_counter()
+    cv2.imwrite(os.path.join(folder_path, image_name), result, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+
+  return res_output 
+
+def blur(img, boxes):
   #Downscale & blur
   downscale_size = (int(img.shape[1] * 0.2), int(img.shape[0] * 0.2))
   img_downscaled = cv2.resize(img, downscale_size, interpolation=cv2.INTER_AREA)
   img_blurred = cv2.GaussianBlur(img_downscaled, (5, 5), 1.5)
 
-  # Upscale
+  # # Upscale
   upscale_size = (img.shape[1], img.shape[0])
   img_upscaled = cv2.resize(img_blurred, upscale_size, interpolation=cv2.INTER_LINEAR)
 
   # Mask from bounding boxes
   mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
-  for i in indices:
-      box = boxes[i].astype(int)
-      cv2.rectangle(mask, (box[0], box[1]), (box[2], box[3]), 255, -1)
+  for box in boxes:
+    box = box.astype(int)
+    # filter out large boxes and boxes on the hood
+    if box[2] - box[0] > 0.8 * img.shape[1] and (box[1] > 0.5 * img.shape[0] or box[3] > 0.5 * img.shape[0]):
+      continue
+    cv2.rectangle(mask, (box[0], box[1]), (box[2], box[3]), 255, -1)
 
   # Composite
   composite_img = cv2.bitwise_and(img_upscaled, img_upscaled, mask=mask)
@@ -84,32 +103,23 @@ def blur(img, image_path, boxes, indices):
 
   # Save
   result = cv2.add(composite_img, img_unmasked)
-  result = cv2.cvtColor(result, cv2.COLOR_RGB2BGR)
-  cv2.imwrite(image_path, result, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-  return int((time.perf_counter() - start) * 1000)
 
-def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
-    # Rescale boxes to original image dimensions
-    input_shape = np.array([model_width, model_height, model_width, model_height])
-    boxes = np.divide(boxes, input_shape, dtype=np.float32)
-    boxes *= np.array([img_width, img_height, img_width, img_height])
-    return boxes
+  return result
 
-def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_threshold, num_threads):
+def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num_threads):
   if not os.path.exists(model_path):
+    # default model path
     model_path = '/opt/dashcam/bin/ml/pvc.onnx'
-  session = onnxruntime.InferenceSession(model_path, providers=onnxruntime.get_available_providers())
-  inputs = session.get_inputs()
-  outputs = session.get_outputs()
-
-  height, width = inputs[0].shape[2:4]
-  model_input_names = [i.name for i in inputs]
-
-  output_names = [output.name for output in outputs]
+  session = DAMOYOLO(
+        model_path,
+        providers=[
+            'CPUExecutionProvider',
+        ],
+    )
 
   q = queue.Queue()
 
-  model_hash = 'bd6127e2e4dc5d4aafd996aaed558af6'
+  model_hash = ''
   model_hash_path = model_path + '.hash'
 
   if os.path.exists(model_hash_path):
@@ -118,22 +128,21 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
 
   metadata = {
     'hash': model_hash,
-    'inference_time': 0,
-    'blurring_time': 0,
-    'sample_count': 0,
     'detections': {},
   }
+
   folder_path = input_path
 
   def worker():
     global input_names
     while True:
-      image_name = q.get()
-      image_path = os.path.join(folder_path, image_name)
+      images = q.get()
       try:
-        output = detect(image_path, session, width, height, output_names, model_input_names, tensor_type, conf_threshold, iou_threshold)
-        if len(output) and len(output[0]): 
-          metadata['detections'][input_names.index(image_name)] = [[CLASS_NAMES[inner[2]]] + inner[0] + [inner[1]] for inner in output]
+        outputs = detect(folder_path, images, session, conf_threshold, nms_threshold)
+        for i, image_name in enumerate(images):
+          if len(outputs[i]):
+            metadata['detections'][input_names.index(image_name)] = outputs[i]
+          
       except Exception as e:
         print(f"Error processing frame {image_name}. Error: {e}")
       q.task_done()
@@ -153,46 +162,43 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
 
     while True:
       current_folders = {f for f in os.listdir(input_path) if f.startswith('km_')}
-      new_folders = current_folders - seen_folders
+      new_folders = sorted(current_folders - seen_folders)
 
       if not in_process:  # Only process if not currently in process
           for folder in new_folders:
-              global blurring_time, sample_count, input_names
+              global blurring_time, sample_count, input_names, composite_time, saving_time, inference_time
               print('Started processing folder:', folder)
               folder_path = os.path.join(input_path, folder)
               # once new folder discovered, push all the items in the queue
               in_process = True
-              metadata['sample_count'] = 0
-              metadata['blurring_time'] = 0
-              metadata['inference_time'] = 0
+
               metadata['start'] = int(time.time()*1000)
-              metadata['end'] = int(time.time()*1000)
               metadata['detections'] = {}
 
-              blurring_time = 0
-              sample_count = 0
-              start = time.perf_counter()
               try:
-                input_names = sorted(os.listdir(folder_path))
-                for name in input_names:
-                  q.put(name)
+                input_names = [f for f in sorted(os.listdir(folder_path)) if f.endswith('.jpg')]
+
+                i = 0
+                while i < len(input_names):
+                  subset = input_names[i:i+4]
+
+                  # hack for full 2x2 grid. Better do black instead
+                  while (len(subset) < 4):
+                     subset.append(input_names[i])
+
+                  q.put(subset) 
+                  i += 4
 
                 q.join()
-                  
-                print('Done processing folder:', folder)
-                if sample_count > 0:
-                  print('Sample count:', sample_count)
-                  metadata['sample_count'] = sample_count
-                  metadata['blurring_time'] = blurring_time / sample_count
-                  metadata['inference_time'] = (int(time.perf_counter() - start) * 1000 / sample_count) - metadata['blurring_time']
-                  metadata['end'] = int(time.time()*1000)
-                  print('Inference time:', metadata['inference_time'])
-                  print('Blurring time:', metadata['blurring_time'])
 
                 if not os.path.exists(output_path):
                     os.makedirs(output_path)
+                
+                metadata['end'] = int(time.time()*1000)
+                print('Took', int(metadata['end'] - metadata['start']), 'msecs')
+
                 with open(os.path.join(output_path, folder + '.json'), 'w') as f:
-                  json.dump(metadata, f)
+                  json.dump(metadata, f, cls=NumpyEncoder)
                 os.rename(folder_path, os.path.join(input_path, 'ready_' + folder))
 
               except Exception as e:
@@ -206,15 +212,20 @@ def main(input_path, output_path, model_path, tensor_type, conf_threshold, iou_t
   except Exception as e:
       print(f"An error occurred: {e}")
       raise e
+  
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.float32):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--input_path', type=str)
   parser.add_argument('--output_path', type=str)
   parser.add_argument('--model_path', type=str, default=DEFAULT_MODEL_PATH)
-  parser.add_argument('--tensor_type', type=str, default='float32')
-  parser.add_argument('--conf_threshold', type=float, default=0.5)
-  parser.add_argument('--iou_threshold', type=float, default=0.5)
+  parser.add_argument('--conf_threshold', type=float, default=0.4)
+  parser.add_argument('--nms_threshold', type=float, default=0.9)
   parser.add_argument('--num_threads', type=int, default=4)
 
   args = parser.parse_args()
@@ -223,8 +234,7 @@ if __name__ == '__main__':
     args.input_path,
     args.output_path,
     args.model_path,
-    args.tensor_type,
     args.conf_threshold,
-    args.iou_threshold,
+    args.nms_threshold,
     args.num_threads,
   )
