@@ -9,15 +9,13 @@ import time
 from yolov8.utils import nms, xywh2xyxy
 from damoyolo.damoyolo_onnx import DAMOYOLO
 from PIL import Image 
-import yappi
+# import yappi
 
 DEFAULT_MODEL_PATH = 'todo'
 CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
 
 width = 2028
 height = 1024
-w2 = int(width/2)
-h2 = int(height/2)
 
 input_names = []
 
@@ -32,70 +30,70 @@ inference_time = 0
 mask_time = 0
 composite_time = 0
 save_time = 0
+detections = 0
 
 def readImage(f, w, h): 
-    im = Image.open(f).resize((w, h), Image.NEAREST)
-    return np.asarray(im)
+  im = Image.open(f).resize((w, h), Image.NEAREST)
+  return np.asarray(im)
 
 def combine_images(images, folder_path, grid_size):
-    
-    w = int(width / grid_size)
-    h = int(height / grid_size)
+  global read_time
+  
+  w = int(width / grid_size)
+  h = int(height / grid_size)
 
-    img = np.zeros((height, width, 3), dtype=np.uint8)
+  img = np.zeros((height, width, 3), dtype=np.uint8)
 
-    # Create a list of coordinates for the top-left corners of the sub-images
-    coords = [(i * w, j * h) for j in range(grid_size) for i in range(grid_size)]
+  coords = [(i * w, j * h) for j in range(grid_size) for i in range(grid_size)]
+  read_time = 0  
 
-    read_time = 0  # Moved inside the function, you can return it if you need it globally
+  # Loop through each image and place it in the grid
+  for i in range(grid_size * grid_size): 
+    if i < len(images):  
+      image_name = images[i]
+      img_path = os.path.join(folder_path, image_name)
+      start = time.perf_counter()
+      orig_resized = readImage(img_path, w, h)
+      orig_resized = cv2.cvtColor(orig_resized, cv2.COLOR_RGB2BGR)
+      read_time += (time.perf_counter() - start) * 1000
+    else:
+      # Use an empty (black) image for spots without images
+      orig_resized = np.zeros((h, w, 3), dtype=np.uint8)
+    x, y = coords[i]
+    img[y:y+h, x:x+w] = orig_resized
 
-    # Loop through each image and place it in the grid
-    for i in range(grid_size * grid_size):  # Iterate up to grid_size*grid_size times
-        if i < len(images):  # Check if there's an image to place in the current grid spot
-            image_name = images[i]
-            img_path = os.path.join(folder_path, image_name)
-            start = time.perf_counter()
-            orig_resized = readImage(img_path, w, h)
-            orig_resized = cv2.cvtColor(orig_resized, cv2.COLOR_RGB2BGR)
-            read_time += (time.perf_counter() - start) * 1000
-        else:
-            # Use an empty (black) image for spots without images
-            orig_resized = np.zeros((h, w, 3), dtype=np.uint8)
-        x, y = coords[i]
-        img[y:y+h, x:x+w] = orig_resized
-
-    return img
+  return img
 
 def transform_box(box, w_offset=0, h_offset=0, width=None, height=None, multiplier=2):
-    # Apply transformations: scale, offset, round
-    new_box = np.floor(np.array([
-        (box[0] - w_offset) * multiplier,
-        (box[1] - h_offset) * multiplier,
-        (box[2] - w_offset) * multiplier,
-        (box[3] - h_offset) * multiplier
-    ])).astype(int)
-    
-    # Making sure all the box coordinates are within the boundaries
-    if width is not None:
-        new_box[::2] = np.clip(new_box[::2], 0, width)  # for x-coordinates
-    if height is not None:
-        new_box[1::2] = np.clip(new_box[1::2], 0, height)  # for y-coordinates
-    
-    return new_box
+  # Apply transformations: scale, offset, round
+  new_box = np.floor(np.array([
+    (box[0] - w_offset) * multiplier,
+    (box[1] - h_offset) * multiplier,
+    (box[2] - w_offset) * multiplier,
+    (box[3] - h_offset) * multiplier
+  ])).astype(int)
+  
+  # Making sure all the box coordinates are within the boundaries
+  if width is not None:
+    new_box[::2] = np.clip(new_box[::2], 0, width)  # for x-coordinates
+  if height is not None:
+    new_box[1::2] = np.clip(new_box[1::2], 0, height)  # for y-coordinates
+  
+  return new_box
 
 # 2x2, 3x3, 4x4
 def determine_grid_dimension(num_images):
-    if num_images <= 15:
-        return 2
-    elif num_images <= 30:
-        return 3
-    else:
-        return 4
+  if num_images <= 30:
+    return 2
+  elif num_images <= 70:
+    return 3
+  else:
+    return 4
 
 def determine_image_index(box, w, h, grid_size):
-    x_index = int(box[0] // w)
-    y_index = int(box[1] // h)
-    return y_index * grid_size + x_index
+  x_index = int(box[0] // w)
+  y_index = int(box[1] // h)
+  return y_index * grid_size + x_index
 
 def detect(folder_path, images, session, conf_threshold, nms_threshold, grid_size):
   global total_samples, blurred_samples, inference_time, combine_time, save_time
@@ -103,7 +101,7 @@ def detect(folder_path, images, session, conf_threshold, nms_threshold, grid_siz
   w2 = int(width/grid_size)
   h2 = int(height/grid_size)
   
-  # combine images to 4x4 grid & execute
+  # combine images to grid & execute
   start = time.perf_counter()
   img = combine_images(images, folder_path, grid_size)
   combine_time += (time.perf_counter() - start) * 1000
@@ -111,6 +109,7 @@ def detect(folder_path, images, session, conf_threshold, nms_threshold, grid_siz
   boxes, scores, class_ids = session(img, nms_th=nms_threshold, score_th=conf_threshold)
   inference_time += (time.perf_counter() - start) * 1000
 
+  # Draw the grid to debug
   # draw_img = session.draw(
   #       img,
   #       conf_threshold,
@@ -196,7 +195,8 @@ def blur(img, boxes):
 
   return result
 
-def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num_threads):
+def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num_threads, grid_dimension):
+  global detections
   if not os.path.exists(model_path):
     # default model path
     model_path = '/opt/dashcam/bin/ml/pvc.onnx'
@@ -226,10 +226,9 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
   }
 
   folder_path = input_path
-  grid_dimension = 3 # default grid size
 
   def worker():
-    global input_names
+    global input_names, detections
     while True:
       images = q.get()
       try:
@@ -237,6 +236,7 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
         for i, image_name in enumerate(images):
           if len(outputs[i]):
             metadata['detections'][input_names.index(image_name)] = outputs[i]
+            detections += len(outputs[i])
           
       except Exception as e:
         print(f"Error processing frame {images[0]}. Error: {e}")
@@ -261,7 +261,7 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
 
       if not in_process:  # Only process if not currently in process
           for folder in new_folders:
-              global blurring_time, read_time, total_samples, blurred_samples, blurring_time, combine_time, input_names, composite_time, save_time, inference_time, downscale_time, upscale_time, mask_time
+              global blurring_time, read_time, total_samples, blurred_samples, blurring_time, combine_time, input_names, composite_time, save_time, inference_time, downscale_time, upscale_time, mask_time, detections
               print('Started processing folder:', folder)
               folder_path = os.path.join(input_path, folder)
               # once new folder discovered, push all the items in the queue
@@ -282,8 +282,9 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
               mask_time = 0
               composite_time = 0
               save_time = 0
+              detections = 0
 
-              yappi.start()
+              # yappi.start()
 
               try:
                 input_names = [f for f in sorted(os.listdir(folder_path)) if f.endswith('.jpg')]
@@ -302,19 +303,20 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
 
                 q.join()
 
-                yappi.stop()
+                # yappi.stop()
 
-                threads = yappi.get_thread_stats()
-                for thread in threads:
-                  print(
-                      "Function stats for (%s) (%d)" % (thread.name, thread.id)
-                  )  # it is the Thread.__class__.__name__
-                  yappi.get_func_stats(ctx_id=thread.id).print_all()
+                # threads = yappi.get_thread_stats()
+                # for thread in threads:
+                #   print(
+                #       "Function stats for (%s) (%d)" % (thread.name, thread.id)
+                #   )  # it is the Thread.__class__.__name__
+                #   yappi.get_func_stats(ctx_id=thread.id).print_all()
 
                 if not os.path.exists(output_path):
                     os.makedirs(output_path)
                 
                 metadata['end'] = int(time.time()*1000)
+                metadata['num_detections'] = detections
                 total = int(metadata['end'] - metadata['start'])
                 total_samples = len(input_names)
                 print('Took', total, 'msecs')
@@ -326,7 +328,6 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
                 if total_samples > 0:
                   coef_all = coef / total_samples
                   metadata['per_frame'] = int(total / len(input_names))
-                  print('Per frame', metadata['per_frame'])
                   metadata['read_time'] = int(read_time * coef_all)
                   metadata['combine_time'] = int((combine_time - read_time) * coef_all)
                   metadata['inference_time'] = int(inference_time * coef_all)
@@ -374,6 +375,7 @@ if __name__ == '__main__':
   parser.add_argument('--conf_threshold', type=float, default=0.4)
   parser.add_argument('--nms_threshold', type=float, default=0.9)
   parser.add_argument('--num_threads', type=int, default=4)
+  parser.add_argument('--grid_dimension', type=int, default=3)
 
   args = parser.parse_args()
 
@@ -384,4 +386,5 @@ if __name__ == '__main__':
     args.conf_threshold,
     args.nms_threshold,
     args.num_threads,
+    args.grid_dimension,
   )
