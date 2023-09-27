@@ -5,19 +5,21 @@ import { CameraType } from 'types';
 
 export const PORT = 5000;
 
-export const PUBLIC_FOLDER = __dirname + '/../../../data/recording';
+export const PUBLIC_FOLDER = __dirname + '/data/recording';
 export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
-export const FRAMES_ROOT_FOLDER = __dirname + '/../../../data/recording/pic';
-export const FRAMEKM_ROOT_FOLDER =
-  __dirname + '/../../../data/recording/framekm';
+export const FRAMES_ROOT_FOLDER = '/data/recording/pic';
+export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
+export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
+export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
 export const GPS_ROOT_FOLDER = '/data/recording/gps';
 export const METADATA_ROOT_FOLDER = '/data/recording/metadata';
+export const UNPROCESSED_METADATA_ROOT_FOLDER = '/data/recording/unprocessed_metadata';
 export const GPS_LATEST_SAMPLE =
   __dirname + '/../../../data/recording/gps/latest.log';
-export const IMU_ROOT_FOLDER = __dirname + '/../../../data/recording/imu';
+export const IMU_ROOT_FOLDER = '/data/recording/imu';
 export const LORA_RESPONSE_FOLDER = __dirname + '/../../../data/lorawan';
 export const LORA_REQUEST_FOLDER = __dirname + '/../../../tmp/lorawan';
 export const BUILD_INFO_PATH = __dirname + '/../../../etc/version.json';
@@ -28,7 +30,10 @@ export const DATA_INTEGRITY_SCRIPT = '/opt/odc-api/data_integrity_check.sh';
 export const ACL_FILES_PATH = '/data';
 export const CACHED_CAMERA_CONFIG = '/data/camera.config';
 export const HEALTH_MARKER_PATH = '/data/healthy.txt';
+export const USB_WRITE_PATH = '/media/usb0/recording';
 export const MOTION_MODEL_CURSOR = '/data/mm_cursor.log';
+export const ML_SCRIPT_PATH = '/opt/odc-api/python/privacy.py';
+export const DEFAULT_MODEL_PATH = '/opt/odc-api/python';
 export const MOTION_MODEL_CONFIG = '/data/mm_config.json';
 export const PRIVACY_ZONES_CONFIG = '/data/ppz.json';
 export const WEBSERVER_LOG_PATH =
@@ -45,6 +50,10 @@ export const CACHED_RES_CONFIG = '/data/res.config';
 export const UPLOAD_PATH = __dirname + '/../../../data/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/home/root/cron_config';
+export const ML_ROOT_FOLDER = '/data/models';
+export const ML_MODELS: Record<string, string> = {
+  PVC: '/data/recording/models/pvc.onnx'
+}
 export const CRON_EXECUTED_TASKS_PATH = '/home/root/cron_executed';
 export const IMAGER_BRIDGE_PATH =
   __dirname + '/../../../opt/dashcam/bin/bridge.sh';

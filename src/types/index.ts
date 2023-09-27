@@ -91,6 +91,8 @@ export interface ICronJobConfig {
   cmd: string | string[];
   if: ICronJobCondition;
   frequency: ICronJobFrequency;
+  device?: CameraType;
+  timeout?: number;
   log: boolean;
 }
 
@@ -128,6 +130,18 @@ export interface ICameraConfig {
       rotation: number;
     };
   };
+}
+
+export interface BoundingBox2D {
+  cx: number;
+  cy: number;
+  width: number;
+  height: number;
+}
+
+export interface Dimensions {
+  width: number;
+  height: number;
 }
 
 export type CameraResolution = '2K' | '4K';

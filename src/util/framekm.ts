@@ -1,5 +1,5 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import {
   Stats,
   mkdir,
@@ -7,13 +7,20 @@ import {
   createReadStream,
   createWriteStream,
   writeFileSync,
+  promises,
+  rmSync,
 } from 'fs';
 import { promisify } from 'util';
+import { join } from 'path';
 import { pipeline } from 'stream';
+import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from './motionModel';
+import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES, getConfig } from './motionModel';
+import { ICameraFile } from 'types';
+import { FrameKMTelemetry, GnssMetadata, ImuMetadata } from 'types/motionModel';
+import { getDiskUsage } from 'services/logDiskUsage';
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
@@ -26,18 +33,23 @@ export const concatFrames = async (
   frames: string[],
   framekmName: string,
   retryCount = 0,
+  frameRootFolder = FRAMES_ROOT_FOLDER,
+  disableMLCheck = false,
+  destFolder?: string,
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
+  const isDashcamMLEnabled = getConfig().isDashcamMLEnabled && destFolder && !disableMLCheck;
+  const frameKmFolder = isDashcamMLEnabled ? UNPROCESSED_FRAMEKM_ROOT_FOLDER : FRAMEKM_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
-      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
+      mkdir(frameKmFolder, resolve);
     });
   } catch (e: unknown) {
     console.log(e);
   }
 
   const framesPath = frames.map(
-    (frame: string) => FRAMES_ROOT_FOLDER + '/' + frame,
+    (frame: string) => frameRootFolder + '/' + frame,
   );
   const bytesMap: BytesMap = {};
   let totalBytes = 0;
@@ -82,31 +94,52 @@ export const concatFrames = async (
       return bytesMap;
     }
 
-    const outputFilePath = FRAMEKM_ROOT_FOLDER + '/' + framekmName;
+    const outputFilePath = frameKmFolder + '/' + framekmName;
 
     try {
-      writeFileSync(outputFilePath, '');
-      for (const file of validFrames) {
-        const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
-        const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
-        const readStream = createReadStream(filePath);
-        await asyncPipeline(readStream, writeStream);
-        bytesMap[file.name] = file.size;
-        totalBytes += file.size;
-      }
-      await sleep(500);
-
-      // VERY IMPORTANT STEP
-      // Check file size to validate the full process
-      const { size } = await asyncStat(outputFilePath);
-      if (size !== totalBytes) {
-        console.log(
-          'Concatenated file size does not match totalBytes, retrying...',
-          size,
-          totalBytes,
-        );
-        await sleep(retryDelay);
-        return concatFrames(frames, framekmName, retryCount + 1);
+      if (isDashcamMLEnabled && destFolder) {
+        try {
+          await new Promise(resolve => {
+            mkdir(destFolder, resolve);
+          });
+        } catch (e: unknown) {
+          console.log(e);
+        }
+        for (const file of validFrames) {
+          const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
+          await promises.copyFile(filePath, destFolder + '/' + framekmName + 'ww' + file.name);
+          bytesMap[file.name] = file.size;
+          totalBytes += file.size;
+        }
+        await sleep(200);
+      } else {
+        writeFileSync(outputFilePath, '');
+        for (const file of validFrames) {
+          const filePath = frameRootFolder + '/' + file.name;
+          const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
+          const readStream = createReadStream(filePath);
+          await asyncPipeline(readStream, writeStream);
+          let fileName = file.name;
+          if (file.name.indexOf('ww') > -1) {
+            fileName = file.name.split('ww')[1];
+          }
+          bytesMap[fileName] = file.size;
+          totalBytes += file.size;
+        }
+        await sleep(500);
+  
+        // VERY IMPORTANT STEP
+        // Check file size to validate the full process
+        const { size } = await asyncStat(outputFilePath);
+        if (size !== totalBytes) {
+          console.log(
+            'Concatenated file size does not match totalBytes, retrying...',
+            size,
+            totalBytes,
+          );
+          await sleep(retryDelay);
+          return concatFrames(frames, framekmName, retryCount + 1);
+        }
       }
     } catch (error) {
       console.log(`Error during concatenation:`, error);
@@ -125,3 +158,37 @@ export const concatFrames = async (
     return bytesMap;
   }
 };
+
+export const getFrameKmTelemetry = (image: ICameraFile, gnss: GnssMetadata, imu: ImuMetadata): FrameKMTelemetry => {
+  const telemetry: FrameKMTelemetry = {
+    systemtime: Date.now(),
+  };
+  if (image && image.path) {
+    try {
+      const fullPath = join(FRAMES_ROOT_FOLDER, image.path);
+      const dimensions = sizeOf(fullPath);
+      if (dimensions) {
+        telemetry.width = dimensions.width;
+        telemetry.height = dimensions.height;
+      }
+      if (gnss && gnss.lat) {
+        telemetry.lat = gnss.lat;
+        telemetry.lon = gnss.lon;
+      }
+      if (imu && imu.accelerometer && imu.accelerometer.length) {
+        telemetry.accel_x = imu.accelerometer[0].x;
+        telemetry.accel_y = imu.accelerometer[0].y;
+        telemetry.accel_z = imu.accelerometer[0].z;
+      }
+      if (imu && imu.gyroscope && imu.gyroscope.length) {
+        telemetry.gyro_x = imu.gyroscope[0].x;
+        telemetry.gyro_y = imu.gyroscope[0].y;
+        telemetry.gyro_z = imu.gyroscope[0].z;
+      }
+      telemetry.disk_used = getDiskUsage();
+    } catch (e: unknown) {
+      console.log('Error getting image sizes for ' + image.path, e);
+    }
+  }
+  return telemetry;
+}

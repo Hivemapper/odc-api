@@ -4,6 +4,7 @@ import {
   readdir,
   readFile,
   readFileSync,
+  renameSync,
   rmSync,
   statSync,
   writeFile,
@@ -41,6 +42,8 @@ import {
   METADATA_ROOT_FOLDER,
   MOTION_MODEL_CONFIG,
   MOTION_MODEL_CURSOR,
+  UNPROCESSED_FRAMEKM_ROOT_FOLDER,
+  UNPROCESSED_METADATA_ROOT_FOLDER,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
 import {
@@ -58,7 +61,7 @@ const MAX_SPEED = 40; // meter per seconds
 const MAX_DISTANCE_BETWEEN_POINTS = 50;
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 1;
-export const MAX_FAILED_ITERATIONS = 10;
+export const MAX_FAILED_ITERATIONS = 14;
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
@@ -80,10 +83,12 @@ let config: MotionModelConfig = {
     gdop: 6,
     eph: 10,
   },
+  Privacy: {},
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   isCornerDetectionEnabled: true,
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
+  isDashcamMLEnabled: false,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,
@@ -260,10 +265,10 @@ const getGnssNameFromCursor = (): Promise<string> => {
   });
 };
 
-const getNextGnssName = (last: string): Promise<string> => {
+const getNextGnssName = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     exec(
-      `ls -1rt \`find ${GPS_ROOT_FOLDER}/ -type f -name '*.json' -newer ${last}\` | head -1`,
+      `find ${GPS_ROOT_FOLDER}/ -type f -name '*.json' | sort | tail -1`,
       { encoding: 'utf-8' },
       (error: ExecException | null, stdout: string) => {
         try {
@@ -295,62 +300,20 @@ let prevGpsRecord: GNSS | undefined = undefined;
 
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
+
     let pathToGpsFile = '';
-    // 1. get next after file or: if time set, then take closer
-    const cursor = await getGnssNameFromCursor();
-    let existLastFile = false;
-    if (cursor) {
-      existLastFile = existsSync(cursor);
-    }
-    let exists = false;
-    console.log('Last cursor: ' + cursor + ' file exists: ' + existLastFile)
-    if (!cursor || !existLastFile) {
-      console.log('No cursor mark...');
-      exists = existsSync(MOTION_MODEL_CURSOR);
-      if (
-        Date.now() > DEFAULT_TIME &&
-        (!exists || (exists && !existLastFile))
-      ) {
-        let lastGpsFilePath = execSync(
-          `ls ${GPS_ROOT_FOLDER} | grep '.json' | tail -1`,
-          {
-            encoding: 'utf-8',
-          },
-        );
-        lastGpsFilePath = String(lastGpsFilePath).split('\n')[0]?.trim();
-        console.log('Last candidate: ' + lastGpsFilePath);
-        const lastFileTimestamp =
-          getDateFromFilename(lastGpsFilePath).getTime();
-        if (lastGpsFilePath && lastFileTimestamp > Date.now() - 300000) {
-          console.log('So last will be: ' + lastGpsFilePath);
-          pathToGpsFile = GPS_ROOT_FOLDER + '/' + lastGpsFilePath;
-          exists = existsSync(pathToGpsFile);
-          if (exists) {
-            parsedCursor = {
-              gnssFilePath: pathToGpsFile,
-              imuFilePath: '',
-            };
-          } else {
-            resolve([]);
-            return;
-          }
-        } else {
-          resolve([]);
-          return;
-        }
-      } else {
-        resolve([]);
-        return;
-      }
-    } else {
-      console.log('Last file is ' + cursor);
-      pathToGpsFile = await getNextGnssName(cursor);
+
+    try {
+      console.log('Last file is ' + prevGnssFile);
+      pathToGpsFile = await getNextGnssName();
       console.log('Next file is: ' + pathToGpsFile);
+    } catch (e) {
+      console.log('Error reading next file:', e);
     }
 
     if (!pathToGpsFile || pathToGpsFile === prevGnssFile) {
       emptyIterationCounter++;
-      if (emptyIterationCounter > 5) {
+      if (emptyIterationCounter > 10) {
         // After 5 empty iterations, we start to be suspicious on the weird filesystem state
         // Let's check the last GPS file stats (name timestamp and modified date timestamp)
         // Compare it with each other, system time and the time of last GPS record
@@ -358,11 +321,11 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         const now = Date.now();
         let lastFileTimestamp = now;
         let lastFileStats = null;
-        if (cursor) {
+        if (pathToGpsFile) {
           lastFileTimestamp = getDateFromFilename(
-            String(cursor).split('/').pop() || '',
+            String(pathToGpsFile).split('/').pop() || '',
           ).getTime();
-          lastFileStats = statSync(cursor);
+          lastFileStats = statSync(pathToGpsFile);
         }
 
         const week = 1000 * 60 * 60 * 24 * 7;
@@ -384,6 +347,7 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
         ) {
           console.log(
             'Repairing Motion model',
+            pathToGpsFile,
             isFilenameOutdated,
             isGpsDataOutOfSyncWithFileDate,
             emptyIterationCounter > MAX_FAILED_ITERATIONS,
@@ -393,15 +357,25 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
             imuFilePath: '',
           };
           emptyIterationCounter = 0;
-          if (cursor) {
-            try {
-              const stats = statSync(cursor);
-              if (stats.isFile()) {
-                rmSync(cursor);
-              }
-            } catch (error: unknown) {
-              console.log(error);
+          try {
+            if (pathToGpsFile) {
+              Instrumentation.add({
+                event: 'DashcamRepairedGps',
+                start: Date.now(),
+                end: Date.now(),
+                message: JSON.stringify({
+                  pathToGpsFile,
+                  isFilenameOutdated,
+                  prevGpsRecordTimestamp,
+                  lastFileStats: lastFileStats?.mtime.getTime(),
+                  isGpsDataOutOfSyncWithFileDate,
+                  emptyIterationCounter,
+                })
+              });
+              rmSync(pathToGpsFile, { force: true });
             }
+          } catch (e: unknown) {
+            console.log(e);
           }
         }
       }
@@ -1400,25 +1374,37 @@ export const selectImages = (
             }
           }
         }
-        if (validChunk.images.length > 1) {
-          const formattedTime = new Date(validChunk.points[0].t)
-            .toISOString()
-            .replace(/[-:]/g, '')
-            .replace('T', '_')
-            .split('.')[0];
-          chunkName =
-            'km_' + formattedTime + '_' + validChunk.images.length + '_' + i;
 
-          validChunk.images.map(
-            (image: ICameraFile, i: number) =>
-              (validChunk.points[i].name = image.path),
-          );
-          // TODO: Return true metadata
-          results.push({
-            chunkName,
-            metadata: validChunk.points,
-            images: validChunk.images,
-          });
+        if (validChunk.images.length > 1) {
+          // check that last point is not equal to first point, weird loop defect
+          const firstPoint = validChunk.points[0];
+          const lastPoint =
+            validChunk.points[validChunk.points.length - 1];
+          if (firstPoint.lat && firstPoint.lon && firstPoint.lat === lastPoint.lat && firstPoint.lon === lastPoint.lon) {
+            validChunk.points.pop();
+            validChunk.images.pop();
+          }
+          // If still more than 1:
+          if (validChunk.images.length > 1) {
+            const formattedTime = new Date(validChunk.points[0].t)
+              .toISOString()
+              .replace(/[-:]/g, '')
+              .replace('T', '_')
+              .split('.')[0];
+            chunkName =
+              'km_' + formattedTime + '_' + validChunk.images.length + '_' + i;
+
+            validChunk.images.map(
+              (image: ICameraFile, i: number) =>
+                (validChunk.points[i].name = image.path),
+            );
+            // TODO: Return true metadata
+            results.push({
+              chunkName,
+              metadata: validChunk.points,
+              images: validChunk.images,
+            });
+          }
         }
 
         existingKeyFrames = [
@@ -1451,11 +1437,14 @@ export const packMetadata = async (
   framesMetadata: FramesMetadata[],
   images: ICameraFile[],
   bytesMap: { [key: string]: number },
+  disableMlCheck = false
 ): Promise<FramesMetadata[]> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
+  const isDashcamMLEnabled = getConfig().isDashcamMLEnabled && !disableMlCheck;
+  const metadataFolder = isDashcamMLEnabled ? UNPROCESSED_METADATA_ROOT_FOLDER : METADATA_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
-      mkdir(METADATA_ROOT_FOLDER, resolve);
+      mkdir(metadataFolder, resolve);
     });
   } catch (e: unknown) {
     console.log(e);
@@ -1466,14 +1455,17 @@ export const packMetadata = async (
     const image: ICameraFile = images[i];
     const bytes = bytesMap[image.path];
     if (bytes && bytes > MIN_PER_FRAME_BYTES && bytes < MAX_PER_FRAME_BYTES) {
-      const { systemTime, ...frame } = framesMetadata[i];
-      frame.bytes = bytes;
-      frame.name = image.path;
-      frame.t = Math.round(framesMetadata[i].t);
-      frame.satellites = Math.round(framesMetadata[i].satellites);
-      //@ts-ignore
-      validatedFrames.push(frame);
-      numBytes += bytes;
+       const metaForFrame = framesMetadata.find(m => m.name === image.path);
+       if (metaForFrame) {
+        const { systemTime, ...frame } = metaForFrame;
+        frame.bytes = bytes;
+        frame.name = image.path;
+        frame.t = Math.round(framesMetadata[i].t);
+        frame.satellites = Math.round(framesMetadata[i].satellites);
+        //@ts-ignore
+        validatedFrames.push(frame);
+        numBytes += bytes;
+       }
     }
   }
   if (numBytes) {
@@ -1487,13 +1479,13 @@ export const packMetadata = async (
         loraDeviceId: undefined,
         keyframeDistance: config.DX,
         resolution: '2k',
-        version: '1.7',
+        version: '1.8',
       },
       frames: validatedFrames,
     };
     try {
       writeFileSync(
-        METADATA_ROOT_FOLDER + '/' + name + '.json',
+        metadataFolder + '/' + name + '.json',
         JSON.stringify(metadataJSON),
         { encoding: 'utf-8' },
       );

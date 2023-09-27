@@ -24,6 +24,7 @@ import framekmRouter from './framekm';
 import metadataRouter from './metadata';
 import utilRouter from './util';
 import privacyRouter from './privacy';
+import mlRouter from './ml';
 import ledRouter from './led';
 import networkRouter from './network';
 import previewRouter from './preview';
@@ -31,7 +32,7 @@ import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
-import { getSessionId, readLast2MB } from 'util/index';
+import { addAppConnectedLog, getSessionId, readLast2MB } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
@@ -51,6 +52,7 @@ router.use('/acl', aclRouter);
 router.use('/config', configRouter);
 router.use('/kpi', kpiRouter);
 router.use('/framekm', framekmRouter);
+router.use('/ml', mlRouter);
 router.use('/metadata', metadataRouter);
 router.use('/util', utilRouter);
 router.use('/privacy', privacyRouter);
@@ -107,9 +109,7 @@ router.get('/ping', (req, res) => {
   exec('touch ' + HEALTH_MARKER_PATH);
   if (!isAppConnected) {
     isAppConnected = true;
-    Instrumentation.add({
-      event: 'DashcamAppConnected',
-    });
+    addAppConnectedLog();
   }
 });
 
@@ -117,9 +117,7 @@ router.get('/locktime', (req, res) => {
   res.json(getLockTime());
   if (!isAppConnected) {
     isAppConnected = true;
-    Instrumentation.add({
-      event: 'DashcamAppConnected',
-    });
+    addAppConnectedLog();
   }
 });
 
