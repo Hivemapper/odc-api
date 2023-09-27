@@ -37,16 +37,17 @@ class DAMOYOLO(object):
         temp_image = copy.deepcopy(image)
         image_height, image_width = image.shape[0], image.shape[1]
 
-        # 前処理
+        # Removing the deepcopy
+        # Preprocess
         image, ratio = self._preprocess(temp_image, self.input_shape)
 
-        # 推論実施
+        # Inference
         results = self.onnx_session.run(
             None,
             {self.input_name: image[None, :, :, :]},
         )
 
-        # 後処理
+        # Postprocess
         scores = results[0]
         bboxes = results[1]
         bboxes, scores, class_ids = self._postprocess(
@@ -62,7 +63,6 @@ class DAMOYOLO(object):
             bboxes = bboxes * decode_ratio
 
         return bboxes, scores, class_ids
-
     def _preprocess(self, image, input_size, swap=(2, 0, 1)):
         temp_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 

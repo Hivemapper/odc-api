@@ -8,7 +8,7 @@ import { getNumFramesFromChunkName } from 'util/motionModel';
 import { join } from 'path';
 import { promisify } from 'util';
 
-const MAX_RESPONSE_SIZE = 30000;
+const MAX_RESPONSE_SIZE = 10000;
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
@@ -17,6 +17,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     const metadataFiles: ICameraFile[] = files
       .filter((filename: string) => filename.indexOf('.json') !== -1)
+      .sort()
       .slice(0, MAX_RESPONSE_SIZE)
       .map(filename => {
         return {

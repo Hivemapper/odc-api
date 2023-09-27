@@ -8,9 +8,10 @@ import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { MotionModelService } from 'services/motionModel';
-import { PrivacyWatcherService } from 'services/privacyWatcher';
+import { PrivacyWatcherService, restartPrivacyProcess } from 'services/privacyWatcher';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
+import { LogDiskUsageService } from 'services/logDiskUsage';
 import { LoadPrivacyService } from 'services/loadPrivacy';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
@@ -76,6 +77,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(MotionModelService);
     serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
+    serviceRunner.add(LogDiskUsageService);
 
     serviceRunner.run();
   } catch (e: unknown) {
@@ -109,12 +111,14 @@ export async function initAppServer(): Promise<Application> {
   
       const timeout = setTimeout(() => {
           console.log('Forcefully shutting down.');
+          restartPrivacyProcess();
           process.exit(1);
       }, 5000);
   
       server?.close(() => {
           clearTimeout(timeout);
           console.log('Closed out remaining connections.');
+          restartPrivacyProcess();
           process.exit(0);
       });
   }

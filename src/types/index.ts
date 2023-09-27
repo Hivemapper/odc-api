@@ -91,6 +91,8 @@ export interface ICronJobConfig {
   cmd: string | string[];
   if: ICronJobCondition;
   frequency: ICronJobFrequency;
+  device?: CameraType;
+  timeout?: number;
   log: boolean;
 }
 

@@ -16,15 +16,18 @@ import {
   writeFile,
   writeFileSync,
   rmSync,
+  existsSync,
 } from 'fs';
 import {
   CACHED_CAMERA_CONFIG,
   CACHED_RES_CONFIG,
   NEW_IMAGER_CONFIG_PATH,
+  USB_WRITE_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
 import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
+import { Instrumentation } from './instrumentation';
 
 let sessionId: string;
 
@@ -131,6 +134,37 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   }
 };
 
+export const stopScriptIfRunning = (scriptPath: string) => {
+  return new Promise((resolve, reject) => {
+      exec(`ps aux | grep "${scriptPath}" | grep -v "grep" | awk '{print $2}'`, (error, stdout, stderr) => {
+          if (error) {
+              reject(error);
+              return;
+          }
+
+          const pids = stdout.split('\n').filter(pid => pid.trim() !== '');
+
+          if (pids.length === 0) {
+              resolve(false);  // Process is not running
+              return;
+          }
+
+          // Kill each found process
+          pids.forEach(pid => {
+              try {
+                  if (Number(pid)) {
+                    process.kill(Number(pid));
+                  }
+              } catch (err) {
+                  console.error(`Failed to kill process ${pid}`, err);
+              }
+          });
+
+          resolve(true);  // Processes were running and have been terminated
+      });
+  });
+};
+
 export const checkIfUpsideDown = (imu: IMU) => {
   return imu && imu.accel.y < -0.8;
 };
@@ -201,6 +235,27 @@ export async function ensureFileExists(filePath: string) {
             console.error(error);
         }
     }
+}
+
+export const addAppConnectedLog = () => {
+  let usbConnected = false;
+  try {
+    usbConnected = existsSync(USB_WRITE_PATH);
+  } catch (e: unknown) {
+    console.log(e);
+  }
+  if (usbConnected) {
+    Instrumentation.add({
+      event: 'DashcamAppConnected',
+      message: JSON.stringify({
+        usbConnected: true
+      })
+    });
+  } else {
+    Instrumentation.add({
+      event: 'DashcamAppConnected',
+    });
+  }
 }
 
 export const getCpuLoad = (callback: (load: number) => void) => {

@@ -1,5 +1,5 @@
 export * from './hdc';
-export const API_VERSION = '3.3.9';
+export const API_VERSION = '3.5.0';
 
 export const isDev = () => {
   return false;

@@ -34,6 +34,7 @@ find "$folder1" -type f | while read -r file; do
     fi
 done
 
+
 # Check and truncate the file if it's larger than 2 MB
 if [ -e "$file_path" ]; then
     file_size=$(stat -c%s "$file_path")
