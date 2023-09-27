@@ -32,6 +32,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamPreviewImage',
   'DashcamApiError',
   'DashcamPackedFrameKm',
+  'DashcamPackedPostProcessedFrameKm',
   'DashcamFirmwareUploaded',
   'DashcamLog',
   'GpsLock',
@@ -176,3 +177,5 @@ export const getGnssDopKpi = (
   }
   return gnssKpi;
 };
+
+// json=$(du -b /data/recording | awk 'NR>1{printf(",")} {printf "\"%s\":%s", $2, $1}' | tr -d '\n') && echo "[21.07.2023 19:05.30.733] [INFO]|1695755621293|3.1.1|oBOaOazSm|DashcamLog|3061631|234|0|{$json}|1" >> /var/log/odc-api.log

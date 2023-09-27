@@ -16,10 +16,12 @@ router.get('/', async (req: Request, res: Response) => {
       mkdirSync(ML_ROOT_FOLDER);
     }
     for (const key in ML_MODELS) {
-      const hashPath = `${ML_ROOT_FOLDER}/${ML_MODELS[key]}.hash`;
+      const hashPath = `${ML_MODELS[key]}.hash`;
       if (existsSync(hashPath)) {
         const hash = readFileSync(hashPath, { encoding: 'utf-8' });
         config.modelHashes[key] = hash.trim();
+      } else {
+        config.modelHashes[key] = 'bd6127e2e4dc5d4aafd996aaed558af6';
       }
     }
     res.json(config);

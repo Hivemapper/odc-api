@@ -1,4 +1,4 @@
-import { FRAMEKM_ROOT_FOLDER, STREAM_REQUEST_FOLDER } from '../config';
+import { FRAMEKM_ROOT_FOLDER, STREAM_REQUEST_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
 import {
   createReadStream,
@@ -11,6 +11,7 @@ import {
 } from 'fs';
 import { concatFrames } from 'util/framekm';
 import { exec } from 'child_process';
+import { getNumFramesFromChunkName } from 'util/motionModel';
 
 const router = Router();
 
@@ -32,6 +33,29 @@ router.post('/:name', async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.json({ error });
+  }
+});
+
+router.get('/unprocessed', async (req: Request, res: Response) => {
+  try {
+    const files = readdirSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER).filter((f) => f.startsWith('km_'));
+    let frames = 0;
+    for (const file of files) {
+      try {
+        const numFrames = getNumFramesFromChunkName(file);
+        if (Number.isInteger(numFrames)) {
+          frames += numFrames;
+        }
+      } catch (e: unknown) {
+        console.log(e);
+      }
+    }
+    res.json({
+      count: files.length,
+      frames
+    });
+  } catch (error) {
+    res.json([]);
   }
 });
 

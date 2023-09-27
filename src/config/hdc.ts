@@ -8,18 +8,24 @@ export const PUBLIC_FOLDER = '/mnt/data';
 export const TMP_PUBLIC_FOLDER = '/tmp/recording';
 export const FRAMES_ROOT_FOLDER = '/tmp/recording/pic';
 export const FRAMEKM_ROOT_FOLDER = '/mnt/data/framekm';
+export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/mnt/data/unprocessed_framekm';
 export const RAW_DATA_ROOT_FOLDER = '/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = '/mnt/data/request';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/mnt/data/mgaoffline.hash';
 export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
+export const ML_METADATA_ROOT_FOLDER = '/mnt/data/ml_metadata';
+export const UNPROCESSED_METADATA_ROOT_FOLDER = '/mnt/data/unprocessed_metadata';
+export const ML_SCRIPT_PATH = '/opt/dashcam/bin/ml/privacy.py';
+export const DEFAULT_MODEL_PATH = '/opt/dashcam/bin/ml';
 export const GPS_LATEST_SAMPLE =
   '/mnt/data/gps/latest.log';
 export const IMU_ROOT_FOLDER = '/mnt/data/imu';
 export const ML_ROOT_FOLDER = '/mnt/data/models';
 export const LORA_RESPONSE_FOLDER = '/mnt/data/lorawan';
 export const LORA_REQUEST_FOLDER = '/tmp/lorawan';
+export const USB_WRITE_PATH = '/media/usb0/recording';
 export const BUILD_INFO_PATH = '/etc/version.json';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const FRAMEKM_CLEANUP_SCRIPT = '/opt/dashcam/bin/cleanup_framekm.sh';
@@ -40,18 +46,17 @@ export const NEW_IMAGER_CONFIG_PATH =
 export const CACHED_RES_CONFIG = '/mnt/data/res.conf';
 export const IMAGER_BRIDGE_PATH =
   '/opt/dashcam/bin/bridge.sh';
-export const UPLOAD_PATH = '/tmp/';
+export const UPLOAD_PATH = '/mnt/data/';
 export const NETWORK_BOOT_CONFIG_PATH =
   '/mnt/data/wifi.cfg';
 export const DEVICE_INFO_LOG_FILE = '/tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
 export const ML_MODELS: Record<string, string> = {
-  PVC: 'pvc.onnx'
+  PVC: '/mnt/data/pvc.onnx'
 }
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const DATA_LOGGER_SERVICE = 'data-logger';
-
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/mnt/data/camera_bridge_config.json';

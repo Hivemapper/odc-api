@@ -32,7 +32,7 @@ import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLockTime } from 'util/lock';
-import { getSessionId, readLast2MB } from 'util/index';
+import { addAppConnectedLog, getSessionId, readLast2MB } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
@@ -109,9 +109,7 @@ router.get('/ping', (req, res) => {
   exec('touch ' + HEALTH_MARKER_PATH);
   if (!isAppConnected) {
     isAppConnected = true;
-    Instrumentation.add({
-      event: 'DashcamAppConnected',
-    });
+    addAppConnectedLog();
   }
 });
 
@@ -119,9 +117,7 @@ router.get('/locktime', (req, res) => {
   res.json(getLockTime());
   if (!isAppConnected) {
     isAppConnected = true;
-    Instrumentation.add({
-      event: 'DashcamAppConnected',
-    });
+    addAppConnectedLog();
   }
 });
 
