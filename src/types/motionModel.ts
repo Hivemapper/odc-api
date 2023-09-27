@@ -36,6 +36,11 @@ export type MotionModelConfig = {
     minSatellites: number;
     eph?: number;
   };
+  Privacy: {
+    numThreads?: number,
+    confThreshold?: number,
+    iouThreshold?: number,
+  }
   ImuFilter: {
     threshold: number;
     alpha: number;
@@ -139,3 +144,28 @@ export type MotionModelCursor = {
   gnssFilePath: string;
   imuFilePath: string;
 };
+
+export type DiskUsage = {
+  gps?: number;
+  frameKm?: number;
+  imu?: number;
+  metadata?: number;
+  ml?: number;
+  pic?: number;
+  total?: number;
+}
+
+export type FrameKMTelemetry = {
+  systemtime: number;
+  width?: number;
+  height?: number;
+  lat?: number;
+  lon?: number;
+  accel_x?: number;
+  accel_y?: number;
+  accel_z?: number;
+  gyro_x?: number;
+  gyro_y?: number;
+  gyro_z?: number;
+  disk_used?: DiskUsage;
+}

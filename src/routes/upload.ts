@@ -1,6 +1,6 @@
 import { UPLOAD_PATH } from '../config';
 import { Router } from 'express';
-import { createWriteStream } from 'fs';
+import { createWriteStream, existsSync, rmSync } from 'fs';
 
 const router = Router();
 
@@ -13,6 +13,13 @@ router.post('/', (req, res) => {
       console.log(`Upload of '${filename}' started`);
       // Create a write stream of the new file
       try {
+        try {
+          if (existsSync(UPLOAD_PATH + filename)) {
+            rmSync(UPLOAD_PATH + filename)
+          }
+        } catch (e: unknown) {
+          console.log('Failed deleting outdated file during upload');
+        }
         const fstream = createWriteStream(UPLOAD_PATH + filename);
         // Pipe it trough
         file.pipe(fstream);

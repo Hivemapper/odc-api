@@ -7,25 +7,24 @@ import {
   packMetadata,
   selectImages,
   syncCursors,
-  MAX_FAILED_ITERATIONS, getConfig,
+  MAX_FAILED_ITERATIONS,
+  getConfig,
 } from 'util/motionModel';
-import { FramesMetadata, GnssMetadata } from 'types/motionModel';
+import { FrameKMTelemetry, FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
-import { concatFrames } from 'util/framekm';
-import { existsSync, mkdir, rmSync } from 'fs';
-import { MOTION_MODEL_CURSOR, RAW_DATA_ROOT_FOLDER } from 'config';
+import { concatFrames, getFrameKmTelemetry } from 'util/framekm';
+import { existsSync, mkdir, renameSync, rmSync, rmdirSync } from 'fs';
+import { FRAMES_ROOT_FOLDER, MOTION_MODEL_CURSOR, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
 import { Instrumentation } from 'util/instrumentation';
-import { getRawImuData, writeRawData } from 'util/datalogger';
 import console from 'console';
 import { isPrivateZonesInitialised } from './loadPrivacy';
-const ITERATION_DELAY = 5400;
+const ITERATION_DELAY = 3400;
 
 export const lastProcessed = null;
 let failedIterations = 0;
-let lastTimeRawSnippetCreated = Date.now();
 
 const execute = async () => {
   let iterationDelay = ITERATION_DELAY;
@@ -52,6 +51,9 @@ const execute = async () => {
     console.log('Motion model: Iterating');
     const gnssChunks: GnssMetadata[][] = await getNextGnss();
     console.log('GPS chunks:', gnssChunks.length);
+    let bundleName = '';
+    let destFolder = '';
+
     for (const gnss of gnssChunks) {
       if (isGnssEligibleForMotionModel(gnss)) {
         await sleep(3000); // let IMU logger wrap the fresh file
@@ -71,6 +73,16 @@ const execute = async () => {
                   'Ready to pack ' + frameKm.metadata.length + ' frames',
                 );
                 try {
+                  if (!destFolder && getConfig().isDashcamMLEnabled) {
+                    bundleName = frameKm.chunkName;
+                    destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
+                    if (existsSync(destFolder)) {
+                      rmdirSync(destFolder, { recursive: true });
+                    }
+                    await new Promise(resolve => {
+                      mkdir(destFolder, resolve);
+                    });
+                  }
                   const start = Date.now();
                   const bytesMap = await promiseWithTimeout(
                     concatFrames(
@@ -78,6 +90,10 @@ const execute = async () => {
                         (item: FramesMetadata) => item.name || '',
                       ),
                       frameKm.chunkName,
+                      0,
+                      FRAMES_ROOT_FOLDER,
+                      false,
+                      destFolder,
                     ),
                     15000,
                   );
@@ -97,28 +113,14 @@ const execute = async () => {
                       ),
                       5000,
                     );
-                    const config = getConfig();
-                    if (config.rawLogsConfiguration && config.rawLogsConfiguration.isEnabled) {
-                      if (!existsSync(RAW_DATA_ROOT_FOLDER)) {
-                        try {
-                          await new Promise(resolve => {
-                            mkdir(RAW_DATA_ROOT_FOLDER, resolve);
-                          });
-                        } catch (e: unknown) {
-                          console.log(e);
-                        }
-                      }
-                      if (lastTimeRawSnippetCreated < Date.now() - (config.rawLogsConfiguration.interval * 1000) || frameKm.images.length > 5) {
-                        const from = new Date(frameKm.metadata[0].t).toISOString().replace('T', ' ').replace('Z', '');
-                        const to = new Date(frameKm.metadata[frameKm.metadata.length - 1].t).toISOString().replace('T', ' ').replace('Z', '');
-                        const name = `${frameKm.chunkName}.db.gz`;
-                        const rawData = await getRawImuData(from, to);
-                        if (rawData) {
-                          await writeRawData(rawData, name);
-                        }
-                        lastTimeRawSnippetCreated = Date.now();
-                      }
-                    }
+                  }
+                  let framekmTelemetry: FrameKMTelemetry = {
+                    systemtime: Date.now()
+                  };
+                  try {
+                    framekmTelemetry = await promiseWithTimeout(getFrameKmTelemetry(frameKm.images[0], gnss[0], imu), 5000);
+                  } catch (error: unknown) {
+                    console.log('Error getting telemetry', error);
                   }
                   Instrumentation.add({
                     event: 'DashcamPackedFrameKm',
@@ -127,6 +129,7 @@ const execute = async () => {
                       name: frameKm.chunkName,
                       numFrames: frameKm.images?.length,
                       duration: Date.now() - start,
+                      ...framekmTelemetry,
                     }),
                   });
                 } catch (error: unknown) {
@@ -145,6 +148,13 @@ const execute = async () => {
           }
         }
       }
+    }
+    if (destFolder && (existsSync(destFolder))) {
+      /**
+       * committing the 30-sec cycle of frames selected
+       * Now ML script can start processing the frames
+       */
+      renameSync(destFolder, UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/' + bundleName + '_bundled');
     }
     await syncCursors();
     failedIterations = 0;

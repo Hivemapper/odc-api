@@ -15,15 +15,19 @@ import {
   statSync,
   writeFile,
   writeFileSync,
+  rmSync,
+  existsSync,
 } from 'fs';
 import {
   CACHED_CAMERA_CONFIG,
   CACHED_RES_CONFIG,
   NEW_IMAGER_CONFIG_PATH,
+  USB_WRITE_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
-import { spawn } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
+import { Instrumentation } from './instrumentation';
 
 let sessionId: string;
 
@@ -130,6 +134,37 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   }
 };
 
+export const stopScriptIfRunning = (scriptPath: string) => {
+  return new Promise((resolve, reject) => {
+      exec(`ps aux | grep "${scriptPath}" | grep -v "grep" | awk '{print $2}'`, (error, stdout, stderr) => {
+          if (error) {
+              reject(error);
+              return;
+          }
+
+          const pids = stdout.split('\n').filter(pid => pid.trim() !== '');
+
+          if (pids.length === 0) {
+              resolve(false);  // Process is not running
+              return;
+          }
+
+          // Kill each found process
+          pids.forEach(pid => {
+              try {
+                  if (Number(pid)) {
+                    process.kill(Number(pid));
+                  }
+              } catch (err) {
+                  console.error(`Failed to kill process ${pid}`, err);
+              }
+          });
+
+          resolve(true);  // Processes were running and have been terminated
+      });
+  });
+};
+
 export const checkIfUpsideDown = (imu: IMU) => {
   return imu && imu.accel.y < -0.8;
 };
@@ -200,6 +235,27 @@ export async function ensureFileExists(filePath: string) {
             console.error(error);
         }
     }
+}
+
+export const addAppConnectedLog = () => {
+  let usbConnected = false;
+  try {
+    usbConnected = existsSync(USB_WRITE_PATH);
+  } catch (e: unknown) {
+    console.log(e);
+  }
+  if (usbConnected) {
+    Instrumentation.add({
+      event: 'DashcamAppConnected',
+      message: JSON.stringify({
+        usbConnected: true
+      })
+    });
+  } else {
+    Instrumentation.add({
+      event: 'DashcamAppConnected',
+    });
+  }
 }
 
 export const getCpuLoad = (callback: (load: number) => void) => {
@@ -434,6 +490,83 @@ export async function promiseWithTimeout(racePromise: any, timeout: number) {
     }),
     wait(timeout),
   ]);
+}
+
+export async function runCommand(cmd: string, args: (string | number)[] = []) {
+  const cli = `${cmd} ${args.join(' ')}`;
+  return new Promise<string>((resolve, reject) => {
+    exec(cli, (err, stdout, stderr) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout.concat(stderr));
+      }
+    });
+  });
+}
+
+export async function spawnProcess(
+  cmd: string,
+  args: string[],
+  flushOutput = false,
+  env?: Record<string, string | undefined>,
+  cwd?: string,
+  timeout = 1000 * 60 * 60 * 1.5,
+  errPatterns: string[] = [],
+) {
+  return new Promise<string>((resolve, reject) => {
+    let out = '';
+    const proc = spawn(cmd, args, {
+      cwd,
+      stdio: [],
+      env: env || process.env,
+    });
+
+    const killer = setTimeout(() => {
+      proc.kill('SIGINT');
+      reject('proc timeout');
+    }, timeout);
+
+    proc.stdout.setEncoding('utf8');
+    proc.stdout.on('data', (data: any) => {
+      const strOut = String(data);
+      const error = errPatterns.find(pattern => strOut.includes(pattern));
+      if (error) {
+        throw error;
+      }
+      if (flushOutput) {
+        console.log(strOut);
+      }
+      out += strOut;
+    });
+    proc.stderr.on('data', (data: any) => {
+      const strOut = String(data);
+      const error = errPatterns.find(pattern => strOut.includes(pattern));
+      if (error) {
+        throw error;
+      }
+      if (flushOutput) {
+        console.error(strOut);
+      }
+      out += strOut;
+    });
+    proc.on('error', (err: unknown) => {
+      clearTimeout(killer);
+      reject(err);
+    });
+    proc.on('close', () => {
+      clearTimeout(killer);
+      resolve(out);
+    });
+  });
+}
+
+export function tryToRemoveFile(path: string) {
+  try {
+    rmSync(path, { force: true });
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 export async function readLast2MB(filePath: string) {

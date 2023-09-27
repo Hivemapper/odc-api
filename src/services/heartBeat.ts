@@ -10,7 +10,7 @@ import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { setLockTime } from 'util/lock';
+import { ifTimeSet, setLockTime } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/motionModel';
 import { COLORS, updateLED } from '../util/led';
 import {
@@ -155,7 +155,7 @@ export const HeartBeatService: IService = {
             setLockTime(gpsSample.ttff);
           }
 
-          lastGpsPoint = gpsSample;
+          lastGpsPoint = { ...gpsSample };
           lastSuccessfulLock = Date.now();
           isLock = true;
           hasBeenLockOnce = true;
@@ -211,10 +211,14 @@ export const HeartBeatService: IService = {
                 cameraLED = COLORS.PINK;
               } else {
                 lastTimeCheckWasPrivate = false;
-                if (isEnoughLightForGnss(lastGpsPoint)) {
-                  cameraLED = COLORS.GREEN;
+                if (ifTimeSet() && lastGpsPoint?.timestamp) {
+                  if (isEnoughLightForGnss(lastGpsPoint)) {
+                    cameraLED = COLORS.GREEN;
+                  } else {
+                    cameraLED = COLORS.DIM;
+                  }
                 } else {
-                  cameraLED = COLORS.DIM;
+                  cameraLED = COLORS.GREEN;
                 }
               }
             } else {

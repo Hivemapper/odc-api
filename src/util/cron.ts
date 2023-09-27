@@ -1,5 +1,5 @@
 import { execSync, spawn } from 'child_process';
-import { CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
+import { CAMERA_TYPE, CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 import { appendFile, writeFile } from 'fs';
 import {
   ICronConditionMethod,
@@ -220,8 +220,15 @@ export const createCronJobExecutor = (
     if (cmd === 'reboot') {
       cacheExecutionForDevice(config.id);
     }
+    if (config.device && config.device !== CAMERA_TYPE) {
+      console.log('Command ' + cmd + ' ignored for ' + CAMERA_TYPE);
+      return;
+    }
     try {
       console.log('Command executed: ' + cmd);
+      if (config.frequency.oncePerDevice) {
+        cacheExecutionForDevice(config.id);
+      }
       const child = spawn(cmd || '', { shell: true });
       Instrumentation.add({
         event: 'DashcamCommandExecuted',
@@ -230,6 +237,13 @@ export const createCronJobExecutor = (
           id: config.id
         })
       });
+      let timeout: any;
+      if (config.timeout) {
+        timeout = setTimeout(() => {
+          console.log('Command timed out:', cmd);
+          child.kill(); // Terminate the process after the timeout
+        }, config.timeout);
+      }
       let output = '';
       child.stdout.setEncoding('utf8');
       child.stdout.on('data', data => {
@@ -240,14 +254,14 @@ export const createCronJobExecutor = (
       });
       child.on('close', async code => {
         console.log('Command finished: ' + cmd);
+        if (timeout) {
+          clearTimeout(timeout);
+        }
         if (code !== 0) {
           console.log('Failed with code: ', code);
         }
         if (output && config.log) {
           console.log(output);
-        }
-        if (config.frequency.oncePerDevice) {
-          cacheExecutionForDevice(config.id);
         }
         if (Array.isArray(command) && command.length) {
           executeOneOrMany(command);

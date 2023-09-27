@@ -26,7 +26,6 @@ export const UpdateMotionModelConfigService: IService = {
                   gdop: 6,
                   eph: 10,
                 };
-                configJSON.isDashcamMLEnabled = true;
               }
               loadConfig(configJSON);
             }
