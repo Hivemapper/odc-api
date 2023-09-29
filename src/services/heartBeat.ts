@@ -164,7 +164,7 @@ export const HeartBeatService: IService = {
           if (!isCameraActive) {
             startCamera();
           }
-        } else {
+        } else if (gpsSample) {
           const gpsLostPeriod = lastSuccessfulLock
             ? Math.abs(Date.now() - lastSuccessfulLock)
             : 70000;
@@ -222,7 +222,7 @@ export const HeartBeatService: IService = {
                 }
               }
             } else {
-              if (!lastTimeCheckWasPrivate) {
+              if (!lastTimeCheckWasPrivate && gpsSample) {
                 cameraLED = isCameraActive ? COLORS.GREEN : COLORS.DIM;
               }
             }
