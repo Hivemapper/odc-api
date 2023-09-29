@@ -608,9 +608,9 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
     }, 5000);
     // Backward compatibility support for old 't' field
     // We add 10 seconds from both end to resolve unsync between the log files
-    const since = (gnss[0].systemTime || gnss[0].t) - 10000;
+    const since = (gnss[0].systemTime || gnss[0].t) - 20000;
     const until =
-      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 10000;
+      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 20000;
 
     try {
       readdir(
@@ -811,7 +811,7 @@ export const getPointsToSample = (
 
   let points: FramesMetadata[] = gpsData;
   const offset = 0;
-  const dx = config.DX;
+  const dx = config.DX + 0.2; // This is a very important addition for having the wider brackets to select frames more accurately
   let previous = [];
 
   if (existingKeyFrames.length > 0) {
@@ -1170,7 +1170,7 @@ export const selectImages = (
       );
       const distanceRange = getDistanceRangeBasedOnSpeed(prevPoint.speed / 3.6);
 
-      if (nextTime < prevTime) {
+      if (nextTime < prevTime || (totalDistance < distanceRange.MIN_DISTANCE && gpsCursor !== frameKM.length - 1)) {
         gpsCursor++;
       } else if (
         (frameTimestamp >= prevTime && frameTimestamp <= nextTime + 50) ||

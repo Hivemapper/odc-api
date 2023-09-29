@@ -419,7 +419,7 @@ def main(input_path, output_path, model_path, conf_threshold, nms_threshold, num
                 cpu = psutil.cpu_times()
                 mem = psutil.virtual_memory()
                 swap = psutil.swap_memory()
-                disk_usage = psutil.disk_usage('/mnt/data')
+                disk_usage = psutil.disk_usage(os.path.dirname(input_path))
                 
                 metadata['end'] = int(time.time()*1000)
                 metadata['cpu_idle'] = int(cpu.idle)

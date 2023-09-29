@@ -18,13 +18,16 @@ export const LogDiskUsageService: IService = {
       const command = 'sh';
       const args = [
         '-c',
-        `json=$(du -b ${PUBLIC_FOLDER} | awk 'NR>1{printf(",")} {printf "\"%s\":%s", $2, $1}' | tr -d '\n') && echo "{$json}"`
+        `du -b ${PUBLIC_FOLDER}`
       ];
       const diskUsageCmd = spawn(command, args);
 
       diskUsageCmd.stdout.on('data', data => {
-        console.log(data.toString());
         output += data.toString();
+      });
+
+      diskUsageCmd.stderr.on('data', data => {
+        console.error(`stderr: ${data}`);
       });
 
       diskUsageCmd.on('error', err => {
@@ -33,8 +36,17 @@ export const LogDiskUsageService: IService = {
 
       diskUsageCmd.on('close', () => {
         try {
-          console.log(output);
-          const usage = JSON.parse(output.trim());
+          const lines = output.trim().split('\n');
+          const usage: { [key: string]: number } = {};
+
+          lines.forEach(line => {
+            const [size, path] = line.split(/\s+/);
+            const sizeKB = Math.round(parseInt(size, 10) / 1024);
+            if (Number.isInteger(sizeKB)) {
+              usage[path] = sizeKB;
+            }
+          });
+
           if (usage[FRAMEKM_ROOT_FOLDER]) {
             diskUsage.frameKm = usage[FRAMEKM_ROOT_FOLDER];
           }
@@ -52,7 +64,6 @@ export const LogDiskUsageService: IService = {
           }
           if (usage[PUBLIC_FOLDER]) {
             diskUsage.total = usage[PUBLIC_FOLDER];
-            console.log('Disk usage:', diskUsage.total);
           }
           if (usage[FRAMES_ROOT_FOLDER]) {
             diskUsage.pic = usage[FRAMES_ROOT_FOLDER];
@@ -67,12 +78,12 @@ export const LogDiskUsageService: IService = {
           }
           console.log('Disk usage:', diskUsage);
         } catch (e: unknown) {
-          console.log('Error parsing disk usage JSON', e);
+          console.log('Error parsing disk usage', e);
         }
       });
     } catch (error: unknown) {
       console.log(error);
     }
   },
-  interval: 10888,
+  interval: 118888,
 };

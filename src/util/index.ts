@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { CameraResolution, ICameraConfig, ICameraFile, IMU } from '../types';
+import { CameraResolution, ICameraConfig, ICameraFile, IMU } from 'types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { UpdateCameraResolutionService } from 'services/updateCameraResolution';

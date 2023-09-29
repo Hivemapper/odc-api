@@ -159,7 +159,7 @@ export const concatFrames = async (
   }
 };
 
-export const getFrameKmTelemetry = (image: ICameraFile, gnss: GnssMetadata, imu: ImuMetadata): FrameKMTelemetry => {
+export const getFrameKmTelemetry = async (image: ICameraFile, gnss: GnssMetadata, imu: ImuMetadata): Promise<FrameKMTelemetry> => {
   const telemetry: FrameKMTelemetry = {
     systemtime: Date.now(),
   };
