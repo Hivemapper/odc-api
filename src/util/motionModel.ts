@@ -55,6 +55,7 @@ import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
+import * as fs from 'fs';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -306,7 +307,74 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     try {
       console.log('Last file is ' + prevGnssFile);
       pathToGpsFile = await getNextGnssName();
+
+      const sourceFilePath = pathToGpsFile;
+      let destinationFilePath = "/media/usb0/";
+      let file_date: string;
+
+      if (pathToGpsFile) {
+        // Get filename of GNSS file
+        let filename = pathToGpsFile.split('/').pop();
+
+        if (filename) {
+
+          // Replace all colons and periods with dashes to make them compatible with FAT32
+          filename = filename.replace(/:/g, '-');
+          file_date = filename.split('T')[0];
+          const parts = filename.split('.');
+          if (parts.length > 1) {
+
+          const lastPart = parts.pop(); // Remove the last part
+          const replacedString = parts.join('-') + '.' + lastPart;
+          destinationFilePath += file_date + '/' + replacedString;
+          }
+        }
+      }
+
+
+      exec('fdisk -l', (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing fdisk: ${error}`);
+          return;
+        }
+
+        const outputLines = stdout.split('\n');
+        let usbStickDetected = false;
+
+        // Iterate through the output lines to identify USB sticks
+        for (const line of outputLines) {
+          // Check for characteristics that indicate a USB stick
+          if (line.includes('/dev/sd') && line.includes('FAT32')) {
+            usbStickDetected = true;
+            break; // Exit the loop if a USB stick is detected
+          }
+        }
+
+        if (usbStickDetected) {
+          console.log("hariii in iffff");
+
+          exec(`mkdir -p /media/usb0/${file_date}`, (err, stdout, stderr)=>{
+            if(err){
+              console.log("Can't create directory for saving GNSS file from Camera to USB");
+            }
+            else{
+              exec(`cp ${sourceFilePath} ${destinationFilePath}`, (err, stdout, stderr) => {
+                if(err){
+                  console.log("Can't write GNSS file from Camera to USB")
+                }
+                else{
+                  console.log("Successfully written GNSS file from Camera to USB")
+                }
+              })
+            }
+          })
+        } else {
+          console.log("No USB stick detected skipping GNSS file from Camera to USB")
+        }
+      });
+
       console.log('Next file is: ' + pathToGpsFile);
+
     } catch (e) {
       console.log('Error reading next file:', e);
     }
