@@ -330,7 +330,8 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
           }
         }
       }
-
+      
+      console.log("testiggggggggggggggggggg")
 
       exec('fdisk -l', (error, stdout, stderr) => {
         if (error) {
