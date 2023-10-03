@@ -2,19 +2,6 @@ import { IService } from '../types';
 import { readdirSync, existsSync, mkdirSync, rename, statSync, readdir } from 'fs';
 import { USB_WRITE_PATH } from 'config';
 
-function countFilesInDirectory(directoryPath: string): number {
-    try {
-        const files = readdirSync(directoryPath);
-        const fileCount = files.filter((file) => {
-            return statSync(`${directoryPath}/${file}`).isFile();
-        }).length;
-        return fileCount;
-    } catch (error) {
-        console.error(`Error counting files in directory '${directoryPath}':`, error);
-        return -1;
-    }
-}
-
 export const SaveImagesToUSB: IService = {
     execute: async () => {
         try {
