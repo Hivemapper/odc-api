@@ -50363,53 +50363,42 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaveImagesToUSB = void 0;
 const fs_1 = __nccwpck_require__(7147);
 const config_1 = __nccwpck_require__(2284);
-function countFilesInDirectory(directoryPath) {
-    try {
-        const files = fs_1.readdirSync(directoryPath);
-        const fileCount = files.filter((file) => {
-            return fs_1.statSync(`${directoryPath}/${file}`).isFile();
-        }).length;
-        return fileCount;
-    }
-    catch (error) {
-        console.error(`Error counting files in directory '${directoryPath}':`, error);
-        return -1;
-    }
-}
 exports.SaveImagesToUSB = {
     execute: async () => {
         try {
-            console.log("starting process to save images to USB", Date.now());
-            const directoryPath = config_1.USB_WRITE_PATH;
-            const files = fs_1.readdir(directoryPath, (err, files) => {
-                files.forEach((file) => {
-                    if (file.endsWith("jpg")) {
-                        const formattedDate = new Date().toISOString().split('T')[0];
-                        const directoryPath = `${config_1.USB_WRITE_PATH}/${formattedDate}`;
-                        //Check if directory exists for the day on which image was collected
-                        if (!fs_1.existsSync(directoryPath)) {
-                            try {
-                                fs_1.mkdirSync(directoryPath, { recursive: true });
+            //Check if USB is connected
+            const usbConnected = fs_1.existsSync(config_1.USB_WRITE_PATH);
+            if (usbConnected) {
+                const directoryPath = config_1.USB_WRITE_PATH;
+                const files = fs_1.readdir(directoryPath, (err, files) => {
+                    files.forEach((file) => {
+                        if (file.endsWith("jpg")) {
+                            const formattedDate = new Date().toISOString().split('T')[0];
+                            const directoryPath = `${config_1.USB_WRITE_PATH}/${formattedDate}`;
+                            //Check if directory exists for the day on which image was collected
+                            if (!fs_1.existsSync(directoryPath)) {
+                                try {
+                                    fs_1.mkdirSync(directoryPath, { recursive: true });
+                                }
+                                catch (error) {
+                                    console.error(`FROM SAVEIMAGESTOUSB SERVICE :::: Error creating directory '${directoryPath}':`, error);
+                                }
                             }
-                            catch (error) {
-                                console.error(`FROM SAVEIMAGESTOUSB SERVICE :::: Error creating directory '${directoryPath}':`, error);
-                            }
+                            //Move the JPG image file to the right directory
+                            const sourcePath = `${config_1.USB_WRITE_PATH}/${file}`;
+                            const destinationPath = `${config_1.USB_WRITE_PATH}/${formattedDate}/${file}`;
+                            fs_1.rename(sourcePath, destinationPath, (err) => {
+                                if (err) {
+                                    console.error(`FROM SAVEIMAGESTOUSB SERVICE :::: Error moving file: ${err}`);
+                                }
+                            });
                         }
-                        //Move the JPG image file to the right directory
-                        const sourcePath = `${config_1.USB_WRITE_PATH}/${file}`;
-                        const destinationPath = `${config_1.USB_WRITE_PATH}/${formattedDate}/${file}`;
-                        fs_1.rename(sourcePath, destinationPath, (err) => {
-                            if (err) {
-                                console.error(`FROM SAVEIMAGESTOUSB SERVICE :::: Error moving file: ${err}`);
-                            }
-                        });
+                    });
+                    if (err) {
+                        console.log("Failed to read directory frm serviceeeeeee");
                     }
-                    console.log("endinggggggg process to save images to USB", Date.now());
                 });
-                if (err) {
-                    console.log("Failed to read directory frm serviceeeeeee");
-                }
-            });
+            }
         }
         catch (error) {
             console.error('Error:', error);
@@ -50417,7 +50406,7 @@ exports.SaveImagesToUSB = {
     },
     interval: 118888,
 };
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic2F2ZUltYWdlc1RvVVNCLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9oYXJpcHJpeWFyZWRkeS9vZGMtYXBpL3NyYy9zZXJ2aWNlcy9zYXZlSW1hZ2VzVG9VU0IudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQ0EsMkJBQW1GO0FBQ25GLG1DQUF3QztBQUV4QyxTQUFTLHFCQUFxQixDQUFDLGFBQXFCO0lBQ2hELElBQUk7UUFDRixNQUFNLEtBQUssR0FBRyxnQkFBVyxDQUFDLGFBQWEsQ0FBQyxDQUFDO1FBQ3pDLE1BQU0sU0FBUyxHQUFHLEtBQUssQ0FBQyxNQUFNLENBQUMsQ0FBQyxJQUFJLEVBQUUsRUFBRTtZQUN0QyxPQUFPLGFBQVEsQ0FBQyxHQUFHLGFBQWEsSUFBSSxJQUFJLEVBQUUsQ0FBQyxDQUFDLE1BQU0sRUFBRSxDQUFDO1FBQ3ZELENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQztRQUNWLE9BQU8sU0FBUyxDQUFDO0tBQ2xCO0lBQUMsT0FBTyxLQUFLLEVBQUU7UUFDZCxPQUFPLENBQUMsS0FBSyxDQUFDLHNDQUFzQyxhQUFhLElBQUksRUFBRSxLQUFLLENBQUMsQ0FBQztRQUM5RSxPQUFPLENBQUMsQ0FBQyxDQUFDO0tBQ1g7QUFDSCxDQUFDO0FBRVUsUUFBQSxlQUFlLEdBQWE7SUFDckMsT0FBTyxFQUFFLEtBQUssSUFBSSxFQUFFO1FBQ2hCLElBQUk7WUFDQSxPQUFPLENBQUMsR0FBRyxDQUFDLHdDQUF3QyxFQUFFLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQyxDQUFDO1lBQ2xFLE1BQU0sYUFBYSxHQUFHLHVCQUFjLENBQUM7WUFDckMsTUFBTSxLQUFLLEdBQUcsWUFBTyxDQUFDLGFBQWEsRUFBRSxDQUFDLEdBQUcsRUFBRSxLQUFLLEVBQUUsRUFBRTtnQkFDaEQsS0FBSyxDQUFDLE9BQU8sQ0FBQyxDQUFDLElBQUksRUFBRSxFQUFFO29CQUNuQixJQUFJLElBQUksQ0FBQyxRQUFRLENBQUMsS0FBSyxDQUFDLEVBQUU7d0JBRXRCLE1BQU0sYUFBYSxHQUFHLElBQUksSUFBSSxFQUFFLENBQUMsV0FBVyxFQUFFLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO3dCQUU3RCxNQUFNLGFBQWEsR0FBRyxHQUFHLHVCQUFjLElBQUksYUFBYSxFQUFFLENBQUM7d0JBRTNELG9FQUFvRTt3QkFDcEUsSUFBSSxDQUFDLGVBQVUsQ0FBQyxhQUFhLENBQUMsRUFBRTs0QkFDNUIsSUFBSTtnQ0FDQSxjQUFTLENBQUMsYUFBYSxFQUFFLEVBQUUsU0FBUyxFQUFFLElBQUksRUFBRSxDQUFDLENBQUM7NkJBQ2pEOzRCQUFDLE9BQU8sS0FBSyxFQUFFO2dDQUNaLE9BQU8sQ0FBQyxLQUFLLENBQUMsK0RBQStELGFBQWEsSUFBSSxFQUFFLEtBQUssQ0FBQyxDQUFDOzZCQUMxRzt5QkFDSjt3QkFFRCxnREFBZ0Q7d0JBQ2hELE1BQU0sVUFBVSxHQUFHLEdBQUcsdUJBQWMsSUFBSSxJQUFJLEVBQUUsQ0FBQzt3QkFDL0MsTUFBTSxlQUFlLEdBQUcsR0FBRyx1QkFBYyxJQUFJLGFBQWEsSUFBSSxJQUFJLEVBQUUsQ0FBQzt3QkFDckUsV0FBTSxDQUFDLFVBQVUsRUFBRSxlQUFlLEVBQUUsQ0FBQyxHQUFHLEVBQUUsRUFBRTs0QkFDeEMsSUFBSSxHQUFHLEVBQUU7Z0NBQ0wsT0FBTyxDQUFDLEtBQUssQ0FBQyx3REFBd0QsR0FBRyxFQUFFLENBQUMsQ0FBQzs2QkFDaEY7d0JBQ0wsQ0FBQyxDQUFDLENBQUM7cUJBQ047b0JBQ0QsT0FBTyxDQUFDLEdBQUcsQ0FBQyw0Q0FBNEMsRUFBRSxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUMsQ0FBQztnQkFDMUUsQ0FBQyxDQUFDLENBQUM7Z0JBQ0gsSUFBRyxHQUFHLEVBQUM7b0JBQ0gsT0FBTyxDQUFDLEdBQUcsQ0FBQyw0Q0FBNEMsQ0FBQyxDQUFDO2lCQUM3RDtZQUNMLENBQUMsQ0FBQyxDQUFDO1NBQ047UUFBQyxPQUFPLEtBQUssRUFBRTtZQUNaLE9BQU8sQ0FBQyxLQUFLLENBQUMsUUFBUSxFQUFFLEtBQUssQ0FBQyxDQUFDO1NBQ2xDO0lBQ0wsQ0FBQztJQUNELFFBQVEsRUFBRSxNQUFNO0NBQ25CLENBQUMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic2F2ZUltYWdlc1RvVVNCLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZmlsZTovLy9Vc2Vycy9oYXJpcHJpeWFyZWRkeS9vZGMtYXBpL3NyYy9zZXJ2aWNlcy9zYXZlSW1hZ2VzVG9VU0IudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQ0EsMkJBQW1GO0FBQ25GLG1DQUF3QztBQUUzQixRQUFBLGVBQWUsR0FBYTtJQUNyQyxPQUFPLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDaEIsSUFBSTtZQUNBLDJCQUEyQjtZQUMzQixNQUFNLFlBQVksR0FBRyxlQUFVLENBQUMsdUJBQWMsQ0FBQyxDQUFDO1lBQ2hELElBQUksWUFBWSxFQUFFO2dCQUNkLE1BQU0sYUFBYSxHQUFHLHVCQUFjLENBQUM7Z0JBQ3JDLE1BQU0sS0FBSyxHQUFHLFlBQU8sQ0FBQyxhQUFhLEVBQUUsQ0FBQyxHQUFHLEVBQUUsS0FBSyxFQUFFLEVBQUU7b0JBQ2hELEtBQUssQ0FBQyxPQUFPLENBQUMsQ0FBQyxJQUFJLEVBQUUsRUFBRTt3QkFDbkIsSUFBSSxJQUFJLENBQUMsUUFBUSxDQUFDLEtBQUssQ0FBQyxFQUFFOzRCQUV0QixNQUFNLGFBQWEsR0FBRyxJQUFJLElBQUksRUFBRSxDQUFDLFdBQVcsRUFBRSxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQzs0QkFFN0QsTUFBTSxhQUFhLEdBQUcsR0FBRyx1QkFBYyxJQUFJLGFBQWEsRUFBRSxDQUFDOzRCQUUzRCxvRUFBb0U7NEJBQ3BFLElBQUksQ0FBQyxlQUFVLENBQUMsYUFBYSxDQUFDLEVBQUU7Z0NBQzVCLElBQUk7b0NBQ0EsY0FBUyxDQUFDLGFBQWEsRUFBRSxFQUFFLFNBQVMsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDO2lDQUNqRDtnQ0FBQyxPQUFPLEtBQUssRUFBRTtvQ0FDWixPQUFPLENBQUMsS0FBSyxDQUFDLCtEQUErRCxhQUFhLElBQUksRUFBRSxLQUFLLENBQUMsQ0FBQztpQ0FDMUc7NkJBQ0o7NEJBRUQsZ0RBQWdEOzRCQUNoRCxNQUFNLFVBQVUsR0FBRyxHQUFHLHVCQUFjLElBQUksSUFBSSxFQUFFLENBQUM7NEJBQy9DLE1BQU0sZUFBZSxHQUFHLEdBQUcsdUJBQWMsSUFBSSxhQUFhLElBQUksSUFBSSxFQUFFLENBQUM7NEJBQ3JFLFdBQU0sQ0FBQyxVQUFVLEVBQUUsZUFBZSxFQUFFLENBQUMsR0FBRyxFQUFFLEVBQUU7Z0NBQ3hDLElBQUksR0FBRyxFQUFFO29DQUNMLE9BQU8sQ0FBQyxLQUFLLENBQUMsd0RBQXdELEdBQUcsRUFBRSxDQUFDLENBQUM7aUNBQ2hGOzRCQUNMLENBQUMsQ0FBQyxDQUFDO3lCQUNOO29CQUNMLENBQUMsQ0FBQyxDQUFDO29CQUNILElBQUksR0FBRyxFQUFFO3dCQUNMLE9BQU8sQ0FBQyxHQUFHLENBQUMsNENBQTRDLENBQUMsQ0FBQztxQkFDN0Q7Z0JBQ0wsQ0FBQyxDQUFDLENBQUM7YUFDTjtTQUNKO1FBQUMsT0FBTyxLQUFLLEVBQUU7WUFDWixPQUFPLENBQUMsS0FBSyxDQUFDLFFBQVEsRUFBRSxLQUFLLENBQUMsQ0FBQztTQUNsQztJQUNMLENBQUM7SUFDRCxRQUFRLEVBQUUsTUFBTTtDQUNuQixDQUFDIn0=
 
 /***/ }),
 
