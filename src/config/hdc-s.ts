@@ -36,8 +36,7 @@ export const ML_SCRIPT_PATH = '/opt/odc-api/python/privacy.py';
 export const DEFAULT_MODEL_PATH = '/opt/odc-api/python';
 export const MOTION_MODEL_CONFIG = '/data/mm_config.json';
 export const PRIVACY_ZONES_CONFIG = '/data/ppz.json';
-export const WEBSERVER_LOG_PATH =
-  __dirname + '/../../../var/log/odc-api.log';
+export const WEBSERVER_LOG_PATH = '/data/recording/odc-api.log';
 export const EVENTS_LOG_PATH = '/data/events.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
 // File containing the camera configuration
