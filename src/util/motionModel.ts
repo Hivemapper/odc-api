@@ -296,7 +296,12 @@ const getNextGnssName = (): Promise<string> => {
 
 let emptyIterationCounter = 0;
 let prevGnssFile = '';
+let lastSuccessfullyProcessed = '';
 let prevGpsRecord: GNSS | undefined = undefined;
+
+export const updateLastSuccessfullyProcessed = () => {
+  lastSuccessfullyProcessed = prevGnssFile;
+}
 
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
@@ -385,6 +390,12 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
       emptyIterationCounter = 0;
     }
     prevGnssFile = pathToGpsFile;
+
+    if (pathToGpsFile === lastSuccessfullyProcessed) {
+      console.log('Already successfully processed this file. Ignoring');
+      resolve([]);
+      return;
+    }
     readFile(
       pathToGpsFile,
       { encoding: 'utf-8' },

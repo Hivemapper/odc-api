@@ -9,6 +9,7 @@ import {
   syncCursors,
   MAX_FAILED_ITERATIONS,
   getConfig,
+  updateLastSuccessfullyProcessed,
 } from 'util/motionModel';
 import { FrameKMTelemetry, FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
@@ -132,6 +133,7 @@ const execute = async () => {
                       ...framekmTelemetry,
                     }),
                   });
+                  updateLastSuccessfullyProcessed();
                 } catch (error: unknown) {
                   Instrumentation.add({
                     event: 'DashcamFailedPackingFrameKm',
