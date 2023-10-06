@@ -19,7 +19,7 @@ import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME } from 'util/lock';
-import { SaveImagesToUSB } from 'services/saveImagesToUSB';
+import { MoveImagesOnUSB } from 'services/moveImagesToUSB';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -79,7 +79,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(LogDiskUsageService);
-    serviceRunner.add(SaveImagesToUSB);
+    serviceRunner.add(MoveImagesOnUSB);
 
     serviceRunner.run();
   } catch (e: unknown) {
