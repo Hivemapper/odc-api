@@ -1,5 +1,5 @@
 import { IService } from '../types';
-import { existsSync, mkdirSync, readdir } from 'fs';
+import { existsSync, mkdirSync, readdir, stat } from 'fs';
 import { USB_WRITE_PATH } from 'config';
 import { getDateFromUnicodeTimestamp} from 'util/index';
 import { promisify } from 'util';
@@ -7,8 +7,8 @@ import { exec } from 'child_process';
 import * as path from 'path';
 
 const DIRS_EXISTING = new Set<string>();
-let num = 0;
 const execAsync = promisify(exec);
+
 const moveFilesOnUSB = async (sourceDir: string) => {
     readdir(sourceDir, async (err, files) => {
         if (err) {
@@ -17,21 +17,28 @@ const moveFilesOnUSB = async (sourceDir: string) => {
         }
         for (const file of files) {
             if (file.endsWith('.jpg')) {
+
                 const formattedDate = getDateFromUnicodeTimestamp(file).toISOString().split('T')[0];
                 const moveFileToRightDir = `mv ${path.join(USB_WRITE_PATH, file)} ${path.join(USB_WRITE_PATH, formattedDate)} `;
+
                 if (!DIRS_EXISTING.has(formattedDate)) {
                     try {
                         mkdirSync(path.join(USB_WRITE_PATH, formattedDate));
                         DIRS_EXISTING.add(formattedDate);
                     }
                     catch (err) {
-                        console.error(`FROM MOVE IMAGES SERVICE :::::::: Error creating directory: ${err}`);
+                        if (! ((err as NodeJS.ErrnoException).code === 'EEXIST')) {
+                            console.error(`FROM MOVE IMAGES SERVICE :::::::: Error creating directory: ${err}`);
+                          }
                     }
                 }
                 try{
-                    const result = await execAsync(moveFileToRightDir);
-                    if(result.stdout){
-                        num++;
+                    const isFileThereinDestination = existsSync(path.join( USB_WRITE_PATH, formattedDate, file));
+                    const isFileThere = existsSync(path.join( USB_WRITE_PATH, file));
+
+                    //Below check is needed to prevent multiple calls for moving same file
+                    if (isFileThere && !isFileThereinDestination) {
+                        await execAsync(moveFileToRightDir);
                     }
                 }
                 catch(err){
