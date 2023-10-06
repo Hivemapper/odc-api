@@ -19,7 +19,7 @@ import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME } from 'util/lock';
-import { MoveImagesOnUSB } from 'services/moveImagesToUSB';
+import { MoveImagesOnUSB } from 'services/moveImagesOnUSB';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
