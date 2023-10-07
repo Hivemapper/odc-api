@@ -24,7 +24,7 @@ const moveFilesOnUSB = async (sourceDir: string) => {
                 const destionationForFile =  path.join(USB_WRITE_PATH, formattedDate, file);
                 const dest = path.join(USB_WRITE_PATH, formattedDate);
 
-                 // Below checks are needed to prevent multiple calls for moving same file
+                 // Below "test -f" checks are needed to prevent multiple calls for moving same file when the service is called multiple times
                 const moveFileToRightDir = `test -f ${sourceFile} && ! test -f ${destionationForFile} && mv ${sourceFile} ${dest} `;
 
                 if (!DIRS_EXISTING.has(formattedDate)) {
