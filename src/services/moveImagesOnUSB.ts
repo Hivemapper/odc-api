@@ -24,7 +24,7 @@ const moveFilesOnUSB = async (sourceDir: string) => {
                 const destionationForFile =  path.join(USB_WRITE_PATH, formattedDate, file);
                 const dest = path.join(USB_WRITE_PATH, formattedDate);
 
-                
+                 // Below checks are needed to prevent multiple calls for moving same file
                 const moveFileToRightDir = `test -f ${sourceFile} && ! test -f ${destionationForFile} && mv ${sourceFile} ${dest} `;
 
                 if (!DIRS_EXISTING.has(formattedDate)) {
@@ -38,7 +38,6 @@ const moveFilesOnUSB = async (sourceDir: string) => {
                           }
                     }
                 }
-                    // // Below check is needed to prevent multiple calls for moving same file
                 const result = await execAsync(moveFileToRightDir);
                 if(result.stderr) {
                     console.error(`FROM MOVE IMAGES SERVICE :::::::: Error moving file: ${result.stderr}`);

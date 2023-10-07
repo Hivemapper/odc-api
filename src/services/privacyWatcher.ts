@@ -197,14 +197,14 @@ const checkMlProcess = async () => {
           console.log('Error executing sysctl', err);
         }
         
-        privacyProcess = spawn(isCpuLimitRequired ? 'cpulimit' : 'python3', cmdArgs.map(s => String(s)), { detached: true });
+        // privacyProcess = spawn(isCpuLimitRequired ? 'cpulimit' : 'python3', cmdArgs.map(s => String(s)), { detached: true });
         
-        privacyProcess.on('close', (code) => {
-            console.log(`Process closed with code ${code}`);
-            isProcessClosed = true;
-        });
+        // privacyProcess.on('close', (code) => {
+        //     console.log(`Process closed with code ${code}`);
+        //     isProcessClosed = true;
+        // });
 
-        privacyProcess.unref();
+        // privacyProcess.unref();
     }
 }
 
