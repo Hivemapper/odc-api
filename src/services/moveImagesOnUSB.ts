@@ -1,13 +1,14 @@
 import { IService } from '../types';
 import { existsSync, mkdirSync, readdir, stat } from 'fs';
 import { USB_WRITE_PATH } from 'config';
-import { getDateFromUnicodeTimestamp} from 'util/index';
+import { getDateFromUnicodeTimestamp, sleep} from 'util/index';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import * as path from 'path';
 
 const DIRS_EXISTING = new Set<string>();
 const execAsync = promisify(exec);
+const TIME_UNTIL_NEXT_EXECUTION = 20000;
 
 const moveFilesOnUSB = async (sourceDir: string) => {
     readdir(sourceDir, async (err, files) => {
@@ -18,8 +19,13 @@ const moveFilesOnUSB = async (sourceDir: string) => {
         for (const file of files) {
             if (file.endsWith('.jpg')) {
 
+                const sourceFile = path.join(USB_WRITE_PATH, file);
                 const formattedDate = getDateFromUnicodeTimestamp(file).toISOString().split('T')[0];
-                const moveFileToRightDir = `mv ${path.join(USB_WRITE_PATH, file)} ${path.join(USB_WRITE_PATH, formattedDate)} `;
+                const destionationForFile =  path.join(USB_WRITE_PATH, formattedDate, file);
+                const dest = path.join(USB_WRITE_PATH, formattedDate);
+
+                
+                const moveFileToRightDir = `test -f ${sourceFile} && ! test -f ${destionationForFile} && mv ${sourceFile} ${dest} `;
 
                 if (!DIRS_EXISTING.has(formattedDate)) {
                     try {
@@ -32,28 +38,16 @@ const moveFilesOnUSB = async (sourceDir: string) => {
                           }
                     }
                 }
-                try{
-                    const isFileThereinDestination = existsSync(path.join( USB_WRITE_PATH, formattedDate, file));
-                    const isFileThere = existsSync(path.join( USB_WRITE_PATH, file));
-
-                    //Below check is needed to prevent multiple calls for moving same file
-                    if (isFileThere && !isFileThereinDestination) {
-                        await execAsync(moveFileToRightDir);
-                    }
+                    // // Below check is needed to prevent multiple calls for moving same file
+                const result = await execAsync(moveFileToRightDir);
+                if(result.stderr) {
+                    console.error(`FROM MOVE IMAGES SERVICE :::::::: Error moving file: ${result.stderr}`);
                 }
-                catch(err){
-                    console.error(`FROM MOVE IMAGES SERVICE :::::::: Error moving Image: ${err}`);
-                }
+                
             }
         }
     });
 };
-
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-}
 
 const execute = async () => {
     try {
