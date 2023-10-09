@@ -44,6 +44,7 @@ import {
   MOTION_MODEL_CURSOR,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
   UNPROCESSED_METADATA_ROOT_FOLDER,
+  USB_WRITE_PATH,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
 import {
@@ -56,6 +57,8 @@ import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
 import * as fs from 'fs';
+import path from 'path';
+import { promisify } from 'util';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -299,6 +302,58 @@ let emptyIterationCounter = 0;
 let prevGnssFile = '';
 let prevGpsRecord: GNSS | undefined = undefined;
 
+const createGNSSFileNameForFAT32 = (gnssFile: string, fileCreationDate: string) => {
+  const parts = gnssFile.split('.');
+  if (parts.length > 1) {
+    const lastPart = parts.pop(); // Remove the last part
+    const replacedString = parts.join('-') + '.' + lastPart;
+    return fileCreationDate + '/' + replacedString;
+  }
+  return '';
+};
+
+const copyGNSSFileToUSB = async (gnssFile: string) => {
+
+  const execAsync = promisify(exec);
+
+  // Replace all colons and periods with dashes to make them compatible with FAT32
+  const gnssFileNameForFAT32 = gnssFile.split('/').pop()?.replace(/:/g, '-');
+
+  if (gnssFileNameForFAT32) {
+    // Get filename of GNSS file
+
+    const usbConnected = existsSync(USB_WRITE_PATH);
+
+    if (usbConnected) {
+
+      const fileCreationDate = gnssFileNameForFAT32.split('T')[0];
+
+      const destinationFileName = createGNSSFileNameForFAT32(gnssFileNameForFAT32, fileCreationDate);
+
+      if (destinationFileName) {
+        const destinationFilePath = USB_WRITE_PATH + '/GNSS/' + destinationFileName;
+
+        console.log("hariii", gnssFile, destinationFilePath);
+
+        try {
+          await fs.mkdirSync(path.join(USB_WRITE_PATH, '/GNSS/', fileCreationDate));
+        }
+        catch (err) {
+          if (!((err as NodeJS.ErrnoException).code === 'EEXIST')) {
+            console.error(`Error creating directory for GNSS file storage: ${err}`);
+          }
+        }
+        const result = await execAsync(`cp ${gnssFile} ${destinationFilePath}`);
+        if (result.stderr) {
+          console.error(`Error copying GNSS file to USB Stick: ${result.stderr}`);
+        }
+      }
+    } else {
+      console.log("No USB stick detected skipping GNSS file from Camera to USB")
+    }
+  }
+};
+
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
 
@@ -308,71 +363,7 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
       console.log('Last file is ' + prevGnssFile);
       pathToGpsFile = await getNextGnssName();
 
-      const sourceFilePath = pathToGpsFile;
-      let destinationFilePath = "/media/usb0/";
-      let file_date: string;
-
-      if (pathToGpsFile) {
-        // Get filename of GNSS file
-        let filename = pathToGpsFile.split('/').pop();
-
-        if (filename) {
-
-          // Replace all colons and periods with dashes to make them compatible with FAT32
-          filename = filename.replace(/:/g, '-');
-          file_date = filename.split('T')[0];
-          const parts = filename.split('.');
-          if (parts.length > 1) {
-
-          const lastPart = parts.pop(); // Remove the last part
-          const replacedString = parts.join('-') + '.' + lastPart;
-          destinationFilePath += file_date + '/' + replacedString;
-          }
-        }
-      }
-      
-      console.log("testiggggggggggggggggggg")
-
-      exec('fdisk -l', (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing fdisk: ${error}`);
-          return;
-        }
-
-        const outputLines = stdout.split('\n');
-        let usbStickDetected = false;
-
-        // Iterate through the output lines to identify USB sticks
-        for (const line of outputLines) {
-          // Check for characteristics that indicate a USB stick
-          if (line.includes('/dev/sd') && line.includes('FAT32')) {
-            usbStickDetected = true;
-            break; // Exit the loop if a USB stick is detected
-          }
-        }
-
-        if (usbStickDetected) {
-          console.log("hariii in iffff");
-
-          exec(`mkdir -p /media/usb0/${file_date}`, (err, stdout, stderr)=>{
-            if(err){
-              console.log("Can't create directory for saving GNSS file from Camera to USB");
-            }
-            else{
-              exec(`cp ${sourceFilePath} ${destinationFilePath}`, (err, stdout, stderr) => {
-                if(err){
-                  console.log("Can't write GNSS file from Camera to USB")
-                }
-                else{
-                  console.log("Successfully written GNSS file from Camera to USB")
-                }
-              })
-            }
-          })
-        } else {
-          console.log("No USB stick detected skipping GNSS file from Camera to USB")
-        }
-      });
+      copyGNSSFileToUSB(pathToGpsFile);
 
       console.log('Next file is: ' + pathToGpsFile);
 
