@@ -308,6 +308,7 @@ let prevGnssFile = '';
 let prevGpsRecord: GNSS | undefined = undefined;
 
 const createFileNameForFAT32 = (gnssFile: string, fileCreationDate: string) => {
+  //We exclude all dots and colons from the filename and replace with - for FAT32 compatibility
   const parts = gnssFile.split('.');
   if (parts.length > 1) {
     const lastPart = parts.pop(); // Remove the last part

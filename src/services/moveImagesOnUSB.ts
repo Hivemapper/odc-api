@@ -2,19 +2,20 @@ import { IService } from '../types';
 import { existsSync, mkdirSync, readdir, stat } from 'fs';
 import { USB_WRITE_PATH } from 'config';
 import { getDateFromUnicodeTimestamp, sleep } from 'util/index';
-import { promisify } from 'util';
 import { exec } from 'child_process';
 import * as path from 'path';
 
 const DIRS_EXISTING = new Set<string>();
 const WAIT_TIME_UNTIL_NEXT_EXECUTION = 20000;
 
+//We are using our own execAsync function because the default promisify can not handle test -f command as we want it to.
+
 const execAsync = (command: string): Promise<{ stdout: string; stderr: string }> =>
     new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
             if (error) {
+                // We are excluding "command failed" from logging because this is a known error the command fails because test -f does not find the file, we don't want to log this error
                 if (!error?.message.includes('Command failed')) {
-                    // Handle any other errors that might occur
                     console.error(`Error executing command: ${error.message}`);
                 }
                 resolve({ stdout, stderr });
