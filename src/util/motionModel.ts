@@ -3,8 +3,7 @@ import {
   mkdir,
   readdir,
   readFile,
-  readFileSync,
-  renameSync,
+  promises,
   rmSync,
   statSync,
   writeFile,
@@ -301,7 +300,12 @@ const getNextGnssName = (): Promise<string> => {
 
 let emptyIterationCounter = 0;
 let prevGnssFile = '';
+let lastSuccessfullyProcessed = '';
 let prevGpsRecord: GNSS | undefined = undefined;
+
+export const updateLastSuccessfullyProcessed = () => {
+  lastSuccessfullyProcessed = prevGnssFile;
+}
 
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
@@ -395,6 +399,12 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
       emptyIterationCounter = 0;
     }
     prevGnssFile = pathToGpsFile;
+
+    if (pathToGpsFile === lastSuccessfullyProcessed) {
+      console.log('Already successfully processed this file. Ignoring');
+      resolve([]);
+      return;
+    }
     readFile(
       pathToGpsFile,
       { encoding: 'utf-8' },
@@ -625,7 +635,7 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
     try {
       readdir(
         IMU_ROOT_FOLDER,
-        (err: NodeJS.ErrnoException | null, files: string[]) => {
+        async (err: NodeJS.ErrnoException | null, files: string[]) => {
           try {
             const imuFiles: string[] = files.filter((filename: string) => {
               if (
@@ -642,7 +652,7 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
               console.log(imuFile);
               
               try {
-                const imu = readFileSync(IMU_ROOT_FOLDER + '/' + imuFile, {
+                const imu = await promises.readFile(IMU_ROOT_FOLDER + '/' + imuFile, {
                   encoding: 'utf-8',
                 });
 

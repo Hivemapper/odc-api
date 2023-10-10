@@ -5,7 +5,7 @@ import {
   GPS_ROOT_FOLDER,
 } from '../config';
 import { Request, Response, Router } from 'express';
-import { readdirSync, readFile, readFileSync, rmSync, writeFileSync } from 'fs';
+import { promises, readFile, readFileSync, rmSync, writeFileSync } from 'fs';
 import { exec, ExecException } from 'child_process';
 import { filterBySinceUntil, getDateFromFilename } from '../util';
 import { ICameraFile } from '../types';
@@ -17,7 +17,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    let files = readdirSync(GPS_ROOT_FOLDER);
+    let files = await promises.readdir(GPS_ROOT_FOLDER);
     if (files.length) {
       // Filter out latest.log
       files = files.filter((filename: string) => filename !== 'latest.log');
