@@ -3,8 +3,7 @@ import {
   mkdir,
   readdir,
   readFile,
-  readFileSync,
-  renameSync,
+  promises,
   rmSync,
   statSync,
   writeFile,
@@ -626,7 +625,7 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
     try {
       readdir(
         IMU_ROOT_FOLDER,
-        (err: NodeJS.ErrnoException | null, files: string[]) => {
+        async (err: NodeJS.ErrnoException | null, files: string[]) => {
           try {
             const imuFiles: string[] = files.filter((filename: string) => {
               if (
@@ -642,7 +641,7 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
             for (const imuFile of imuFiles) {
               console.log(imuFile);
               try {
-                const imu = readFileSync(IMU_ROOT_FOLDER + '/' + imuFile, {
+                const imu = await promises.readFile(IMU_ROOT_FOLDER + '/' + imuFile, {
                   encoding: 'utf-8',
                 });
                 let output = '';
