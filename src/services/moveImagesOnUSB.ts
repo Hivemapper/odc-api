@@ -53,7 +53,7 @@ const moveFilesOnUSB = async (sourceDir: string) => {
                         }
                     }
                 }
-                const result = await execAsync(moveFileToRightDir);
+                await execAsync(moveFileToRightDir);
             }
         }
     });

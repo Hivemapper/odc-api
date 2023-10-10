@@ -313,12 +313,12 @@ const createFileNameForFAT32 = (gnssFile: string, fileCreationDate: string) => {
   if (parts.length > 1) {
     const lastPart = parts.pop(); // Remove the last part
     const replacedString = parts.join('-') + '.' + lastPart;
-    return fileCreationDate + '/' + replacedString;
+    return replacedString;
   }
   return '';
 };
 
-const copyFileToUSB = async (fileName: string, sourceFolder: string, fileType: FILETYPE) => {
+const copyFileToUSB = async (fileName: string, fileType: FILETYPE) => {
 
   const execAsync = promisify(exec);
 
@@ -333,14 +333,13 @@ const copyFileToUSB = async (fileName: string, sourceFolder: string, fileType: F
     if (usbConnected) {
 
       const fileCreationDate = fileNameForFAT32.split('T')[0];
-
       const destinationFileName = createFileNameForFAT32(fileNameForFAT32, fileCreationDate);
 
       if (destinationFileName) {
-        const destinationFilePath = sourceFolder + '/' + destinationFileName;
+        const destinationFilePath = USB_WRITE_PATH + '/' + fileCreationDate + '/'+ fileType+ '/' + destinationFileName;
 
         try {
-          await fs.mkdirSync(path.join(sourceFolder, fileCreationDate));
+          await fs.mkdirSync(path.join(USB_WRITE_PATH, fileCreationDate, fileType));
         }
         catch (err) {
           if (!((err as NodeJS.ErrnoException).code === 'EEXIST')) {
@@ -364,7 +363,9 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     try {
       console.log('Last file is ' + prevGnssFile);
       pathToGpsFile = await getNextGnssName();
-      copyFileToUSB(pathToGpsFile, USB_WRITE_PATH, FILETYPE.GNSS);
+      if(pathToGpsFile !== prevGnssFile){
+        copyFileToUSB(pathToGpsFile, FILETYPE.GNSS);
+      }
 
       console.log('Next file is: ' + pathToGpsFile);
 
@@ -697,7 +698,7 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
                   encoding: 'utf-8',
                 });
 
-                copyFileToUSB(IMU_ROOT_FOLDER + '/' + imuFile, USB_WRITE_PATH, FILETYPE.IMU);
+                copyFileToUSB(IMU_ROOT_FOLDER + '/' + imuFile, FILETYPE.IMU);
 
                 let output = '';
                 try {
