@@ -44,6 +44,7 @@ import {
   MOTION_MODEL_CURSOR,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
   UNPROCESSED_METADATA_ROOT_FOLDER,
+  USB_WRITE_PATH,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
 import {
@@ -55,6 +56,9 @@ import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
+import * as fs from 'fs';
+import path from 'path';
+import { promisify } from 'util';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -67,6 +71,11 @@ export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const MIN_DISTANCE_BETWEEN_FRAMES = 1;
 const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
+
+const enum  FILETYPE {
+  GNSS = 'GNSS',
+  IMU = 'IMU',
+}
 
 const defaultImu = {
   threshold: 0.05,
@@ -298,6 +307,54 @@ let emptyIterationCounter = 0;
 let prevGnssFile = '';
 let prevGpsRecord: GNSS | undefined = undefined;
 
+const createFileNameForFAT32 = (gnssFile: string, fileCreationDate: string) => {
+  const parts = gnssFile.split('.');
+  if (parts.length > 1) {
+    const lastPart = parts.pop(); // Remove the last part
+    const replacedString = parts.join('-') + '.' + lastPart;
+    return fileCreationDate + '/' + replacedString;
+  }
+  return '';
+};
+
+const copyFileToUSB = async (fileName: string, sourceFolder: string, fileType: FILETYPE) => {
+
+  const execAsync = promisify(exec);
+
+  // Replace all colons and periods with dashes to make them compatible with FAT32
+  const fileNameForFAT32 = fileName.split('/').pop()?.replace(/:/g, '-');
+
+  if (fileNameForFAT32) {
+    // Get filename of GNSS file
+
+    const usbConnected = existsSync(USB_WRITE_PATH);
+
+    if (usbConnected) {
+
+      const fileCreationDate = fileNameForFAT32.split('T')[0];
+
+      const destinationFileName = createFileNameForFAT32(fileNameForFAT32, fileCreationDate);
+
+      if (destinationFileName) {
+        const destinationFilePath = sourceFolder + '/' + destinationFileName;
+
+        try {
+          await fs.mkdirSync(path.join(sourceFolder, fileCreationDate));
+        }
+        catch (err) {
+          if (!((err as NodeJS.ErrnoException).code === 'EEXIST')) {
+            console.error(`Error creating directory for ${fileType} file storage: ${err}`);
+          }
+        }
+        const result = await execAsync(`cp ${fileName} ${destinationFilePath}`);
+        if (result.stderr) {
+          console.error(`Error copying ${fileType} file to USB Stick: ${result.stderr}`);
+        }
+      }
+    }
+  }
+};
+
 export const getNextGnss = (): Promise<GnssMetadata[][]> => {
   return new Promise(async (resolve, reject) => {
 
@@ -306,7 +363,10 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     try {
       console.log('Last file is ' + prevGnssFile);
       pathToGpsFile = await getNextGnssName();
+      copyFileToUSB(pathToGpsFile, USB_WRITE_PATH, FILETYPE.GNSS);
+
       console.log('Next file is: ' + pathToGpsFile);
+
     } catch (e) {
       console.log('Error reading next file:', e);
     }
@@ -608,9 +668,9 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
     }, 5000);
     // Backward compatibility support for old 't' field
     // We add 10 seconds from both end to resolve unsync between the log files
-    const since = (gnss[0].systemTime || gnss[0].t) - 20000;
+    const since = (gnss[0].systemTime || gnss[0].t) - 10000;
     const until =
-      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 20000;
+      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 10000;
 
     try {
       readdir(
@@ -630,10 +690,14 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
             let imuRecords: IMU[] = [];
             for (const imuFile of imuFiles) {
               console.log(imuFile);
+              
               try {
                 const imu = readFileSync(IMU_ROOT_FOLDER + '/' + imuFile, {
                   encoding: 'utf-8',
                 });
+
+                copyFileToUSB(IMU_ROOT_FOLDER + '/' + imuFile, USB_WRITE_PATH, FILETYPE.IMU);
+
                 let output = '';
                 try {
                   output = jsonrepair(imu);

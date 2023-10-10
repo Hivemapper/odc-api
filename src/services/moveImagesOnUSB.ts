@@ -1,14 +1,28 @@
 import { IService } from '../types';
 import { existsSync, mkdirSync, readdir, stat } from 'fs';
 import { USB_WRITE_PATH } from 'config';
-import { getDateFromUnicodeTimestamp, sleep} from 'util/index';
+import { getDateFromUnicodeTimestamp, sleep } from 'util/index';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import * as path from 'path';
 
 const DIRS_EXISTING = new Set<string>();
-const execAsync = promisify(exec);
-const TIME_UNTIL_NEXT_EXECUTION = 20000;
+const WAIT_TIME_UNTIL_NEXT_EXECUTION = 20000;
+
+const execAsync = (command: string): Promise<{ stdout: string; stderr: string }> =>
+    new Promise((resolve, reject) => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                if (!error?.message.includes('Command failed')) {
+                    // Handle any other errors that might occur
+                    console.error(`Error executing command: ${error.message}`);
+                }
+                resolve({ stdout, stderr });
+                return;
+            }
+            resolve({ stdout, stderr });
+        });
+    });
 
 const moveFilesOnUSB = async (sourceDir: string) => {
     readdir(sourceDir, async (err, files) => {
@@ -21,10 +35,10 @@ const moveFilesOnUSB = async (sourceDir: string) => {
 
                 const sourceFile = path.join(USB_WRITE_PATH, file);
                 const formattedDate = getDateFromUnicodeTimestamp(file).toISOString().split('T')[0];
-                const destionationForFile =  path.join(USB_WRITE_PATH, formattedDate, file);
+                const destionationForFile = path.join(USB_WRITE_PATH, formattedDate, file);
                 const dest = path.join(USB_WRITE_PATH, formattedDate);
 
-                 // Below "test -f" checks are needed to prevent multiple calls for moving same file when the service is called multiple times
+                // Below "test -f" checks are needed to prevent multiple calls for moving same file when the service is called multiple times
                 const moveFileToRightDir = `test -f ${sourceFile} && ! test -f ${destionationForFile} && mv ${sourceFile} ${dest} `;
 
                 if (!DIRS_EXISTING.has(formattedDate)) {
@@ -33,16 +47,12 @@ const moveFilesOnUSB = async (sourceDir: string) => {
                         DIRS_EXISTING.add(formattedDate);
                     }
                     catch (err) {
-                        if (! ((err as NodeJS.ErrnoException).code === 'EEXIST')) {
+                        if (!((err as NodeJS.ErrnoException).code === 'EEXIST')) {
                             console.error(`FROM MOVE IMAGES SERVICE :::::::: Error creating directory: ${err}`);
-                          }
+                        }
                     }
                 }
                 const result = await execAsync(moveFileToRightDir);
-                if(result.stderr) {
-                    console.error(`FROM MOVE IMAGES SERVICE :::::::: Error moving file: ${result.stderr}`);
-                }
-                
             }
         }
     });
@@ -54,7 +64,7 @@ const execute = async () => {
         const usbConnected = existsSync(USB_WRITE_PATH);
         if (usbConnected) {
             await moveFilesOnUSB(USB_WRITE_PATH);
-            await sleep(20000);
+            await sleep(WAIT_TIME_UNTIL_NEXT_EXECUTION);
             execute();
         }
     } catch (error) {
