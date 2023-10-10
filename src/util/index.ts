@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { CameraResolution, ICameraConfig, ICameraFile, IMU } from 'types';
+import { CameraResolution, FileType, ICameraConfig, ICameraFile, IMU } from 'types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
@@ -17,6 +17,7 @@ import {
   writeFileSync,
   rmSync,
   existsSync,
+  mkdirSync,
 } from 'fs';
 import {
   CACHED_CAMERA_CONFIG,
@@ -28,6 +29,9 @@ import {
 import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 import { Instrumentation } from './instrumentation';
+import { promisify } from 'util';
+import path from 'path';
+const execAsync = promisify(exec);
 
 let sessionId: string;
 
@@ -593,3 +597,47 @@ export async function readLast2MB(filePath: string) {
     return '';
   }
 }
+
+const createFileNameForFAT32 = (fileName: string) => {
+  //We exclude all dots and colons from the filename and replace with - for FAT32 compatibility
+  const parts = fileName.split('.');
+  if (parts.length > 1) {
+    const lastPart = parts.pop(); // Remove the last part
+    const replacedString = parts.join('-') + '.' + lastPart;
+    return replacedString;
+  }
+  return '';
+};
+
+export const copyFileToUSB = async (fileName: string, fileType: FileType) => {
+  // Replace all colons and periods with dashes to make them compatible with FAT32
+  const fileNameForFAT32 = fileName.split('/').pop()?.replace(/:/g, '-');
+
+  if (fileNameForFAT32) {
+    const usbConnected = existsSync(USB_WRITE_PATH);
+
+    if (usbConnected) {
+
+      const fileCreationDate = fileNameForFAT32.split('T')[0];
+      const destinationFileName = createFileNameForFAT32(fileNameForFAT32);
+
+      if (destinationFileName) {
+        const destinationFolder = path.join(USB_WRITE_PATH, fileCreationDate, fileType);
+        const destinationFilePath = path.join(destinationFolder, destinationFileName);
+
+        try {
+          mkdirSync(destinationFolder);
+        }
+        catch (err) {
+          if (!((err as NodeJS.ErrnoException).code === 'EEXIST')) {
+            console.error(`Error creating directory for ${fileType} file storage: ${err}`);
+          }
+        }
+        const result = await execAsync(`cp ${fileName} ${destinationFilePath}`);
+        if (result.stderr) {
+          console.error(`Error copying ${fileType} file to USB Stick: ${result.stderr}`);
+        }
+      }
+    }
+  }
+};
