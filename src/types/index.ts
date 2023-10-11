@@ -144,6 +144,11 @@ export interface Dimensions {
   height: number;
 }
 
+export const enum FileType {
+  GNSS = 'GNSS',
+  IMU = 'IMU',
+}
+
 export type CameraResolution = '2K' | '4K';
 
 export interface InstrumentationData {
