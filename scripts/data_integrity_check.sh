@@ -8,11 +8,23 @@ fi
 folder1="$1"
 folder2="$2"
 file_path="$3"
-max_file_size=$((2 * 1024 * 1024)) # 2MB
-min_file_size=$((100 * 1024)) # 100KB
+
+# Check if folder1 and folder2 exist
+if [[ ! -d "$folder1" ]]; then
+    echo "Error: $folder1 does not exist"
+    exit 1
+fi
+
+if [[ ! -d "$folder2" ]]; then
+    echo "Error: $folder2 does not exist"
+    exit 1
+fi
+
+max_file_size=$((2 * 1024 * 1024))
+min_file_size=$((100 * 1024))
 
 # Remove all empty files from folder2
-find "$folder2" -type f -empty -exec rm -f {} +
+find "$folder2" -type f -size 0 -exec rm -f {} +
 
 # Remove framekm files less than 100 KB and corresponding metadata files
 find "$folder1" -type f -size -${min_file_size}c | while read -r file; do
@@ -34,6 +46,17 @@ find "$folder1" -type f | while read -r file; do
     fi
 done
 
+# Process JSON files in folder2
+# If json exists in folder2 but corresponding file doesn't exist in folder1, remove json in folder2
+find "$folder2" -type f -name "*.json" | while read -r json; do
+    base_name=$(basename "$json" .json)
+    file="${folder1}/${base_name}"
+    
+    if [[ ! -e "$file" ]]; then
+        echo "Removing: $json"
+        rm -f "$json"
+    fi
+done
 
 # Check and truncate the file if it's larger than 2 MB
 if [ -e "$file_path" ]; then
