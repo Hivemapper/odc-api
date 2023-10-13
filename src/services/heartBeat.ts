@@ -147,6 +147,10 @@ export const HeartBeatService: IService = {
 
       const isCameraActive = await isCameraBridgeServiceActive();
 
+      if (!isCameraActive && ifTimeSet() && hasBeenLockOnce) {
+        startCamera();
+      }
+
       let gpsLED: any = null;
       try {
         const gpsSample = await fetchGNSSLatestSample();
@@ -171,9 +175,7 @@ export const HeartBeatService: IService = {
           hasBeenLockOnce = true;
 
           gpsLED = COLORS.GREEN;
-          if (!isCameraActive) {
-            startCamera();
-          }
+
         } else if (gpsSample) {
           const gpsLostPeriod = lastSuccessfulLock
             ? Math.abs(Date.now() - lastSuccessfulLock)
@@ -189,10 +191,10 @@ export const HeartBeatService: IService = {
           }
           isLock = false;
 
-          if (isCameraActive && !hasBeenLockOnce) {
+          if (isCameraActive && (!hasBeenLockOnce || !ifTimeSet())) {
             exec(CMD.STOP_CAMERA);
             console.log(
-              'Camera intentionally stopped cause Lock is not there yet',
+              'Camera intentionally stopped cause Lock is not there yet or Time is not set', Date.now()
             );
           }
         }

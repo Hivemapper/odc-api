@@ -34,6 +34,7 @@ import { CameraType, FileType, ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
 import {
   CAMERA_TYPE,
+  CMD,
   DATA_LOGGER_SERVICE,
   FRAMES_ROOT_FOLDER,
   GPS_ROOT_FOLDER,
@@ -1068,8 +1069,8 @@ export const getImagesForDateRange = async (from: number, to: number) => {
 
 export const checkForPossibleDataRepairment = (dateStart: number, dateEnd?: number) => {
   sequenceOfOldGpsData++;
-  if (sequenceOfOldGpsData > 5) {
-    if (repairedCursors > 5) {
+  if (sequenceOfOldGpsData > 4) {
+    if (repairedCursors > 2) {
       exec(`rm -r ${GPS_ROOT_FOLDER} && mkdir ${GPS_ROOT_FOLDER} && systemctl restart ${DATA_LOGGER_SERVICE} && systemctl restart camera-bridge`);
       Instrumentation.add({
         event: 'DashcamRepairedGps',
@@ -1079,7 +1080,8 @@ export const checkForPossibleDataRepairment = (dateStart: number, dateEnd?: numb
       repairedCursors = 0;
       sequenceOfOldGpsData = 0;
     } else {
-      console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
+      console.log('Repairing the cursor to solve the unsync between frames and GPS logs & possible problems of camera-bridge');
+      exec(CMD.RESTART_CAMERA);
       resetCursors();
       Instrumentation.add({
         event: 'DashcamRepairedCursors',
