@@ -621,6 +621,19 @@ export const copyFileToUSB = async (fileName: string, fileType: FileType) => {
       const fileCreationDate = fileNameForFAT32.split('T')[0];
       const destinationFileName = createFileNameForFAT32(fileNameForFAT32);
 
+      const doesDestinationFolderExists = existsSync(path.join(USB_WRITE_PATH, fileCreationDate));
+
+      if(!doesDestinationFolderExists) {
+        try {
+          mkdirSync(path.join(USB_WRITE_PATH, fileCreationDate));
+        }
+        catch (err) {
+          if (!((err as NodeJS.ErrnoException).code === 'EEXIST')) {
+            console.error(`Error creating directory for ${USB_WRITE_PATH+fileCreationDate}: ${err}`);
+          }
+        }
+      }
+
       if (destinationFileName) {
         const destinationFolder = path.join(USB_WRITE_PATH, fileCreationDate, fileType);
         const destinationFilePath = path.join(destinationFolder, destinationFileName);
