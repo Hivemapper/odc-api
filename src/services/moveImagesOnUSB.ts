@@ -1,6 +1,6 @@
-import { IService } from '../types';
+import { CameraType, IService } from '../types';
 import { existsSync, mkdirSync, promises, readdir } from 'fs';
-import { USB_WRITE_PATH } from 'config';
+import { CAMERA_TYPE, USB_WRITE_PATH } from 'config';
 import { getDateFromUnicodeTimestamp, sleep } from 'util/index';
 import { exec } from 'child_process';
 import * as path from 'path';
@@ -63,6 +63,9 @@ const moveFilesOnUSB = async (sourceDir: string) => {
 
 const execute = async () => {
     try {
+        if (CAMERA_TYPE === CameraType.HdcS) {
+            return;
+        }
         //Check if USB is connected
         const usbConnected = existsSync(USB_WRITE_PATH);
         if (usbConnected) {

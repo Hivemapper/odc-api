@@ -1,11 +1,12 @@
 import { exec, ExecException, spawnSync } from 'child_process';
 import {
   CMD,
+  FIRMWARE_UPDATE_MARKER,
   GPS_LATEST_SAMPLE,
   HEALTH_MARKER_PATH,
   isDev,
 } from 'config';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
@@ -114,6 +115,10 @@ const createHealthMarker = () => {
   exec('touch ' + HEALTH_MARKER_PATH);
 };
 
+const isFirmwareUpdateInProcess = () => {
+  return existsSync(FIRMWARE_UPDATE_MARKER);
+};
+
 const isGpsLock = (gpsSample: any) => {
   const lock =
     gpsSample &&
@@ -125,14 +130,19 @@ const isGpsLock = (gpsSample: any) => {
   return lock;
 };
 
+let blinking = false;
+
 export const HeartBeatService: IService = {
   execute: async () => {
     try {
       createHealthMarker();
 
-      if (isFirmwareUpdate && isLedControlledByDashcam) {
-        updateLED(COLORS.WHITE, COLORS.WHITE, COLORS.WHITE);
-        return;
+      if (isFirmwareUpdateInProcess()) {
+        blinking = !blinking;
+        if (blinking) {
+          updateLED(COLORS.BLACK, COLORS.BLACK, COLORS.BLACK);
+          return;
+        }
       }
 
       const isCameraActive = await isCameraBridgeServiceActive();

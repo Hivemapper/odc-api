@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { CameraResolution, FileType, ICameraConfig, ICameraFile, IMU } from 'types';
+import { CameraResolution, CameraType, FileType, ICameraConfig, ICameraFile, IMU } from 'types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
@@ -22,6 +22,7 @@ import {
 import {
   CACHED_CAMERA_CONFIG,
   CACHED_RES_CONFIG,
+  CAMERA_TYPE,
   NEW_IMAGER_CONFIG_PATH,
   USB_WRITE_PATH,
   WEBSERVER_LOG_PATH,
@@ -610,6 +611,9 @@ const createFileNameForFAT32 = (fileName: string) => {
 };
 
 export const copyFileToUSB = async (fileName: string, fileType: FileType) => {
+  if (CAMERA_TYPE === CameraType.HdcS) {
+    return;
+  }
   // Replace all colons and periods with dashes to make them compatible with FAT32
   const fileNameForFAT32 = fileName.split('/').pop()?.replace(/:/g, '-');
 
