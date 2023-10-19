@@ -33,6 +33,7 @@ import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { CameraType, FileType, ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
 import {
+  API_VERSION,
   CAMERA_TYPE,
   CMD,
   DATA_LOGGER_SERVICE,
@@ -42,24 +43,20 @@ import {
   METADATA_ROOT_FOLDER,
   MOTION_MODEL_CONFIG,
   MOTION_MODEL_CURSOR,
-  UNPROCESSED_FRAMEKM_ROOT_FOLDER,
   UNPROCESSED_METADATA_ROOT_FOLDER,
-  USB_WRITE_PATH,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
 import {
   copyFileToUSB,
   getDateFromFilename,
   getDateFromUnicodeTimestamp,
+  getQuality,
   promiseWithTimeout,
 } from 'util/index';
 import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
-import * as fs from 'fs';
-import path from 'path';
-import { promisify } from 'util';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -1501,7 +1498,8 @@ export const packMetadata = async (
         numFrames: validatedFrames.length,
         size: numBytes,
         deviceType: CAMERA_TYPE,
-        quality: 80,
+        firmwareVersion: API_VERSION,
+        quality: getQuality(),
         loraDeviceId: undefined,
         keyframeDistance: config.DX,
         resolution: '2k',
