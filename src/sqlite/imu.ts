@@ -1,6 +1,7 @@
 import { db } from './index';
+import { ImuRecord } from 'types/sqlite';
 
-export const fetchImuLogsByTime  = (from: number, to?: number): Promise<any[] | unknown> => {
+export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<ImuRecord[]> => {
     let query = `SELECT * FROM imu WHERE time > ?`;
     const args = [from];
 
@@ -9,9 +10,10 @@ export const fetchImuLogsByTime  = (from: number, to?: number): Promise<any[] | 
         args.push(to);
     }
     return new Promise((resolve, reject) => {
-        db.all(query, args, (err, rows) => {
+        db.all(query, args, (err: unknown, rows: ImuRecord[]) => {
             if (err) {
-                reject(err);
+                console.log(err);
+                reject([]);
             } else {
                 resolve(rows);
             }
@@ -19,12 +21,12 @@ export const fetchImuLogsByTime  = (from: number, to?: number): Promise<any[] | 
     });
 }
 
-export const fetchImuLogsById = (id: number): Promise<any[] | unknown> => {
+export const fetchImuLogsById = async (id: number): Promise<ImuRecord[]> => {
     const query = `SELECT * FROM imu WHERE id > ?`;
     return new Promise((resolve, reject) => {
-        db.all(query, [id], (err, rows) => {
+        db.all(query, [id], (err: unknown, rows: ImuRecord[]) => {
             if (err) {
-                reject(err);
+                reject([]);
             } else {
                 resolve(rows);
             }
@@ -32,12 +34,12 @@ export const fetchImuLogsById = (id: number): Promise<any[] | unknown> => {
     });
 }
 
-export const fetchLastNImuRecords = async (n: number): Promise<any[] | unknown> => {
+export const fetchLastNImuRecords = async (n: number): Promise<ImuRecord[]> => {
     const query = `SELECT * FROM imu ORDER BY id DESC LIMIT ?`;
     return new Promise((resolve, reject) => {
-        db.all(query, [n], (err, rows) => {
+        db.all(query, [n], (err: unknown, rows: ImuRecord[]) => {
             if (err) {
-              reject(err);
+              reject([]);
             } else {
               resolve(rows);
             }

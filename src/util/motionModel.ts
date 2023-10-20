@@ -3,10 +3,7 @@ import {
   mkdir,
   readdir,
   readFile,
-  readFileSync,
-  renameSync,
   rmSync,
-  statSync,
   writeFile,
   writeFileSync,
 } from 'fs';
@@ -55,6 +52,9 @@ import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
+import { fetchImuLogsByTime } from 'sqlite/imu';
+import { GnssRecord, ImuRecord } from 'types/sqlite';
+import { fetchGnssLogsByTime } from 'sqlite/gnss';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -66,6 +66,7 @@ export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const MIN_DISTANCE_BETWEEN_FRAMES = 1;
+const DEFAULT_GNSS_FETCH_INTERVAL = 30000;
 const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
 
 const defaultImu = {
@@ -151,7 +152,7 @@ const isValidRawLogsConfiguration = (conf: RawLogsConfiguration): boolean => {
   return !conf || (typeof conf.interval ==='number' && typeof conf.isEnabled === 'boolean');
 }
 
-const isValidGnssMetadata = (gnss: GNSS): boolean => {
+const isValidGnssMetadata = (gnss: GnssRecord): boolean => {
   let isValid = true;
 
   if (!gnss.latitude) {
@@ -165,17 +166,17 @@ const isValidGnssMetadata = (gnss: GNSS): boolean => {
           isValid = isValid && gnss.fix === '3D';
           break;
         case 'minSatellites':
-          isValid = isValid && gnss.satellites && gnss.satellites.used >= value;
+          isValid = isValid && !!gnss.satellites_used && gnss.satellites_used >= value;
           break;
-        case 'xdop':
-        case 'ydop':
-        case 'pdop':
-        case 'hdop':
-        case 'vdop':
-        case 'tdop':
-        case 'gdop':
-          isValid = isValid && !!gnss.dop && gnss.dop[key] <= value;
-          break;
+          case 'xdop':
+          case 'ydop':
+          case 'pdop':
+          case 'hdop':
+          case 'vdop':
+          case 'tdop':
+          case 'gdop':
+            isValid = isValid && gnss[key] <= value;
+            break;
         case 'eph':
           isValid =
             isValid &&
@@ -294,226 +295,122 @@ const getNextGnssName = (): Promise<string> => {
   });
 };
 
-let emptyIterationCounter = 0;
-let prevGnssFile = '';
-let lastSuccessfullyProcessed = '';
-let prevGpsRecord: GNSS | undefined = undefined;
+let prevGnssTimestamp = 0;
 
-export const updateLastSuccessfullyProcessed = () => {
-  lastSuccessfullyProcessed = prevGnssFile;
-}
+export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
+  if (!prevGnssTimestamp) {
+    prevGnssTimestamp = Date.now() - DEFAULT_GNSS_FETCH_INTERVAL; // By default, grabbing last 30 seconds of GNSS info
+  }
 
-export const getNextGnss = (): Promise<GnssMetadata[][]> => {
-  return new Promise(async (resolve, reject) => {
+  const gpsChunks: GnssMetadata[][] = [];
+  let gps: GnssMetadata[] = [];
+  let sequentialBadRecords = 0;
+  try {
+    let gnssRecords: GnssRecord[] = await fetchGnssLogsByTime(prevGnssTimestamp);
 
-    let pathToGpsFile = '';
+    if (Array.isArray(gnssRecords)) {
+      console.log(
+        `${gnssRecords.length} GPS records fetched from SQLite`,
+      );
+      gnssRecords = gnssRecords.filter(
+        (record: GnssRecord) =>
+          record?.satellites_seen &&
+          new Date(record?.system_time).getTime() > DEFAULT_TIME,
+      );
 
-    try {
-      console.log('Last file is ' + prevGnssFile);
-      pathToGpsFile = await getNextGnssName();
-      console.log('Next file is: ' + pathToGpsFile);
-    } catch (e) {
-      console.log('Error reading next file:', e);
-    }
+      const goodRecords: GnssRecord[] = gnssRecords.filter((gnss: GnssRecord) =>
+        isValidGnssMetadata(gnss),
+      );
+      // New KPI for measuring GPS performance
+      try {
+        const dopKpi: GnssDopKpi = getGnssDopKpi(
+          gnssRecords,
+          goodRecords,
+        );
+        Instrumentation.add({
+          event: 'DashcamDop',
+          size: gnssRecords.length,
+          message: JSON.stringify(dopKpi),
+        });
+      } catch (e: unknown) {
+        console.log(e);
+      }
 
-    if (!pathToGpsFile || pathToGpsFile === prevGnssFile) {
-      emptyIterationCounter++;
-      if (emptyIterationCounter > 10) {
-        // After 5 empty iterations, we start to be suspicious on the weird filesystem state
-        // Let's check the last GPS file stats (name timestamp and modified date timestamp)
-        // Compare it with each other, system time and the time of last GPS record
-        // It all should be in sync
-        const now = Date.now();
-        let lastFileTimestamp = now;
-        let lastFileStats = null;
-        if (pathToGpsFile) {
-          lastFileTimestamp = getDateFromFilename(
-            String(pathToGpsFile).split('/').pop() || '',
-          ).getTime();
-          lastFileStats = statSync(pathToGpsFile);
-        }
-
-        const week = 1000 * 60 * 60 * 24 * 7;
-        const isFilenameOutdated =
-          lastFileTimestamp < now - week || lastFileTimestamp > now + week;
-        const prevGpsRecordTimestamp = new Date(
-          prevGpsRecord?.timestamp || '',
-        ).getTime();
-        const isGpsDataOutOfSyncWithFileDate =
-          prevGpsRecord &&
-          lastFileStats &&
-          prevGpsRecordTimestamp < lastFileStats.mtime.getTime() - week &&
-          prevGpsRecordTimestamp > lastFileStats.mtime.getTime() + week;
+      let prevPoint: any;
+      console.log(
+        `${goodRecords.length} Good GPS records found in this file`,
+      );
+      gnssRecords.map((gnss: GnssRecord, index: number) => {
+        const t = gnss?.time
+          ? new Date(gnss.time).getTime()
+          : 0;
+        // in meters
+        const distance =
+          prevPoint && gnss.latitude
+            ? latLonDistance(
+                prevPoint.latitude,
+                gnss.latitude,
+                prevPoint.longitude,
+                gnss.longitude,
+              )
+            : config.DX;
+        // in seconds
+        // const prevTime = prevPoint
+        //   ? new Date(prevPoint.timestamp).getTime()
+        //   : 0;
+        // const timeDiff = prevTime ? (t - prevTime) / 1000 : 0;
+        // speed in m/s
+        // const speed = timeDiff ? distance / timeDiff : MIN_SPEED;
+        const speed = gnss.speed;
 
         if (
-          isFilenameOutdated ||
-          isGpsDataOutOfSyncWithFileDate ||
-          emptyIterationCounter > MAX_FAILED_ITERATIONS
+          t &&
+          isValidGnssMetadata(gnss) &&
+          speed < MAX_SPEED &&
+          distance < MAX_DISTANCE_BETWEEN_POINTS
         ) {
-          console.log(
-            'Repairing Motion model',
-            pathToGpsFile,
-            isFilenameOutdated,
-            isGpsDataOutOfSyncWithFileDate,
-            emptyIterationCounter > MAX_FAILED_ITERATIONS,
-          );
-          parsedCursor = {
-            gnssFilePath: '',
-            imuFilePath: '',
-          };
-          emptyIterationCounter = 0;
-          try {
-            if (pathToGpsFile) {
-              Instrumentation.add({
-                event: 'DashcamRepairedGps',
-                start: Date.now(),
-                end: Date.now(),
-                message: JSON.stringify({
-                  pathToGpsFile,
-                  isFilenameOutdated,
-                  prevGpsRecordTimestamp,
-                  lastFileStats: lastFileStats?.mtime.getTime(),
-                  isGpsDataOutOfSyncWithFileDate,
-                  emptyIterationCounter,
-                })
-              });
-              rmSync(pathToGpsFile, { force: true });
-            }
-          } catch (e: unknown) {
-            console.log(e);
+          if (speed >= MIN_SPEED || index === gnssRecords.length - 1) {
+            gps.push({
+              t,
+              systemTime: new Date(gnss.system_time).getTime(),
+              lat: gnss.latitude,
+              lon: gnss.longitude,
+              alt: gnss.altitude,
+              speed: (speed * 3600) / 1000,
+              satellites: gnss.satellites_used,
+              dilution: 0, // TBD
+              xdop: gnss.xdop || 99,
+              ydop: gnss.ydop || 99,
+              pdop: gnss.pdop || 99,
+              hdop: gnss.hdop || 99,
+              vdop: gnss.vdop || 99,
+              tdop: gnss.tdop || 99,
+              gdop: gnss.gdop || 99,
+              eph: gnss.eph || 999,
+            });
+            prevPoint = { ...gnss };
+            sequentialBadRecords = 0;
+          }
+        } else if (t) {
+          sequentialBadRecords++;
+          if (gps.length && sequentialBadRecords > 3) {
+            gps.sort((a, b) => a.t - b.t);
+            gpsChunks.push(gps);
+            gps = [];
+            prevPoint = null;
           }
         }
-      }
-      resolve([]);
-      return;
-    } else {
-      emptyIterationCounter = 0;
+      });
     }
-    prevGnssFile = pathToGpsFile;
-
-    if (pathToGpsFile === lastSuccessfullyProcessed) {
-      console.log('Already successfully processed this file. Ignoring');
-      resolve([]);
-      return;
-    }
-    readFile(
-      pathToGpsFile,
-      { encoding: 'utf-8' },
-      (err: NodeJS.ErrnoException | null, data: string) => {
-        const gpsChunks: GnssMetadata[][] = [];
-        let gps: GnssMetadata[] = [];
-        let sequentialBadRecords = 0;
-        if (!err && data) {
-          try {
-            let gnssRecords = JSON.parse(jsonrepair(data));
-            if (Array.isArray(gnssRecords) && gnssRecords?.length) {
-              prevGpsRecord = gnssRecords[0];
-              console.log(
-                `${gnssRecords.length} GPS records found in this file`,
-              );
-              gnssRecords = gnssRecords.filter(
-                (record: GNSS) =>
-                  record?.satellites &&
-                  new Date(record?.systemtime).getTime() > DEFAULT_TIME,
-              );
-
-              const goodRecords: GNSS[] = gnssRecords.filter((gnss: GNSS) =>
-                isValidGnssMetadata(gnss),
-              );
-              // New KPI for measuring GPS performance
-              try {
-                const dopKpi: GnssDopKpi = getGnssDopKpi(
-                  gnssRecords,
-                  goodRecords,
-                );
-                Instrumentation.add({
-                  event: 'DashcamDop',
-                  size: gnssRecords.length,
-                  message: JSON.stringify(dopKpi),
-                });
-              } catch (e: unknown) {
-                console.log(e);
-              }
-
-              let prevPoint: any;
-              console.log(
-                `${goodRecords.length} Good GPS records found in this file`,
-              );
-              gnssRecords.map((gnss: GNSS, index: number) => {
-                const t = gnss?.timestamp
-                  ? new Date(gnss.timestamp).getTime()
-                  : 0;
-                // in meters
-                const distance =
-                  prevPoint && gnss.latitude
-                    ? latLonDistance(
-                        prevPoint.latitude,
-                        gnss.latitude,
-                        prevPoint.longitude,
-                        gnss.longitude,
-                      )
-                    : config.DX;
-                // in seconds
-                // const prevTime = prevPoint
-                //   ? new Date(prevPoint.timestamp).getTime()
-                //   : 0;
-                // const timeDiff = prevTime ? (t - prevTime) / 1000 : 0;
-                // speed in m/s
-                // const speed = timeDiff ? distance / timeDiff : MIN_SPEED;
-                const speed = gnss.speed;
-
-                if (
-                  t &&
-                  isValidGnssMetadata(gnss) &&
-                  speed < MAX_SPEED &&
-                  distance < MAX_DISTANCE_BETWEEN_POINTS
-                ) {
-                  if (speed >= MIN_SPEED || index === gnssRecords.length - 1) {
-                    gps.push({
-                      t,
-                      systemTime: new Date(gnss.systemtime).getTime(),
-                      lat: gnss.latitude,
-                      lon: gnss.longitude,
-                      alt: gnss.height,
-                      speed: (speed * 3600) / 1000,
-                      satellites: gnss.satellites.used,
-                      dilution: 0, // TBD
-                      xdop: gnss.dop?.xdop || 99,
-                      ydop: gnss.dop?.ydop || 99,
-                      pdop: gnss.dop?.pdop || 99,
-                      hdop: gnss.dop?.hdop || 99,
-                      vdop: gnss.dop?.vdop || 99,
-                      tdop: gnss.dop?.tdop || 99,
-                      gdop: gnss.dop?.gdop || 99,
-                      eph: gnss.eph || 999,
-                    });
-                    prevPoint = { ...gnss };
-                    sequentialBadRecords = 0;
-                  }
-                } else if (t) {
-                  sequentialBadRecords++;
-                  if (gps.length && sequentialBadRecords > 3) {
-                    gps.sort((a, b) => a.t - b.t);
-                    gpsChunks.push(gps);
-                    gps = [];
-                    prevPoint = null;
-                  }
-                }
-              });
-            }
-          } catch (e: unknown) {
-            console.log('Error parsing GPS JSON');
-          }
-        }
-        // re-order gps records by time, just in case
-        if (gps.length) {
-          gps.sort((a, b) => a.t - b.t);
-          gpsChunks.push(gps);
-        }
-        resolve(gpsChunks);
-      },
-    );
-  });
+  } catch (e: unknown) {
+    console.log('Error parsing GPS JSON');
+  }
+  // re-order gps records by time, just in case
+  if (gps.length) {
+    gps.sort((a, b) => a.t - b.t);
+    gpsChunks.push(gps);
+  }
+  return gpsChunks;
 };
 
 export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
@@ -609,7 +506,7 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
     magnetometer: [],
     gyroscope: [],
   };
-  return new Promise(resolve => {
+  return new Promise(async (resolve) => {
     if (!gnss || !gnss.length) {
       resolve(imuData);
       return;
@@ -618,90 +515,32 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
       resolve(imuData);
     }, 5000);
     // Backward compatibility support for old 't' field
-    // We add 10 seconds from both end to resolve unsync between the log files
-    const since = (gnss[0].systemTime || gnss[0].t) - 20000;
+    const since = (gnss[0].systemTime || gnss[0].t);
     const until =
-      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 20000;
+      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t);
 
     try {
-      readdir(
-        IMU_ROOT_FOLDER,
-        (err: NodeJS.ErrnoException | null, files: string[]) => {
-          try {
-            const imuFiles: string[] = files.filter((filename: string) => {
-              if (
-                filename.indexOf('.json') === -1 ||
-                filename.indexOf('.tmp') !== -1
-              ) {
-                return false;
-              }
-              const fileDate = getDateFromFilename(filename).getTime();
-              return fileDate >= since && fileDate <= until;
+      const imuRecords = await fetchImuLogsByTime(since, until);
+      if (Array.isArray(imuRecords)) {
+        imuRecords.map((imu: ImuRecord) => {
+          if (imu && imu.time) {
+            const imuTimestamp = new Date(imu.time).getTime();
+            imuData.accelerometer.push({
+              x: Number(imu.acc_x) || 0,
+              y: Number(imu.acc_y) || 0,
+              z: Number(imu.acc_z) || 0,
+              ts: imuTimestamp,
             });
-            let imuRecords: IMU[] = [];
-            for (const imuFile of imuFiles) {
-              console.log(imuFile);
-              try {
-                const imu = readFileSync(IMU_ROOT_FOLDER + '/' + imuFile, {
-                  encoding: 'utf-8',
-                });
-                let output = '';
-                try {
-                  output = jsonrepair(imu);
-                } catch (er: unknown) {
-                  console.log('Imu parsing error: ' + er);
-                }
-                if (output) {
-                  let parsedImu = null;
-                  try {
-                    parsedImu = JSON.parse(output);
-                  } catch (e: unknown) {
-                    console.log('Caught JSON parse, didnt break');
-                  }
-                  if (Array.isArray(parsedImu)) {
-                    imuRecords = imuRecords.concat(parsedImu);
-                  }
-                }
-              } catch (err: unknown) {
-                console.log('Caught here: ', err);
-              }
-            }
-            console.log(
-              `Selected ${imuRecords.length} imuRecords for ${
-                until - since
-              } msecs`,
-            );
-            imuRecords.map((imu: IMU) => {
-              if (imu && imu.time) {
-                const imuTimestamp = new Date(imu.time).getTime();
-                if (imuTimestamp >= since && imuTimestamp <= until) {
-                  if (imu.accel) {
-                    imuData.accelerometer.push({
-                      x: Number(imu.accel.x) || 0,
-                      y: Number(imu.accel.y) || 0,
-                      z: Number(imu.accel.z) || 0,
-                      ts: imuTimestamp,
-                    });
-                  }
-                  if (imu.gyro) {
-                    imuData.gyroscope.push({
-                      x: Number(imu.gyro.x) || 0,
-                      y: Number(imu.gyro.y) || 0,
-                      z: Number(imu.gyro.z) || 0,
-                      ts: imuTimestamp,
-                    });
-                  }
-                }
-              }
+            imuData.gyroscope.push({
+              x: Number(imu.gyro_x) || 0,
+              y: Number(imu.gyro_y) || 0,
+              z: Number(imu.gyro_z) || 0,
+              ts: imuTimestamp,
             });
-            clearTimeout(timeout);
-            resolve(imuData);
-          } catch (e: unknown) {
-            clearTimeout(timeout);
-            resolve(imuData);
           }
-        },
-      );
+        });
+        resolve(imuData);
+      }
     } catch (error: unknown) {
       clearTimeout(timeout);
       resolve(imuData);

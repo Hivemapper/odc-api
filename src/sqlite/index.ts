@@ -2,7 +2,7 @@ import {
   Database,
 } from 'sqlite3';
   
-const DB_NAME = 'data-logger.v1.1.1.db';
+const DB_NAME = 'data-logger.v1.2.0.db';
 
 export const connectDB = (
   callback?: () => void,
