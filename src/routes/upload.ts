@@ -20,41 +20,35 @@ router.post('/', (req, res) => {
       const uploadFilePath = UPLOAD_PATH + filename;
       // Create a write stream of the new file
       try {
-        try {
-          if (existsSync(uploadFilePath)) {
-            const stat = statSync(uploadFilePath);
+        if (existsSync(uploadFilePath)) {
+          const stat = statSync(uploadFilePath);
 
-            //Check if file is already existing and has the same size
-            if (fileSize && typeof fileSize === 'string' && stat && parseInt(fileSize) === stat.size) {
-              res.json({
-                output: 'done',
-              });
-            }
-            else {
-              rmSync(uploadFilePath);
-            }
-          }
-          const fstream = createWriteStream(uploadFilePath);
-          // Pipe it trough
-          file.pipe(fstream);
-
-          // On finish of the upload
-          fstream.on('close', () => {
-            console.log(`Upload of '${filename}' finished`);
+          //Check if file is already existing and has the same size
+          if (fileSize && typeof fileSize === 'string' && stat && parseInt(fileSize) === stat.size) {
             res.json({
               output: 'done',
             });
-          });
-        } catch (e: unknown) {
-          console.log('Error from upload route', e);
+            return;
+          }
+          else {
+            rmSync(uploadFilePath);
+          }
         }
+        const fstream = createWriteStream(uploadFilePath);
+        // Pipe it trough
+        file.pipe(fstream);
 
-      } catch (e: unknown) {
-        console.log(e);
-        res.json({
-          error: e,
+        // On finish of the upload
+        fstream.on('close', () => {
+          console.log(`Upload of '${filename}' finished`);
+          res.json({
+            output: 'done',
+          });
         });
+      } catch (e: unknown) {
+        console.log('Error from upload route', e);
       }
+
     });
   } catch (e: unknown) {
     console.log(e);
