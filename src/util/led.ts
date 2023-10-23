@@ -53,6 +53,12 @@ export const COLORS: { [key: string]: ILED } = {
     blue: 20,
     on: true,
   },
+  BLACK: {
+    red: 0,
+    green: 0,
+    blue: 0,
+    on: false,
+  },
 };
 
 let currentLEDs = {
@@ -94,6 +100,8 @@ export const updateLED = async (
         updateLEDHdcS(255, 0, 0);
       } else if (gpsLED === COLORS.DIM || framesLED === COLORS.DIM) {
         updateLEDHdcS(255, 255, 255);
+      } else if (framesLED === COLORS.BLACK) {
+        updateLEDHdcS(0, 0, 0);
       } else {
         updateLEDHdcS(0, 0, 255);
       }

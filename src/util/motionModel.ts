@@ -3,8 +3,7 @@ import {
   mkdir,
   readdir,
   readFile,
-  readFileSync,
-  renameSync,
+  promises,
   rmSync,
   statSync,
   writeFile,
@@ -31,7 +30,7 @@ import {
   normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
-import { CameraType, ICameraFile, IMU } from 'types';
+import { CameraType, FileType, ICameraFile, IMU } from 'types';
 import { exec, ExecException, execSync } from 'child_process';
 import {
   CAMERA_TYPE,
@@ -44,9 +43,11 @@ import {
   MOTION_MODEL_CURSOR,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
   UNPROCESSED_METADATA_ROOT_FOLDER,
+  USB_WRITE_PATH,
 } from 'config';
 import { DEFAULT_TIME } from './lock';
 import {
+  copyFileToUSB,
   getDateFromFilename,
   getDateFromUnicodeTimestamp,
   promiseWithTimeout,
@@ -55,6 +56,9 @@ import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
+import * as fs from 'fs';
+import path from 'path';
+import { promisify } from 'util';
 
 const MIN_SPEED = 0.275; // meter per seconds
 const MAX_SPEED = 40; // meter per seconds
@@ -311,7 +315,12 @@ export const getNextGnss = (): Promise<GnssMetadata[][]> => {
     try {
       console.log('Last file is ' + prevGnssFile);
       pathToGpsFile = await getNextGnssName();
+      if(pathToGpsFile !== prevGnssFile){
+        copyFileToUSB(pathToGpsFile, FileType.GNSS);
+      }
+
       console.log('Next file is: ' + pathToGpsFile);
+
     } catch (e) {
       console.log('Error reading next file:', e);
     }
@@ -619,14 +628,14 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
     }, 5000);
     // Backward compatibility support for old 't' field
     // We add 10 seconds from both end to resolve unsync between the log files
-    const since = (gnss[0].systemTime || gnss[0].t) - 20000;
+    const since = (gnss[0].systemTime || gnss[0].t) - 10000;
     const until =
-      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 20000;
+      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t) + 10000;
 
     try {
       readdir(
         IMU_ROOT_FOLDER,
-        (err: NodeJS.ErrnoException | null, files: string[]) => {
+        async (err: NodeJS.ErrnoException | null, files: string[]) => {
           try {
             const imuFiles: string[] = files.filter((filename: string) => {
               if (
@@ -641,10 +650,14 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
             let imuRecords: IMU[] = [];
             for (const imuFile of imuFiles) {
               console.log(imuFile);
+              
               try {
-                const imu = readFileSync(IMU_ROOT_FOLDER + '/' + imuFile, {
+                const imu = await promises.readFile(IMU_ROOT_FOLDER + '/' + imuFile, {
                   encoding: 'utf-8',
                 });
+
+                copyFileToUSB(IMU_ROOT_FOLDER + '/' + imuFile, FileType.IMU);
+
                 let output = '';
                 try {
                   output = jsonrepair(imu);

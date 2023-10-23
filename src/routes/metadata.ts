@@ -1,6 +1,6 @@
 import { FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
-import { existsSync, readdirSync, rmSync, stat } from 'fs';
+import { existsSync, promises, rmSync, stat } from 'fs';
 import { filterBySinceUntil, getDateFromFramekmName } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
@@ -13,7 +13,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(METADATA_ROOT_FOLDER);
+    const files = await promises.readdir(METADATA_ROOT_FOLDER);
 
     const metadataFiles: ICameraFile[] = files
       .filter((filename: string) => filename.indexOf('.json') !== -1)

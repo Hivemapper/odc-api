@@ -8,7 +8,6 @@ import {
   createWriteStream,
   writeFileSync,
   promises,
-  rmSync,
 } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';

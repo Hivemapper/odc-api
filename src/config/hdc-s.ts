@@ -27,6 +27,7 @@ export const NETWORK_BOOT_CONFIG_PATH = __dirname + '/../../../data/wifi.cfg';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const FRAMEKM_CLEANUP_SCRIPT = '/opt/odc-api/cleanup_framekm.sh';
 export const DATA_INTEGRITY_SCRIPT = '/opt/odc-api/data_integrity_check.sh';
+export const FIRMWARE_UPDATE_MARKER = '/data/recording/update_in_progress';
 export const ACL_FILES_PATH = '/data';
 export const CACHED_CAMERA_CONFIG = '/data/camera.config';
 export const HEALTH_MARKER_PATH = '/data/healthy.txt';

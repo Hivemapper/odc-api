@@ -38,6 +38,7 @@ export const LED_CONFIG_PATH = '/tmp/led.json';
 export const CACHED_CAMERA_CONFIG = '/mnt/data/camera.conf';
 export const PRIVACY_ZONES_CONFIG = '/mnt/data/ppz.json';
 export const MOTION_MODEL_CURSOR = '/mnt/data/mm_cursor.log';
+export const FIRMWARE_UPDATE_MARKER = '/mnt/data/update_in_progress';
 export const MOTION_MODEL_CONFIG = '/mnt/data/dashcam_config.json';
 export const IMAGER_CONFIG_PATH =
   '/opt/dashcam/bin/config.json';

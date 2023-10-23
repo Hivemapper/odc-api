@@ -1,6 +1,6 @@
 import { IMU_ROOT_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
-import { readdirSync } from 'fs';
+import { promises } from 'fs';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 import { filterBySinceUntil, getDateFromFilename } from '../util';
@@ -13,7 +13,7 @@ let timeStarted: any;
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(IMU_ROOT_FOLDER);
+    const files = await promises.readdir(IMU_ROOT_FOLDER);
     if (files.length) {
       // Last IMU file is not finished yet
       files.pop();
