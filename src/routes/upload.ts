@@ -22,6 +22,8 @@ router.post('/', (req, res) => {
         try {
           if (existsSync(UPLOAD_PATH + filename)) {
             const stat = statSync(UPLOAD_PATH + filename);
+
+            //Check if file is already existing and has the same size
             if (fileSize && typeof fileSize === 'string' && stat && parseInt(fileSize) === stat.size) {
               res.json({
                 output: 'done',
