@@ -17,11 +17,12 @@ router.post('/', (req, res) => {
     req.busboy.on('file', (fieldname, file, data) => {
       const filename = data && data.filename ? data.filename : 'upload.raucb';
       console.log(`Upload of '${filename}' started`);
+      const uploadFilePath = UPLOAD_PATH + filename;
       // Create a write stream of the new file
       try {
         try {
-          if (existsSync(UPLOAD_PATH + filename)) {
-            const stat = statSync(UPLOAD_PATH + filename);
+          if (existsSync(uploadFilePath)) {
+            const stat = statSync(uploadFilePath);
 
             //Check if file is already existing and has the same size
             if (fileSize && typeof fileSize === 'string' && stat && parseInt(fileSize) === stat.size) {
@@ -30,32 +31,20 @@ router.post('/', (req, res) => {
               });
             }
             else {
-              rmSync(UPLOAD_PATH + filename);
-              const fstream = createWriteStream(UPLOAD_PATH + filename);
-              // Pipe it trough
-              file.pipe(fstream);
-
-              // On finish of the upload
-              fstream.on('close', () => {
-                console.log(`Upload of '${filename}' finished`);
-                res.json({
-                  output: 'done',
-                });
-              });
+              rmSync(uploadFilePath);
             }
-          } else {
-            const fstream = createWriteStream(UPLOAD_PATH + filename);
-            // Pipe it trough
-            file.pipe(fstream);
-
-            // On finish of the upload
-            fstream.on('close', () => {
-              console.log(`Upload of '${filename}' finished`);
-              res.json({
-                output: 'done',
-              });
-            });
           }
+          const fstream = createWriteStream(uploadFilePath);
+          // Pipe it trough
+          file.pipe(fstream);
+
+          // On finish of the upload
+          fstream.on('close', () => {
+            console.log(`Upload of '${filename}' finished`);
+            res.json({
+              output: 'done',
+            });
+          });
         } catch (e: unknown) {
           console.log('Error from upload route', e);
         }
