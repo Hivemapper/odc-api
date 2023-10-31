@@ -79,55 +79,6 @@ export function latLonToECEFDist(p0: THREE.Vector3, p1: THREE.Vector3) {
   return p0.distanceTo(p1);
 }
 
-export function normaliseLatLon(
-  first: FramesMetadata,
-  second: FramesMetadata,
-  msec: number,
-): FramesMetadata {
-  try {
-    const firstTime = first.systemTime;
-    const secondTime = second.systemTime;
-
-    if (firstTime === secondTime) {
-      return { ...first };
-    }
-    const indx = (msec - firstTime) / (secondTime - firstTime);
-    return interpolate(
-      first,
-      second,
-      indx,
-      [
-        'lat', 
-        'lon', 
-        'alt', 
-        'speed', 
-        't', 
-        'systemTime',     
-        'satellites',  
-        'dilution',
-        'xdop',
-        'ydop',
-        'pdop',
-        'hdop',
-        'vdop',
-        'tdop',
-        'gdop',
-        'eph',
-        'acc_x',
-        'acc_y',
-        'acc_z',
-        'gyro_x',
-        'gyro_y',
-        'gyro_z'
-      ],
-      { ...first },
-    );
-  } catch (e: unknown) {
-    console.log('Math error during coord normalisation', e);
-    return { ...first };
-  }
-}
-
 export function latLonToECEFDistance(a: any, b: any) {
   const aPoint = new THREE.Vector3(0, 0, 0);
   const bPoint = new THREE.Vector3(0, 0, 0);

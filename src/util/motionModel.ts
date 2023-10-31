@@ -27,7 +27,6 @@ import {
   ecefToLLA,
   interpolate,
   latLonDistance,
-  normaliseLatLon,
 } from './geomath';
 import { getGnssDopKpi, Instrumentation } from './instrumentation';
 import { CameraType, FileType, ICameraFile, IMU } from 'types';
@@ -687,13 +686,14 @@ export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
                 const imuTimestamp = new Date(imu.time).getTime();
                 if (imuTimestamp >= since && imuTimestamp <= until) {
                   if (imu.accel) {
+                    // Restricting Accelerometer values by -2:2 boundaries to avoid inadequate noise
                     imuData.accelerometer.push({
-                      x: Number(imu.accel.x) || 0,
-                      y: Number(imu.accel.y) || 0,
-                      z: Number(imu.accel.z) || 0,
-                      ts: imuTimestamp,
+                        x: Math.min(Math.max(Number(imu.accel.x), -2), 2) || 0,
+                        y: Math.min(Math.max(Number(imu.accel.y), -2), 2) || 0,
+                        z: Math.min(Math.max(Number(imu.accel.z), -2), 2) || 0,
+                        ts: imuTimestamp,
                     });
-                  }
+                }
                   if (imu.gyro) {
                     imuData.gyroscope.push({
                       x: Number(imu.gyro.x) || 0,
@@ -1441,6 +1441,67 @@ export const selectImages = (
     resolve(results);
   });
 };
+
+export function normaliseLatLon(
+  first: FramesMetadata,
+  second: FramesMetadata,
+  msec: number,
+): FramesMetadata {
+  try {
+    const firstTime = first.systemTime;
+    const secondTime = second.systemTime;
+
+    if (firstTime === secondTime) {
+      return { ...first };
+    }
+    const indx = (msec - firstTime) / (secondTime - firstTime);
+    const val = interpolate(
+      first,
+      second,
+      indx,
+      [
+        'lat', 
+        'lon', 
+        'alt', 
+        'speed', 
+        't', 
+        'systemTime',     
+        'satellites',  
+        'dilution',
+        'xdop',
+        'ydop',
+        'pdop',
+        'hdop',
+        'vdop',
+        'tdop',
+        'gdop',
+        'eph',
+        'acc_x',
+        'acc_y',
+        'acc_z',
+        'gyro_x',
+        'gyro_y',
+        'gyro_z'
+      ],
+      { ...first },
+    );
+    // Clip out of bounds values, that's a miscalculation of interpolation
+    // All the values are properly filtered on GNSS level, so take them from the second point
+    if (config?.GnssFilter?.hdop && val.hdop > config.GnssFilter.hdop) {
+      val.hdop = second.hdop;
+    }
+    if (config?.GnssFilter?.gdop && val.hdop > config.GnssFilter.gdop) {
+      val.gdop = second.gdop;
+    }
+    if (config?.GnssFilter?.eph && val.eph > config.GnssFilter.eph) {
+      val.eph = second.eph;
+    }
+    return val;
+  } catch (e: unknown) {
+    console.log('Math error during coord normalisation', e);
+    return { ...first };
+  }
+}
 
 export const getNumFramesFromChunkName = (name: string) => {
   if (name) {
