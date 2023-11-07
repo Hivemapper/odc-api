@@ -27,6 +27,8 @@ let config: MotionModelConfig = {
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
   isDashcamMLEnabled: false,
+  isTripTrimmingEnabled: true,
+  TrimDistance: 100,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,

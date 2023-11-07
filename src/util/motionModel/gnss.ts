@@ -12,7 +12,7 @@ import { GnssDopKpi } from 'types/instrumentation';
 import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
 import { latLonDistance } from 'util/geomath';
 import { timeIsMostLikelyLight } from 'util/daylight';
-const DEFAULT_GNSS_FETCH_INTERVAL = 30000;
+import { getLastTimestamp } from 'sqlite/framekm';
 
 const isValidGnssMetadata = (gnss: GnssRecord): boolean => {
   let isValid = true;
@@ -51,14 +51,9 @@ const isValidGnssMetadata = (gnss: GnssRecord): boolean => {
   return isValid;
 };
 
-let prevGnssTimestamp = 0;
 
 export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
-  if (!prevGnssTimestamp) {
-    // TODO: read the cursor from SQLite
-    prevGnssTimestamp = Date.now() - DEFAULT_GNSS_FETCH_INTERVAL; // By default, grabbing last 30 seconds of GNSS info
-  }
-
+  const prevGnssTimestamp = await getLastTimestamp();
   const gpsChunks: GnssMetadata[][] = [];
   let gps: GnssMetadata[] = [];
 

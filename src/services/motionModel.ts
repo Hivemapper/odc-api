@@ -1,4 +1,4 @@
-import { IService } from '../types';
+import { ICameraFile, IService } from '../types';
 import {
   createMotionModel,
   selectImages,
@@ -12,9 +12,13 @@ import { isCarParkedBasedOnImu } from 'util/imu';
 import { isPrivateZonesInitialised } from './loadPrivacy';
 import { getNextGnss, isGnssEligibleForMotionModel } from 'util/motionModel/gnss';
 import { getNextImu } from 'util/motionModel/imu';
+import { moveFrames } from 'util/frames';
+import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, isFrameKmComplete } from 'sqlite/framekm';
+import { FRAMEKM_ROOT_FOLDER } from 'config';
+import { join } from 'path';
+import { promises } from 'fs';
 const ITERATION_DELAY = 10000;
-
-export const lastProcessed = null;
+let failuresInARow = 0;
 
 const execute = async () => {
   try {
@@ -36,15 +40,40 @@ const execute = async () => {
         const imu = await getNextImu(gnss);
         if (!isCarParkedBasedOnImu(imu)) {
           console.log('Creating a motion model');
-          const chunks = createMotionModel(gnss, imu);
+          const existingKeyFrames = await getExistingFramesMetadata();
+          const chunks = createMotionModel(gnss, imu, existingKeyFrames);
           for (const chunk of chunks) {
             const frameKms = await promiseWithTimeout(
               selectImages(chunk),
               10000,
             );
-            for (const frameKm of frameKms) {
+            for (let i = 0; i < frameKms.length; i++) {
+              const frameKm = frameKms[i];
               if (frameKm.metadata.length) {
-                await packFrameKm(frameKm);
+                // update FrameKM table
+                await addFramesToFrameKm(frameKms[0]);
+                const frameKmName = await getFrameKmName();
+                // Move frames to EMMC. TODO: make sure they will never stuck on EMMC if packaging failed
+                await moveFrames(frameKms[0].images.map((image: ICameraFile) => image.path), join(FRAMEKM_ROOT_FOLDER, frameKmName));
+
+                // If Current FrameKM is fully complete,
+                // Or if there was a cut of frameKM during last iteration
+                if (await isFrameKmComplete() || i < frameKms.length - 1) {
+                  try {
+                    await packFrameKm(await getFrameKmMetadata());
+                    await clearFrameKmTable();
+                    await promises.rmdir(join(FRAMEKM_ROOT_FOLDER, frameKmName));
+                    failuresInARow = 0;
+                  } catch (e) {
+                    console.error(e);
+                    failuresInARow++;
+                    // TODO: dirty cleanup. Make a proper instrumentation and error handling
+                    if (failuresInARow > 5) {
+                      await clearFrameKmTable();
+                      await promises.rmdir(join(FRAMEKM_ROOT_FOLDER, frameKmName));
+                    }
+                  }
+                }
               }
             }
           }

@@ -58,6 +58,7 @@ const POTENTIAL_CORNER_ANGLE = 90;
 export const createMotionModel = (
   gpsData: GnssMetadata[],
   imuData: ImuMetadata,
+  existingKeyFrames: FramesMetadata[]
 ): FramesMetadata[][] => {
   if (gpsData.length < 2) {
     console.log('Not enough gps data');
@@ -125,7 +126,7 @@ export const createMotionModel = (
     .map(frameKm => {
       let samplesToTake: FramesMetadata[] = [];
       try {
-        samplesToTake = getPointsToSample(frameKm, imuData);
+        samplesToTake = getPointsToSample(frameKm, imuData, existingKeyFrames);
       } catch (e: any) {
         console.log('dashcam: sampling failed: ' + e);
       }
@@ -139,11 +140,11 @@ export const createMotionModel = (
   return totalSamples > MIN_FRAMES_TO_EXTRACT ? samplesToTakePerFrameKm : [];
 };
 
-let existingKeyFrames: FramesMetadata[] = [];
 
 export const getPointsToSample = (
   gpsData: FramesMetadata[],
   imuData: ImuMetadata,
+  existingKeyFrames: FramesMetadata[]
 ) => {
   // Catmull-Rom is a cubic interpolation,
   // which requires 4 points
@@ -300,7 +301,6 @@ export const getPointsToSample = (
     console.log('Missing IMU data');
   }
   console.log(`dashcam: points sampled: ${pointsToSample?.length}`);
-  existingKeyFrames = pointsToSample;
   return pointsToSample;
 };
 
@@ -653,11 +653,6 @@ export const selectImages = (
         images: imagesToDownload,
         points: gpsForImages,
       });
-      existingKeyFrames = [
-        ...gpsForImages.map(frame => {
-          return { ...frame };
-        }),
-      ];
     }
 
     // LOOP FOR DOWNLOADING CHUNKS
@@ -752,12 +747,6 @@ export const selectImages = (
             });
           }
         }
-
-        existingKeyFrames = [
-          ...chunk.points.map(frame => {
-            return { ...frame };
-          }),
-        ];
       }
     }
 
