@@ -13,9 +13,6 @@ export const connectDB = (
       console.error('[SQLITE] DB connect error', err.message)
       throw err
     }else{
-        listAllTables((tables) => {
-            console.log('All tables:', tables);
-        });
         callback?.();
     }
   });
@@ -39,6 +36,44 @@ export const listAllTables = (callback: (tables: string[]) => void): void => {
       return;
     }
     callback(tables);
+  });
+};
+
+// Helper function to promisify db.run
+export const runAsync = (db: Database, sql: string, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this);
+      }
+    });
+  });
+};
+
+// Helper function to promisify db.all for running SELECT queries
+export const getAsync = (db: Database, sql: string, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+};
+
+export const runSchemaAsync = (db: Database, sql: string) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this);
+      }
+    });
   });
 };
     

@@ -2,24 +2,18 @@ import {
   existsSync,
   mkdir,
   readdir,
-  readFile,
-  rmSync,
-  writeFile,
+  rmdirSync,
   writeFileSync,
 } from 'fs';
-import { GnssDopKpi } from 'types/instrumentation';
 import * as THREE from 'three';
 import {
   CurveData,
   FrameKMOutput,
+  FrameKMTelemetry,
   FramesMetadata,
-  GNSS,
   GnssMetadata,
   ImuMetadata,
-  MotionModelConfig,
-  MotionModelCursor, RawLogsConfiguration,
 } from 'types/motionModel';
-import { timeIsMostLikelyLight } from './daylight';
 import {
   catmullRomCurve,
   ecefToLLA,
@@ -27,38 +21,30 @@ import {
   latLonDistance,
   normaliseLatLon,
 } from './geomath';
-import { getGnssDopKpi, Instrumentation } from './instrumentation';
-import { CameraType, ICameraFile, IMU } from 'types';
-import { exec, ExecException, execSync } from 'child_process';
+import { Instrumentation } from './instrumentation';
+import { CameraType, ICameraFile } from 'types';
+import { exec } from 'child_process';
 import {
   CAMERA_TYPE,
   DATA_LOGGER_SERVICE,
   FRAMES_ROOT_FOLDER,
   GPS_ROOT_FOLDER,
-  IMU_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
-  MOTION_MODEL_CONFIG,
-  MOTION_MODEL_CURSOR,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
   UNPROCESSED_METADATA_ROOT_FOLDER,
 } from 'config';
-import { DEFAULT_TIME } from './lock';
 import {
-  getDateFromFilename,
   getDateFromUnicodeTimestamp,
   promiseWithTimeout,
 } from 'util/index';
-import { jsonrepair } from 'jsonrepair';
 import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
-import { fetchImuLogsByTime } from 'sqlite/imu';
-import { GnssRecord, ImuRecord } from 'types/sqlite';
-import { fetchGnssLogsByTime } from 'sqlite/gnss';
 
-const MIN_SPEED = 0.275; // meter per seconds
-const MAX_SPEED = 40; // meter per seconds
-const MAX_DISTANCE_BETWEEN_POINTS = 50;
+import { getConfig } from './motionModel/config';
+import { getFrameDataFromGps } from './motionModel/gnss';
+import { concatFrames, getFrameKmTelemetry } from './framekm';
+
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 1;
 export const MAX_FAILED_ITERATIONS = 14;
@@ -66,499 +52,8 @@ export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const MIN_DISTANCE_BETWEEN_FRAMES = 1;
-const DEFAULT_GNSS_FETCH_INTERVAL = 30000;
 const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
-
-const defaultImu = {
-  threshold: 0.05,
-  alpha: 0.5,
-  params: [1, 1, 1, 0, 1],
-};
-
-let config: MotionModelConfig = {
-  DX: 6,
-  GnssFilter: {
-    '3dLock': true,
-    minSatellites: 4,
-    hdop: 4,
-    gdop: 6,
-    eph: 10,
-  },
-  Privacy: {},
-  MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
-  isCornerDetectionEnabled: true,
-  isImuMovementDetectionEnabled: false,
-  isLightCheckDisabled: false,
-  isDashcamMLEnabled: false,
-  ImuFilter: defaultImu,
-  rawLogsConfiguration: {
-    isEnabled: false,
-    interval: 300,
-    snapshotSize: 30,
-    includeGps: true,
-    includeImu: true,
-    maxCollectedBytes: 5000000,
-  },
-  privacyRadius: 200,
-};
-
-let sequenceOfOldGpsData = 0;
-let repairedCursors = 0;
-
-export const loadConfig = (
-  _config: MotionModelConfig,
-  updateFile?: boolean,
-) => {
-  if (isValidConfig(_config)) {
-    config = _config;
-    if (updateFile) {
-      writeFile(
-        MOTION_MODEL_CONFIG,
-        JSON.stringify(config),
-        {
-          encoding: 'utf-8',
-        },
-        () => {},
-      );
-    }
-  } else {
-    console.log('trying to load invalid dashcam configuration: ', _config);
-  }
-};
-
-export const getConfig = (): MotionModelConfig => {
-  return config;
-};
-
-export const isValidConfig = (_config: MotionModelConfig) => {
-  const isValid =
-    _config &&
-    Number(_config.DX) &&
-    Number(_config.MaxPendingTime) &&
-    typeof _config.isCornerDetectionEnabled === 'boolean' &&
-    typeof _config.isImuMovementDetectionEnabled === 'boolean' &&
-    typeof _config.isLightCheckDisabled === 'boolean' &&
-    typeof _config.GnssFilter === 'object' &&
-    isValidRawLogsConfiguration(_config.rawLogsConfiguration);
-  if (isValid && !_config.ImuFilter) {
-    _config.ImuFilter = defaultImu;
-  }
-  _config.isImuMovementDetectionEnabled = false;
-  _config.isLightCheckDisabled = false;
-  return isValid;
-};
-
-const isValidRawLogsConfiguration = (conf: RawLogsConfiguration): boolean => {
-  return !conf || (typeof conf.interval ==='number' && typeof conf.isEnabled === 'boolean');
-}
-
-const isValidGnssMetadata = (gnss: GnssRecord): boolean => {
-  let isValid = true;
-
-  if (!gnss.latitude) {
-    return false;
-  }
-
-  for (const [key, value] of Object.entries(config.GnssFilter)) {
-    if (typeof value === 'number') {
-      switch (key) {
-        case '3dLock':
-          isValid = isValid && gnss.fix === '3D';
-          break;
-        case 'minSatellites':
-          isValid = isValid && !!gnss.satellites_used && gnss.satellites_used >= value;
-          break;
-          case 'xdop':
-          case 'ydop':
-          case 'pdop':
-          case 'hdop':
-          case 'vdop':
-          case 'tdop':
-          case 'gdop':
-            isValid = isValid && gnss[key] <= value;
-            break;
-        case 'eph':
-          isValid =
-            isValid &&
-            (!!gnss.eph && gnss.eph <= value);
-          break;
-        default:
-          break;
-      }
-    }
-  }
-  return isValid;
-};
-
-let parsedCursor: MotionModelCursor = {
-  gnssFilePath: '',
-  imuFilePath: '',
-};
-
-export const resetCursors = async () => {
-  parsedCursor = {
-    gnssFilePath: '',
-    imuFilePath: '',
-  };
-  rmSync(MOTION_MODEL_CURSOR);
-}
-
-export const syncCursors = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    try {
-      if (parsedCursor?.gnssFilePath) {
-        console.log('Syncing cursors');
-        exec(
-          "echo '" +
-            JSON.stringify(parsedCursor) +
-            "' > " +
-            MOTION_MODEL_CURSOR,
-          (error: ExecException | null, stdout: string, stderr: string) => {
-            resolve();
-          },
-        );
-      } else {
-        resolve();
-      }
-    } catch (e: unknown) {
-      reject(e);
-    }
-  });
-};
-
-const getGnssNameFromCursor = (): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const exists = existsSync(MOTION_MODEL_CURSOR);
-    if (exists) {
-      readFile(
-        MOTION_MODEL_CURSOR,
-        { encoding: 'utf-8' },
-        async (err: NodeJS.ErrnoException | null, data: string) => {
-          if (!err && data) {
-            try {
-              parsedCursor = JSON.parse(jsonrepair(data)) || {};
-              resolve(parsedCursor.gnssFilePath || '');
-            } catch (e: unknown) {
-              console.log('Error parsing Cursor file', e);
-              resolve('');
-            }
-            // Fixing weird things
-            if (typeof parsedCursor !== 'object') {
-              parsedCursor = {
-                gnssFilePath: '',
-                imuFilePath: '',
-              };
-            }
-          } else {
-            console.log('Error reading Motion Model Cursor file', err);
-            try {
-              await rmSync(MOTION_MODEL_CURSOR);
-            } catch (e: unknown) {
-              console.log('Error cleaning up Sync file');
-            }
-            resolve('');
-          }
-        },
-      );
-    } else {
-      resolve('');
-    }
-  });
-};
-
-const getNextGnssName = (): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(
-      `find ${GPS_ROOT_FOLDER}/ -type f -name '*.json' | sort | tail -1`,
-      { encoding: 'utf-8' },
-      (error: ExecException | null, stdout: string) => {
-        try {
-          if (stdout && !error) {
-            const nextCandidate = String(stdout).split('\n')[0];
-            if (nextCandidate.indexOf('.json') !== -1) {
-              parsedCursor = {
-                gnssFilePath: nextCandidate,
-                imuFilePath: '',
-              };
-              resolve(parsedCursor.gnssFilePath);
-            } else {
-              resolve('');
-            }
-          } else {
-            resolve('');
-          }
-        } catch (e: unknown) {
-          resolve('');
-        }
-      },
-    );
-  });
-};
-
-let prevGnssTimestamp = 0;
-
-export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
-  if (!prevGnssTimestamp) {
-    prevGnssTimestamp = Date.now() - DEFAULT_GNSS_FETCH_INTERVAL; // By default, grabbing last 30 seconds of GNSS info
-  }
-
-  const gpsChunks: GnssMetadata[][] = [];
-  let gps: GnssMetadata[] = [];
-  let sequentialBadRecords = 0;
-  try {
-    let gnssRecords: GnssRecord[] = await fetchGnssLogsByTime(prevGnssTimestamp);
-
-    if (Array.isArray(gnssRecords)) {
-      console.log(
-        `${gnssRecords.length} GPS records fetched from SQLite`,
-      );
-      gnssRecords = gnssRecords.filter(
-        (record: GnssRecord) =>
-          record?.satellites_seen &&
-          new Date(record?.system_time).getTime() > DEFAULT_TIME,
-      );
-
-      const goodRecords: GnssRecord[] = gnssRecords.filter((gnss: GnssRecord) =>
-        isValidGnssMetadata(gnss),
-      );
-      // New KPI for measuring GPS performance
-      try {
-        const dopKpi: GnssDopKpi = getGnssDopKpi(
-          gnssRecords,
-          goodRecords,
-        );
-        Instrumentation.add({
-          event: 'DashcamDop',
-          size: gnssRecords.length,
-          message: JSON.stringify(dopKpi),
-        });
-      } catch (e: unknown) {
-        console.log(e);
-      }
-
-      let prevPoint: any;
-      console.log(
-        `${goodRecords.length} Good GPS records found in this file`,
-      );
-      gnssRecords.map((gnss: GnssRecord, index: number) => {
-        const t = gnss?.time
-          ? new Date(gnss.time).getTime()
-          : 0;
-        // in meters
-        const distance =
-          prevPoint && gnss.latitude
-            ? latLonDistance(
-                prevPoint.latitude,
-                gnss.latitude,
-                prevPoint.longitude,
-                gnss.longitude,
-              )
-            : config.DX;
-        // in seconds
-        // const prevTime = prevPoint
-        //   ? new Date(prevPoint.timestamp).getTime()
-        //   : 0;
-        // const timeDiff = prevTime ? (t - prevTime) / 1000 : 0;
-        // speed in m/s
-        // const speed = timeDiff ? distance / timeDiff : MIN_SPEED;
-        const speed = gnss.speed;
-
-        if (
-          t &&
-          isValidGnssMetadata(gnss) &&
-          speed < MAX_SPEED &&
-          distance < MAX_DISTANCE_BETWEEN_POINTS
-        ) {
-          if (speed >= MIN_SPEED || index === gnssRecords.length - 1) {
-            gps.push({
-              t,
-              systemTime: new Date(gnss.system_time).getTime(),
-              lat: gnss.latitude,
-              lon: gnss.longitude,
-              alt: gnss.altitude,
-              speed: (speed * 3600) / 1000,
-              satellites: gnss.satellites_used,
-              dilution: 0, // TBD
-              xdop: gnss.xdop || 99,
-              ydop: gnss.ydop || 99,
-              pdop: gnss.pdop || 99,
-              hdop: gnss.hdop || 99,
-              vdop: gnss.vdop || 99,
-              tdop: gnss.tdop || 99,
-              gdop: gnss.gdop || 99,
-              eph: gnss.eph || 999,
-            });
-            prevPoint = { ...gnss };
-            sequentialBadRecords = 0;
-          }
-        } else if (t) {
-          sequentialBadRecords++;
-          if (gps.length && sequentialBadRecords > 3) {
-            gps.sort((a, b) => a.t - b.t);
-            gpsChunks.push(gps);
-            gps = [];
-            prevPoint = null;
-          }
-        }
-      });
-    }
-  } catch (e: unknown) {
-    console.log('Error parsing GPS JSON');
-  }
-  // re-order gps records by time, just in case
-  if (gps.length) {
-    gps.sort((a, b) => a.t - b.t);
-    gpsChunks.push(gps);
-  }
-  return gpsChunks;
-};
-
-export const isGnssEligibleForMotionModel = (gnss: GnssMetadata[]) => {
-  const notTooDark = isEnoughLight(gnss);
-  const isCarParked = isCarParkedBasedOnGnss(gnss);
-  const isTooOld = isGpsTooOld(gnss);
-
-  console.log('Eligible?', notTooDark, !isCarParked, !isTooOld);
-
-  if (!gnss.length) {
-    Instrumentation.add({
-      event: 'DashcamRejectedGps',
-      message: 'badQuality',
-    });
-  } else if (!notTooDark) {
-    Instrumentation.add({
-      event: 'DashcamRejectedGps',
-      message: 'notEnoughLight',
-    });
-  } else if (isCarParked) {
-    Instrumentation.add({
-      event: 'DashcamRejectedGps',
-      message: 'carNotMoving',
-    });
-  } else if (isTooOld) {
-    Instrumentation.add({
-      event: 'DashcamRejectedGps',
-      message: 'dataTooOld',
-    });
-  }
-  return gnss.length && notTooDark && !isCarParked && !isTooOld;
-};
-
-export function isCarParkedBasedOnGnss(gpsData: GnssMetadata[]) {
-  return !gpsData.some((gps: GnssMetadata) => gps.speed > 4);
-}
-
-export const isImuValid = (imuData: ImuMetadata): boolean => {
-  return (
-    !!imuData.accelerometer &&
-    !!imuData.gyroscope &&
-    !!imuData.accelerometer.length &&
-    !!imuData.gyroscope.length &&
-    imuData.accelerometer[0].x !== 0 &&
-    imuData.accelerometer[0].y !== 0 &&
-    imuData.accelerometer[0].z !== 0
-  );
-};
-
-export function isEnoughLight(gpsData: GnssMetadata[]) {
-  if (config.isLightCheckDisabled) {
-    return true;
-  }
-  if (!gpsData.length) {
-    return false;
-  }
-  const sufficientDaylight = timeIsMostLikelyLight(
-    new Date(gpsData[0].t),
-    gpsData[0].lon,
-    gpsData[0].lat,
-  );
-
-  return sufficientDaylight;
-}
-
-export function isEnoughLightForGnss(gnss: GNSS | null) {
-  if (!gnss || !gnss.timestamp || config.isLightCheckDisabled) {
-    return true;
-  }
-  return timeIsMostLikelyLight(
-    new Date(gnss.timestamp),
-    gnss.longitude,
-    gnss.latitude,
-  );
-}
-
-export function isGpsTooOld(gpsData: GnssMetadata[]) {
-  const now = Date.now();
-
-  const isDataTooOld = gpsData.some(
-    (gps: GnssMetadata) => gps.t < now - config.MaxPendingTime,
-  );
-  if (isDataTooOld) {
-    checkForPossibleDataRepairment(gpsData.length && gpsData[0]?.t ? gpsData[0].t : now);
-  }
-  return isDataTooOld;
-}
-
-export const getNextImu = (gnss: GnssMetadata[]): Promise<ImuMetadata> => {
-  // TODO: Implement
-  const imuData: ImuMetadata = {
-    accelerometer: [],
-    magnetometer: [],
-    gyroscope: [],
-  };
-  return new Promise(async (resolve) => {
-    if (!gnss || !gnss.length) {
-      resolve(imuData);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      resolve(imuData);
-    }, 5000);
-    // Backward compatibility support for old 't' field
-    const since = (gnss[0].systemTime || gnss[0].t);
-    const until =
-      (gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t);
-
-    try {
-      const imuRecords = await fetchImuLogsByTime(since, until);
-      if (Array.isArray(imuRecords)) {
-        imuRecords.map((imu: ImuRecord) => {
-          if (imu && imu.time) {
-            const imuTimestamp = new Date(imu.time).getTime();
-            imuData.accelerometer.push({
-              x: Number(imu.acc_x) || 0,
-              y: Number(imu.acc_y) || 0,
-              z: Number(imu.acc_z) || 0,
-              ts: imuTimestamp,
-            });
-            imuData.gyroscope.push({
-              x: Number(imu.gyro_x) || 0,
-              y: Number(imu.gyro_y) || 0,
-              z: Number(imu.gyro_z) || 0,
-              ts: imuTimestamp,
-            });
-          }
-        });
-        resolve(imuData);
-      }
-    } catch (error: unknown) {
-      clearTimeout(timeout);
-      resolve(imuData);
-    }
-  });
-};
-
-const getFrameDataFromGps = (gps: GnssMetadata): FramesMetadata => {
-  return {
-    ...gps,
-    acc_x: 0,
-    acc_y: 0,
-    acc_z: 0,
-    gyro_x: 0,
-    gyro_y: 0,
-    gyro_z: 0,
-  };
-};
+const POTENTIAL_CORNER_ANGLE = 90;
 
 export const createMotionModel = (
   gpsData: GnssMetadata[],
@@ -661,7 +156,9 @@ export const getPointsToSample = (
 
   let points: FramesMetadata[] = gpsData;
   const offset = 0;
-  const dx = config.DX + 0.2; // This is a very important addition for having the wider brackets to select frames more accurately
+  const { isCornerDetectionEnabled, DX } = getConfig();
+  // TODO: revisit with next iteration
+  const dx = DX + 0.2; // This is a very important addition for having the wider brackets to select frames more accurately
   let previous = [];
 
   if (existingKeyFrames.length > 0) {
@@ -677,30 +174,27 @@ export const getPointsToSample = (
     }
   }
 
-  //console.log('dashcam: points for spline: ' + points.length);
   const spaceCurve = catmullRomCurve(points, ['lon', 'lat', undefined], true);
   const totalDistance = spaceCurve.getLength();
   const pointsToSample: FramesMetadata[] = [];
   let curvePoints: CurveData[] = [];
 
-  // const { isCornerDetectionEnabled } = config;
-
   if (totalDistance) {
     console.log('total distance: ' + totalDistance + ', DX: ' + dx);
-    // let prevTangent = null;
+    let prevTangent = null;
     for (let u = offset; u <= totalDistance; u += dx) {
-      // if (isCornerDetectionEnabled) {
-      //   const v = u / totalDistance;
-      //   const currTangent = spaceCurve.getTangentAt(v);
-      //   let angle = 0;
-      //   if (prevTangent) {
-      //     angle = Math.abs((prevTangent.angleTo(currTangent) * 180) / Math.PI);
-      //   }
-      //   prevTangent = currTangent;
-      //   if (angle > POTENTIAL_CORNER_ANGLE) {
-      //     u = findCorner(spaceCurve, u, dx, totalDistance, angle);
-      //   }
-      // }
+      if (isCornerDetectionEnabled) {
+        const v = u / totalDistance;
+        const currTangent = spaceCurve.getTangentAt(v);
+        let angle = 0;
+        if (prevTangent) {
+          angle = Math.abs((prevTangent.angleTo(currTangent) * 180) / Math.PI);
+        }
+        prevTangent = currTangent;
+        if (angle > POTENTIAL_CORNER_ANGLE) {
+          u = findCorner(spaceCurve, u, dx, totalDistance, angle);
+        }
+      }
       curvePoints.push(getPoint(spaceCurve, u / totalDistance));
     }
   }
@@ -892,6 +386,9 @@ export const getImagesForDateRange = async (from: number, to: number) => {
   });
 };
 
+let sequenceOfOldGpsData = 0;
+let repairedCursors = 0;
+
 export const checkForPossibleDataRepairment = (dateStart: number, dateEnd?: number) => {
   sequenceOfOldGpsData++;
   if (sequenceOfOldGpsData > 5) {
@@ -906,7 +403,6 @@ export const checkForPossibleDataRepairment = (dateStart: number, dateEnd?: numb
       sequenceOfOldGpsData = 0;
     } else {
       console.log('Repairing the cursor to solve the unsync between frames and GPS logs');
-      resetCursors();
       Instrumentation.add({
         event: 'DashcamRepairedCursors',
         start: Math.round(dateStart),
@@ -1269,6 +765,86 @@ export const selectImages = (
   });
 };
 
+let bundleName = '';
+let destFolder = '';
+
+export const packFrameKm = async (frameKm: FrameKMOutput) => {
+  console.log(
+    'Ready to pack ' + frameKm.metadata.length + ' frames',
+  );
+  try {
+    if (!destFolder && getConfig().isDashcamMLEnabled) {
+      bundleName = frameKm.chunkName;
+      destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
+      if (existsSync(destFolder)) {
+        rmdirSync(destFolder, { recursive: true });
+      }
+      await new Promise(resolve => {
+        mkdir(destFolder, resolve);
+      });
+    }
+    const start = Date.now();
+    const bytesMap = await promiseWithTimeout(
+      concatFrames(
+        frameKm.metadata.map(
+          (item: FramesMetadata) => item.name || '',
+        ),
+        frameKm.chunkName,
+        0,
+        FRAMES_ROOT_FOLDER,
+        false,
+        destFolder,
+      ),
+      15000,
+    );
+    let totalBytes = 0;
+    if (bytesMap && Object.keys(bytesMap).length) {
+      totalBytes = (Object.values(bytesMap) as number[]).reduce(
+        (acc: number, curr: number | undefined) =>
+          acc + (Number(curr) || 0),
+        0,
+      );
+      await promiseWithTimeout(
+        packMetadata(
+          frameKm.chunkName,
+          frameKm.metadata,
+          frameKm.images,
+          bytesMap,
+        ),
+        5000,
+      );
+    }
+    let framekmTelemetry: FrameKMTelemetry = {
+      systemtime: Date.now()
+    };
+    try {
+      framekmTelemetry = await promiseWithTimeout(getFrameKmTelemetry(frameKm.images[0], frameKm.metadata), 5000);
+    } catch (error: unknown) {
+      console.log('Error getting telemetry', error);
+    }
+    Instrumentation.add({
+      event: 'DashcamPackedFrameKm',
+      size: totalBytes,
+      message: JSON.stringify({
+        name: frameKm.chunkName,
+        numFrames: frameKm.images?.length,
+        duration: Date.now() - start,
+        ...framekmTelemetry,
+      }),
+    });
+  } catch (error: unknown) {
+    Instrumentation.add({
+      event: 'DashcamFailedPackingFrameKm',
+      message: JSON.stringify({
+        name: frameKm.chunkName,
+        reason: 'Motion Model Error',
+        error,
+      }),
+    });
+    console.log(error);
+  }
+}
+
 export const getNumFramesFromChunkName = (name: string) => {
   if (name) {
     const parts = name.split('_');
@@ -1327,7 +903,7 @@ export const packMetadata = async (
         deviceType: CAMERA_TYPE,
         quality: 80,
         loraDeviceId: undefined,
-        keyframeDistance: config.DX,
+        keyframeDistance: getConfig().DX,
         resolution: '2k',
         version: '1.8',
       },
@@ -1352,7 +928,7 @@ export const packMetadata = async (
 };
 
 const getDistanceRangeBasedOnSpeed = (speed: number) => {
-  const dx = config.DX;
+  const dx = getConfig().DX;
 
   // We use brackets around DX to help the distance between points being not so strict to respect FPS of the camera
   // Obviously, for bigger FPS we can be more strict on DX to be close to perfect

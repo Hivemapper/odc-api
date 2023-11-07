@@ -8,7 +8,6 @@ import {
   createWriteStream,
   writeFileSync,
   promises,
-  rmSync,
 } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';
@@ -17,9 +16,10 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES, getConfig } from './motionModel';
+import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from './motionModel';
+import { getConfig } from './motionModel/config';
 import { ICameraFile } from 'types';
-import { FrameKMTelemetry, GnssMetadata, ImuMetadata } from 'types/motionModel';
+import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 
 const asyncPipeline = promisify(pipeline);
@@ -159,31 +159,32 @@ export const concatFrames = async (
   }
 };
 
-export const getFrameKmTelemetry = async (image: ICameraFile, gnss: GnssMetadata, imu: ImuMetadata): Promise<FrameKMTelemetry> => {
+export const getFrameKmTelemetry = async (image: ICameraFile, meta: FramesMetadata[]): Promise<FrameKMTelemetry> => {
   const telemetry: FrameKMTelemetry = {
     systemtime: Date.now(),
   };
-  if (image && image.path) {
+  if (image && image.path && meta.length) {
     try {
+      const record = meta[0];
       const fullPath = join(FRAMES_ROOT_FOLDER, image.path);
       const dimensions = sizeOf(fullPath);
       if (dimensions) {
         telemetry.width = dimensions.width;
         telemetry.height = dimensions.height;
       }
-      if (gnss && gnss.lat) {
-        telemetry.lat = gnss.lat;
-        telemetry.lon = gnss.lon;
+      if (record && record.lat) {
+        telemetry.lat = record.lat;
+        telemetry.lon = record.lon;
       }
-      if (imu && imu.accelerometer && imu.accelerometer.length) {
-        telemetry.accel_x = imu.accelerometer[0].x;
-        telemetry.accel_y = imu.accelerometer[0].y;
-        telemetry.accel_z = imu.accelerometer[0].z;
+      if (record && record.acc_x) {
+        telemetry.accel_x = record.acc_x;
+        telemetry.accel_y = record.acc_y;
+        telemetry.accel_z = record.acc_z;
       }
-      if (imu && imu.gyroscope && imu.gyroscope.length) {
-        telemetry.gyro_x = imu.gyroscope[0].x;
-        telemetry.gyro_y = imu.gyroscope[0].y;
-        telemetry.gyro_z = imu.gyroscope[0].z;
+      if (record && record.gyro_x) {
+        telemetry.gyro_x = record.gyro_x;
+        telemetry.gyro_y = record.gyro_y;
+        telemetry.gyro_z = record.gyro_z;
       }
       telemetry.disk_used = getDiskUsage();
     } catch (e: unknown) {
