@@ -14,7 +14,7 @@ import { isPrivateZonesInitialised } from './loadPrivacy';
 import { getNextGnss, isGnssEligibleForMotionModel } from 'util/motionModel/gnss';
 import { getNextImu } from 'util/motionModel/imu';
 import { moveFrames } from 'util/frames';
-import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, isFrameKmComplete, isInProgress } from 'sqlite/framekm';
+import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, isFrameKmComplete } from 'sqlite/framekm';
 import { UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { join } from 'path';
 import { promises } from 'fs';
