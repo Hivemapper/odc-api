@@ -6,9 +6,9 @@ import {
   writeFileSync,
 } from 'fs';
 import * as THREE from 'three';
+import { join } from 'path';
 import {
   CurveData,
-  FrameKMOutput,
   FrameKMTelemetry,
   FramesMetadata,
   GnssMetadata,
@@ -414,15 +414,13 @@ export const checkForPossibleDataRepairment = (dateStart: number, dateEnd?: numb
   }
 }
 
-export const selectImages = (
+export const selectImages = async (
   frameKM: FramesMetadata[],
-): Promise<FrameKMOutput[]> => {
-  return new Promise(async (resolve, reject) => {
-    const results: FrameKMOutput[] = [];
+): Promise<FramesMetadata[][]> => {
+    const results: FramesMetadata[][] = [];
     if (!frameKM.length) {
       console.log('No points to work with');
-      resolve([{ chunkName: '', metadata: [], images: [] }]);
-      return;
+      return [];
     }
     const dateStart = frameKM[0].systemTime || frameKM[0].t;
     const dateEnd =
@@ -479,8 +477,7 @@ export const selectImages = (
 
     if (!images.length) {
       console.log('No images selected');
-      resolve([{ chunkName: '', metadata: [], images: [] }]);
-      return;
+      return [];
     }
 
     console.log('==========');
@@ -655,13 +652,9 @@ export const selectImages = (
       });
     }
 
-    // LOOP FOR DOWNLOADING CHUNKS
-    let chunkName = '';
-
     if (!subChunks.length) {
       console.log('No chunks were packed for provided frames and gpsData');
-      resolve([{ chunkName: '', metadata: [], images: [] }]);
-      return;
+      return [];
     }
 
     try {
@@ -690,17 +683,13 @@ export const selectImages = (
 
     for (let i = 0; i < subChunks.length; i++) {
       const chunk = subChunks[i];
-      const validChunk: { images: ICameraFile[]; points: FramesMetadata[] } = {
-        images: [],
-        points: [],
-      };
-      validChunk.images.push(chunk.images[0]);
-      validChunk.points.push(chunk.points[0]);
+      const validChunk: FramesMetadata[] = [];
+      validChunk.push({ ...chunk.points[0], name: chunk.images[0].path });
 
       if (chunk.images.length > 1) {
         // First, sanitise the data
         for (let k = 1; k < chunk.images.length; k++) {
-          const lastFrame = validChunk.points[validChunk.points.length - 1];
+          const lastFrame = validChunk[validChunk.length - 1];
           const curFrame = chunk.points[k];
           if (curFrame.t - lastFrame.t > MIN_TIME_BETWEEN_FRAMES) {
             const delta = latLonDistance(
@@ -710,60 +699,38 @@ export const selectImages = (
               curFrame.lon,
             );
             if (delta > MIN_DISTANCE_BETWEEN_FRAMES) {
-              validChunk.images.push(chunk.images[k]);
-              validChunk.points.push(chunk.points[k]);
+              validChunk.push({ ...curFrame, name: chunk.images[k].path });
             }
           }
         }
 
-        if (validChunk.images.length > 1) {
+        if (validChunk.length > 1) {
           // check that last point is not equal to first point, weird loop defect
-          const firstPoint = validChunk.points[0];
+          const firstPoint = validChunk[0];
           const lastPoint =
-            validChunk.points[validChunk.points.length - 1];
+            validChunk[validChunk.length - 1];
           if (firstPoint.lat && firstPoint.lon && firstPoint.lat === lastPoint.lat && firstPoint.lon === lastPoint.lon) {
-            validChunk.points.pop();
-            validChunk.images.pop();
+            validChunk.pop();
           }
           // If still more than 1:
-          if (validChunk.images.length > 1) {
-            const formattedTime = new Date(validChunk.points[0].t)
-              .toISOString()
-              .replace(/[-:]/g, '')
-              .replace('T', '_')
-              .split('.')[0];
-            chunkName =
-              'km_' + formattedTime + '_' + validChunk.images.length + '_' + i;
-
-            validChunk.images.map(
-              (image: ICameraFile, i: number) =>
-                (validChunk.points[i].name = image.path),
-            );
-            // TODO: Return true metadata
-            results.push({
-              chunkName,
-              metadata: validChunk.points,
-              images: validChunk.images,
-            });
+          if (validChunk.length > 1) {
+            results.push(validChunk);
           }
         }
       }
     }
 
-    resolve(results);
-  });
+    return results;
 };
 
-let bundleName = '';
 let destFolder = '';
 
-export const packFrameKm = async (frameKm: FrameKMOutput) => {
+export const packFrameKm = async (bundleName: string, frameKm: FramesMetadata[]) => {
   console.log(
-    'Ready to pack ' + frameKm.metadata.length + ' frames',
+    'Ready to pack ' + frameKm.length + ' frames',
   );
   try {
     if (!destFolder && getConfig().isDashcamMLEnabled) {
-      bundleName = frameKm.chunkName;
       destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
       if (existsSync(destFolder)) {
         rmdirSync(destFolder, { recursive: true });
@@ -775,12 +742,12 @@ export const packFrameKm = async (frameKm: FrameKMOutput) => {
     const start = Date.now();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
-        frameKm.metadata.map(
+        frameKm.map(
           (item: FramesMetadata) => item.name || '',
         ),
-        frameKm.chunkName,
+        bundleName,
         0,
-        FRAMES_ROOT_FOLDER,
+        join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, bundleName),
         false,
         destFolder,
       ),
@@ -795,9 +762,8 @@ export const packFrameKm = async (frameKm: FrameKMOutput) => {
       );
       await promiseWithTimeout(
         packMetadata(
-          frameKm.chunkName,
-          frameKm.metadata,
-          frameKm.images,
+          bundleName,
+          frameKm,
           bytesMap,
         ),
         5000,
@@ -807,7 +773,7 @@ export const packFrameKm = async (frameKm: FrameKMOutput) => {
       systemtime: Date.now()
     };
     try {
-      framekmTelemetry = await promiseWithTimeout(getFrameKmTelemetry(frameKm.images[0], frameKm.metadata), 5000);
+      framekmTelemetry = await promiseWithTimeout(getFrameKmTelemetry(bundleName, frameKm), 5000);
     } catch (error: unknown) {
       console.log('Error getting telemetry', error);
     }
@@ -815,8 +781,8 @@ export const packFrameKm = async (frameKm: FrameKMOutput) => {
       event: 'DashcamPackedFrameKm',
       size: totalBytes,
       message: JSON.stringify({
-        name: frameKm.chunkName,
-        numFrames: frameKm.images?.length,
+        name: bundleName,
+        numFrames: frameKm?.length,
         duration: Date.now() - start,
         ...framekmTelemetry,
       }),
@@ -825,7 +791,7 @@ export const packFrameKm = async (frameKm: FrameKMOutput) => {
     Instrumentation.add({
       event: 'DashcamFailedPackingFrameKm',
       message: JSON.stringify({
-        name: frameKm.chunkName,
+        name: bundleName,
         reason: 'Motion Model Error',
         error,
       }),
@@ -850,7 +816,6 @@ export const getNumFramesFromChunkName = (name: string) => {
 export const packMetadata = async (
   name: string,
   framesMetadata: FramesMetadata[],
-  images: ICameraFile[],
   bytesMap: { [key: string]: number },
   disableMlCheck = false
 ): Promise<FramesMetadata[]> => {
@@ -866,21 +831,17 @@ export const packMetadata = async (
   }
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
-  for (let i = 0; i < images.length; i++) {
-    const image: ICameraFile = images[i];
-    const bytes = bytesMap[image.path];
+  for (let i = 0; i < framesMetadata.length; i++) {
+    const metaForFrame: FramesMetadata = framesMetadata[i];
+    const bytes = bytesMap[metaForFrame.name || ''];
     if (bytes && bytes > MIN_PER_FRAME_BYTES && bytes < MAX_PER_FRAME_BYTES) {
-       const metaForFrame = framesMetadata.find(m => m.name === image.path);
-       if (metaForFrame) {
-        const { systemTime, ...frame } = metaForFrame;
-        frame.bytes = bytes;
-        frame.name = image.path;
-        frame.t = Math.round(framesMetadata[i].t);
-        frame.satellites = Math.round(framesMetadata[i].satellites);
-        //@ts-ignore
-        validatedFrames.push(frame);
-        numBytes += bytes;
-       }
+      const { systemTime, ...frame } = metaForFrame;
+      frame.bytes = bytes;
+      frame.t = Math.round(framesMetadata[i].t);
+      frame.satellites = Math.round(framesMetadata[i].satellites);
+      //@ts-ignore
+      validatedFrames.push(frame);
+      numBytes += bytes;
     }
   }
   if (numBytes) {

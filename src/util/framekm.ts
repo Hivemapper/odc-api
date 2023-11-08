@@ -159,14 +159,14 @@ export const concatFrames = async (
   }
 };
 
-export const getFrameKmTelemetry = async (image: ICameraFile, meta: FramesMetadata[]): Promise<FrameKMTelemetry> => {
+export const getFrameKmTelemetry = async (bundleName: string, meta: FramesMetadata[]): Promise<FrameKMTelemetry> => {
   const telemetry: FrameKMTelemetry = {
     systemtime: Date.now(),
   };
-  if (image && image.path && meta.length) {
+  if (meta.length && meta[0].name) {
     try {
       const record = meta[0];
-      const fullPath = join(FRAMES_ROOT_FOLDER, image.path);
+      const fullPath = join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, bundleName, record.name || '');
       const dimensions = sizeOf(fullPath);
       if (dimensions) {
         telemetry.width = dimensions.width;
@@ -188,7 +188,7 @@ export const getFrameKmTelemetry = async (image: ICameraFile, meta: FramesMetada
       }
       telemetry.disk_used = getDiskUsage();
     } catch (e: unknown) {
-      console.log('Error getting image sizes for ' + image.path, e);
+      console.log('Error getting image sizes', e);
     }
   }
   return telemetry;

@@ -1,10 +1,10 @@
-import { ICameraFile, IService } from '../types';
+import { IService } from '../types';
 import {
   createMotionModel,
   selectImages,
   packFrameKm,
 } from 'util/motionModel';
-import { GnssMetadata } from 'types/motionModel';
+import { FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
@@ -14,7 +14,7 @@ import { getNextGnss, isGnssEligibleForMotionModel } from 'util/motionModel/gnss
 import { getNextImu } from 'util/motionModel/imu';
 import { moveFrames } from 'util/frames';
 import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, isFrameKmComplete } from 'sqlite/framekm';
-import { FRAMEKM_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { join } from 'path';
 import { promises } from 'fs';
 const ITERATION_DELAY = 10000;
@@ -43,24 +43,24 @@ const execute = async () => {
           const existingKeyFrames = await getExistingFramesMetadata();
           const chunks = createMotionModel(gnss, imu, existingKeyFrames);
           for (const chunk of chunks) {
-            const frameKms = await promiseWithTimeout(
+            const frameKms: FramesMetadata[][] = await promiseWithTimeout(
               selectImages(chunk),
               10000,
             );
             for (let i = 0; i < frameKms.length; i++) {
               const frameKm = frameKms[i];
-              if (frameKm.metadata.length) {
-                // update FrameKM table
-                await addFramesToFrameKm(frameKms[0]);
+              if (frameKm.length) {
                 const frameKmName = await getFrameKmName();
                 // Move frames to EMMC. TODO: make sure they will never stuck on EMMC if packaging failed
-                await moveFrames(frameKms[0].images.map((image: ICameraFile) => image.path), join(FRAMEKM_ROOT_FOLDER, frameKmName));
+                await moveFrames(frameKm.map(img => img.name || ''), join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
+                // update FrameKM table
+                await addFramesToFrameKm(frameKms[0]);
 
                 // If Current FrameKM is fully complete,
                 // Or if there was a cut of frameKM during last iteration
                 if (await isFrameKmComplete() || i < frameKms.length - 1) {
                   try {
-                    await packFrameKm(await getFrameKmMetadata());
+                    await packFrameKm(frameKmName, await getFrameKmMetadata());
                     await clearFrameKmTable();
                     await promises.rmdir(join(FRAMEKM_ROOT_FOLDER, frameKmName));
                     failuresInARow = 0;

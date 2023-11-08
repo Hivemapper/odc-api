@@ -1,5 +1,3 @@
-import { ICameraFile } from 'types';
-
 export type Dilution = {
   xdop: number;
   ydop: number;
@@ -8,12 +6,6 @@ export type Dilution = {
   vdop: number;
   tdop: number;
   gdop: number;
-};
-
-export type FrameKMOutput = {
-  chunkName: string;
-  metadata: FramesMetadata[];
-  images: ICameraFile[];
 };
 
 export type RawLogsConfiguration = {

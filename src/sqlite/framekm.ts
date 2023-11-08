@@ -18,34 +18,31 @@ export const isFrameKmComplete = async (): Promise<boolean> => {
 
 export const getFrameKmMetadata = async (): Promise<FramesMetadata[]> => {
   try {
-    const rows: any = await getAsync(
-      db,
-      'SELECT * FROM framekm ORDER BY id;',
-    );
+    const rows: any = await getAsync(db, 'SELECT * FROM framekm ORDER BY id;');
     return rows;
   } catch (error) {
     console.error('Error fetching framekm metadata:', error);
     return [];
   }
-}
+};
 
 export const getLastTimestamp = async (): Promise<number> => {
   try {
     let row: any = await getAsync(
       db,
-      'SELECT ts FROM framekm ORDER BY id DESC LIMIT 1;',
+      'SELECT systemTime FROM framekm ORDER BY id DESC LIMIT 1;',
     );
     if (row.length) {
-      return row[0].ts;
+      return row[0].systemTime;
     }
 
     // If not found, try to get the last timestamp from the prev_framekm table
     row = await getAsync(
       db,
-      'SELECT ts FROM prev_framekm ORDER BY id DESC LIMIT 1;',
+      'SELECT systemTime FROM prev_framekm ORDER BY id DESC LIMIT 1;',
     );
     if (row.length) {
-      return row[0].ts;
+      return row[0].systemTime;
     }
 
     // If no timestamps are found in either table, return the current time
@@ -81,14 +78,16 @@ export const getExistingFramesMetadata = async (limit = 3): Promise<any[]> => {
 
 let metersTrimmed = 0;
 
-export const addFramesToFrameKm = async (rows: FramesMetadata[], tableName = 'framekm'): Promise<void> => {
-  const {
-    isTripTrimmingEnabled,
-    TrimDistance
-  } = getConfig();
+export const addFramesToFrameKm = async (
+  rows: FramesMetadata[],
+  tableName = 'framekm',
+): Promise<void> => {
+  const { isTripTrimmingEnabled, TrimDistance } = getConfig();
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
-    const framesLeftToTrim = Math.ceil((TrimDistance - metersTrimmed) / getConfig().DX);
+    const framesLeftToTrim = Math.ceil(
+      (TrimDistance - metersTrimmed) / getConfig().DX,
+    );
     const rowsToIgnore = rows.slice(0, framesLeftToTrim);
     metersTrimmed += rowsToIgnore.length * getConfig().DX;
     rows = rows.slice(framesLeftToTrim);
@@ -100,15 +99,15 @@ export const addFramesToFrameKm = async (rows: FramesMetadata[], tableName = 'fr
       const insertSQL = `
         INSERT INTO ${tableName} (
           bytes, name, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
-          lat, lon, alt, speed, ts, systemTime, satellites, dilution,
-          eph, path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          lat, lon, alt, speed, t, systemTime, satellites, dilution,
+          eph
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
-  
+
       try {
         // Start transaction
         await runAsync(db, 'BEGIN TRANSACTION;');
-  
+
         for (const row of rows) {
           await runAsync(db, insertSQL, [
             row.bytes,
@@ -127,11 +126,10 @@ export const addFramesToFrameKm = async (rows: FramesMetadata[], tableName = 'fr
             row.systemTime,
             row.satellites,
             row.dilution,
-            row.eph,
-            row.path,
+            row.eph
           ]);
         }
-  
+
         // Commit transaction
         await runAsync(db, 'COMMIT;');
         resolve();
@@ -150,12 +148,13 @@ export const addFramesToFrameKm = async (rows: FramesMetadata[], tableName = 'fr
 };
 
 export const clearFrameKmTable = async (): Promise<void> => {
+  const frameKmName = await getFrameKmName();
   return new Promise((resolve, reject) => {
     try {
       db.serialize(async () => {
         await runAsync(db, 'BEGIN;');
         await runAsync(db, 'DELETE FROM prev_framekm;');
-        await runAsync(db, 'INSERT INTO prev_framekm SELECT * FROM framekm;');
+        await runAsync(db, 'INSERT INTO prev_framekm (SELECT *, ? as framekm_name FROM framekm);', [frameKmName]);
         await runAsync(db, 'DELETE FROM framekm;');
         await runAsync(db, 'COMMIT;');
         resolve();
@@ -170,7 +169,7 @@ export const getFrameKmName = async (): Promise<string> => {
   try {
     const row: any = await getAsync(
       db,
-      'SELECT ts FROM framekm ORDER BY id DESC LIMIT 1;',
+      'SELECT t FROM framekm ORDER BY id LIMIT 1;',
     );
     if (row.length) {
       const row: any = await getAsync(
@@ -178,13 +177,13 @@ export const getFrameKmName = async (): Promise<string> => {
         'SELECT COUNT(*) AS count FROM framekm;',
       );
       const count = row[0].count;
-  
-      const formattedTime = new Date(row[0].ts)
-      .toISOString()
-      .replace(/[-:]/g, '')
-      .replace('T', '_')
-      .split('.')[0];
-    return 'km_' + formattedTime + '_' + count + '_' + 0;
+
+      const formattedTime = new Date(row[0].t)
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace('T', '_')
+        .split('.')[0];
+      return 'km_' + formattedTime + '_' + count + '_' + 0;
     } else {
       // We can't generate FrameKM Name for empty FrameKM table
       return '';
@@ -193,4 +192,4 @@ export const getFrameKmName = async (): Promise<string> => {
     console.log(e);
     return '';
   }
-}
+};

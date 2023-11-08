@@ -73,7 +73,6 @@ export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
       const goodRecords: GnssRecord[] = gnssRecords.filter((gnss: GnssRecord) =>
         isValidGnssMetadata(gnss),
       );
-      // New KPI for measuring GPS performance
       try {
         const dopKpi: GnssDopKpi = getGnssDopKpi(gnssRecords, goodRecords);
         Instrumentation.add({

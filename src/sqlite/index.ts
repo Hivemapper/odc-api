@@ -1,19 +1,15 @@
-import {
-  Database,
-} from 'sqlite3';
-  
+import { Database } from 'sqlite3';
+
 const DB_NAME = '/data/recording/data-logger.v1.2.0.db';
 
-export const connectDB = (
-  callback?: () => void,
-): Database => {
+export const connectDB = (callback?: () => void): Database => {
   console.log('[SQLITE] CONNECT DB');
-  return new Database(DB_NAME, (err) => {
+  return new Database(DB_NAME, err => {
     if (err) {
-      console.error('[SQLITE] DB connect error', err.message)
-      throw err
-    }else{
-        callback?.();
+      console.error('[SQLITE] DB connect error', err.message);
+      throw err;
+    } else {
+      callback?.();
     }
   });
 };
@@ -24,25 +20,33 @@ export const listAllTables = (callback: (tables: string[]) => void): void => {
   // Array to store the names of all tables
   const tables: string[] = [];
 
-  db.each(query, (err: any, row: any) => {
-    if (err) {
-      console.error('[SQLITE] Error fetching tables', err.message);
-      return;
-    }
-    tables.push(row.name);
-  }, (err: any) => { // This callback gets executed when all rows have been retrieved
-    if (err) {
-      console.error('[SQLITE] Error completing the fetch operation', err.message);
-      return;
-    }
-    callback(tables);
-  });
+  db.each(
+    query,
+    (err: any, row: any) => {
+      if (err) {
+        console.error('[SQLITE] Error fetching tables', err.message);
+        return;
+      }
+      tables.push(row.name);
+    },
+    (err: any) => {
+      // This callback gets executed when all rows have been retrieved
+      if (err) {
+        console.error(
+          '[SQLITE] Error completing the fetch operation',
+          err.message,
+        );
+        return;
+      }
+      callback(tables);
+    },
+  );
 };
 
 // Helper function to promisify db.run
-export const runAsync = (db: Database, sql: string, params = []) => {
+export const runAsync = (db: Database, sql: string, params: any[] = []) => {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
+    db.run(sql, params, function (err) {
       if (err) {
         reject(err);
       } else {
@@ -76,5 +80,47 @@ export const runSchemaAsync = (db: Database, sql: string) => {
     });
   });
 };
+
+export const initialise = async (): Promise<void> => {
+  await createFrameKMTable();
+};
+
+export const createFrameKMTable = async (): Promise<void> => {
+  const createTableSQL = `
+  CREATE TABLE IF NOT EXISTS framekm (
+    bytes INTEGER,
+    name TEXT,
+    acc_x REAL,
+    acc_y REAL,
+    acc_z REAL,
+    gyro_x REAL,
+    gyro_y REAL,
+    gyro_z REAL,
+    lat REAL,
+    lon REAL,
+    alt REAL,
+    speed REAL,
+    t INTEGER,
+    systemTime INTEGER,
+    satellites INTEGER,
+    dilution REAL,
+    eph REAL
+  );`;
+  try {
+    await runSchemaAsync(db, createTableSQL);
     
-export const db: Database = connectDB();
+    // prev_framekm table will hold the metadata of previous FrameKMs
+    // That will help to reference the previous points for motion model,
+    // And also to hold the metadata of multiple previous FrameKMs while ML is running
+    const createPrevTableSQL = createTableSQL.replace(
+      'framekm (',
+      'prev_framekm ( framekm_name TEXT,',
+    );
+    await runSchemaAsync(db, createPrevTableSQL);
+  } catch (error) {
+    console.error('Error during initialisation of tables:', error);
+    throw error;
+  }
+};
+
+export const db: Database = connectDB(initialise);
