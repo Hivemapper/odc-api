@@ -51,16 +51,15 @@ const isValidGnssMetadata = (gnss: GnssRecord): boolean => {
   return isValid;
 };
 
-
 export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
   const prevGnssTimestamp = await getLastTimestamp();
   const gpsChunks: GnssMetadata[][] = [];
   let gps: GnssMetadata[] = [];
 
   try {
-    let gnssRecords: GnssRecord[] = await fetchGnssLogsByTime(
-      prevGnssTimestamp,
-    );
+    // we don't need to keep querying all data if last frame is older than 30 secs
+    const since = Math.max(prevGnssTimestamp, Date.now() - 30000);
+    let gnssRecords: GnssRecord[] = await fetchGnssLogsByTime(since, since + 60000); // restricting fetch to 1 minute to prevent accidentally querying too much data
 
     if (Array.isArray(gnssRecords)) {
       console.log(`${gnssRecords.length} GPS records fetched from SQLite`);

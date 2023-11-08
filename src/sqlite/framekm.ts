@@ -30,23 +30,22 @@ export const getLastTimestamp = async (): Promise<number> => {
   try {
     let row: any = await getAsync(
       db,
-      'SELECT systemTime FROM framekm ORDER BY id DESC LIMIT 1;',
+      'SELECT t FROM framekm ORDER BY id DESC LIMIT 1;',
     );
     if (row.length) {
-      return row[0].systemTime;
+      return row[0].t;
     }
 
     // If not found, try to get the last timestamp from the prev_framekm table
     row = await getAsync(
       db,
-      'SELECT systemTime FROM prev_framekm ORDER BY id DESC LIMIT 1;',
+      'SELECT t FROM prev_framekm ORDER BY id DESC LIMIT 1;',
     );
     if (row.length) {
-      return row[0].systemTime;
+      return row[0].t;
     }
 
-    // If no timestamps are found in either table, return the current time
-    return Date.now();
+    return 0;
   } catch (error) {
     console.error('Error fetching last timestamp:', error);
     return Date.now();

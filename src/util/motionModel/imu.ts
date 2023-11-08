@@ -29,7 +29,7 @@ export const getNextImu = async (gnss: GnssMetadata[]): Promise<ImuMetadata> => 
   const until = gnss[gnss.length - 1].systemTime || gnss[gnss.length - 1].t;
 
   try {
-    const imuRecords = await fetchImuLogsByTime(since, until);
+    const imuRecords = await fetchImuLogsByTime(Math.max(since, until - 30000), until);
     if (Array.isArray(imuRecords)) {
       imuRecords.map((imu: ImuRecord) => {
         if (imu && imu.time) {
