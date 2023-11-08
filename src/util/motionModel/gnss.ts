@@ -59,6 +59,7 @@ export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
   try {
     // we don't need to keep querying all data if last frame is older than 30 secs
     const since = Math.max(prevGnssTimestamp, Date.now() - 30000);
+    console.log('Fetching GNSS:', prevGnssTimestamp, since);
     let gnssRecords: GnssRecord[] = await fetchGnssLogsByTime(since, since + 60000); // restricting fetch to 1 minute to prevent accidentally querying too much data
 
     if (Array.isArray(gnssRecords)) {

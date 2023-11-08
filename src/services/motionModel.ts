@@ -3,6 +3,7 @@ import {
   createMotionModel,
   selectImages,
   packFrameKm,
+  checkFrameKmContinuity,
 } from 'util/motionModel';
 import { FramesMetadata, GnssMetadata } from 'types/motionModel';
 import { promiseWithTimeout, sleep } from 'util/index';
@@ -13,10 +14,11 @@ import { isPrivateZonesInitialised } from './loadPrivacy';
 import { getNextGnss, isGnssEligibleForMotionModel } from 'util/motionModel/gnss';
 import { getNextImu } from 'util/motionModel/imu';
 import { moveFrames } from 'util/frames';
-import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, isFrameKmComplete } from 'sqlite/framekm';
-import { FRAMEKM_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
+import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, isFrameKmComplete, isInProgress } from 'sqlite/framekm';
+import { UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { join } from 'path';
 import { promises } from 'fs';
+
 const ITERATION_DELAY = 10000;
 let failuresInARow = 0;
 
@@ -41,6 +43,7 @@ const execute = async () => {
         if (!isCarParkedBasedOnImu(imu)) {
           console.log('Creating a motion model');
           const existingKeyFrames = await getExistingFramesMetadata();
+          await checkFrameKmContinuity(existingKeyFrames, gnss[0]);
           const chunks = createMotionModel(gnss, imu, existingKeyFrames);
           for (const chunk of chunks) {
             const frameKms: FramesMetadata[][] = await promiseWithTimeout(
@@ -62,7 +65,7 @@ const execute = async () => {
                   try {
                     await packFrameKm(frameKmName, await getFrameKmMetadata());
                     await clearFrameKmTable();
-                    await promises.rmdir(join(FRAMEKM_ROOT_FOLDER, frameKmName));
+                    await promises.rmdir(join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
                     failuresInARow = 0;
                   } catch (e) {
                     console.error(e);
@@ -70,7 +73,7 @@ const execute = async () => {
                     // TODO: dirty cleanup. Make a proper instrumentation and error handling
                     if (failuresInARow > 5) {
                       await clearFrameKmTable();
-                      await promises.rmdir(join(FRAMEKM_ROOT_FOLDER, frameKmName));
+                      await promises.rmdir(join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
                     }
                   }
                 }

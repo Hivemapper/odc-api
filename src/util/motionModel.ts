@@ -1,6 +1,7 @@
 import {
   existsSync,
   mkdir,
+  promises,
   readdir,
   rmdirSync,
   writeFileSync,
@@ -41,9 +42,10 @@ import { tmpFrameName } from 'routes/recordings';
 import console from 'console';
 import { isPrivateLocation } from './privacy';
 
-import { getConfig } from './motionModel/config';
+import { MAX_DISTANCE_BETWEEN_POINTS, getConfig } from './motionModel/config';
 import { getFrameDataFromGps } from './motionModel/gnss';
 import { concatFrames, getFrameKmTelemetry } from './framekm';
+import { clearFrameKmTable, getFrameKmMetadata, getFrameKmName, isInProgress } from 'sqlite/framekm';
 
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
 const MIN_FRAMES_TO_EXTRACT = 1;
@@ -724,6 +726,23 @@ export const selectImages = async (
 };
 
 let destFolder = '';
+
+export const checkFrameKmContinuity = async (lastFrames: FramesMetadata[], next: GnssMetadata) => {
+  if (await isInProgress()) {
+    const last = lastFrames[lastFrames.length - 1];
+    if (latLonDistance(last.lat, next.lat, last.lon, next.lon) > MAX_DISTANCE_BETWEEN_POINTS) {
+      console.log('dashcam: frameKM cut by DISTANCE');
+      const frameKmName = await getFrameKmName();
+      try {
+        await packFrameKm(frameKmName, await getFrameKmMetadata());
+        await clearFrameKmTable();
+        await promises.rmdir(join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+}
 
 export const packFrameKm = async (bundleName: string, frameKm: FramesMetadata[]) => {
   console.log(

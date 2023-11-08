@@ -16,6 +16,21 @@ export const isFrameKmComplete = async (): Promise<boolean> => {
   }
 };
 
+export const isInProgress = async (): Promise<boolean> => {
+  try {
+    const existsRow: any = await getAsync(
+      db,
+      'SELECT EXISTS(SELECT 1 FROM framekm) AS inProgress;',
+    );
+    // The result will be 1 if the table is not empty, 0 otherwise
+    const inProgress = existsRow.inProgress === 1;
+    return inProgress;
+  } catch (error) {
+    console.error('Error checking if framekm is not empty:', error);
+    throw error;
+  }
+};
+
 export const getFrameKmMetadata = async (): Promise<FramesMetadata[]> => {
   try {
     const rows: any = await getAsync(db, 'SELECT * FROM framekm ORDER BY id;');
