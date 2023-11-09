@@ -113,8 +113,8 @@ export const createFrameKMTable = async (): Promise<void> => {
     // That will help to reference the previous points for motion model,
     // And also to hold the metadata of multiple previous FrameKMs while ML is running
     const createPrevTableSQL = createTableSQL.replace(
-      'framekm (',
-      'prev_framekm ( framekm_name TEXT,',
+      'framekm',
+      'prev_framekm',
     );
     await runSchemaAsync(db, createPrevTableSQL);
   } catch (error) {

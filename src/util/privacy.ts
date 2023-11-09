@@ -1,6 +1,6 @@
 import KDBush from 'kdbush';
 import { latLonToWebMercator } from './geomath';
-import { getConfig } from './motionModel';
+import { getConfig } from './motionModel/config';
 
 const DEFAULT_RADIUS = 200;
 let privateZones: KDBush | undefined;

@@ -75,7 +75,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(MotionModelService);
-    serviceRunner.add(PrivacyWatcherService);
+    // serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(LogDiskUsageService);
 
