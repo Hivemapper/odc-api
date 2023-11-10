@@ -42,8 +42,10 @@ export type MotionModelConfig = {
   isImuMovementDetectionEnabled: boolean;
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
+  ignoreFpsDrop: boolean;
   isTripTrimmingEnabled: boolean;
   TrimDistance: number;
+  FrameKmLengthMeters: number;
   isDashcamMLEnabled: boolean;
   rawLogsConfiguration: RawLogsConfiguration;
   privacyRadius?: number;

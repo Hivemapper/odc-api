@@ -3,7 +3,7 @@ import { readFile } from 'fs';
 import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { fileExists } from 'util/index';
-import { loadConfig } from 'util/motionModel';
+import { loadConfig } from 'util/motionModel/config';
 
 export const UpdateMotionModelConfigService: IService = {
   execute: async () => {
@@ -17,16 +17,6 @@ export const UpdateMotionModelConfigService: IService = {
           try {
             const configJSON = JSON.parse(jsonrepair(data.toString()));
             if (configJSON && configJSON.DX) {
-              // temporarily add default filter
-              if (!configJSON.disableDefault) {
-                configJSON.GnssFilter = {
-                  '3dLock': true,
-                  minSatellites: 4,
-                  hdop: 4,
-                  gdop: 6,
-                  eph: 10,
-                };
-              }
               loadConfig(configJSON);
             }
           } catch (e: unknown) {

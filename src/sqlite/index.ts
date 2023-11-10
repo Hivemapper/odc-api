@@ -1,10 +1,9 @@
+import { DB_PATH } from 'config';
 import { Database } from 'sqlite3';
-
-const DB_NAME = '/data/recording/data-logger.v1.2.0.db';
 
 export const connectDB = (callback?: () => void): Database => {
   console.log('[SQLITE] CONNECT DB');
-  return new Database(DB_NAME, err => {
+  return new Database(DB_PATH, err => {
     if (err) {
       console.error('[SQLITE] DB connect error', err.message);
       throw err;

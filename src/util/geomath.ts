@@ -55,7 +55,7 @@ export function interpolate(
   if (indx < 0) {
     // We should keep it in [0, 1] range. Otherwise it's a math error
     indx = 0;
-    console.log('Potential math calc error during normalisation');
+    console.log('Potential math calc error during normalisation', first, second, indx);
   }
   if (indx === 0) {
     return { ...first };

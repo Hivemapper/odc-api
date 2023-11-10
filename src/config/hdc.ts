@@ -18,6 +18,7 @@ export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
 export const ML_METADATA_ROOT_FOLDER = '/mnt/data/ml_metadata';
 export const UNPROCESSED_METADATA_ROOT_FOLDER = '/mnt/data/unprocessed_metadata';
 export const ML_SCRIPT_PATH = '/opt/dashcam/bin/ml/privacy.py';
+export const DB_PATH = '/mnt/data/gnss.v1.2.0.db';
 export const DEFAULT_MODEL_PATH = '/opt/dashcam/bin/ml';
 export const GPS_LATEST_SAMPLE =
   '/mnt/data/gps/latest.log';

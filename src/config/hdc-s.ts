@@ -11,6 +11,7 @@ export const FRAMES_ROOT_FOLDER = '/data/recording/pic';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
+export const DB_PATH = '/data/recording/data-logger.v1.2.0.db';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';

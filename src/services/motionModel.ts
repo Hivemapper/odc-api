@@ -6,7 +6,7 @@ import {
   checkFrameKmContinuity,
 } from 'util/motionModel';
 import { FramesMetadata, GnssMetadata } from 'types/motionModel';
-import { promiseWithTimeout, sleep } from 'util/index';
+import { clearDirectory, promiseWithTimeout, sleep } from 'util/index';
 import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { isCarParkedBasedOnImu } from 'util/imu';
@@ -14,16 +14,45 @@ import { isPrivateZonesInitialised } from './loadPrivacy';
 import { getNextGnss, isGnssEligibleForMotionModel } from 'util/motionModel/gnss';
 import { getNextImu } from 'util/motionModel/imu';
 import { moveFrames } from 'util/frames';
-import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, getFramesCount, isFrameKmComplete } from 'sqlite/framekm';
+import { addFramesToFrameKm, clearFrameKmTable, getExistingFramesMetadata, getFrameKmMetadata, getFrameKmName, getFramesCount, isFrameKmComplete, isInProgress } from 'sqlite/framekm';
 import { UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { join } from 'path';
-import { promises } from 'fs';
+import { existsSync, promises } from 'fs';
 
 const ITERATION_DELAY = 10000;
 let failuresInARow = 0;
+let firstLoad = true;
 
 const execute = async () => {
   try {
+    if (firstLoad) {
+      firstLoad = false;
+      await sleep(3000);
+      if (!existsSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER)) {
+        try {
+          await promises.mkdir(UNPROCESSED_FRAMEKM_ROOT_FOLDER);
+        } catch (e: unknown) {
+          console.log(e);
+        }
+      }
+      if (await isInProgress()) {
+        const frameKmName = await getFrameKmName();
+        if (frameKmName) {
+          try {
+            const data = await getFrameKmMetadata(true);
+            // Trim the end of last trip
+            const trimmedData = data.slice(0, -12);
+            if (trimmedData.length) {
+              await packFrameKm(frameKmName, trimmedData);
+              await clearFrameKmTable(true);
+              await clearDirectory(UNPROCESSED_FRAMEKM_ROOT_FOLDER);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    }
     // Do not iterate if system time is not set
     // wait for system integrity check to be done
     // and Private Zones are in memory
@@ -50,6 +79,7 @@ const execute = async () => {
               selectImages(chunk),
               10000,
             );
+            
             console.log('FRAMEKMS READY: ' + frameKms.length);
             for (let i = 0; i < frameKms.length; i++) {
               const frameKm = frameKms[i];
@@ -76,6 +106,12 @@ const execute = async () => {
                     await clearFrameKmTable();
                     const count = await getFramesCount();
                     console.log('After clear: ', count);
+                    if (count) {
+                      // If there are frames left in the table, move them to the new FrameKM
+                      const newFrameKmName = await getFrameKmName();
+                      const remainingFrames = await getFrameKmMetadata();
+                      await moveFrames(remainingFrames.map(img => img.name || ''), join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, newFrameKmName), join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
+                    }
                     console.log('Removing dir: ', join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
                     await promises.rmdir(join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName), { recursive: true });
                     failuresInARow = 0;

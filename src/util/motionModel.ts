@@ -48,7 +48,6 @@ import { concatFrames, getFrameKmTelemetry } from './framekm';
 import { clearFrameKmTable, getFrameKmMetadata, getFrameKmName, isInProgress } from 'sqlite/framekm';
 
 const MAX_TIMEDIFF_BETWEEN_FRAMES = 180 * 1000;
-const MIN_FRAMES_TO_EXTRACT = 1;
 export const MAX_FAILED_ITERATIONS = 14;
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -56,6 +55,7 @@ export const MIN_PER_FRAME_BYTES = 25 * 1000;
 const MIN_DISTANCE_BETWEEN_FRAMES = 1;
 const MIN_TIME_BETWEEN_FRAMES = 33; // Max 30fps
 const POTENTIAL_CORNER_ANGLE = 90;
+const cutReasonMap: Record<string, string> = {};
 
 export const createMotionModel = (
   gpsData: GnssMetadata[],
@@ -123,7 +123,6 @@ export const createMotionModel = (
   frameKms.push(curFrameKm);
   console.log(`dashcam: frameKM parsed: ${frameKms.length}`);
 
-  let totalSamples = 0;
   const samplesToTakePerFrameKm: any[] = frameKms
     .map(frameKm => {
       let samplesToTake: FramesMetadata[] = [];
@@ -132,14 +131,12 @@ export const createMotionModel = (
       } catch (e: any) {
         console.log('dashcam: sampling failed: ' + e);
       }
-      totalSamples += samplesToTake?.length || 0;
       return samplesToTake;
-    })
-    .filter(frameKm => (frameKm || []).length > MIN_FRAMES_TO_EXTRACT);
+    });
   console.log(
     `dashcam: sample chunks parsed: ${samplesToTakePerFrameKm.length}`,
   );
-  return totalSamples > MIN_FRAMES_TO_EXTRACT ? samplesToTakePerFrameKm : [];
+  return samplesToTakePerFrameKm;
 };
 
 
@@ -158,10 +155,10 @@ export const getPointsToSample = (
   }
 
   let points: FramesMetadata[] = gpsData;
-  const offset = 0;
-  const { isCornerDetectionEnabled, DX } = getConfig();
+  let offset = 0;
+  // const { isCornerDetectionEnabled, DX } = getConfig();
   // TODO: revisit with next iteration
-  const dx = DX + 0.2; // This is a very important addition for having the wider brackets to select frames more accurately
+  const dx = getConfig().DX + 0.2; // This is a very important addition for having the wider brackets to select frames more accurately
   let previous = [];
 
   if (existingKeyFrames.length > 0) {
@@ -171,6 +168,8 @@ export const getPointsToSample = (
     const next = gpsData[0];
     const dist = latLonDistance(last.lat, next.lat, last.lon, next.lon);
     if (dist < 50) {
+      const prevSpaceCurve = catmullRomCurve(previous, ['lon', 'lat', undefined], true);
+      offset = prevSpaceCurve.getLength() + dx;
       points = previous.concat(points);
     } else {
       previous = [];
@@ -180,30 +179,31 @@ export const getPointsToSample = (
   const spaceCurve = catmullRomCurve(points, ['lon', 'lat', undefined], true);
   const totalDistance = spaceCurve.getLength();
   const pointsToSample: FramesMetadata[] = [];
-  let curvePoints: CurveData[] = [];
+  const curvePoints: CurveData[] = [];
 
   if (totalDistance) {
-    console.log('total distance: ' + totalDistance + ', DX: ' + dx);
-    let prevTangent = null;
+    console.log('total distance: ' + totalDistance + ', offset: ' + offset + ', DX: ' + dx);
+    // let prevTangent = null;
     for (let u = offset; u <= totalDistance; u += dx) {
-      if (isCornerDetectionEnabled) {
-        const v = u / totalDistance;
-        const currTangent = spaceCurve.getTangentAt(v);
-        let angle = 0;
-        if (prevTangent) {
-          angle = Math.abs((prevTangent.angleTo(currTangent) * 180) / Math.PI);
-        }
-        prevTangent = currTangent;
-        if (angle > POTENTIAL_CORNER_ANGLE) {
-          u = findCorner(spaceCurve, u, dx, totalDistance, angle);
-        }
-      }
+      // TODO: revisit corner detection with next iteration
+      // if (isCornerDetectionEnabled) {
+      //   const v = u / totalDistance;
+      //   const currTangent = spaceCurve.getTangentAt(v);
+      //   let angle = 0;
+      //   if (prevTangent) {
+      //     angle = Math.abs((prevTangent.angleTo(currTangent) * 180) / Math.PI);
+      //   }
+      //   prevTangent = currTangent;
+      //   if (angle > POTENTIAL_CORNER_ANGLE) {
+      //     u = findCorner(spaceCurve, u, dx, totalDistance, angle);
+      //   }
+      // }
       curvePoints.push(getPoint(spaceCurve, u / totalDistance));
     }
   }
-  curvePoints = curvePoints.slice(previous.length);
+  // curvePoints = curvePoints.slice(previous.length);
 
-  if (points.length < 3 || curvePoints.length < 3) {
+  if (points.length < 3) {
     return [];
   }
 
@@ -266,7 +266,7 @@ export const getPointsToSample = (
     }
   }
 
-  if (pointsToSample.length < 3) {
+  if (!pointsToSample.length || (pointsToSample.length < 3 && !existingKeyFrames.length)) {
     return [];
   }
 
@@ -534,6 +534,7 @@ export const selectImages = async (
           prevPoint.lon,
           pointForFrame.lon,
         );
+        console.log(totalDistance, distance, ' - ', prevTime, frameTimestamp - prevTime, nextTime - prevTime, nextFrameTimestamp - prevTime);
 
         if (isPrivateLocation(pointForFrame.lat, pointForFrame.lon)) {
           if (imagesToDownload.length) {
@@ -556,6 +557,7 @@ export const selectImages = async (
           imageCursor++;
         } else if (distance < distanceRange.MIN_DISTANCE) {
           if (!imagesToDownload.length) {
+            console.log('Selected first one');
             imagesToDownload = [images[imageCursor]];
             gpsForImages = [pointForFrame];
           } else {
@@ -579,6 +581,7 @@ export const selectImages = async (
               ) {
                 imageCursor++;
                 pointForFrame = { ...candidateFrame };
+                console.log('Selected');
                 gpsForImages.push(pointForFrame);
                 imagesToDownload.push(images[imageCursor]);
                 if (gpsCursor !== frameKM.length - 1) {
@@ -590,25 +593,41 @@ export const selectImages = async (
           imageCursor++;
         } else if (distance > distanceRange.MAX_DISTANCE) {
           // NEED TO CUT FRAMEKM HERE
-          console.log(
-            `cutting frameKM of size ${
-              imagesToDownload.length
-            } cause of distance between frames: ${distance}, delay in msecs: ${
-              frameTimestamp - prevTime
-            }, speed: ${prevPoint.speed}`,
-          );
-          if (imagesToDownload.length) {
-            subChunks.push({
-              images: imagesToDownload,
-              points: gpsForImages,
-            });
+          if (getConfig().ignoreFpsDrop) {
+            console.log(
+              `ignoring the cut ${
+                imagesToDownload.length
+              } caused of distance between frames: ${distance}, delay in msecs: ${
+                frameTimestamp - prevTime
+              }, speed: ${prevPoint.speed}`,
+            );
+            gpsForImages.push(pointForFrame);
+            imagesToDownload.push(images[imageCursor]);
+            imageCursor++;
+            if (gpsCursor !== frameKM.length - 1) {
+              gpsCursor++;
+            }
+          } else {
+            console.log(
+              `cutting frameKM of size ${
+                imagesToDownload.length
+              } cause of distance between frames: ${distance}, delay in msecs: ${
+                frameTimestamp - prevTime
+              }, speed: ${prevPoint.speed}`,
+            );
+            if (imagesToDownload.length) {
+              subChunks.push({
+                images: imagesToDownload,
+                points: gpsForImages,
+              });
+            }
+            imagesToDownload = [images[imageCursor]];
+            gpsForImages = [pointForFrame];
+            if (gpsCursor !== frameKM.length - 1) {
+              gpsCursor++;
+            }
+            imageCursor++;
           }
-          imagesToDownload = [images[imageCursor]];
-          gpsForImages = [pointForFrame];
-          if (gpsCursor !== frameKM.length - 1) {
-            gpsCursor++;
-          }
-          imageCursor++;
         } else {
           // Let's check if the next frame could be the better candidate to go into motion model
           if (nextFrameTimestamp) {
@@ -624,6 +643,7 @@ export const selectImages = async (
               prevPoint.lon,
               candidateFrame.lon,
             );
+            console.log(totalDistance, distance, 'Better?');
             if (
               distance >= distanceRange.BEST_MIN_DISTANCE &&
               distance <= distanceRange.MAX_DISTANCE
@@ -633,6 +653,7 @@ export const selectImages = async (
             }
           }
 
+          console.log('Selected');
           gpsForImages.push(pointForFrame);
           imagesToDownload.push(images[imageCursor]);
           imageCursor++;
@@ -669,8 +690,8 @@ export const selectImages = async (
             (acc, obj) => acc + obj?.images?.length || 0,
             0,
           ),
-          dateStart,
-          dateEnd,
+          dateStart: Math.round(dateStart),
+          dateEnd: Math.round(dateEnd),
           firstImageTs: images?.[0]?.date,
           lastImageTs: images?.[images.length - 1]?.date,
           chunks: subChunks.length,
@@ -730,16 +751,22 @@ let destFolder = '';
 export const checkFrameKmContinuity = async (lastFrames: FramesMetadata[], next: GnssMetadata) => {
   if (await isInProgress()) {
     const last = lastFrames[lastFrames.length - 1];
-    if (latLonDistance(last.lat, next.lat, last.lon, next.lon) > MAX_DISTANCE_BETWEEN_POINTS) {
+    const distance = latLonDistance(last.lat, next.lat, last.lon, next.lon);
+    console.log('Checking continuity:', distance, last.t, next.t);
+    if (distance > MAX_DISTANCE_BETWEEN_POINTS) {
       console.log('dashcam: frameKM cut by DISTANCE');
       const frameKmName = await getFrameKmName();
-      try {
-        await packFrameKm(frameKmName, await getFrameKmMetadata());
-        await clearFrameKmTable();
-        await promises.rmdir(join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName));
-      } catch (e) {
-        console.error(e);
+      if (frameKmName) {
+        try {
+          await packFrameKm(frameKmName, await getFrameKmMetadata(true));
+          await clearFrameKmTable(true);
+          await promises.rmdir(join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, frameKmName), { recursive: true });
+        } catch (e) {
+          console.error(e);
+        }
       }
+    } else {
+      console.log('ALL GOOD, CONTINUOUS!');
     }
   }
 }
@@ -748,6 +775,13 @@ export const packFrameKm = async (bundleName: string, frameKm: FramesMetadata[])
   console.log(
     'Ready to pack ' + frameKm.length + ' frames',
   );
+  let finalBundleName;
+
+  // We never pack such a short framekms
+  if (frameKm.length < 3) {
+    console.log('SHORT FRAMEKM THROWN AWAY', frameKm.length);
+    return;
+  }
   try {
     if (!destFolder && getConfig().isDashcamMLEnabled) {
       destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
@@ -758,13 +792,14 @@ export const packFrameKm = async (bundleName: string, frameKm: FramesMetadata[])
         mkdir(destFolder, resolve);
       });
     }
+    const finalBundleName = await getFrameKmName(frameKm.length);
     const start = Date.now();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
         frameKm.map(
           (item: FramesMetadata) => item.name || '',
         ),
-        bundleName,
+        finalBundleName,
         0,
         join(UNPROCESSED_FRAMEKM_ROOT_FOLDER, bundleName),
         false,
@@ -781,36 +816,38 @@ export const packFrameKm = async (bundleName: string, frameKm: FramesMetadata[])
       );
       await promiseWithTimeout(
         packMetadata(
-          bundleName,
+          finalBundleName,
           frameKm,
           bytesMap,
         ),
         5000,
       );
+
+      let framekmTelemetry: FrameKMTelemetry = {
+        systemtime: Date.now()
+      };
+      try {
+        framekmTelemetry = await promiseWithTimeout(getFrameKmTelemetry(bundleName, frameKm), 5000);
+      } catch (error: unknown) {
+        console.log('Error getting telemetry', error);
+      }
+      Instrumentation.add({
+        event: 'DashcamPackedFrameKm',
+        size: totalBytes,
+        message: JSON.stringify({
+          name: finalBundleName,
+          numFrames: frameKm?.length,
+          duration: Date.now() - start,
+          cutReason: frameKm?.length < Math.ceil(1000 / getConfig().DX) ? cutReasonMap[bundleName] || 'unknown' : 'complete',
+          ...framekmTelemetry,
+        }),
+      });
     }
-    let framekmTelemetry: FrameKMTelemetry = {
-      systemtime: Date.now()
-    };
-    try {
-      framekmTelemetry = await promiseWithTimeout(getFrameKmTelemetry(bundleName, frameKm), 5000);
-    } catch (error: unknown) {
-      console.log('Error getting telemetry', error);
-    }
-    Instrumentation.add({
-      event: 'DashcamPackedFrameKm',
-      size: totalBytes,
-      message: JSON.stringify({
-        name: bundleName,
-        numFrames: frameKm?.length,
-        duration: Date.now() - start,
-        ...framekmTelemetry,
-      }),
-    });
   } catch (error: unknown) {
     Instrumentation.add({
       event: 'DashcamFailedPackingFrameKm',
       message: JSON.stringify({
-        name: bundleName,
+        name: finalBundleName || bundleName,
         reason: 'Motion Model Error',
         error,
       }),

@@ -56,6 +56,27 @@ export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
   const gpsChunks: GnssMetadata[][] = [];
   let gps: GnssMetadata[] = [];
 
+  function convertGnssToOdcFormat(gnss: GnssRecord, t: number): GnssMetadata {
+    return {
+      t,
+      systemTime: new Date(gnss.system_time).getTime(),
+      lat: gnss.latitude,
+      lon: gnss.longitude,
+      alt: gnss.altitude,
+      speed: (gnss.speed * 3600) / 1000,
+      satellites: gnss.satellites_used,
+      dilution: 0, // TBD
+      xdop: gnss.xdop || 99,
+      ydop: gnss.ydop || 99,
+      pdop: gnss.pdop || 99,
+      hdop: gnss.hdop || 99,
+      vdop: gnss.vdop || 99,
+      tdop: gnss.tdop || 99,
+      gdop: gnss.gdop || 99,
+      eph: gnss.eph || 999,
+    }
+  }
+
   try {
     // we don't need to keep querying all data if last frame is older than 30 secs
     const since = Math.max(prevGnssTimestamp, Date.now() - 30000);
@@ -99,35 +120,27 @@ export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
               )
             : getConfig().DX;
 
+        const aproxSpeed = prevPoint ? distance / (t - prevPoint.t) : gnss.speed;
+
         if (
           t &&
           isValidGnssMetadata(gnss) &&
-          gnss.speed < MAX_SPEED &&
+          aproxSpeed < MAX_SPEED &&
+          gnss.speed >= MIN_SPEED && 
           distance < MAX_DISTANCE_BETWEEN_POINTS
         ) {
-          if (gnss.speed >= MIN_SPEED || index === gnssRecords.length - 1) {
-            gps.push({
-              t,
-              systemTime: new Date(gnss.system_time).getTime(),
-              lat: gnss.latitude,
-              lon: gnss.longitude,
-              alt: gnss.altitude,
-              speed: (gnss.speed * 3600) / 1000,
-              satellites: gnss.satellites_used,
-              dilution: 0, // TBD
-              xdop: gnss.xdop || 99,
-              ydop: gnss.ydop || 99,
-              pdop: gnss.pdop || 99,
-              hdop: gnss.hdop || 99,
-              vdop: gnss.vdop || 99,
-              tdop: gnss.tdop || 99,
-              gdop: gnss.gdop || 99,
-              eph: gnss.eph || 999,
-            });
-            prevPoint = { ...gnss };
-          }
-        } else if (t) {
-          if (distance > MAX_DISTANCE_BETWEEN_POINTS) {
+          gps.push(convertGnssToOdcFormat(gnss, t));
+          prevPoint = { ...gnss, t };
+        } else if (t && isValidGnssMetadata(gnss)) {
+          if (aproxSpeed > MAX_SPEED) {
+            console.log('WEIRD SPEED', aproxSpeed);
+            if (isValidGnssMetadata(gnss) && gps.length && prevPoint && gnss.eph < prevPoint.eph) { 
+              console.log('REPLACED', gnss.eph, prevPoint.eph);
+              gps[gps.length - 1] = convertGnssToOdcFormat(gnss, t);
+              prevPoint = { ...gnss, t };
+            }
+          } else if (distance > MAX_DISTANCE_BETWEEN_POINTS) {
+            console.log('gps chunked', MAX_DISTANCE_BETWEEN_POINTS);
             gps.sort((a, b) => a.t - b.t);
             gpsChunks.push(gps);
             gps = [];

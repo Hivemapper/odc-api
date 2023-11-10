@@ -77,7 +77,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(MotionModelService);
     // serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
-    serviceRunner.add(LogDiskUsageService);
+    // serviceRunner.add(LogDiskUsageService);
 
     serviceRunner.run();
   } catch (e: unknown) {

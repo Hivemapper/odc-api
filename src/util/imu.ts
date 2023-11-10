@@ -1,7 +1,7 @@
 import { ImuMetadata, IXYZPoint } from 'types/motionModel';
 import { KalmanFilter } from './filter';
 import { Instrumentation } from './instrumentation';
-import { getConfig } from './motionModel';
+import { getConfig } from './motionModel/config';
 
 export const complementaryFilter = (
   accelData: IXYZPoint,

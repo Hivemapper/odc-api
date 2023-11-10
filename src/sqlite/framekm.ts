@@ -2,11 +2,19 @@ import { getConfig } from 'util/motionModel/config';
 import { db, getAsync, runAsync } from './index';
 import { FramesMetadata } from 'types/motionModel';
 
+function getMaxFramesCount() {
+  const {
+    FrameKmLengthMeters,
+    DX,
+  } = getConfig();
+  return Math.round(FrameKmLengthMeters / DX);
+}
+
 export const isFrameKmComplete = async (): Promise<boolean> => {
   try {
     const count = await getFramesCount();
-    console.log('FRAMES READY: ' + count, count * getConfig().DX > 1000);
-    return count > Math.round(1000 / getConfig().DX); // Check if we have at least KM of data
+    console.log('FRAMES READY: ' + count, count * getConfig().DX > getConfig().FrameKmLengthMeters);
+    return count > getMaxFramesCount(); // Check if we have at least KM of data
   } catch (error) {
     console.error('Error checking if framekm is complete:', error);
     return false;
@@ -28,23 +36,18 @@ export const getFramesCount = async (): Promise<number> => {
 
 export const isInProgress = async (): Promise<boolean> => {
   try {
-    const existsRow: any = await getAsync(
-      db,
-      'SELECT EXISTS(SELECT 1 FROM framekm) AS inProgress;',
-    );
-    // The result will be 1 if the table is not empty, 0 otherwise
-    const inProgress = existsRow.inProgress === 1;
-    return inProgress;
+    const count = await getFramesCount();
+    return count > 0;
   } catch (error) {
     console.error('Error checking if framekm is not empty:', error);
     return false;
   }
 };
 
-export const getFrameKmMetadata = async (): Promise<FramesMetadata[]> => {
+export const getFrameKmMetadata = async (getAll = false): Promise<FramesMetadata[]> => {
   try {
-    const limit = Math.round(1000 / getConfig().DX);
-    const rows: any = await getAsync(db, `SELECT * FROM framekm ORDER BY t LIMIT ${limit};`);
+    const limit = getMaxFramesCount();
+    const rows: any = await getAsync(db, `SELECT * FROM framekm ORDER BY t${getAll ? '' : ' LIMIT ' + limit};`);
     return rows;
   } catch (error) {
     console.error('Error fetching framekm metadata:', error);
@@ -104,7 +107,7 @@ export const getExistingFramesMetadata = async (limit = 3): Promise<any[]> => {
       rows = rows.concat(prevRows);
     }
 
-    return rows; // Returns either the last N records from framekm, prev_framekm, or an empty array
+    return rows?.length ? rows.reverse() : []; // Returns either the last N records from framekm, prev_framekm, or an empty array
   } catch (error) {
     console.error('Error fetching frames:', error);
     return [];
@@ -126,6 +129,7 @@ export const addFramesToFrameKm = async (
     const rowsToIgnore = rows.slice(0, framesLeftToTrim);
     metersTrimmed += rowsToIgnore.length * getConfig().DX;
     rows = rows.slice(framesLeftToTrim);
+    console.log('TRIMMED: ', rowsToIgnore.length);
     await addFramesToFrameKm(rowsToIgnore, 'prev_framekm');
   }
 
@@ -140,9 +144,6 @@ export const addFramesToFrameKm = async (
       `;
 
       try {
-        // Start transaction
-        await runAsync(db, 'BEGIN TRANSACTION;');
-
         for (const row of rows) {
           await runAsync(db, insertSQL, [
             row.bytes,
@@ -164,33 +165,28 @@ export const addFramesToFrameKm = async (
             row.eph,
           ]);
         }
-
-        // Commit transaction
-        await runAsync(db, 'COMMIT;');
         resolve();
       } catch (error) {
         console.error('Error adding rows to framekm:', error);
-        // If an error occurs, attempt to rollback the transaction
-        try {
-          await runAsync(db, 'ROLLBACK;');
-          reject(error); // Reject the promise with the error
-        } catch (rollbackError) {
-          reject(rollbackError); // If rollback fails, reject the promise with the rollback error
-        }
+        reject(error); 
       }
     });
   }
 };
 
-export const clearFrameKmTable = async (): Promise<void> => {
+export const clearFrameKmTable = async (clearAll = false): Promise<void> => {
   try {
-    const limit = Math.round(1000 / getConfig().DX);
+    const limit = getMaxFramesCount();
     await runAsync(db, 'DELETE FROM prev_framekm;');
     await runAsync(
       db,
       'INSERT INTO prev_framekm SELECT * FROM framekm;'
     );
-    await runAsync(db, `DELETE FROM framekm WHERE rowid IN (SELECT rowid FROM framekm ORDER BY t LIMIT ${limit});`);
+    if (clearAll) {
+      await runAsync(db, 'DELETE FROM framekm;');
+    } else {
+      await runAsync(db, `DELETE FROM framekm WHERE rowid IN (SELECT rowid FROM framekm ORDER BY t LIMIT ${limit});`);
+    }
   } catch (error) {
     console.log(error);
   }
@@ -205,7 +201,7 @@ export const clearAll = async (): Promise<void> => {
   }
 };
 
-export const getFrameKmName = async (withCount = false): Promise<string> => {
+export const getFrameKmName = async (count = 0): Promise<string> => {
   try {
     const row: any = await getAsync(
       db,
@@ -213,8 +209,6 @@ export const getFrameKmName = async (withCount = false): Promise<string> => {
     );
     console.log(row);
     if (row.length) {
-      const count = await getFramesCount();
-
       let formattedTime;
       try {
         formattedTime = new Date(Math.round(Number(row[0].t)))
@@ -225,7 +219,7 @@ export const getFrameKmName = async (withCount = false): Promise<string> => {
       } catch {
         return '';
       }
-      return 'km_' + formattedTime + '_' + (withCount ? count : 0) + '_' + 0;
+      return 'km_' + formattedTime + '_' + count + '_' + 0;
     } else {
       // We can't generate FrameKM Name for empty FrameKM table
       return '';

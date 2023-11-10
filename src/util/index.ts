@@ -10,13 +10,13 @@ import {
   createReadStream,
   readFile,
   readFileSync,
-  stat,
   Stats,
   statSync,
   writeFile,
   writeFileSync,
   rmSync,
   existsSync,
+  stat,
 } from 'fs';
 import {
   CACHED_CAMERA_CONFIG,
@@ -28,6 +28,7 @@ import {
 import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 import { Instrumentation } from './instrumentation';
+import { join } from 'path';
 
 let sessionId: string;
 
@@ -136,32 +137,35 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
 
 export const stopScriptIfRunning = (scriptPath: string) => {
   return new Promise((resolve, reject) => {
-      exec(`ps aux | grep "${scriptPath}" | grep -v "grep" | awk '{print $2}'`, (error, stdout, stderr) => {
-          if (error) {
-              reject(error);
-              return;
+    exec(
+      `ps aux | grep "${scriptPath}" | grep -v "grep" | awk '{print $2}'`,
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        const pids = stdout.split('\n').filter(pid => pid.trim() !== '');
+
+        if (pids.length === 0) {
+          resolve(false); // Process is not running
+          return;
+        }
+
+        // Kill each found process
+        pids.forEach(pid => {
+          try {
+            if (Number(pid)) {
+              process.kill(Number(pid));
+            }
+          } catch (err) {
+            console.error(`Failed to kill process ${pid}`, err);
           }
+        });
 
-          const pids = stdout.split('\n').filter(pid => pid.trim() !== '');
-
-          if (pids.length === 0) {
-              resolve(false);  // Process is not running
-              return;
-          }
-
-          // Kill each found process
-          pids.forEach(pid => {
-              try {
-                  if (Number(pid)) {
-                    process.kill(Number(pid));
-                  }
-              } catch (err) {
-                  console.error(`Failed to kill process ${pid}`, err);
-              }
-          });
-
-          resolve(true);  // Processes were running and have been terminated
-      });
+        resolve(true); // Processes were running and have been terminated
+      },
+    );
   });
 };
 
@@ -218,23 +222,23 @@ const defaultCameraConfig: ICameraConfig = {
   },
 };
 
-const fileExistsCache: { [key: string]: boolean } = {}; 
+const fileExistsCache: { [key: string]: boolean } = {};
 
 export async function ensureFileExists(filePath: string) {
-    if (fileExistsCache[filePath]) return;
+  if (fileExistsCache[filePath]) return;
 
-    try {
-        await promises.access(filePath, constants.F_OK);
-        fileExistsCache[filePath] = true;  // If access is successful, update the cache.
-    } catch (error: any) {
-        // If the error indicates the file doesn't exist, create it.
-        if (error && error.code === 'ENOENT') {
-            await promises.writeFile(filePath, '');
-            fileExistsCache[filePath] = true;
-        } else {
-            console.error(error);
-        }
+  try {
+    await promises.access(filePath, constants.F_OK);
+    fileExistsCache[filePath] = true; // If access is successful, update the cache.
+  } catch (error: any) {
+    // If the error indicates the file doesn't exist, create it.
+    if (error && error.code === 'ENOENT') {
+      await promises.writeFile(filePath, '');
+      fileExistsCache[filePath] = true;
+    } else {
+      console.error(error);
     }
+  }
 }
 
 export const addAppConnectedLog = () => {
@@ -248,15 +252,15 @@ export const addAppConnectedLog = () => {
     Instrumentation.add({
       event: 'DashcamAppConnected',
       message: JSON.stringify({
-        usbConnected: true
-      })
+        usbConnected: true,
+      }),
     });
   } else {
     Instrumentation.add({
       event: 'DashcamAppConnected',
     });
   }
-}
+};
 
 export const getCpuLoad = (callback: (load: number) => void) => {
   try {
@@ -566,6 +570,38 @@ export function tryToRemoveFile(path: string) {
     rmSync(path, { force: true });
   } catch (err) {
     console.error(err);
+  }
+}
+
+export function convertTimestampToDbFormat(timestamp: number) {
+  const date = new Date(timestamp);
+  // Convert to ISO string and replace 'T' with a space and 'Z' with an empty string.
+  let dateString = date.toISOString().replace('T', ' ').replace('Z', '');
+  // Now, we need to adjust the milliseconds to match your database format (5 decimal places):
+  const parts = dateString.split('.');
+  // Ensure that there are exactly 5 digits for milliseconds
+  parts[1] = parts[1].padEnd(5, '0').substring(0, 5);
+  dateString = parts.join('.');
+  return dateString;
+}
+
+export async function clearDirectory(directory: string) {
+  try {
+    if (!existsSync(directory)) {
+      return;
+    }
+    const files = await promises.readdir(directory);
+    for (const file of files) {
+      const fullPath = join(directory, file);
+      const fileStat = await promises.stat(fullPath);
+      if (fileStat.isDirectory()) {
+        await promises.rmdir(fullPath, { recursive: true });
+      } else {
+        await promises.unlink(fullPath);
+      }
+    }
+  } catch (err) {
+    console.error(`Error clearing directory: ${err}`);
   }
 }
 

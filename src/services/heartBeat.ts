@@ -11,7 +11,7 @@ import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
 import { ifTimeSet, setLockTime } from 'util/lock';
-import { isEnoughLightForGnss } from 'util/motionModel';
+import { isEnoughLightForGnss } from 'util/motionModel/gnss';
 import { COLORS, updateLED } from '../util/led';
 import {
   isCameraRunningOutOfSpace,
@@ -85,7 +85,7 @@ const fetchGNSSLatestSample = async () => {
       try {
         gpsSample = JSON.parse(jsonrepair(data));
       } catch (e) {
-        console.log('Latest.log Parse Error:', e);
+        //
       }
     }
   } catch (e) {

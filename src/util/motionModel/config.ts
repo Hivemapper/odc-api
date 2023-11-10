@@ -25,10 +25,12 @@ let config: MotionModelConfig = {
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   isCornerDetectionEnabled: true,
   isImuMovementDetectionEnabled: false,
+  ignoreFpsDrop: false,
   isLightCheckDisabled: false,
   isDashcamMLEnabled: false,
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
+  FrameKmLengthMeters: 1000,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,
@@ -46,7 +48,7 @@ export const loadConfig = (
   updateFile?: boolean,
 ) => {
   if (isValidConfig(_config)) {
-    config = _config;
+    config = { ...config, ..._config };
     if (updateFile) {
       writeFile(
         MOTION_MODEL_CONFIG,

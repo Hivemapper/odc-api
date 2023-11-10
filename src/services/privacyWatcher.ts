@@ -2,7 +2,7 @@ import { existsSync, mkdir, readFileSync, readdirSync, rmSync } from 'fs';
 import path from 'path';
 import { promiseWithTimeout, sleep, stopScriptIfRunning } from 'util/index';
 import { CAMERA_TYPE, DEFAULT_MODEL_PATH, ML_METADATA_ROOT_FOLDER, ML_SCRIPT_PATH, UNPROCESSED_FRAMEKM_ROOT_FOLDER, UNPROCESSED_METADATA_ROOT_FOLDER } from 'config';
-import { getNumFramesFromChunkName, packMetadata } from 'util/motionModel';
+import { getNumFramesFromChunkName } from 'util/motionModel';
 import { ChildProcess, exec, spawn } from 'child_process';
 import { concatFrames } from 'util/framekm';
 import { Instrumentation } from 'util/instrumentation';
@@ -113,16 +113,16 @@ const execute = async () => {
                       acc + (Number(curr) || 0),
                     0,
                   );
-                  await promiseWithTimeout(
-                    packMetadata(
-                      chunkName,
-                      metadata.frames,
-                      chunkFrames.map((f) => ({ path: f.split('ww')[1], date: 0 })),
-                      bytesMap,
-                      true
-                    ),
-                    5000,
-                  );
+                  // await promiseWithTimeout(
+                  //   packMetadata(
+                  //     chunkName,
+                  //     metadata.frames,
+                  //     chunkFrames.map((f) => ({ path: f.split('ww')[1], date: 0 })),
+                  //     bytesMap,
+                  //     true
+                  //   ),
+                  //   5000,
+                  // );
                   rmSync(metadataPath);
                 }
                 Instrumentation.add({
