@@ -100,10 +100,12 @@ export const getNextGnss = async (): Promise<GnssMetadata[][]> => {
               )
             : getConfig().DX;
 
+        const approxSpeed = prevPoint ? distance / (t - prevPoint.t) : gnss.speed;
+
         if (
           t &&
           isValidGnssMetadata(gnss) &&
-          gnss.speed < MAX_SPEED &&
+          approxSpeed < MAX_SPEED &&
           distance < MAX_DISTANCE_BETWEEN_POINTS
         ) {
           if (gnss.speed >= MIN_SPEED || index === gnssRecords.length - 1) {

@@ -29,6 +29,7 @@ let config: MotionModelConfig = {
   isDashcamMLEnabled: false,
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
+  FrameKmLengthMeters: 1000,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,

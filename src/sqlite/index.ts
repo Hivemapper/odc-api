@@ -77,4 +77,47 @@ export const runSchemaAsync = (db: Database, sql: string) => {
   });
 };
     
-export const db: Database = connectDB();
+
+export const initialise = async (): Promise<void> => {
+  await createFrameKMTable();
+};
+
+export const createFrameKMTable = async (): Promise<void> => {
+  const createTableSQL = `
+  CREATE TABLE IF NOT EXISTS framekm (
+    bytes INTEGER,
+    name TEXT,
+    acc_x REAL,
+    acc_y REAL,
+    acc_z REAL,
+    gyro_x REAL,
+    gyro_y REAL,
+    gyro_z REAL,
+    lat REAL,
+    lon REAL,
+    alt REAL,
+    speed REAL,
+    t INTEGER,
+    systemTime INTEGER,
+    satellites INTEGER,
+    dilution REAL,
+    eph REAL
+  );`;
+  try {
+    await runSchemaAsync(db, createTableSQL);
+
+    // prev_framekm table will hold the metadata of previous FrameKMs
+    // That will help to reference the previous points for motion model,
+    // And also to hold the metadata of multiple previous FrameKMs while ML is running
+    const createPrevTableSQL = createTableSQL.replace(
+      'framekm',
+      'prev_framekm',
+    );
+    await runSchemaAsync(db, createPrevTableSQL);
+  } catch (error) {
+    console.error('Error during initialisation of tables:', error);
+    throw error;
+  }
+};
+
+export const db: Database = connectDB(initialise);

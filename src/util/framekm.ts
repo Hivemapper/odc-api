@@ -193,3 +193,11 @@ export const getFrameKmTelemetry = async (image: ICameraFile, meta: FramesMetada
   }
   return telemetry;
 }
+
+export const getMaxFrameKmLength = () => {
+  const {
+    FrameKmLengthMeters,
+    DX,
+  } = getConfig();
+  return Math.round(FrameKmLengthMeters / DX);
+}
