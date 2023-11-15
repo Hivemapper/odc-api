@@ -105,7 +105,7 @@ export type GnssMetadata = Dilution & {
   alt: number;
   speed: number;
   t: number;
-  systemTime: number;
+  systemTime?: number;
   satellites: number;
   dilution: number;
   eph: number;

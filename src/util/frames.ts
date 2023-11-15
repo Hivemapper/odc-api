@@ -1,19 +1,44 @@
 import { FRAMES_ROOT_FOLDER } from 'config';
-import { existsSync, promises } from 'fs';
-import { join } from 'path';
+import { readdir } from 'fs';
+import { tmpFrameName } from 'routes/recordings';
+import { IImage } from 'types';
+import { getDateFromUnicodeTimestamp } from 'util/index';
 
-export const moveFrames = async (images: string[], destination: string, originPath = FRAMES_ROOT_FOLDER) => {
-  if (!existsSync(destination)) {
-    await promises.mkdir(destination);
-  }
-  const movePromises = images.map((image: string) => {
-    const imagePath = join(originPath, image);
-    const destinationPath = join(destination, image);
+export const getImagesForDateRange = async (from: number, to: number): Promise<IImage[]> => {
+  return new Promise(resolve => {
+    try {
+      readdir(
+        FRAMES_ROOT_FOLDER,
+        (err: NodeJS.ErrnoException | null, files: string[]) => {
+          try {
+            const jpgFiles: IImage[] = files
+              .filter(
+                (filename: string) =>
+                  filename.indexOf('.jpg') !== -1 &&
+                  filename.indexOf('.tmp') === -1 &&
+                  filename !== tmpFrameName,
+              )
+              .map(filename => {
+                return {
+                  image_name: filename,
+                  system_time: getDateFromUnicodeTimestamp(filename).getTime(),
+                };
+              });
 
-    // TODO: Better to use rename() here, but it didn't work across all devices:
-    // HDC: Error: EXDEV: cross-device link not permitted, rename '/tmp/recording/pic/1699566236_360930.jpg' -> '/mnt/data/unprocessed_framekm/km_20231109_214351_0_0/1699566236_360930.jpg'
-    // Investigate
-    return promises.copyFile(imagePath, destinationPath);
+            const filteredFiles = jpgFiles.filter((file: IImage) => {
+              return !(file.system_time < from || file.system_time > to);
+            });
+
+            resolve(filteredFiles);
+          } catch (error) {
+            console.log(error);
+            resolve([]);
+          }
+        },
+      );
+    } catch (error) {
+      console.log(error);
+      resolve([]);
+    }
   });
-  return Promise.all(movePromises);
 };

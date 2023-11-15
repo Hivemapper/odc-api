@@ -7,7 +7,6 @@ import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
-import { MotionModelService } from 'services/motionModel';
 import { PrivacyWatcherService, restartPrivacyProcess } from 'services/privacyWatcher';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
@@ -19,6 +18,7 @@ import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME } from 'util/lock';
+import { MotionModelController } from 'util/motionModel/motionModelController';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -74,10 +74,12 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
-    serviceRunner.add(MotionModelService);
     serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(LogDiskUsageService);
+
+    // Execute motion model
+    MotionModelController();
 
     serviceRunner.run();
   } catch (e: unknown) {

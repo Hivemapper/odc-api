@@ -16,11 +16,13 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from './motionModel';
 import { getConfig } from './motionModel/config';
-import { ICameraFile } from 'types';
-import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
+import { FrameKMTelemetry } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
+import { FrameKM } from 'types/sqlite';
+
+export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
+export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
@@ -159,22 +161,22 @@ export const concatFrames = async (
   }
 };
 
-export const getFrameKmTelemetry = async (image: ICameraFile, meta: FramesMetadata[]): Promise<FrameKMTelemetry> => {
+export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {
   const telemetry: FrameKMTelemetry = {
     systemtime: Date.now(),
   };
-  if (image && image.path && meta.length) {
+  if (meta.length && meta[0].image_name) {
     try {
       const record = meta[0];
-      const fullPath = join(FRAMES_ROOT_FOLDER, image.path);
+      const fullPath = join(framesFolder, record.image_name || '');
       const dimensions = sizeOf(fullPath);
       if (dimensions) {
         telemetry.width = dimensions.width;
         telemetry.height = dimensions.height;
       }
-      if (record && record.lat) {
-        telemetry.lat = record.lat;
-        telemetry.lon = record.lon;
+      if (record && record.latitude) {
+        telemetry.lat = record.latitude;
+        telemetry.lon = record.longitude;
       }
       if (record && record.acc_x) {
         telemetry.accel_x = record.acc_x;
@@ -188,7 +190,7 @@ export const getFrameKmTelemetry = async (image: ICameraFile, meta: FramesMetada
       }
       telemetry.disk_used = getDiskUsage();
     } catch (e: unknown) {
-      console.log('Error getting image sizes for ' + image.path, e);
+      console.log('Error getting image sizes', e);
     }
   }
   return telemetry;

@@ -1,13 +1,14 @@
 import { db } from './index';
 import { ImuRecord } from 'types/sqlite';
+import { convertTimestampToDbFormat } from 'util/index';
 
 export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<ImuRecord[]> => {
     let query = `SELECT * FROM imu WHERE time > ?`;
-    const args = [from];
+    const args = [convertTimestampToDbFormat(from)];
 
     if (to) {
         query += ` AND time < ?`;
-        args.push(to);
+        args.push(convertTimestampToDbFormat(to));
     }
     return new Promise((resolve, reject) => {
         db.all(query, args, (err: unknown, rows: ImuRecord[]) => {
@@ -15,7 +16,10 @@ export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<Im
                 console.log(err);
                 reject([]);
             } else {
-                resolve(rows);
+                resolve(rows.map(r => { 
+                    r.system_time = new Date(r.time + 'Z').getTime();
+                    return r;
+                }));
             }
         });
     });

@@ -4,7 +4,7 @@ import { MotionModelConfig, RawLogsConfiguration } from 'types/motionModel';
 
 export const MIN_SPEED = 0.275; // meter per seconds
 export const MAX_SPEED = 40; // meter per seconds
-export const MAX_DISTANCE_BETWEEN_POINTS = 50;
+export const MAX_DISTANCE_BETWEEN_POINTS = 10;
 
 const defaultImu = {
   threshold: 0.05,
