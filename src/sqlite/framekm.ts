@@ -6,16 +6,12 @@ import { distance } from 'util/geomath';
 import { join } from 'path';
 import { FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { existsSync, promises } from 'fs';
+import { isPrivateLocation } from 'util/privacy';
 
 export const isFrameKmComplete = async (): Promise<boolean> => {
   try {
     const totalFrameKmsInTable = await getFrameKmsCount();
-    if (totalFrameKmsInTable > 1) {
-      return true;
-    } else {
-      const count = await getFramesCount();
-      return count > getMaxFrameKmLength();
-    }
+    return totalFrameKmsInTable > 1;
   } catch (error) {
     console.error('Error checking if framekm is complete:', error);
     return false;
@@ -41,7 +37,7 @@ export const getFrameKmsCount = async (): Promise<number> => {
       db,
       'SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms;',
     );
-    return row.distinctCount;
+    return row.length ? row[0].distinctCount : 0;
   } catch (error) {
     console.error('Error checking distinct fkm_id count:', error);
     return 0;
@@ -54,7 +50,7 @@ export const getLatestFrameKmId = async (): Promise<number | undefined> => {
       db,
       'SELECT MAX(fkm_id) AS latestFkmId FROM framekms;',
     );
-    return latestFkmIdRow ? latestFkmIdRow.latestFkmId : null;
+    return latestFkmIdRow.length ? latestFkmIdRow[0].latestFkmId : null;
   } catch (error) {
     console.error('Error fetching latest fkm_id:', error);
     return undefined;
@@ -67,7 +63,7 @@ export const getFirstFrameKmId = async (): Promise<number | undefined> => {
       db,
       'SELECT MIN(fkm_id) AS firstFkmId FROM framekms;',
     );
-    return firstFkmIdRow ? firstFkmIdRow.firstFkmId : null;
+    return firstFkmIdRow.length ? firstFkmIdRow[0].firstFkmId : null;
   } catch (error) {
     console.error('Error fetching first fkm_id:', error);
     return undefined;
@@ -94,13 +90,33 @@ export const getFrameKm = async (
   try {
     const rows = await getAsync(
       db,
-      'SELECT * FROM framekms WHERE fkm_id = ? ORDER BY t DESC;',
+      'SELECT * FROM framekms WHERE fkm_id = ? ORDER BY time DESC;',
       [fkmId],
     );
     return rows as FrameKM;
   } catch (error) {
     console.error('Error fetching current framekm:', error);
     return [];
+  }
+};
+
+export const getAllFrameKms = async (): Promise<FrameKM> => {
+  try {
+    const rows = await getAsync(db, 'SELECT * FROM framekms ORDER BY time DESC;');
+    return rows as FrameKM;
+  } catch (error) {
+    console.error('Error fetching current framekm:', error);
+    return [];
+  }
+};
+
+export const clearAll = async (): Promise<boolean> => {
+  try {
+    await runAsync(db, 'DELETE FROM framekms;');
+    return true;
+  } catch (error) {
+    console.error('Error clearing framekms table:', error);
+    return false;
   }
 };
 
@@ -133,11 +149,11 @@ export const getLastTimestamp = async (): Promise<number> => {
 
 export const getLastRecord = async (): Promise<any> => {
   try {
-    const row = await getAsync(
+    const row: any = await getAsync(
       db,
-      'SELECT * FROM framekms ORDER BY ROWID DESC LIMIT 1;',
+      'SELECT * FROM framekms ORDER BY time DESC LIMIT 1;',
     );
-    return row;
+    return row && row.length && row[0].longitude ? row[0] : null;
   } catch (error) {
     console.error('Error fetching last inserted record:', error);
     return null;
@@ -149,7 +165,7 @@ export const getExistingFramesMetadata = async (limit = 3): Promise<any[]> => {
   try {
     const rows: any = await getAsync(
       db,
-      `SELECT * FROM framekms ORDER BY ROWID DESC LIMIT ${limit};`,
+      `SELECT * FROM framekms ORDER BY time DESC LIMIT ${limit};`,
     );
 
     return rows?.length ? rows.reverse() : [];
@@ -165,6 +181,9 @@ export const addFramesToFrameKm = async (
   rows: FrameKmRecord[],
   force = false,
 ): Promise<void> => {
+  console.log(
+    'GOING TO ADD ' + rows.length + ' FRAMES. ' + (force ? ' FORCED!!' : ''),
+  );
   const { isTripTrimmingEnabled, TrimDistance } = getConfig();
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
@@ -174,30 +193,49 @@ export const addFramesToFrameKm = async (
     const rowsToIgnore = rows.slice(0, framesLeftToTrim);
     metersTrimmed += rowsToIgnore.length * getConfig().DX;
     rows = rows.slice(framesLeftToTrim);
+    console.log('TRIMMED ' + rowsToIgnore.length);
   }
 
   if (rows.length) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       const insertSQL = `
         INSERT INTO framekms (
-          image_name, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
+          fkm_id, image_name, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop,
-          time, system_time, satellites_used, dilution, eph
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, satellites_used, dilution, eph, frame_idx
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
+        if (isPrivateLocation(row.latitude, row.longitude)) {
+          console.log('PRIVATE ZONE. Ignored');
+          continue;
+        }
         try {
           const last = await getLastRecord();
-          let fkm_id = 0;
-          if (last) {
+          let fkm_id = 1;
+          let frame_idx = 1;
+          if (last && last.fkm_id) {
+            console.log('surprise, last inserted: ', last.fkm_id, last.frame_idx);
+            const lastFkmId = Number(last.fkm_id) || 1;
             const forceFrameKmSwitch = force && i === 0;
-            fkm_id = forceFrameKmSwitch ? last.fkm_id + 1 : last.fkm_id;
+            fkm_id = forceFrameKmSwitch ? lastFkmId + 1 : lastFkmId;
             // sanity check for accidental insert of the wrong sample into framekm
-            if (distance(last, row) > getConfig().DX * 2 && !forceFrameKmSwitch) {
+            if (
+              distance(last, row) > getConfig().DX * 2 &&
+              !forceFrameKmSwitch
+            ) {
               fkm_id++;
+            }
+            if (fkm_id === lastFkmId) {
+              frame_idx = Number(last.frame_idx) + 1;
+            }
+            if (frame_idx > getMaxFrameKmLength()) {
+              console.log('FRAMEKM IS COMPLETE!! SWITCHING TO NEXT ONE.');
+              fkm_id++;
+              frame_idx = 1;
             }
           }
           // Move frame
@@ -212,6 +250,7 @@ export const addFramesToFrameKm = async (
             join(FRAMES_ROOT_FOLDER, row.image_name),
             join(destination, row.image_name),
           );
+          console.log('About to add frame: ', row.image_name, fkm_id, frame_idx);
 
           await runAsync(db, insertSQL, [
             fkm_id,
@@ -238,10 +277,10 @@ export const addFramesToFrameKm = async (
             row.satellites_used,
             row.dilution,
             row.eph,
+            frame_idx,
           ]);
         } catch (error) {
           console.error('Error adding row to framekm:', error);
-          reject(error);
         }
       }
       resolve();

@@ -2,7 +2,7 @@ import { IImage, SensorData } from 'types';
 import { DraftFrameKm } from './draftFrameKm';
 import { isGnss, isImage, isImu } from 'util/sensor';
 import { isGoodQualityGnssRecord } from 'util/gnss';
-import { GnssRecord, ImuRecord } from 'types/sqlite';
+import { FrameKM, GnssRecord, ImuRecord } from 'types/sqlite';
 import { timeIsMostLikelyLight } from 'util/daylight';
 import { getConfig } from './config';
 import {
@@ -17,6 +17,12 @@ import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
+import { distance } from 'util/geomath';
+import { LatLon } from 'types/motionModel';
+import { exec } from 'child_process';
+import { DATA_LOGGER_SERVICE } from 'config';
+
+let sessionTrimmed = false;
 
 export class DriveSession {
   startedAt = new Date();
@@ -28,7 +34,18 @@ export class DriveSession {
     this.trimDistance = trimDistance;
   }
 
-  ingestData(sensorData: SensorData[]) {
+  ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
+
+    // check if no sensor data is missing — otherwise repair services
+    this.checkForMissingSensorData(gnss, imu, images);
+
+    // Combine sensor data to be able to split them on chunks based on system time
+    const sensorData: SensorData[] = (gnss as SensorData[])
+      .concat(imu)
+      .concat(images)
+      .filter(s => s)
+      .sort((a, b) => a.system_time - b.system_time);
+
     for (const data of sensorData) {
       if (!this.dataIsGoodEnough(data)) {
         continue;
@@ -41,30 +58,55 @@ export class DriveSession {
 
       const added = this.draftFrameKm.maybeAdd(data);
       if (!added) {
-        // need to cut
         this.frameKmsToProcess.push(this.draftFrameKm);
         this.draftFrameKm = new DraftFrameKm(data);
       }
+    }
+    if (this.draftFrameKm) {
+      console.log('Data in draft: ', this.draftFrameKm.getData().length);
     }
   }
 
   async getSamplesAndSyncWithDb() {
     // get prev frames for proper frame stitching
+    console.log('traversing full packages');
     const prevKeyFrames = await getExistingFramesMetadata();
-
+    const isContinuous = !this.frameKmsToProcess.length;
     for (let i = 0; i < this.frameKmsToProcess.length; i++) {
       const curFrameKm = this.frameKmsToProcess[i];
-      const newFrames = curFrameKm.getEvenlyDistancedFramesFromSensorData(i === 0 ? prevKeyFrames : []);
-        if (newFrames.length) {
-          // can potentially add to separate FrameKMs
+      const newFrames = curFrameKm.getEvenlyDistancedFramesFromSensorData(
+        i === 0 ? prevKeyFrames : [],
+      );
+      if (newFrames.length) {
+        // can potentially add to separate FrameKMs
+        if (i === 0 || newFrames.length > 3) {
           await addFramesToFrameKm(newFrames, i > 0);
-          if (this.frameKmsToProcess.length === 1) {
-            this.frameKmsToProcess = [];
-            this.draftFrameKm = null;
-          }
         }
+      }
     }
     this.frameKmsToProcess = [];
+
+    console.log('traversing draft');
+    // what's up with current draft
+    const newFrames = this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
+      isContinuous ? prevKeyFrames : [],
+    ) || [];
+    if (newFrames.length > 1) {
+      // can potentially add to separate FrameKMs
+      await addFramesToFrameKm(newFrames, !isContinuous);
+      const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
+      console.log('last gps to consider: ', distance(newFrames[newFrames.length - 1] as LatLon, lastGpsElem as LatLon), lastGpsElem?.time)
+      this.draftFrameKm = new DraftFrameKm(lastGpsElem);
+    } else {
+      console.log('Not enough frames to add yet, ', newFrames.length);
+      if (this.draftFrameKm) {
+        if (this.draftFrameKm.getData().length > 100000) {
+          console.log('SANITIZING THE DATA');
+          this.draftFrameKm.clearData();
+          this.draftFrameKm = null;
+        }
+      }
+    }
   }
 
   dataIsGoodEnough(data: SensorData) {
@@ -99,16 +141,60 @@ export class DriveSession {
     return (await getLastTimestamp()) ?? this.startedAt;
   }
 
-  async getNextFrameKMToProcess() {
+  
+  async getNextFrameKMToProcess(): Promise<FrameKM | null> {
     if (await isFrameKmComplete()) {
       const fkmId = await getFirstFrameKmId();
       return await getFrameKm(fkmId);
     } else {
+      const { isTripTrimmingEnabled, TrimDistance, DX } = getConfig();
+
+      if (!sessionTrimmed && isTripTrimmingEnabled) {
+        // END TRIP TRIMMING
+        console.log('Trying to trim the end of the trip');
+        sessionTrimmed = true;
+        const fkm_id = await getFirstFrameKmId();
+        console.log('FrameKM to trim', fkm_id);
+        if (fkm_id) {
+          const frameKmToTrim = await getFrameKm(fkm_id);
+          const framesToTrim = Math.round(TrimDistance / DX);
+          if (frameKmToTrim.length > framesToTrim) {
+            return frameKmToTrim.slice(0, frameKmToTrim.length - Math.round(TrimDistance / DX));
+          } else {
+            // @ts-ignore
+            return [{ fkm_id }]; // return dummy element that will trigger the cleanup
+          }
+        } else {
+          return null;
+        }
+      } 
       return null;
     }
   }
 
-  doneProcessingFrameKM() {
-    // remove FrameKM from table
+  possibleImagerProblemCounter = 0;
+  possibleGnssImuProblemCounter = 0;
+  checkForMissingSensorData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
+    if (!gnss.length || !imu.length) {
+      this.possibleGnssImuProblemCounter++;
+      if (this.possibleGnssImuProblemCounter === 3) {
+        console.log('Repairing Data Logger');
+        exec(`systemctl restart ${DATA_LOGGER_SERVICE}`);
+        this.possibleGnssImuProblemCounter = 0;
+      }
+    } else {
+      this.possibleGnssImuProblemCounter = 0;
+    }
+
+    if (!images.length) {
+      this.possibleImagerProblemCounter++;
+      if (this.possibleImagerProblemCounter === 3) {
+        console.log('Repairing Camera Bridge');
+        exec(`systemctl restart camera-bridge`);
+        this.possibleImagerProblemCounter = 0;
+      }
+    } else {
+      this.possibleImagerProblemCounter = 0;
+    }
   }
 }

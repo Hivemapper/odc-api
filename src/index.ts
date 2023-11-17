@@ -7,10 +7,10 @@ import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
-import { PrivacyWatcherService, restartPrivacyProcess } from 'services/privacyWatcher';
+// import { PrivacyWatcherService, restartPrivacyProcess } from 'services/privacyWatcher';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
-import { LogDiskUsageService } from 'services/logDiskUsage';
+// import { LogDiskUsageService } from 'services/logDiskUsage';
 import { LoadPrivacyService } from 'services/loadPrivacy';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
@@ -74,9 +74,9 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
-    serviceRunner.add(PrivacyWatcherService);
+    // serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
-    serviceRunner.add(LogDiskUsageService);
+    // serviceRunner.add(LogDiskUsageService);
 
     // Execute motion model
     MotionModelController();
@@ -113,14 +113,14 @@ export async function initAppServer(): Promise<Application> {
   
       const timeout = setTimeout(() => {
           console.log('Forcefully shutting down.');
-          restartPrivacyProcess();
+          // restartPrivacyProcess();
           process.exit(1);
       }, 5000);
   
       server?.close(() => {
           clearTimeout(timeout);
           console.log('Closed out remaining connections.');
-          restartPrivacyProcess();
+          // restartPrivacyProcess();
           process.exit(0);
       });
   }

@@ -15,7 +15,7 @@ export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<G
             if (err) {
                 reject([]);
             } else {
-                resolve(rows.map(r => { 
+                resolve(rows.filter(r => r).map(r => { 
                     r.time = new Date(r.time + 'Z').getTime();
                     r.system_time = new Date(r.system_time + 'Z').getTime();
                     r.dilution = r.hdop;

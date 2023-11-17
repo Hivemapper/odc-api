@@ -203,3 +203,16 @@ export const getMaxFrameKmLength = () => {
   } = getConfig();
   return Math.round(FrameKmLengthMeters / DX);
 }
+
+export const getNumFramesFromChunkName = (name: string) => {
+  if (name) {
+    const parts = name.split('_');
+    if (parts.length > 3) {
+      return Number(parts[3]);
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+};

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getConfig, loadConfig } from 'util/motionModel';
+import { getConfig, loadConfig } from 'util/motionModel/config';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE, ML_MODELS, ML_ROOT_FOLDER } from '../config';
 

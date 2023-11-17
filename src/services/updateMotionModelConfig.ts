@@ -3,7 +3,7 @@ import { readFile } from 'fs';
 import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { fileExists } from 'util/index';
-import { loadConfig } from 'util/motionModel';
+import { loadConfig } from 'util/motionModel/config';
 
 export const UpdateMotionModelConfigService: IService = {
   execute: async () => {
@@ -27,7 +27,7 @@ export const UpdateMotionModelConfigService: IService = {
                   eph: 10,
                 };
               }
-              loadConfig(configJSON);
+              loadConfig(configJSON, true);
             }
           } catch (e: unknown) {
             console.log('Error parsing MM config', e);

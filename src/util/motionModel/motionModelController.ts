@@ -4,29 +4,38 @@ import { packFrameKm } from "./packaging";
 
 const QUERY_WINDOW_SIZE = 10 * 1000;
 
-const session = new DriveSession();
+let session = new DriveSession();
+
 export async function MotionModelController() {
-  if (!session.ready()) {
-    setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
-    return;
-  }
+  try {
+    let frameKMToProcess = await session.getNextFrameKMToProcess();
+    while (frameKMToProcess?.length) {
+      await packFrameKm(frameKMToProcess);
+      frameKMToProcess = await session.getNextFrameKMToProcess();
+    }
   
-  const sensorData = await querySensorData(await session.getLastTime());
-  if (sensorData.length) {
-    console.log('First record:', sensorData[0].system_time, ' Last record:', sensorData[sensorData.length - 1].system_time);
-  }
-
-  session.ingestData(sensorData);
-  await session.getSamplesAndSyncWithDb();
-
-  let frameKMToProcess = await session.getNextFrameKMToProcess();
-  while (frameKMToProcess) {
-    await packFrameKm(frameKMToProcess);
-    frameKMToProcess = await session.getNextFrameKMToProcess();
+    if (!session.ready()) {
+      setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
+      return;
+    }
+  
+    console.log('');
+    console.log('');
+    console.log('//////////////////////////////////////////////////');
+    console.log('/////////////// ITERATION ////////////////////////');
+    console.log('//////////////////////////////////////////////////');
+    
+    const {
+      gnss, imu, images
+    } = await querySensorData(await session.getLastTime());
+  
+    session.ingestData(gnss, imu, images);
+    await session.getSamplesAndSyncWithDb();
+  } catch (e: unknown) {
+    console.log('Critical motion model controller error, investigate: ', e);
+    session = new DriveSession();
   }
 
   setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
 }
-
-MotionModelController();
 

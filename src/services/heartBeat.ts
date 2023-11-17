@@ -85,7 +85,7 @@ const fetchGNSSLatestSample = async () => {
       try {
         gpsSample = JSON.parse(jsonrepair(data));
       } catch (e) {
-        console.log('Latest.log Parse Error:', e);
+        // console.log('Latest.log Parse Error:', e);
       }
     }
   } catch (e) {
@@ -161,7 +161,7 @@ export const HeartBeatService: IService = {
           hasBeenLockOnce = true;
 
           gpsLED = COLORS.GREEN;
-          if (!isCameraActive) {
+          if (!isCameraActive && ifTimeSet()) {
             startCamera();
           }
         } else if (gpsSample) {

@@ -16,7 +16,7 @@ export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<Im
                 console.log(err);
                 reject([]);
             } else {
-                resolve(rows.map(r => { 
+                resolve(rows.filter(r => r).map(r => { 
                     r.system_time = new Date(r.time + 'Z').getTime();
                     return r;
                 }));

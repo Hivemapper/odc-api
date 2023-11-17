@@ -1,14 +1,14 @@
 import { Database } from 'sqlite3';
 import { fetchGnssLogsByTime } from './gnss';
 import { fetchImuLogsByTime } from './imu';
-import { SensorData } from 'types';
+import { IImage } from 'types';
 import { getImagesForDateRange } from 'util/frames';
-
-const DB_NAME = '/data/recording/data-logger.v1.2.0.db';
+import { DB_PATH } from 'config';
+import { GnssRecord, ImuRecord } from 'types/sqlite';
 
 export const connectDB = (callback?: () => void): Database => {
   console.log('[SQLITE] CONNECT DB');
-  return new Database(DB_NAME, err => {
+  return new Database(DB_PATH, err => {
     if (err) {
       console.error('[SQLITE] DB connect error', err.message);
       throw err;
@@ -91,28 +91,25 @@ export const initialise = async (): Promise<void> => {
 
 export const querySensorData = async (
   lastTimestamp: number,
-): Promise<SensorData[]> => {
+): Promise<{ gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]}> => {
   try {
-    const res: SensorData[] = [];
-    const gnss = await fetchGnssLogsByTime(
-      Math.max(lastTimestamp, Date.now() - 60 * 1000),
-    ); // don't fetch more than a minute of data
+    const logTime = Math.max(lastTimestamp, Date.now() - 60 * 1000);
+    console.log('Getting sensor data for: ', new Date(logTime));
+    const start = Date.now();
+    const gnss = (await fetchGnssLogsByTime(logTime)).filter(g => g); // don't fetch more than a minute of data
     const since = gnss[0].system_time;
     const until = gnss[gnss.length - 1].system_time;
 
     const imu = await fetchImuLogsByTime(since, until);
     const images = await getImagesForDateRange(since, until);
+    const duration = (until - since) / 1000;
     console.log(
-      `Sensor data queried: ${gnss.length} GNSS, ${imu.length} IMU, ${images.length} images`,
+      `Sensor data queried: ${gnss.length} GNSS, ${imu.length} IMU, ${images.length} images. Took ${Date.now() - start} msecs, Since: ${since}, Until: ${until}, Period: ${duration.toFixed(1)} secs. ${duration > 0 ? `Freq: GNSS ${(gnss.length / duration).toFixed(1)}, IMU ${(imu.length / duration).toFixed(1)}, Images ${(images.length / duration).toFixed(1)}, ` : ''}`,
     );
-    return res
-      .concat(gnss)
-      .concat(imu)
-      .concat(images)
-      .sort((a, b) => a.system_time - b.system_time);
+    return { gnss, imu, images };
   } catch (e: unknown) {
     console.log('Unknown sensor data fetch problem', e);
-    return [];
+    return { gnss: [], imu: [], images: [] };
   }
 };
 
@@ -140,6 +137,7 @@ export const createFrameKMTable = async (): Promise<void> => {
     altitude REAL,
     speed REAL,
     time INTEGER,
+    frame_idx INTEGER,
     system_time INTEGER,
     satellites_used INTEGER,
     dilution REAL,

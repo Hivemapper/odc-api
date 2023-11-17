@@ -99,6 +99,8 @@ export interface IMU {
   time: string;
 }
 
+export type LatLon = { latitude: number; longitude: number };
+
 export type GnssMetadata = Dilution & {
   lat: number;
   lon: number;

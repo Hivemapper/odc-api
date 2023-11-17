@@ -21,15 +21,30 @@ import { getConfig } from './config';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
-  let finalBundleName;
-  let frameKmName;
-
-  // We don't pack such a short framekms
-  if (frameKm.length < 3) {
-    console.log('SHORT FRAMEKM THROWN AWAY', frameKm.length);
+  if (!frameKm.length) {
     return;
   }
+  
+  let finalBundleName;
+  let frameKmName;
   try {
+    const frameKmId = frameKm[0].fkm_id;
+    frameKmName = await getFrameKmName(frameKmId);
+    finalBundleName = frameKmName + '_' + frameKm.length + '_0';
+    const framesFolder = join(
+      UNPROCESSED_FRAMEKM_ROOT_FOLDER,
+      String(frameKmId),
+    );
+
+    // We don't pack such a short framekms
+    if (frameKm.length < 3) {
+      console.log('SHORT FRAMEKM THROWN AWAY', frameKm.length);
+      if (frameKm.length) {
+        await deleteFrameKm(frameKm[0].fkm_id);
+        await promises.rmdir(framesFolder, { recursive: true });
+      }
+      return;
+    }
     // TODO: revisit when back to ML topic
     // if (!destFolder && getConfig().isDashcamMLEnabled) {
     //   destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
@@ -40,13 +55,6 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     //     mkdir(destFolder, resolve);
     //   });
     // }
-    const frameKmId = frameKm[0].fkm_id;
-    const frameKmName = await getFrameKmName(frameKmId);
-    const finalBundleName = frameKmName + '_' + frameKm.length + '_0';
-    const framesFolder = join(
-      UNPROCESSED_FRAMEKM_ROOT_FOLDER,
-      String(frameKmId),
-    );
     const start = Date.now();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
@@ -129,7 +137,7 @@ export const packMetadata = async (
         vdop: m.vdop,
         tdop: m.tdop,
         gdop: m.gdop,
-        speed: m.speed,
+        speed: m.speed * 3.6, // ms to kmh
         t: Math.round(m.time),
         satellites: Math.round(m.satellites_used),
         dilution: Math.round(m.dilution),

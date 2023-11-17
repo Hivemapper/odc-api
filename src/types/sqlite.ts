@@ -77,6 +77,7 @@ export type FrameKmRecord = {
     dilution: number;
     ml_model_hash?: string;
     ml_detections?: string;
+    frame_idx?: number;
   };
 
   export type FrameKM = FrameKmRecord[];
