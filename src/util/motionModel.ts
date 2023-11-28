@@ -89,6 +89,8 @@ let config: MotionModelConfig = {
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
   isDashcamMLEnabled: false,
+  isGyroCalibrationEnabled: true,
+  isAccelerometerCalibrationEnabled: false,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,

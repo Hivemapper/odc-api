@@ -5,6 +5,7 @@ import busboy from 'connect-busboy';
 import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
+import { InitIMUCalibrationService } from 'services/initIMUCalibration';
 import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { MotionModelService } from 'services/motionModel';
@@ -72,6 +73,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(IntegrityCheckService);
     serviceRunner.add(DeviceInfoService);
+    serviceRunner.add(InitIMUCalibrationService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(MotionModelService);
