@@ -88,8 +88,6 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       } catch (error: unknown) {
         console.log('Error getting telemetry', error);
       }
-      await deleteFrameKm(frameKm[0].fkm_id);
-      await promises.rmdir(framesFolder, { recursive: true });
       Instrumentation.add({
         event: 'DashcamPackedFrameKm',
         size: totalBytes,
@@ -101,6 +99,9 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         }),
       });
     }
+    await deleteFrameKm(frameKm[0].fkm_id);
+    await promises.rmdir(framesFolder, { recursive: true });
+    
   } catch (error: unknown) {
     Instrumentation.add({
       event: 'DashcamFailedPackingFrameKm',

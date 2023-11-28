@@ -32,6 +32,14 @@ export class DraftFrameKm {
 
   maybeAdd(data: SensorData): boolean {
 
+    if (!this.data.length) {
+      if (isGnss(data)) {
+        this.lastGnss = { ...data } as GnssRecord;
+      }
+      this.data.push(data);
+      return true;
+    }
+
     if (isGnss(data)) {
       if (!this.lastGnss) {
         this.lastGnss = { ...data } as GnssRecord;
@@ -106,10 +114,6 @@ export class DraftFrameKm {
     } else if (isImu(data)) {
       this.data.push(data);
       return true;
-    }
-
-    if (!this.data.length) {
-      this.data.push(data);
     }
 
     return true;

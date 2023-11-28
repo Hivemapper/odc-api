@@ -17,6 +17,8 @@ import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
+import { distance } from 'util/geomath';
+import { LatLon } from 'types/motionModel';
 import { exec } from 'child_process';
 import { DATA_LOGGER_SERVICE } from 'config';
 
@@ -36,6 +38,11 @@ export class DriveSession {
 
     // check if no sensor data is missing — otherwise repair services
     this.checkForMissingSensorData(gnss, imu, images);
+
+    if (!images.length || !gnss.length) {
+      // doesn't make sense to add any data if there's no images or gnss records for the time snippet
+      return;
+    }
 
     // Combine sensor data to be able to split them on chunks based on system time
     const sensorData: SensorData[] = (gnss as SensorData[])
@@ -66,6 +73,8 @@ export class DriveSession {
   }
 
   async getSamplesAndSyncWithDb() {
+    // get prev frames for proper frame stitching
+    console.log('traversing full packages');
     const prevKeyFrames = await getExistingFramesMetadata();
     const isContinuous = !this.frameKmsToProcess.length;
     for (let i = 0; i < this.frameKmsToProcess.length; i++) {
@@ -82,18 +91,22 @@ export class DriveSession {
     }
     this.frameKmsToProcess = [];
 
+    console.log('traversing draft');
+    // what's up with current draft
     const newFrames = this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
       isContinuous ? prevKeyFrames : [],
     ) || [];
     if (newFrames.length > 1) {
+      // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);
       const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
+      console.log('last gps to consider: ', distance(newFrames[newFrames.length - 1] as LatLon, lastGpsElem as LatLon), lastGpsElem?.time)
       this.draftFrameKm = new DraftFrameKm(lastGpsElem);
     } else {
+      console.log('Not enough frames to add yet, ', newFrames.length);
       if (this.draftFrameKm) {
-        // Safe-check: if draftKM is getting massive, 
-        // then something is going wrong: clear it
         if (this.draftFrameKm.getData().length > 100000) {
+          console.log('SANITIZING THE DATA');
           this.draftFrameKm.clearData();
           this.draftFrameKm = null;
         }
@@ -104,6 +117,7 @@ export class DriveSession {
   dataIsGoodEnough(data: SensorData) {
     if (isGnss(data)) {
       const gnss: GnssRecord = data as GnssRecord;
+
       return (
         isGoodQualityGnssRecord(gnss) &&
         timeIsMostLikelyLight(
@@ -143,6 +157,7 @@ export class DriveSession {
 
       if (!sessionTrimmed && isTripTrimmingEnabled) {
         // END TRIP TRIMMING
+        console.log('Trying to trim the end of the trip');
         sessionTrimmed = true;
         const fkm_id = await getFirstFrameKmId();
         console.log('FrameKM to trim', fkm_id);
@@ -170,7 +185,11 @@ export class DriveSession {
       this.possibleGnssImuProblemCounter++;
       if (this.possibleGnssImuProblemCounter === 3) {
         console.log('Repairing Data Logger');
-        exec(`systemctl restart ${DATA_LOGGER_SERVICE}`);
+        exec(`journalctl -eu ${DATA_LOGGER_SERVICE}`, (error, stdout, stderr) => {
+          console.log(stdout || stderr);
+          console.log('Restarting data-logger');
+          exec(`systemctl restart ${DATA_LOGGER_SERVICE}`);
+        });
         this.possibleGnssImuProblemCounter = 0;
       }
     } else {
@@ -181,7 +200,11 @@ export class DriveSession {
       this.possibleImagerProblemCounter++;
       if (this.possibleImagerProblemCounter === 3) {
         console.log('Repairing Camera Bridge');
-        exec(`systemctl restart camera-bridge`);
+        exec(`journalctl -eu camera-bridge`, (error, stdout, stderr) => {
+          console.log(stdout || stderr);
+          console.log('Restarting Camera-Bridge');
+          exec(`systemctl restart camera-bridge`);
+        });
         this.possibleImagerProblemCounter = 0;
       }
     } else {
