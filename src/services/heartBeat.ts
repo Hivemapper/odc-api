@@ -162,6 +162,7 @@ export const HeartBeatService: IService = {
 
           gpsLED = COLORS.GREEN;
           if (!isCameraActive && ifTimeSet()) {
+            console.log('Starting the camera', new Date());
             startCamera();
           }
         } else if (gpsSample) {

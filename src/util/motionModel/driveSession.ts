@@ -20,7 +20,9 @@ import { isImuValid } from 'util/imu';
 import { distance } from 'util/geomath';
 import { LatLon } from 'types/motionModel';
 import { exec } from 'child_process';
-import { DATA_LOGGER_SERVICE } from 'config';
+import { DATA_LOGGER_SERVICE, FOLDER_PURGER_SERVICE, FRAMES_ROOT_FOLDER } from 'config';
+import { promises } from 'fs';
+import { Instrumentation } from 'util/instrumentation';
 
 let sessionTrimmed = false;
 
@@ -200,10 +202,29 @@ export class DriveSession {
       this.possibleImagerProblemCounter++;
       if (this.possibleImagerProblemCounter === 3) {
         console.log('Repairing Camera Bridge');
-        exec(`journalctl -eu camera-bridge`, (error, stdout, stderr) => {
+        exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
           console.log(stdout || stderr);
           console.log('Restarting Camera-Bridge');
-          exec(`systemctl restart camera-bridge`);
+          try {
+            await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
+            console.log('Successfully cleaned folder');
+          } catch (e: unknown) {
+            console.log(e);
+          }
+          try {
+            await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
+            console.log('Successfully re-created folder');
+          } catch (e: unknown) {
+            console.log(e);
+          }
+          exec(`systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`, (err, stout, sterr) => {
+            console.log(stout || sterr);
+            console.log('Successfully restarted Folder Purger & Camera Bridge');
+            Instrumentation.add({
+              event: 'DashcamFetchedFirstImages',
+            });
+          });
+
         });
         this.possibleImagerProblemCounter = 0;
       }

@@ -58,6 +58,7 @@ export const ML_MODELS: Record<string, string> = {
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const DATA_LOGGER_SERVICE = 'data-logger';
+export const FOLDER_PURGER_SERVICE = 'folder_purger';
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/mnt/data/camera_bridge_config.json';

@@ -10,11 +10,11 @@ export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<Im
         query += ` AND time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: ImuRecord[]) => {
             if (err) {
                 console.log(err);
-                reject([]);
+                resolve([]);
             } else {
                 resolve(rows.filter(r => r).map(r => { 
                     r.system_time = new Date(r.time + 'Z').getTime();

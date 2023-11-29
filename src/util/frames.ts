@@ -4,7 +4,7 @@ import { tmpFrameName } from 'routes/recordings';
 import { IImage } from 'types';
 import { getDateFromUnicodeTimestamp } from 'util/index';
 
-export const getImagesForDateRange = async (from: number, to: number): Promise<IImage[]> => {
+export const getFramesFromFS = async (from: number, to: number): Promise<IImage[]> => {
   return new Promise(resolve => {
     try {
       readdir(

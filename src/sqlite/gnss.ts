@@ -10,10 +10,10 @@ export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<G
         query += ` AND time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: GnssRecord[]) => {
             if (err) {
-                reject([]);
+                resolve([]);
             } else {
                 resolve(rows.filter(r => r).map(r => { 
                     r.time = new Date(r.time + 'Z').getTime();

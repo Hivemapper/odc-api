@@ -1,10 +1,5 @@
 import { Database } from 'sqlite3';
-import { fetchGnssLogsByTime } from './gnss';
-import { fetchImuLogsByTime } from './imu';
-import { IImage } from 'types';
-import { getImagesForDateRange } from 'util/frames';
 import { DB_PATH } from 'config';
-import { GnssRecord, ImuRecord } from 'types/sqlite';
 
 export const connectDB = (callback?: () => void): Database => {
   console.log('[SQLITE] CONNECT DB');
@@ -87,30 +82,7 @@ export const runSchemaAsync = (db: Database, sql: string) => {
 
 export const initialise = async (): Promise<void> => {
   await createFrameKMTable();
-};
-
-export const querySensorData = async (
-  lastTimestamp: number,
-): Promise<{ gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]}> => {
-  try {
-    const logTime = Math.max(lastTimestamp, Date.now() - 60 * 1000);
-    console.log('Getting sensor data for: ', new Date(logTime));
-    const start = Date.now();
-    const gnss = (await fetchGnssLogsByTime(logTime)).filter(g => g); // don't fetch more than a minute of data
-    const since = gnss[0].system_time;
-    const until = gnss[gnss.length - 1].system_time;
-
-    const imu = await fetchImuLogsByTime(since, until);
-    const images = await getImagesForDateRange(since, until);
-    const duration = (until - since) / 1000;
-    console.log(
-      `Sensor data queried: ${gnss.length} GNSS, ${imu.length} IMU, ${images.length} images. Took ${Date.now() - start} msecs, Since: ${since}, Until: ${until}, Period: ${duration.toFixed(1)} secs. ${duration > 0 ? `Freq: GNSS ${(gnss.length / duration).toFixed(1)}, IMU ${(imu.length / duration).toFixed(1)}, Images ${(images.length / duration).toFixed(1)}, ` : ''}`,
-    );
-    return { gnss, imu, images };
-  } catch (e: unknown) {
-    console.log('Unknown sensor data fetch problem', e);
-    return { gnss: [], imu: [], images: [] };
-  }
+  await createFrameTable();
 };
 
 export const createFrameKMTable = async (): Promise<void> => {
@@ -148,6 +120,20 @@ export const createFrameKMTable = async (): Promise<void> => {
     await runSchemaAsync(db, createTableSQL);
   } catch (error) {
     console.error('Error during initialisation of tables:', error);
+    throw error;
+  }
+};
+
+export const createFrameTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS frames (
+    system_time INTEGER PRIMARY KEY NOT NULL,
+    image_name TEXT NOT NULL
+    );`;
+  try {
+    await runSchemaAsync(db, createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the frames table:', error);
     throw error;
   }
 };

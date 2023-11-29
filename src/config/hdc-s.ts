@@ -64,6 +64,7 @@ export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/data/camera_bridge_config.hash';
 export const GPS_MGA_OFFLINE_FILE = '/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/data/mgaoffline.hash';
 export const DATA_LOGGER_SERVICE = 'hivemapper-data-logger';
+export const FOLDER_PURGER_SERVICE = 'hivemapper-folder-purger';
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 

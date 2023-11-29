@@ -37,7 +37,7 @@ done
 
 # Check and truncate the file if it's larger than 2 MB
 if [ -e "$log_file_path" ]; then
-    file_size=$(stat -c%s "$log_file_path")
+    file_size=$(wc -c < "$log_file_path")
     if [ $file_size -gt $max_file_size ]; then
         tail -c $max_file_size "$log_file_path" > "${log_file_path}.tmp" && mv "${log_file_path}.tmp" "$log_file_path"
         echo "Truncated $log_file_path to the last 2 MB"
@@ -45,7 +45,7 @@ if [ -e "$log_file_path" ]; then
 fi
 
 if [ -e "$events_file_path" ]; then
-    file_size=$(stat -c%s "$events_file_path")
+    file_size=$(wc -c < "$events_file_path")
     if [ $file_size -gt $max_file_size ]; then
         tail -c $max_file_size "$events_file_path" > "${events_file_path}.tmp" && mv "${events_file_path}.tmp" "$events_file_path"
         echo "Truncated $events_file_path to the last 2 MB"
