@@ -51,6 +51,8 @@ export type MotionModelConfig = {
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
   isDashcamMLEnabled: boolean;
+  isGyroCalibrationEnabled: boolean;
+  isAccelerometerCalibrationEnabled: boolean;
   rawLogsConfiguration: RawLogsConfiguration;
   privacyRadius?: number;
   modelHashes?: Record<string, string>;

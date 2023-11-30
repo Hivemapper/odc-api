@@ -39,6 +39,7 @@ export const PRIVACY_ZONES_CONFIG = '/data/ppz.json';
 export const WEBSERVER_LOG_PATH = '/data/recording/odc-api.log';
 export const EVENTS_LOG_PATH = '/data/events.log';
 export const LED_CONFIG_PATH = __dirname + '/../../../tmp/led.json';
+export const IMU_CALIBRATOR_PATH = '/opt/dashcam/bin/imucalibrator';
 // File containing the camera configuration
 export const IMAGER_CONFIG_PATH =
   __dirname + '/../../../opt/camera-bridge/config.json';
