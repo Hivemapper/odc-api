@@ -4,6 +4,7 @@ import { fetchGnssLogsByTime } from './gnss';
 import { fetchImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
 import { insertFrames } from './frames';
+import { db, runAsync } from 'sqlite';
 
 export const querySensorData = async (
   lastTimestamp: number,
@@ -41,5 +42,17 @@ export const querySensorData = async (
   } catch (e: unknown) {
     console.log('Unknown sensor data fetch problem', e);
     return { gnss: [], imu: [], images: [] };
+  }
+};
+
+export const resetDB = async () => {
+  try {
+    console.log('RESETTING DB');
+    await runAsync(db, 'DELETE FROM framekms;');
+    await runAsync(db, 'DELETE FROM gnss;');
+    await runAsync(db, 'DELETE FROM imu;');
+    await runAsync(db, 'DELETE FROM frames;');
+  } catch (error) {
+    console.error('Error clearing tables:', error);
   }
 };

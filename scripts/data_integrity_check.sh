@@ -9,7 +9,7 @@ folder1="$1"
 folder2="$2"
 log_file_path="$3"
 events_file_path="$4"
-max_file_size=$((2 * 1024 * 1024)) # 2MB
+max_lines=30000 # approximately 2MB of logs
 min_file_size=$((100 * 1024)) # 100KB
 
 # Remove all empty files from folder2
@@ -35,19 +35,20 @@ find "$folder1" -type f | while read -r file; do
     fi
 done
 
-# Check and truncate the file if it's larger than 2 MB
+# Check and truncate the log file if it's larger than 2 MB / 30000 lines
 if [ -e "$log_file_path" ]; then
     file_size=$(wc -c < "$log_file_path")
-    if [ $file_size -gt $max_file_size ]; then
-        tail -c $max_file_size "$log_file_path" > "${log_file_path}.tmp" && mv "${log_file_path}.tmp" "$log_file_path"
-        echo "Truncated $log_file_path to the last 2 MB"
+    if [ "$file_size" -gt "$max_file_size" ]; then
+        tail -n "$max_lines" "$log_file_path" > "${log_file_path}.tmp" && mv "${log_file_path}.tmp" "$log_file_path"
+        echo "Truncated $log_file_path to the last $max_lines lines"
     fi
 fi
 
+# Check and truncate the events file
 if [ -e "$events_file_path" ]; then
     file_size=$(wc -c < "$events_file_path")
-    if [ $file_size -gt $max_file_size ]; then
-        tail -c $max_file_size "$events_file_path" > "${events_file_path}.tmp" && mv "${events_file_path}.tmp" "$events_file_path"
-        echo "Truncated $events_file_path to the last 2 MB"
+    if [ "$file_size" -gt "$max_file_size" ]; then
+        tail -n "$max_lines" "$events_file_path" > "${events_file_path}.tmp" && mv "${events_file_path}.tmp" "$events_file_path"
+        echo "Truncated $events_file_path to the last $max_lines lines"
     fi
 fi

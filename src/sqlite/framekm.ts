@@ -90,7 +90,7 @@ export const getFrameKm = async (
   try {
     const rows = await getAsync(
       db,
-      'SELECT * FROM framekms WHERE fkm_id = ? ORDER BY time DESC;',
+      'SELECT * FROM framekms WHERE fkm_id = ? ORDER BY time;',
       [fkmId],
     );
     return rows as FrameKM;
@@ -244,7 +244,7 @@ export const addFramesToFrameKm = async (
             String(fkm_id),
           );
           if (!existsSync(destination)) {
-            await promises.mkdir(destination);
+            await promises.mkdir(destination, { recursive: true });
           }
           await promises.copyFile(
             join(FRAMES_ROOT_FOLDER, row.image_name),

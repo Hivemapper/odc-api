@@ -4,7 +4,7 @@ import {
   METADATA_ROOT_FOLDER,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
 } from 'config';
-import { promises, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
 import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
@@ -174,6 +174,9 @@ export const packMetadata = async (
       frames: validatedFrames,
     };
     try {
+      if (!existsSync(METADATA_ROOT_FOLDER)) {
+        mkdirSync(METADATA_ROOT_FOLDER);
+      }
       writeFileSync(
         METADATA_ROOT_FOLDER + '/' + name + '.json',
         JSON.stringify(metadataJSON),

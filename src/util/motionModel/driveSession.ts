@@ -1,4 +1,4 @@
-import { IImage, SensorData } from 'types';
+import { CameraType, IImage, SensorData } from 'types';
 import { DraftFrameKm } from './draftFrameKm';
 import { isGnss, isImage, isImu } from 'util/sensor';
 import { isGoodQualityGnssRecord } from 'util/gnss';
@@ -20,9 +20,17 @@ import { isImuValid } from 'util/imu';
 import { distance } from 'util/geomath';
 import { LatLon } from 'types/motionModel';
 import { exec } from 'child_process';
-import { DATA_LOGGER_SERVICE, FOLDER_PURGER_SERVICE, FRAMES_ROOT_FOLDER } from 'config';
-import { promises } from 'fs';
+import {
+  CAMERA_TYPE,
+  DATA_LOGGER_SERVICE,
+  FOLDER_PURGER_SERVICE,
+  FRAMES_ROOT_FOLDER,
+  UNPROCESSED_FRAMEKM_ROOT_FOLDER,
+} from 'config';
+import { existsSync, mkdirSync, promises, rmSync } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
+import { resetDB } from 'sqlite/common';
+import { sleep } from 'util/index';
 
 let sessionTrimmed = false;
 
@@ -31,13 +39,13 @@ export class DriveSession {
   frameKmsToProcess: DraftFrameKm[] = [];
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
+  lastSuccess = 0;
 
   constructor(trimDistance = 100) {
     this.trimDistance = trimDistance;
   }
 
   ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
-
     // check if no sensor data is missing — otherwise repair services
     this.checkForMissingSensorData(gnss, imu, images);
 
@@ -95,14 +103,22 @@ export class DriveSession {
 
     console.log('traversing draft');
     // what's up with current draft
-    const newFrames = this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
-      isContinuous ? prevKeyFrames : [],
-    ) || [];
+    const newFrames =
+      this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
+        isContinuous ? prevKeyFrames : [],
+      ) || [];
     if (newFrames.length > 1) {
       // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);
       const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
-      console.log('last gps to consider: ', distance(newFrames[newFrames.length - 1] as LatLon, lastGpsElem as LatLon), lastGpsElem?.time)
+      console.log(
+        'last gps to consider: ',
+        distance(
+          newFrames[newFrames.length - 1] as LatLon,
+          lastGpsElem as LatLon,
+        ),
+        lastGpsElem?.time,
+      );
       this.draftFrameKm = new DraftFrameKm(lastGpsElem);
     } else {
       console.log('Not enough frames to add yet, ', newFrames.length);
@@ -139,6 +155,9 @@ export class DriveSession {
   }
 
   ready() {
+    if (ifTimeSet() && !this.lastSuccess) {
+      this.lastSuccess = Date.now();
+    }
     return ifTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
   }
 
@@ -149,10 +168,12 @@ export class DriveSession {
     return (await getLastTimestamp()) ?? this.startedAt;
   }
 
-  
   async getNextFrameKMToProcess(): Promise<FrameKM | null> {
     if (await isFrameKmComplete()) {
       const fkmId = await getFirstFrameKmId();
+      if (ifTimeSet()) {
+        this.lastSuccess = Date.now();
+      }
       return await getFrameKm(fkmId);
     } else {
       const { isTripTrimmingEnabled, TrimDistance, DX } = getConfig();
@@ -167,7 +188,10 @@ export class DriveSession {
           const frameKmToTrim = await getFrameKm(fkm_id);
           const framesToTrim = Math.round(TrimDistance / DX);
           if (frameKmToTrim.length > framesToTrim) {
-            return frameKmToTrim.slice(0, frameKmToTrim.length - Math.round(TrimDistance / DX));
+            return frameKmToTrim.slice(
+              0,
+              frameKmToTrim.length - Math.round(TrimDistance / DX),
+            );
           } else {
             // @ts-ignore
             return [{ fkm_id }]; // return dummy element that will trigger the cleanup
@@ -175,23 +199,23 @@ export class DriveSession {
         } else {
           return null;
         }
-      } 
+      }
       return null;
     }
   }
 
   possibleImagerProblemCounter = 0;
   possibleGnssImuProblemCounter = 0;
-  checkForMissingSensorData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
+
+  async checkForMissingSensorData(
+    gnss: GnssRecord[],
+    imu: ImuRecord[],
+    images: IImage[],
+  ) {
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
       if (this.possibleGnssImuProblemCounter === 3) {
-        console.log('Repairing Data Logger');
-        exec(`journalctl -eu ${DATA_LOGGER_SERVICE}`, (error, stdout, stderr) => {
-          console.log(stdout || stderr);
-          console.log('Restarting data-logger');
-          exec(`systemctl restart ${DATA_LOGGER_SERVICE}`);
-        });
+        this.repairDataLogger();
         this.possibleGnssImuProblemCounter = 0;
       }
     } else {
@@ -201,35 +225,83 @@ export class DriveSession {
     if (!images.length) {
       this.possibleImagerProblemCounter++;
       if (this.possibleImagerProblemCounter === 3) {
-        console.log('Repairing Camera Bridge');
-        exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
-          console.log(stdout || stderr);
-          console.log('Restarting Camera-Bridge');
-          try {
-            await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
-            console.log('Successfully cleaned folder');
-          } catch (e: unknown) {
-            console.log(e);
-          }
-          try {
-            await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
-            console.log('Successfully re-created folder');
-          } catch (e: unknown) {
-            console.log(e);
-          }
-          exec(`systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`, (err, stout, sterr) => {
-            console.log(stout || sterr);
-            console.log('Successfully restarted Folder Purger & Camera Bridge');
-            Instrumentation.add({
-              event: 'DashcamFetchedFirstImages',
-            });
-          });
-
-        });
+        this.repairCameraBridge();
         this.possibleImagerProblemCounter = 0;
       }
     } else {
       this.possibleImagerProblemCounter = 0;
     }
+
+    if (
+      this.lastSuccess &&
+      ifTimeSet() &&
+      Date.now() - this.lastSuccess > 1000 * 60 * 10
+    ) {
+      // We have 10 minutes with no packages. Worth resetting DB to fully repair session
+      await resetDB();
+      try {
+        rmSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER, {
+          recursive: true,
+          force: true,
+        });
+      } catch (e: unknown) {
+        console.log(e);
+      }
+      if (!existsSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER)) {
+        mkdirSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER);
+      }
+      Instrumentation.add({
+        event: 'DashcamApiRepaired',
+        message: JSON.stringify({ serviceRepaired: 'db' }),
+      });
+      this.repairDataLogger();
+      await sleep(2000);
+      this.repairCameraBridge();
+    }
+  }
+
+  repairDataLogger() {
+    console.log('Repairing Data Logger');
+    exec(`journalctl -eu ${DATA_LOGGER_SERVICE}`, (error, stdout, stderr) => {
+      console.log(stdout || stderr);
+      console.log('Restarting data-logger');
+      exec(`systemctl restart ${DATA_LOGGER_SERVICE}`);
+      Instrumentation.add({
+        event: 'DashcamApiRepaired',
+        message: JSON.stringify({ serviceRepaired: 'data-logger' }),
+      });
+    });
+  }
+
+  repairCameraBridge() {
+    console.log('Repairing Camera Bridge');
+    exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
+      console.log(stdout || stderr);
+      console.log('Restarting Camera-Bridge');
+      try {
+        await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
+        console.log('Successfully cleaned folder');
+      } catch (e: unknown) {
+        console.log(e);
+      }
+      try {
+        await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
+        console.log('Successfully re-created folder');
+      } catch (e: unknown) {
+        console.log(e);
+      }
+      let restartCmd = `systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`;
+      if (CAMERA_TYPE === CameraType.HdcS) {
+        restartCmd = 'systemctl restart jpeg-recorder && ' + restartCmd;
+      }
+      exec(restartCmd, (err, stout, sterr) => {
+        console.log(stout || sterr);
+        console.log('Successfully restarted Folder Purger & Camera Bridge');
+        Instrumentation.add({
+          event: 'DashcamApiRepaired',
+          message: JSON.stringify({ serviceRepaired: 'camera-bridge' }),
+        });
+      });
+    });
   }
 }

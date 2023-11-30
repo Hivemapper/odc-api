@@ -32,7 +32,7 @@ export const insertFrames = async (frames: IImage[]): Promise<void> => {
         typeof frame.image_name === 'string',
     );
     insertedTimes++;
-    if (insertedTimes > 20) {
+    if (insertedTimes > 10) {
       // first, purge the table
       insertedTimes = 0;
       await deleteOldestFrames();
