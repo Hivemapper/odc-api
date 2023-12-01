@@ -25,12 +25,9 @@ import {
   DATA_LOGGER_SERVICE,
   FOLDER_PURGER_SERVICE,
   FRAMES_ROOT_FOLDER,
-  UNPROCESSED_FRAMEKM_ROOT_FOLDER,
 } from 'config';
-import { existsSync, mkdirSync, promises, rmSync } from 'fs';
+import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
-import { resetDB } from 'sqlite/common';
-import { sleep } from 'util/index';
 
 let sessionTrimmed = false;
 
@@ -39,7 +36,6 @@ export class DriveSession {
   frameKmsToProcess: DraftFrameKm[] = [];
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
-  lastSuccess = 0;
 
   constructor(trimDistance = 100) {
     this.trimDistance = trimDistance;
@@ -155,9 +151,6 @@ export class DriveSession {
   }
 
   ready() {
-    if (ifTimeSet() && !this.lastSuccess) {
-      this.lastSuccess = Date.now();
-    }
     return ifTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
   }
 
@@ -171,9 +164,6 @@ export class DriveSession {
   async getNextFrameKMToProcess(): Promise<FrameKM | null> {
     if (await isFrameKmComplete()) {
       const fkmId = await getFirstFrameKmId();
-      if (ifTimeSet()) {
-        this.lastSuccess = Date.now();
-      }
       return await getFrameKm(fkmId);
     } else {
       const { isTripTrimmingEnabled, TrimDistance, DX } = getConfig();
@@ -230,33 +220,6 @@ export class DriveSession {
       }
     } else {
       this.possibleImagerProblemCounter = 0;
-    }
-
-    if (
-      this.lastSuccess &&
-      ifTimeSet() &&
-      Date.now() - this.lastSuccess > 1000 * 60 * 10
-    ) {
-      // We have 10 minutes with no packages. Worth resetting DB to fully repair session
-      await resetDB();
-      try {
-        rmSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER, {
-          recursive: true,
-          force: true,
-        });
-      } catch (e: unknown) {
-        console.log(e);
-      }
-      if (!existsSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER)) {
-        mkdirSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER);
-      }
-      Instrumentation.add({
-        event: 'DashcamApiRepaired',
-        message: JSON.stringify({ serviceRepaired: 'db' }),
-      });
-      this.repairDataLogger();
-      await sleep(2000);
-      this.repairCameraBridge();
     }
   }
 

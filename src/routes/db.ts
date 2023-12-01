@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { resetDB } from 'sqlite/common';
 import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
 import { fetchLastNGnssRecords } from 'sqlite/gnss';
 import { fetchLastNImuRecords } from 'sqlite/imu';
@@ -49,6 +50,18 @@ router.get('/framekm/count', async (req, res) => {
 router.get('/framekm/clear', async (req, res) => {
   try {
     await clearAll();
+    res.send({
+      done: true,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+// TODO: for debug purposes, remove later
+router.get('/reset', async (req, res) => {
+  try {
+    await resetDB();
     res.send({
       done: true,
     });
