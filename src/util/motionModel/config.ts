@@ -27,6 +27,8 @@ let config: MotionModelConfig = {
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
   isDashcamMLEnabled: false,
+  isGyroCalibrationEnabled: false,
+  isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
   FrameKmLengthMeters: 1000,
