@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { IMU_CALIBRATOR_PATH } from 'config';
 import { promisify } from 'util';
-import { getConfig } from 'util/motionModel';
+import { getConfig } from 'util/motionModel/config';
 import { IService } from '../types';
 
 const calibrate = async (sensor: string) => {

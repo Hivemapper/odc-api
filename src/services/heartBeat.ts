@@ -1,17 +1,18 @@
 import { exec, ExecException, spawnSync } from 'child_process';
 import {
   CMD,
+  FIRMWARE_UPDATE_MARKER,
   GPS_LATEST_SAMPLE,
   HEALTH_MARKER_PATH,
   isDev,
 } from 'config';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
 import { ifTimeSet, setLockTime } from 'util/lock';
-import { isEnoughLightForGnss } from 'util/motionModel';
+import { isEnoughLightForGnss } from 'util/gnss';
 import { COLORS, updateLED } from '../util/led';
 import {
   isCameraRunningOutOfSpace,
@@ -85,7 +86,7 @@ const fetchGNSSLatestSample = async () => {
       try {
         gpsSample = JSON.parse(jsonrepair(data));
       } catch (e) {
-        console.log('Latest.log Parse Error:', e);
+        // console.log('Latest.log Parse Error:', e);
       }
     }
   } catch (e) {
@@ -114,6 +115,10 @@ const createHealthMarker = () => {
   exec('touch ' + HEALTH_MARKER_PATH);
 };
 
+const isFirmwareUpdateInProcess = () => {
+  return existsSync(FIRMWARE_UPDATE_MARKER);
+};
+
 const isGpsLock = (gpsSample: any) => {
   const lock =
     gpsSample &&
@@ -125,17 +130,27 @@ const isGpsLock = (gpsSample: any) => {
   return lock;
 };
 
+let blinking = false;
+
 export const HeartBeatService: IService = {
   execute: async () => {
     try {
       createHealthMarker();
 
-      if (isFirmwareUpdate && isLedControlledByDashcam) {
-        updateLED(COLORS.WHITE, COLORS.WHITE, COLORS.WHITE);
-        return;
+      if (isFirmwareUpdateInProcess()) {
+        blinking = !blinking;
+        if (blinking) {
+          updateLED(COLORS.BLACK, COLORS.BLACK, COLORS.BLACK);
+          return;
+        }
       }
 
       const isCameraActive = await isCameraBridgeServiceActive();
+
+      if (!isCameraActive && ifTimeSet() && hasBeenLockOnce) {
+        console.log('Starting the camera', new Date());
+        startCamera();
+      }
 
       let gpsLED: any = null;
       try {
@@ -161,9 +176,7 @@ export const HeartBeatService: IService = {
           hasBeenLockOnce = true;
 
           gpsLED = COLORS.GREEN;
-          if (!isCameraActive) {
-            startCamera();
-          }
+
         } else if (gpsSample) {
           const gpsLostPeriod = lastSuccessfulLock
             ? Math.abs(Date.now() - lastSuccessfulLock)
@@ -179,10 +192,10 @@ export const HeartBeatService: IService = {
           }
           isLock = false;
 
-          if (isCameraActive && !hasBeenLockOnce) {
+          if (isCameraActive && (!hasBeenLockOnce || !ifTimeSet())) {
             exec(CMD.STOP_CAMERA);
             console.log(
-              'Camera intentionally stopped cause Lock is not there yet',
+              'Camera intentionally stopped cause Lock is not there yet or Time is not set', Date.now()
             );
           }
         }

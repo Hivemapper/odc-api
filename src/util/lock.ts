@@ -1,6 +1,6 @@
 import { exec, ExecException } from 'child_process';
 
-export const DEFAULT_TIME = 1690848000000;
+export const DEFAULT_TIME = 1696118400000; // 2023-10-01, dashcam default time is less than this date. So once the date is bigger, we know that system time is set
 let lockTime = 0;
 let isTimeSet = false;
 

@@ -5,6 +5,7 @@ import { Dilution, GNSS } from 'types/motionModel';
 import { getSessionId, getCpuLoad, getTimeFromBoot, ensureFileExists } from 'util/index';
 import { promises } from 'fs';
 import lockfile from 'proper-lockfile';
+import { GnssRecord } from 'types/sqlite';
 
 const VALID_DASHCAM_EVENTS = new Set([
   'DashcamLoaded',
@@ -90,8 +91,8 @@ export class InstrumentationClass {
 export const Instrumentation = new InstrumentationClass();
 
 export const getGnssDopKpi = (
-  gnssArray: GNSS[],
-  validRecords: GNSS[],
+  gnssArray: GnssRecord[],
+  validRecords: GnssRecord[],
 ): GnssDopKpi => {
   const dopKpi: DopKpi = {
     min: 99,
@@ -134,7 +135,6 @@ export const getGnssDopKpi = (
 
   try {
     if (gnssArray.length) {
-      const dopArray = gnssArray.map(gnss => gnss.dop);
       const dopKeys = [
         'xdop',
         'ydop',
@@ -148,7 +148,7 @@ export const getGnssDopKpi = (
       for (const key of dopKeys) {
         let dop = [];
         if (key !== 'eph') {
-          dop = dopArray.map(d => d?.[key as keyof Dilution] || 99);
+          dop = gnssArray.map(d => d?.[key as keyof Dilution] || 99);
         } else {
           dop = gnssArray.map(g => g?.eph || 999);
         }
