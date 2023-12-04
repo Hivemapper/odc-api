@@ -1,7 +1,7 @@
 import proj4 from 'proj4';
 import * as GeoLib from 'geolib';
 import * as THREE from 'three';
-import { FramesMetadata } from 'types/motionModel';
+import { GnssRecord } from 'types/sqlite';
 
 const PROJ4_WGS84_LAT_LON =
   '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees';
@@ -46,22 +46,33 @@ export function catmullRomCurve(
  * @returns
  */
 export function interpolate(
-  first: FramesMetadata,
-  second: FramesMetadata,
+  first: GnssRecord,
+  second: GnssRecord,
   indx: number,
-  keys: (keyof FramesMetadata)[],
-  res: FramesMetadata,
-): FramesMetadata {
+  keys?: (keyof GnssRecord)[],
+  res?: GnssRecord,
+): GnssRecord {
   if (indx < 0) {
     // We should keep it in [0, 1] range. Otherwise it's a math error
     indx = 0;
-    console.log('Potential math calc error during normalisation');
+    console.log(
+      'Potential math calc error during normalisation',
+      first,
+      second,
+      indx,
+    );
   }
   if (indx === 0) {
     return { ...first };
   }
   if (indx === 1) {
     return { ...second };
+  }
+  if (!keys) {
+    keys = Object.keys(first) as (keyof GnssRecord)[];
+  }
+  if (!res) {
+    res = { ...first };
   }
   for (const key of keys) {
     const firstVal = first[key] || 0;
@@ -77,55 +88,6 @@ export function latLonToECEFDist(p0: THREE.Vector3, p1: THREE.Vector3) {
   latLonToECEF(p1.x, p1.y, p1.z, p1);
 
   return p0.distanceTo(p1);
-}
-
-export function normaliseLatLon(
-  first: FramesMetadata,
-  second: FramesMetadata,
-  msec: number,
-): FramesMetadata {
-  try {
-    const firstTime = first.systemTime;
-    const secondTime = second.systemTime;
-
-    if (firstTime === secondTime) {
-      return { ...first };
-    }
-    const indx = (msec - firstTime) / (secondTime - firstTime);
-    return interpolate(
-      first,
-      second,
-      indx,
-      [
-        'lat', 
-        'lon', 
-        'alt', 
-        'speed', 
-        't', 
-        'systemTime',     
-        'satellites',  
-        'dilution',
-        'xdop',
-        'ydop',
-        'pdop',
-        'hdop',
-        'vdop',
-        'tdop',
-        'gdop',
-        'eph',
-        'acc_x',
-        'acc_y',
-        'acc_z',
-        'gyro_x',
-        'gyro_y',
-        'gyro_z'
-      ],
-      { ...first },
-    );
-  } catch (e: unknown) {
-    console.log('Math error during coord normalisation', e);
-    return { ...first };
-  }
 }
 
 export function latLonToECEFDistance(a: any, b: any) {
@@ -215,6 +177,18 @@ export function latLonDistance(
     { latitude: lat1, longitude: lon1 },
     { latitude: lat2, longitude: lon2 },
     accuracy,
+  );
+}
+
+export function distance(
+  prev: { latitude: number; longitude: number },
+  next: { latitude: number; longitude: number },
+) {
+  return latLonDistance(
+    prev.latitude,
+    next.latitude,
+    prev.longitude,
+    next.longitude,
   );
 }
 

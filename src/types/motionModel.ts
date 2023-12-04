@@ -50,6 +50,9 @@ export type MotionModelConfig = {
   isImuMovementDetectionEnabled: boolean;
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
+  isTripTrimmingEnabled: boolean;
+  TrimDistance: number;
+  FrameKmLengthMeters: number;
   isDashcamMLEnabled: boolean;
   rawLogsConfiguration: RawLogsConfiguration;
   privacyRadius?: number;
@@ -96,13 +99,15 @@ export interface IMU {
   time: string;
 }
 
+export type LatLon = { latitude: number; longitude: number };
+
 export type GnssMetadata = Dilution & {
   lat: number;
   lon: number;
   alt: number;
   speed: number;
   t: number;
-  systemTime: number;
+  systemTime?: number;
   satellites: number;
   dilution: number;
   eph: number;

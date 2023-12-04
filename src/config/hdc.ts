@@ -11,6 +11,7 @@ export const FRAMEKM_ROOT_FOLDER = '/mnt/data/framekm';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/mnt/data/unprocessed_framekm';
 export const RAW_DATA_ROOT_FOLDER = '/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = '/mnt/data/request';
+export const DB_PATH = '/mnt/data/data-logger.v1.3.1.db';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/mnt/data/mgaoffline.hash';
@@ -57,6 +58,7 @@ export const ML_MODELS: Record<string, string> = {
 export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const DATA_LOGGER_SERVICE = 'data-logger';
+export const FOLDER_PURGER_SERVICE = 'folder_purger';
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/mnt/data/camera_bridge_config.json';

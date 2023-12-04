@@ -1,3 +1,5 @@
+import { GnssRecord, ImuRecord } from "./sqlite";
+
 export enum CameraType {
   Hdc = 'hdc',
   HdcS = 'hdc-s',
@@ -63,6 +65,13 @@ export interface IMU {
   temp: number;
   time: string;
 }
+
+export interface IImage {
+  system_time: number;
+  image_name: string;
+}
+
+export type SensorData = ImuRecord | GnssRecord | IImage;
 
 export interface ICronJobFrequency {
   interval?: number;

@@ -1,7 +1,7 @@
 import { LORA_REQUEST_FOLDER } from '../config';
 import { Request, Response, Router } from 'express';
 import { promises as Fs } from 'fs';
-import { LORA_RESPONSE_FOLDER } from 'config/hdc-s';
+import { LORA_RESPONSE_FOLDER } from 'config';
 import { initDirectory } from 'util/files';
 import { createLoraFile } from 'util/lora';
 

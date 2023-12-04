@@ -3,7 +3,7 @@ import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER, RAW_
 import { getOldestFileDateInDirectory } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME, ifTimeSet } from 'util/lock';
-import { getConfig } from 'util/motionModel';
+import { getConfig } from 'util/motionModel/config';
 import { IService } from '../types';
 import { isIntegrityCheckDone } from './integrityCheck';
 
