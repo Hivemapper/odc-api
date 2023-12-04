@@ -1,6 +1,7 @@
 export interface ImuRecord {
     id: number;
-    time: string;
+    time: number;
+    system_time: number;
     acc_x: number;
     acc_y: number;
     acc_z: number;
@@ -11,9 +12,8 @@ export interface ImuRecord {
 }
 
 export interface GnssRecord {
-    id: number;
-    time: string;
-    system_time: string;
+    time: number;
+    system_time: number;
     fix: string;
     ttff: number;
     latitude: number;
@@ -21,6 +21,7 @@ export interface GnssRecord {
     altitude: number;
     speed: number;
     heading: number;
+    dilution: number;
     satellites_seen: number;
     satellites_used: number;
     eph: number;
@@ -48,3 +49,35 @@ export interface GnssRecord {
     gga: string;
     rxm_measx: string;
 }
+
+export type FrameKmRecord = {
+    fkm_id?: number;
+    image_name: string;
+    acc_x: number;
+    acc_y: number;
+    acc_z: number;
+    gyro_x: number;
+    gyro_y: number;
+    gyro_z: number;
+    xdop: number;
+    ydop: number;
+    tdop: number;
+    vdop: number;
+    pdop: number;
+    gdop: number;
+    hdop: number;
+    eph: number;
+    latitude: number;
+    longitude: number;
+    altitude: number;
+    speed: number;
+    time: number;
+    system_time: number;
+    satellites_used: number;
+    dilution: number;
+    ml_model_hash?: string;
+    ml_detections?: string;
+    frame_idx?: number;
+  };
+
+  export type FrameKM = FrameKmRecord[];

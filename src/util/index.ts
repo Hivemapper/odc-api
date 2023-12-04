@@ -569,6 +569,18 @@ export function tryToRemoveFile(path: string) {
   }
 }
 
+export function convertTimestampToDbFormat(timestamp: number) {
+  const date = new Date(timestamp);
+  // Convert to ISO string and replace 'T' with a space and 'Z' with an empty string.
+  let dateString = date.toISOString().replace('T', ' ').replace('Z', '');
+  // Now, we need to adjust the milliseconds to match your database format (5 decimal places):
+  const parts = dateString.split('.');
+  // Ensure that there are exactly 5 digits for milliseconds
+  parts[1] = parts[1].padEnd(5, '0').substring(0, 5);
+  dateString = parts.join('.');
+  return dateString;
+}
+
 export async function readLast2MB(filePath: string) {
   try {
     const { size } = statSync(filePath);

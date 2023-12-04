@@ -4,7 +4,7 @@ import { existsSync, readdirSync, rmSync, stat } from 'fs';
 import { filterBySinceUntil, getDateFromFramekmName } from '../util';
 import { ICameraFile } from '../types';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getNumFramesFromChunkName } from 'util/motionModel';
+import { getNumFramesFromChunkName } from 'util/framekm';
 import { join } from 'path';
 import { promisify } from 'util';
 

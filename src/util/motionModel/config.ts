@@ -2,9 +2,9 @@ import { MOTION_MODEL_CONFIG } from 'config';
 import { writeFile } from 'fs';
 import { MotionModelConfig, RawLogsConfiguration } from 'types/motionModel';
 
-export const MIN_SPEED = 0.275; // meter per seconds
+export const MIN_SPEED = 0.15; // meter per seconds
 export const MAX_SPEED = 40; // meter per seconds
-export const MAX_DISTANCE_BETWEEN_POINTS = 50;
+export const MAX_DISTANCE_BETWEEN_POINTS = 10;
 
 const defaultImu = {
   threshold: 0.05,
@@ -27,6 +27,9 @@ let config: MotionModelConfig = {
   isImuMovementDetectionEnabled: false,
   isLightCheckDisabled: false,
   isDashcamMLEnabled: false,
+  isTripTrimmingEnabled: true,
+  TrimDistance: 100,
+  FrameKmLengthMeters: 1000,
   ImuFilter: defaultImu,
   rawLogsConfiguration: {
     isEnabled: false,
@@ -44,7 +47,7 @@ export const loadConfig = (
   updateFile?: boolean,
 ) => {
   if (isValidConfig(_config)) {
-    config = _config;
+    config = { ...config, ..._config };
     if (updateFile) {
       writeFile(
         MOTION_MODEL_CONFIG,

@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import {
   DATA_INTEGRITY_SCRIPT,
+  EVENTS_LOG_PATH,
   FRAMEKM_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
   WEBSERVER_LOG_PATH,
@@ -26,6 +27,7 @@ export const IntegrityCheckService: IService = {
           FRAMEKM_ROOT_FOLDER,
           METADATA_ROOT_FOLDER,
           WEBSERVER_LOG_PATH,
+          EVENTS_LOG_PATH,
         ]);
 
         cleanupScript.stdout.on('data', data => {

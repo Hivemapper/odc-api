@@ -3,7 +3,7 @@ import {
   } from '../config';
   import { Router } from 'express';
   import { existsSync, mkdirSync, renameSync, writeFileSync } from 'fs';
-import { restartPrivacyProcess } from 'services/privacyWatcher';
+//import { restartPrivacyProcess } from 'services/privacyWatcher';
 
   const router = Router();
   
@@ -29,7 +29,7 @@ import { restartPrivacyProcess } from 'services/privacyWatcher';
       }
       renameSync(req.body.path, modelPath);
       writeFileSync(modelPath + '.hash', req.body.hash, { encoding: 'utf-8' });
-      restartPrivacyProcess();
+      // restartPrivacyProcess();
       res.json({ done: true } );
     } catch (error: unknown) {
       res.json({ error });

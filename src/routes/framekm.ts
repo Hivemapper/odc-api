@@ -9,9 +9,8 @@ import {
   rmSync,
   statSync,
 } from 'fs';
-import { concatFrames } from 'util/framekm';
+import { concatFrames, getNumFramesFromChunkName } from 'util/framekm';
 import { exec } from 'child_process';
-import { getNumFramesFromChunkName } from 'util/motionModel';
 
 const router = Router();
 

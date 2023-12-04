@@ -6,11 +6,12 @@ import { CameraType } from 'types';
 export const PORT = 5000;
 
 export const PUBLIC_FOLDER = '/data/recording';
-export const TMP_PUBLIC_FOLDER = __dirname + '/../../../tmp/public';
-export const FRAMES_ROOT_FOLDER = '/data/recording/pic';
+export const TMP_PUBLIC_FOLDER = '/tmp/recording';
+export const FRAMES_ROOT_FOLDER = '/tmp/recording/pics';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
+export const DB_PATH = '/data/recording/data-logger.v1.3.1.db';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
@@ -63,6 +64,7 @@ export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/data/camera_bridge_config.hash';
 export const GPS_MGA_OFFLINE_FILE = '/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/data/mgaoffline.hash';
 export const DATA_LOGGER_SERVICE = 'hivemapper-data-logger';
+export const FOLDER_PURGER_SERVICE = 'hivemapper-folder-purger';
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 
