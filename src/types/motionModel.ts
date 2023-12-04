@@ -54,6 +54,8 @@ export type MotionModelConfig = {
   TrimDistance: number;
   FrameKmLengthMeters: number;
   isDashcamMLEnabled: boolean;
+  isGyroCalibrationEnabled: boolean;
+  isAccelerometerCalibrationEnabled: boolean;
   rawLogsConfiguration: RawLogsConfiguration;
   privacyRadius?: number;
   modelHashes?: Record<string, string>;
