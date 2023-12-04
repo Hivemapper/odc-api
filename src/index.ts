@@ -7,7 +7,6 @@ import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
-// import { PrivacyWatcherService, restartPrivacyProcess } from 'services/privacyWatcher';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
 // import { LogDiskUsageService } from 'services/logDiskUsage';
@@ -74,7 +73,6 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
-    // serviceRunner.add(PrivacyWatcherService);
     serviceRunner.add(LoadPrivacyService);
     // serviceRunner.add(LogDiskUsageService);
 

@@ -3,9 +3,9 @@ import { Request, Response, Router } from 'express';
 import {
   createReadStream,
   existsSync,
+  promises,
   mkdirSync,
   readdir,
-  readdirSync,
   rmSync,
   statSync,
 } from 'fs';
@@ -16,7 +16,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(FRAMEKM_ROOT_FOLDER);
+    const files = await promises.readdir(FRAMEKM_ROOT_FOLDER);
     res.json(files);
   } catch (error) {
     res.json([]);
@@ -37,7 +37,7 @@ router.post('/:name', async (req: Request, res: Response) => {
 
 router.get('/unprocessed', async (req: Request, res: Response) => {
   try {
-    const files = readdirSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER).filter((f) => f.startsWith('km_'));
+    const files = (await promises.readdir(UNPROCESSED_FRAMEKM_ROOT_FOLDER)).filter((f) => f.startsWith('km_'));
     let frames = 0;
     for (const file of files) {
       try {

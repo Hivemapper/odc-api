@@ -31,6 +31,7 @@ export const BUILD_INFO_PATH = '/etc/version.json';
 export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const FRAMEKM_CLEANUP_SCRIPT = '/opt/dashcam/bin/cleanup_framekm.sh';
 export const DATA_INTEGRITY_SCRIPT = '/opt/dashcam/bin/data_integrity_check.sh';
+export const FIRMWARE_UPDATE_MARKER = '/mnt/data/update_in_progress';
 export const ACL_FILES_PATH = '/mnt/data';
 export const WEBSERVER_LOG_PATH =
   '/mnt/data/camera-node.log';
