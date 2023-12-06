@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { resetDB } from 'sqlite/common';
+import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
 import { fetchLastNGnssRecords } from 'sqlite/gnss';
 import { fetchLastNImuRecords } from 'sqlite/imu';
@@ -20,6 +21,16 @@ router.get('/imu/:n', async (req, res) => {
   const { n } = req.params;
   try {
     const rows = await fetchLastNImuRecords(Number(n));
+    res.send(rows);
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/errors/:n', async (req, res) => {
+  const { n } = req.params;
+  try {
+    const rows = await fetchLastNErrorRecords(Number(n));
     res.send(rows);
   } catch (error) {
     res.status(500).send({ error });

@@ -7,6 +7,8 @@ import { join } from 'path';
 import { FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
+import { insertErrorLog } from './error';
+import { Instrumentation } from 'util/instrumentation';
 
 export const isFrameKmComplete = async (): Promise<boolean> => {
   try {
@@ -223,10 +225,19 @@ export const addFramesToFrameKm = async (
             const forceFrameKmSwitch = force && i === 0;
             fkm_id = forceFrameKmSwitch ? lastFkmId + 1 : lastFkmId;
             // sanity check for accidental insert of the wrong sample into framekm
+            const distanceBetweenFrames = distance(last, row);
             if (
-              distance(last, row) > getConfig().DX * 2 &&
+              distanceBetweenFrames > getConfig().DX * 2 &&
               !forceFrameKmSwitch
             ) {
+              insertErrorLog('Distance between frames is more than allowed: ' + distanceBetweenFrames);
+              Instrumentation.add({
+                event: 'DashcamCutReason',
+                message: JSON.stringify({
+                  reason: 'FrameKmValidation',
+                  distance: Math.round(distanceBetweenFrames),
+                }),
+              });
               fkm_id++;
             }
             if (fkm_id === lastFkmId) {

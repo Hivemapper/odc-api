@@ -13,7 +13,7 @@ const defaultImu = {
 };
 
 let config: MotionModelConfig = {
-  DX: 6,
+  DX: 8,
   GnssFilter: {
     '3dLock': true,
     minSatellites: 4,

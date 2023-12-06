@@ -21,6 +21,7 @@ import {
 import * as console from 'console';
 import { isPrivateLocation } from 'util/privacy';
 import { fileExists } from 'util/index';
+import { insertErrorLog } from 'sqlite/error';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -189,6 +190,7 @@ export const HeartBeatService: IService = {
             Instrumentation.add({
               event: 'DashcamLost3dLock',
             });
+            insertErrorLog('DashcamLost3dLock');
           }
           isLock = false;
 

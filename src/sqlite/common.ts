@@ -5,6 +5,13 @@ import { fetchImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
 import { insertFrames } from './frames';
 import { db, runAsync } from 'sqlite';
+import { Instrumentation } from 'util/instrumentation';
+
+let accumulated = 0;
+let accumDuration = 0;
+let accumGnssFreq = 0;
+let accumImuFreq = 0;
+let accumImageFreq = 0;
 
 export const querySensorData = async (
   lastTimestamp: number,
@@ -20,21 +27,44 @@ export const querySensorData = async (
     const imu = await fetchImuLogsByTime(since, until);
     const images = await getFramesFromFS(since, until);
     const duration = (until - since) / 1000;
-    console.log(
-      `Sensor data queried: ${gnss.length} GNSS, ${imu.length} IMU, ${
-        images.length
-      } images. Took ${
-        Date.now() - start
-      } msecs, Since: ${since}, Until: ${until}, Period: ${duration.toFixed(
-        1,
-      )} secs. ${
-        duration > 0
-          ? `Freq: GNSS ${(gnss.length / duration).toFixed(1)}, IMU ${(
-              imu.length / duration
-            ).toFixed(1)}, Images ${(images.length / duration).toFixed(1)}, `
-          : ''
-      }`,
-    );
+    if (duration > 0) {
+      const GnssFreq = gnss.length / duration;
+      const ImuFreq = imu.length / duration;
+      const ImageFreq = images.length / duration;
+
+      accumulated++;
+      accumDuration += duration;
+      accumGnssFreq += GnssFreq;
+      accumImuFreq += ImuFreq;
+      accumImageFreq += ImageFreq;
+
+      if (accumulated >= 10) {
+        Instrumentation.add({
+          event: 'DashcamSensorDataFreq',
+          size: Math.round(accumDuration),
+          message: JSON.stringify({
+            fps: Math.round(accumImageFreq / accumulated),
+            imu: Math.round(accumImuFreq / accumulated),
+            gnss: Math.round(accumGnssFreq / accumulated),
+          }),
+        });
+        accumulated = 0;
+        accumGnssFreq = 0;
+        accumImuFreq = 0;
+        accumImageFreq = 0;
+        accumDuration = 0;
+      }
+
+      console.log(
+        `Sensor data queried: ${gnss.length} GNSS, ${imu.length} IMU, ${
+          images.length
+        } images. Took ${
+          Date.now() - start
+        } msecs, Since: ${since}, Until: ${until}, Period: ${duration.toFixed(
+          1,
+        )} secs. Freq: GNSS ${GnssFreq.toFixed(1)}, IMU ${ImuFreq.toFixed(1)}, Images ${ImageFreq.toFixed(1)}`,
+      );
+    }
     if (images.length) {
       await insertFrames(images);
     }
@@ -52,6 +82,7 @@ export const resetDB = async () => {
     await runAsync(db, 'DELETE FROM gnss;');
     await runAsync(db, 'DELETE FROM imu;');
     await runAsync(db, 'DELETE FROM frames;');
+    await runAsync(db, 'DELETE FROM error_logs;');
   } catch (error) {
     console.error('Error clearing tables:', error);
   }
