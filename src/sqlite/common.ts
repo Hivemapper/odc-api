@@ -71,6 +71,7 @@ export const querySensorData = async (
       }
       return { gnss, imu, images };
     } else {
+      console.log('No valuable GNSS data fetched');
       return { gnss: [], imu: [], images: [] };
     }
   } catch (e: unknown) {
