@@ -4,11 +4,11 @@ import { convertTimestampToDbFormat } from 'util/index';
 import { DEFAULT_TIME } from 'util/lock';
 
 export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<GnssRecord[]> => {
-    let query = `SELECT * FROM gnss WHERE time > ?`;
+    let query = `SELECT * FROM gnss WHERE system_time > ?`;
     const args = [convertTimestampToDbFormat(from)];
 
     if (to) {
-        query += ` AND time < ?`;
+        query += ` AND system_time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
     return new Promise((resolve) => {

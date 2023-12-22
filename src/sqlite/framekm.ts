@@ -142,7 +142,7 @@ export const deleteFrameKm = async (
 export const getLastTimestamp = async (): Promise<number> => {
   try {
     const lastRecord = await getLastRecord();
-    return lastRecord?.time || 0;
+    return lastRecord?.system_time || 0;
   } catch (error) {
     console.error('Error fetching last timestamp:', error);
     return Date.now();

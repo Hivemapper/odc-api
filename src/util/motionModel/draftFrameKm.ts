@@ -172,7 +172,7 @@ export class DraftFrameKm {
     if (this.data.length) {
       const lastGps = this.getGpsData()?.pop();
       if (lastGps) {
-        return lastGps.time;
+        return lastGps.system_time;
       } else {
         return this.data[this.data.length - 1].system_time;
       }
