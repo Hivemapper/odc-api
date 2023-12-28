@@ -7,12 +7,35 @@ import { setMostRecentPing } from 'services/heartBeat';
 import { getNumFramesFromChunkName } from 'util/framekm';
 import { join } from 'path';
 import { promisify } from 'util';
+import { getAccessControlListFromCamera, checkifAclPassed } from 'util/acl';
+import {
+  fromString as fromHexString,
+  toString as toHexString,
+} from 'hex-array';
 
 const MAX_RESPONSE_SIZE = 10000;
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
+    const accessControlList = await getAccessControlListFromCamera();
+    const fleetEntityWalletAddress = req.headers.cookies;
+    if(accessControlList){
+
+      const data = fromHexString(accessControlList);
+
+      const aclResult = JSON.parse(String.fromCharCode(...data));
+    
+      if (!aclResult.acl) {
+        // return null;
+      }
+      const ensureAclPassed = checkifAclPassed(true, fleetEntityWalletAddress, aclResult);
+      console.log("From ODC API metadata.ts file, is ACL passed?", ensureAclPassed);
+      if(!ensureAclPassed){
+        res.json([]);
+        return;
+      }
+    }
     const files = await promises.readdir(METADATA_ROOT_FOLDER);
 
     const metadataFiles: ICameraFile[] = files
