@@ -8,45 +8,43 @@ import {
 const execPromise = promisify(exec);
 
 export async function ensureAclPassed(req: Request, res: Response, next: NextFunction) {
+  //TODO: For Hari remove log statements after testing
   console.log("[ACL] Control reached middleware ensureAclPassed req.headers.cookie value", req.headers.cookie);
 
-  if (req.headers.cookie) {
+  const accessControlList = await getAccessControlListFromCamera();
+  console.log("[ACL] Control reached middleware ensureAclPassed accessControlList from camera", accessControlList);
 
-    const accessControlList = await getAccessControlListFromCamera();
-    const fleetEntityId = req.headers.cookie.split('=')[1];
-    console.log("[ACL] Control reached middleware ensureAclPassed accessControlList from camera", accessControlList);
+  if (accessControlList && req?.headers?.cookie) {
+    const fleetEntityId = req?.headers?.cookie.split('=')[1];
+    const data = fromHexString(accessControlList);
+    const aclResult = JSON.parse(String.fromCharCode(...data));
 
-    if (accessControlList) {
+    if (aclResult?.acl && fleetEntityId && typeof fleetEntityId === 'string') {
 
-      const data = fromHexString(accessControlList);
-      const aclResult = JSON.parse(String.fromCharCode(...data));
+      console.log("[ACL] Control reached middleware ensureAclPassed ACL result after parsing:", aclResult?.acl);
 
-      if (aclResult?.acl && fleetEntityId && typeof fleetEntityId === 'string') {
+      const isAclPassed = isWhitelisted(fleetEntityId, aclResult?.acl);
 
-        console.log("[ACL] Control reached middleware ensureAclPassed ACL result after parsing:", aclResult?.acl);
+      console.log("[ACL] Control reached middleware ensureAclPassed return value from whitelisted function", isAclPassed);
 
-        const isAclPassed = isWhitelisted(fleetEntityId, aclResult?.acl);
+      if (isAclPassed) {
 
-        console.log("[ACL] Control reached middleware ensureAclPassed return value from whitelisted function", isAclPassed);
-
-        if (isAclPassed) {
-
-          next();
-          return;
-
-        }
-      }
-      if(!aclResult?.acl){
-
-        console.log("[ACL] Control reached middleware ensureAclPassed ACL result is null");
         next();
         return;
 
       }
     }
-    else {
+    if (!aclResult?.acl) {
+
+      console.log("[ACL] Control reached middleware ensureAclPassed ACL result is null");
       next();
+      return;
+
     }
+  }
+  else {
+    next();
+    return;
   }
 
   console.log("[ACL] Control reached middleware ensureAclPassed returning empty array");
@@ -62,7 +60,7 @@ export const getAccessControlListFromCamera = async () => {
 
     return stdout;
   } catch (error: unknown) {
-    console.log("Error reading ACL file from metadata.ts");
+    console.log("Error reading ACL file from acl.ts middleware");
     return null;
   }
 };

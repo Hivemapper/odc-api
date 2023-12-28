@@ -14,7 +14,6 @@ const router = Router();
 
 router.get('/', ensureAclPassed, async (req: Request, res: Response) => {
   try {
-    console.log('[METADATA] Control reached to metadata route fetching the data');
     const files = await promises.readdir(METADATA_ROOT_FOLDER);
 
     const metadataFiles: ICameraFile[] = files
