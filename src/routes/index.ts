@@ -100,6 +100,7 @@ router.get('/info', async (req: Request, res: Response) => {
 });
 
 router.get('/ping', (req, res) => {
+  const deviceInfo = getDeviceInfo();
   setMostRecentPing(Date.now());
   res.json({
     healthy: true,
@@ -108,6 +109,7 @@ router.get('/ping', (req, res) => {
     dashcam: CAMERA_TYPE,
     sessionId: getSessionId(),
     ...getLockTime(),
+    ...deviceInfo,
   });
   exec('touch ' + HEALTH_MARKER_PATH);
   if (!isAppConnected) {
