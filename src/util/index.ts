@@ -237,6 +237,22 @@ export async function ensureFileExists(filePath: string) {
     }
 }
 
+export const parseCookie = (cookie: string, name: string): string | null => {
+  if (!cookie) {
+    return null;
+  }
+
+  const cookies = cookie.split('; ');
+  for (let i = 0; i < cookies.length; i++) {
+    const [cookieName, cookieValue] = cookies[i].split('=');
+    if (cookieName === name) {
+      return cookieValue;
+    }
+  }
+
+  return null;
+}
+
 export const addAppConnectedLog = () => {
   let usbConnected = false;
   try {
