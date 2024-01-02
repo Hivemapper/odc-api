@@ -281,13 +281,55 @@ router.get('/sensordata/:since', async (req: Request, res: Response) => {
 
   const sensordata : SensorRecord[] = [];
   gnss.forEach((value) => {
-    sensordata.push({sensor: "gnss", ...value})
+    sensordata.push({sensor: "gnss", ...value});
   })
   imu.forEach((value) => {
-    sensordata.push({sensor: "imu", ...value})
+    sensordata.push({sensor: "imu", ...value});
   })
 
   res.json(sensordata);
 });
+
+router.get('/sensorquery', async (req: Request, res: Response) =>  {
+  let since = 0;
+  let until = 0;
+  let limit = 0;
+  let offset = 0;
+
+  try {
+    since = parseInt(req.query.since as string);
+    until = parseInt(req.query.until as string);
+    limit = parseInt(req.query.limit as string);
+    offset = parseInt(req.query.offset as string); // TODO Separate
+  } catch (e) {
+    console.log(e);
+    res.status(400).json(e);
+  }
+  console.log('-------------------------');
+  console.log(since, until, limit, offset);
+  console.log(Date.now())
+
+  const { gnss, imu } = await querySensorData(since, until, limit, offset);
+  const sensordata : SensorRecord[] = [];
+  gnss.forEach((value) => {
+    sensordata.push({sensor: "gnss", ...value});
+  })
+  imu.forEach((value) => {
+    sensordata.push({sensor: "imu", ...value});
+  })
+
+  const numGnssEntries = gnss.length;
+  const lastEntry = gnss.at(-1);
+  let lastGnssDate = 0;
+  if (lastEntry !== undefined) {
+    lastGnssDate = lastEntry.system_time;
+  }
+
+  res.json({
+    numGnssEntries,
+    lastGnssDate,
+    sensordata,
+  })
+})
 
 export default router;

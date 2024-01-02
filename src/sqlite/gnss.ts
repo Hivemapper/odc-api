@@ -3,7 +3,7 @@ import { db } from './index';
 import { convertTimestampToDbFormat } from 'util/index';
 import { DEFAULT_TIME } from 'util/lock';
 
-export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<GnssRecord[]> => {
+export const fetchGnssLogsByTime  = async (from: number, to?: number, limit?: number, offset?: number): Promise<GnssRecord[]> => {
     let query = `SELECT * FROM gnss WHERE system_time > ?`;
     const args = [convertTimestampToDbFormat(from)];
 
@@ -11,6 +11,15 @@ export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<G
         query += ` AND system_time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
+    if (limit) {
+        query += ` LIMIT ?`;
+        args.push(`${limit}`);
+    }
+    if (offset) {
+        query += ` OFFSET ?`;
+        args.push(`${offset}`);
+    }
+
     return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: GnssRecord[]) => {
             if (err) {

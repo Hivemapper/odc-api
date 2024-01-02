@@ -14,13 +14,13 @@ let accumImuFreq = 0;
 let accumImageFreq = 0;
 
 export const querySensorData = async (
-  lastTimestamp: number,
+  lastTimestamp: number, until?: number, limit?: number, offset?: number
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[] }> => {
   try {
-    const logTime = Math.max(lastTimestamp, Date.now() - 60 * 1000);
+    const logTime = Math.max(lastTimestamp, Date.now() - 60 * 60 * 1000);
     console.log('Getting sensor data for: ', new Date(logTime));
     const start = Date.now();
-    const gnss = (await fetchGnssLogsByTime(logTime)).filter(g => g); // don't fetch more than a minute of data
+    const gnss = (await fetchGnssLogsByTime(logTime, until, limit, offset)).filter(g => g); // don't fetch more than a minute of data
     if (gnss.length) {
       const since = gnss[0].system_time;
       const until = gnss[gnss.length - 1].system_time;
