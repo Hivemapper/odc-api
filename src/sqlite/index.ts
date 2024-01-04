@@ -114,7 +114,10 @@ export const createFrameKMTable = async (): Promise<void> => {
     satellites_used INTEGER,
     dilution REAL,
     ml_model_hash TEXT,
-    ml_detections TEXT
+    ml_detections TEXT,
+    inference_time INTEGER,
+    created_at INTEGER,
+    processed_at INTEGER
   );`;
   try {
     await runSchemaAsync(db, createTableSQL);

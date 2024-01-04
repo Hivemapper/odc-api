@@ -34,10 +34,16 @@ export const getFramesCount = async (): Promise<number> => {
 };
 
 export const getFrameKmsCount = async (): Promise<number> => {
+  const { isDashcamMLEnabled } = getConfig();
+  
+  const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
+    isDashcamMLEnabled ? ' WHERE model_hash IS NOT NULL' : ''
+  };`;
+
   try {
     const row: any = await getAsync(
       db,
-      'SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms;',
+      query,
     );
     return row.length ? row[0].distinctCount : 0;
   } catch (error) {
@@ -205,8 +211,8 @@ export const addFramesToFrameKm = async (
           fkm_id, image_name, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop,
-          time, system_time, satellites_used, dilution, eph, frame_idx
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, satellites_used, dilution, eph, frame_idx, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -289,6 +295,7 @@ export const addFramesToFrameKm = async (
             row.dilution,
             row.eph,
             frame_idx,
+            Date.now(),
           ]);
         } catch (error) {
           console.error('Error adding row to framekm:', error);

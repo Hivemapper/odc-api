@@ -6,27 +6,31 @@ import {
   fromString as fromHexString,
 } from 'hex-array';
 import { parseCookie } from 'util/index';
+import { Instrumentation } from 'util/instrumentation';
 const execPromise = promisify(exec);
 
 export async function ensureAclPassed(req: Request, res: Response, next: NextFunction) {
-  //TODO: For Hari remove log statements after testing
-  console.log("[ACL] Control reached middleware ensureAclPassed req.headers.cookie value", req.headers.cookie);
 
   try {
     const accessControlList = await getAccessControlListFromCamera();
-    console.log("[ACL] Control reached middleware ensureAclPassed accessControlList from camera", accessControlList);
+    let aclResult = {
+      acl: null
+    };
+    let fleetEntityId = null;
 
     if (accessControlList && req?.headers?.cookie) {
-      const fleetEntityId = parseCookie(req.headers.cookie, 'aclId');
-      console.log("[ACL] fleetEntityId:", fleetEntityId);
+      fleetEntityId = parseCookie(req.headers.cookie, 'aclId');
+
       const data = fromHexString(accessControlList);
-      const aclResult = JSON.parse(String.fromCharCode(...data));
+      try {
+        aclResult = JSON.parse(String.fromCharCode(...data));
+      } catch (e: unknown) {
+        // console.log('Error parsing ACL JSON:', e);
+      }
   
       if (aclResult?.acl && fleetEntityId && typeof fleetEntityId === 'string') {
   
-        console.log("[ACL] Control reached middleware ensureAclPassed ACL result after parsing:", aclResult?.acl);
         const isAclPassed = isWhitelisted(fleetEntityId, aclResult?.acl);
-        console.log("[ACL] Control reached middleware ensureAclPassed return value from whitelisted function", isAclPassed);
   
         if (isAclPassed) {
           next();
@@ -34,7 +38,6 @@ export async function ensureAclPassed(req: Request, res: Response, next: NextFun
         }
       }
       if (!aclResult?.acl) {
-        console.log("[ACL] Control reached middleware ensureAclPassed ACL result is null");
         next();
         return;
       }
@@ -44,9 +47,18 @@ export async function ensureAclPassed(req: Request, res: Response, next: NextFun
       return;
     }
   
-    console.log("[ACL] Control reached middleware ensureAclPassed returning empty array");
+    console.log("[ACL] Control reached middleware ensureAclPassed returning empty array", req?.headers?.cookie, aclResult?.acl);
+    Instrumentation.add({
+      event: 'DashcamApiError',
+      message: 'ACL restriction',
+    });
     res.json([]);
   } catch (error: unknown) {
+    console.log('Error processing ACL', error);
+    Instrumentation.add({
+      event: 'DashcamApiError',
+      message: 'ACL error',
+    });
     next();
   }
 }

@@ -1,6 +1,7 @@
 import { querySensorData } from 'sqlite/common';
 import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
+import { Instrumentation } from 'util/instrumentation';
 
 const QUERY_WINDOW_SIZE = 10 * 1000;
 
@@ -31,6 +32,10 @@ export async function MotionModelController() {
     // TODO: utilise raw logs: collect, pack, etc here
   } catch (e: unknown) {
     console.log('Critical motion model controller error, investigate: ', e);
+    Instrumentation.add({
+      event: 'DashcamApiError',
+      message: 'Motion model error',
+    });
     session = new DriveSession();
   }
 
