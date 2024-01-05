@@ -14,20 +14,20 @@ let accumImuFreq = 0;
 let accumImageFreq = 0;
 
 export const querySensorData = async (
-  lastTimestamp: number,
+  lastTimestamp: number, until?: number
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[] }> => {
   try {
     const gnssSince = Math.max(lastTimestamp, Date.now() - 60 * 1000);
     console.log('Getting sensor data for: ', new Date(gnssSince));
     const start = Date.now();
-    const gnssUntil = gnssSince + 120 * 1000; // restricting the GNSS query to 2 min max, to prevent accidental overloads
+    const gnssUntil = until ?? gnssSince + 120 * 1000; // restricting the GNSS query to 2 min max, to prevent accidental overloads
     const gnss = (await fetchGnssLogsByTime(gnssSince, gnssUntil)).filter(g => g); // don't fetch more than a minute of data
     if (gnss.length) {
-        const since = gnss[0].system_time;
-        const until = Math.min(gnss[gnss.length - 1].system_time, since + 120 * 1000); // restricting the IMU query to 2 min max, to prevent accidental overloads
-        const imu = await fetchImuLogsByTime(since, until);
-        const images = await getFramesFromFS(since, until);
-        const duration = (until - since) / 1000;
+        const imuSince = gnss[0].system_time;
+        const imuUntil = Math.min(gnss[gnss.length - 1].system_time, until ?? imuSince + 120 * 1000); // restricting the IMU query to 2 min max, to prevent accidental overloads
+        const imu = await fetchImuLogsByTime(imuSince, imuUntil);
+        const images = await getFramesFromFS(imuSince, imuUntil);
+        const duration = (imuUntil - imuSince) / 1000;
       if (duration > 0) {
         const GnssFreq = gnss.length / duration;
         const ImuFreq = imu.length / duration;
@@ -61,7 +61,7 @@ export const querySensorData = async (
             images.length
           } images. Took ${
             Date.now() - start
-          } msecs, Since: ${since}, Until: ${until}, Period: ${duration.toFixed(
+          } msecs, Since: ${imuSince}, Until: ${imuUntil}, Period: ${duration.toFixed(
             1,
           )} secs. Freq: GNSS ${GnssFreq.toFixed(1)}, IMU ${ImuFreq.toFixed(1)}, Images ${ImageFreq.toFixed(1)}`,
         );
