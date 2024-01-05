@@ -15,11 +15,17 @@ IMAGE_WIDTH = 2028
 IMAGE_HEIGHT = 1024
 
 def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
-  # Rescale boxes to original image dimensions
-  input_shape = np.array([model_width, model_height, model_width, model_height])
-  boxes = np.divide(boxes, input_shape, dtype=np.float32)
-  boxes *= np.array([img_width, img_height, img_width, img_height])
-  return boxes
+    # Rescale boxes to original image dimensions
+    # paying attention to paddings of squared detections
+    input_shape = np.array([model_width, model_height, model_width, model_height])
+    aspect_ratio = img_width / img_height
+    resize_ratio = model_width / img_width
+    padding = (model_height - img_height * resize_ratio) / 2
+
+    boxes -= np.array([0, padding, 0, padding])
+    boxes = np.divide(boxes, input_shape, dtype=np.float32)
+    boxes *= np.array([img_width, img_height * aspect_ratio, img_width, img_height * aspect_ratio])
+    return boxes
 
 def detect(image_path, session, conf_threshold, nms_threshold, tensor_type):
   start = time.perf_counter()
@@ -30,19 +36,22 @@ def detect(image_path, session, conf_threshold, nms_threshold, tensor_type):
   output = session.infer(inputs={input_blob: tensor})
 
   predictions = np.squeeze(output['output0']).T
+
   scores = np.max(predictions[:, 4:], axis=1)
   predictions = predictions[scores > conf_threshold, :]
+
+  scores = scores[scores > conf_threshold]
   class_ids = np.argmax(predictions[:, 4:], axis=1)
   boxes = predictions[:, :4]
   boxes = xywh2xyxy(boxes)
   indices = nms(xywh2xyxy(boxes), scores, nms_threshold)
   boxes = rescale_boxes(boxes, IMAGE_WIDTH, IMAGE_HEIGHT, model_shape, model_shape)
-  blur(img, image_path, boxes, indices, scores, class_ids)
-  inference_time += (time.perf_counter() - start) * 1000
+  blur(img, image_path, boxes[indices])
+  inference_time = (time.perf_counter() - start) * 1000
 
   return list(zip(boxes[indices].tolist(), scores[indices].tolist(), class_ids[indices].tolist())), inference_time
 
-def blur(img, boxes):
+def blur(img, image_name, boxes):
   #Downscale & blur
   downscale_size = (int(img.shape[1] * 0.2), int(img.shape[0] * 0.2))
   img_downscaled = cv2.resize(img, downscale_size, interpolation=cv2.INTER_NEAREST)
@@ -54,6 +63,7 @@ def blur(img, boxes):
 
   # Mask from bounding boxes
   mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
+
   for box in boxes:
     box = box.astype(int)
     # filter out large boxes and boxes on the hood
@@ -66,6 +76,8 @@ def blur(img, boxes):
   mask_inv = cv2.bitwise_not(mask)
   img_unmasked = cv2.bitwise_and(img, img, mask=mask_inv)
   result = cv2.add(composite_img, img_unmasked)
+  # result = draw(result, conf_threshold, boxes[indices], scores[indices], class_ids[indices], CLASS_NAMES)
+  cv2.imwrite(image_name, result)
 
   return result
 
@@ -73,19 +85,22 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
 
   # Load 2 models: small and medium
   ie = IECore()
-  session_sm = ie.import_network(model_file=os.path.join(model_path, '_sm.blob'), device_name=device)
-  session_md = ie.import_network(model_file=os.path.join(model_path, '_md.blob'), device_name=device)
+
+  sm_path = model_path + '_sm.blob'
+  session_sm = ie.import_network(model_file=sm_path, device_name=device)
+  md_path = model_path + '_md.blob'
+  session_md = ie.import_network(model_file=md_path, device_name=device)
 
   q = queue.Queue()
 
   # Read model hashes
   model_hash_sm = ''
-  model_hash_path = os.path.join(model_path, '_sm.hash')
+  model_hash_path = sm_path = model_path + '_sm.hash'
   with open(model_hash_path, 'r') as file:
     model_hash_sm = file.read().strip()
 
   model_hash_md = ''
-  model_hash_path = os.path.join(model_path, '_md.hash')
+  model_hash_path = model_path + '_md.hash'
   with open(model_hash_path, 'r') as file:
     model_hash_md = file.read().strip()
 
@@ -96,14 +111,14 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
       image = q.get()
       is_optimised = getattr(image, 'speed', 0) > SPEED_THRESHOLD_FOR_OPTIMISED_MODEL
       try:
-        detections, inference_time = detect(image, session_sm if is_optimised else session_md, conf_threshold, nms_threshold, tensor_type)
-        sqlite.set_frame_ml(image, model_hash_sm if is_optimised else model_hash_md, detections, inference_time)
+        detections, inference_time = detect(image['image_name'], session_sm if is_optimised else session_md, conf_threshold, nms_threshold, tensor_type)
+        sqlite.set_frame_ml(image['image_name'], model_hash_sm if is_optimised else model_hash_md, detections, inference_time)
       except Exception as e:
-        sqlite.set_frame_ml(image, model_hash_sm if is_optimised else model_hash_md, [], None)
-        print(f"Error processing frame {image}. Error: {e}")
+        sqlite.set_frame_ml(image['image_name'], model_hash_sm if is_optimised else model_hash_md, [], None)
+        print(f"Error processing frame {image['image_name']}. Error: {e}")
       finally:
-        currently_processing.remove(image)
-        q.task_done()
+        currently_processing.remove(image['image_name'])
+      q.task_done()
 
   # init threads
   for i in range(num_threads):
@@ -116,10 +131,11 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
     while True:
       images = sqlite.get_frames_for_ml(num_threads)
       for image in images:
-        if image not in currently_processing:
-          currently_processing.add(image)
+        if image['image_name'] not in currently_processing:
+          currently_processing.add(image['image_name'])
           q.put(image)
       q.join()
+
       time.sleep(2)
 
   except KeyboardInterrupt:
