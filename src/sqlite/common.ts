@@ -17,7 +17,7 @@ export const querySensorData = async (
   lastTimestamp: number, until?: number
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[] }> => {
   try {
-    const gnssSince = Math.max(lastTimestamp, Date.now() - 60 * 1000);
+    const gnssSince = lastTimestamp;
     console.log('Getting sensor data for: ', new Date(gnssSince));
     const start = Date.now();
     const gnssUntil = until ?? gnssSince + 120 * 1000; // restricting the GNSS query to 2 min max, to prevent accidental overloads
