@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { readdirSync } from 'fs';
+import { db, runAsync } from 'sqlite';
 import { resetDB } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
@@ -61,6 +63,31 @@ router.get('/framekm/count', async (req, res) => {
 router.get('/framekm/clear', async (req, res) => {
   try {
     await clearAll();
+    res.send({
+      done: true,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/framekm/add/:name/:speed', async (req, res) => {
+  try {
+    const files = readdirSync('/data/python/frames/' + req.params.name);
+    for (const file of files) {
+      const insertSQL = `
+        INSERT INTO framekms (
+          image_name, image_path, speed, created_at
+        ) VALUES (?, ?, ?, ?);
+      `;
+      await runAsync(db, insertSQL, [
+        file,
+        '/data/python/frames/' + req.params.name,
+        Number(req.params.speed),
+        Date.now(),
+      ]);
+    }
+    
     res.send({
       done: true,
     });

@@ -208,11 +208,11 @@ export const addFramesToFrameKm = async (
     return new Promise(async (resolve) => {
       const insertSQL = `
         INSERT INTO framekms (
-          fkm_id, image_name, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
+          fkm_id, image_name, image_path, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop,
           time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -272,6 +272,7 @@ export const addFramesToFrameKm = async (
           await runAsync(db, insertSQL, [
             fkm_id,
             row.image_name,
+            destination,
             row.acc_x,
             row.acc_y,
             row.acc_z,

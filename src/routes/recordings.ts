@@ -10,6 +10,7 @@ import {
 import { CameraType, ICameraFile } from '../types';
 import { exec, ExecException } from 'child_process';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from 'util/motionModel/config';
 
 export const tmpFrameName = 'cam0pipe.jpg';
 const router = Router();
@@ -75,8 +76,9 @@ router.get('/pic/:name', (req: Request, res: Response) => {
 
 router.get('/last', async (req: Request, res: Response) => {
   try {
+    const { isDashcamMLEnabled } = getConfig();
     exec(
-      `ls -t ${FRAMES_ROOT_FOLDER}/*.jpg | head -2`,
+      `ls -t ${FRAMES_ROOT_FOLDER}/*.${isDashcamMLEnabled ? 'jpeg' : 'jpg'} | head -2`,
       {
         encoding: 'utf-8',
       },

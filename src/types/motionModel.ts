@@ -147,6 +147,10 @@ export type FramesMetadata = GnssMetadata & {
   gyro_z: number;
 };
 
+export type DetectionsData = [string, number, number, number, number, number];
+
+export type DetectionsByFrame = Record<string, DetectionsData[]>;
+
 export type MotionModelCursor = {
   gnssFilePath: string;
   imuFilePath: string;

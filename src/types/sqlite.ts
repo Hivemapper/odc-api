@@ -53,6 +53,7 @@ export interface GnssRecord {
 export type FrameKmRecord = {
     fkm_id?: number;
     image_name: string;
+    image_path: string;
     acc_x: number;
     acc_y: number;
     acc_z: number;
@@ -77,6 +78,9 @@ export type FrameKmRecord = {
     dilution: number;
     ml_model_hash?: string;
     ml_detections?: string;
+    inference_time?: number;
+    created_at?: number;
+    processed_at?: number;
     frame_idx?: number;
   };
 

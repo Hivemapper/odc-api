@@ -90,6 +90,7 @@ export const createFrameKMTable = async (): Promise<void> => {
   CREATE TABLE IF NOT EXISTS framekms (
     fkm_id INTEGER,
     image_name TEXT PRIMARY KEY NOT NULL,
+    image_path TEXT,
     acc_x REAL,
     acc_y REAL,
     acc_z REAL,

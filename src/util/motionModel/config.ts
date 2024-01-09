@@ -84,6 +84,7 @@ export const isValidConfig = (_config: MotionModelConfig) => {
   }
   _config.isImuMovementDetectionEnabled = false;
   _config.isLightCheckDisabled = false;
+  _config.isDashcamMLEnabled = true; // FORCE ENABLE FOR TESTING. TODO: REMOVE
   return isValid;
 };
 

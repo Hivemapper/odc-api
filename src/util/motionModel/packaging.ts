@@ -7,7 +7,7 @@ import {
 import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
-import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
+import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality } from 'util/index';
 import {
@@ -116,6 +116,8 @@ export const packFrameKm = async (frameKm: FrameKM) => {
   }
 };
 
+const CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
+
 export const packMetadata = async (
   name: string,
   framesMetadata: FrameKM,
@@ -123,6 +125,10 @@ export const packMetadata = async (
 ): Promise<FramesMetadata[]> => {
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
+  const privacyModelHash = undefined;
+  const privacyDetections: DetectionsByFrame = {};
+  let totalProcessedTime = 0;
+
   for (let i = 0; i < framesMetadata.length; i++) {
     const m: FrameKmRecord = framesMetadata[i];
     const bytes = bytesMap[m.image_name || ''];
@@ -155,10 +161,40 @@ export const packMetadata = async (
         // detections: m.ml_detections || '',
       };
       validatedFrames.push(frame);
+      if (m.ml_model_hash) {
+        totalProcessedTime += m.inference_time || 0;
+        let detections = [];
+        try {
+          detections = JSON.parse(m.ml_detections || '[]');
+        } catch (e: unknown) {
+          console.log('Error parsing detections');
+        }
+        if (detections?.length) {
+          const sanitizedDetections = detections.filter((d: any) => d && d.length === 3 && d[0].length === 4).map((d: any) => {
+            let class_name = 'unknown';
+            try {
+              class_name = CLASS_NAMES[d[2]]
+            } catch {
+              //
+            }
+            return [
+              class_name,
+              Math.floor(d[0][0]),
+              Math.floor(d[0][1]),
+              Math.ceil(d[0][2]),
+              Math.ceil(d[0][3]),
+              d[1]
+            ];
+          });
+          if (sanitizedDetections.length) {
+            privacyDetections[validatedFrames.length - 1] = sanitizedDetections;
+          }
+        }
+      }
       numBytes += bytes;
     }
   }
-  if (numBytes) {
+  if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
     const metadataJSON = {
       bundle: {
@@ -173,9 +209,23 @@ export const packMetadata = async (
         keyframeDistance: getConfig().DX,
         resolution: '2k',
         version: '1.8',
+        privacyModelHash,
+        privacyDetections: privacyModelHash && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
       },
       frames: validatedFrames,
     };
+    if (privacyModelHash) {
+      const lastFrame = framesMetadata[framesMetadata.length - 1];
+      Instrumentation.add({
+        event: 'DashcamML',
+        size: validatedFrames.length,
+        message: JSON.stringify({
+          hash: privacyModelHash,
+          inference_time: Math.round(totalProcessedTime / validatedFrames.length),
+          processing_delay: Math.round(Date.now() - (lastFrame.created_at || 0))
+        }),
+      });
+    }
     try {
       if (!existsSync(METADATA_ROOT_FOLDER)) {
         mkdirSync(METADATA_ROOT_FOLDER);
