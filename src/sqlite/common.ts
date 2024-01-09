@@ -14,17 +14,22 @@ let accumImuFreq = 0;
 let accumImageFreq = 0;
 
 export const querySensorData = async (
-  lastTimestamp: number, until?: number
+  since: number, until?: number
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[] }> => {
   try {
-    const gnssSince = Math.max(lastTimestamp, Date.now() - 60 * 1000);
-    console.log('Getting sensor data for: ', new Date(gnssSince));
     const start = Date.now();
-    const gnssUntil = until ?? gnssSince + 120 * 1000; // restricting the GNSS query to 2 min max, to prevent accidental overloads
-    const gnss = (await fetchGnssLogsByTime(gnssSince, gnssUntil)).filter(g => g); // don't fetch more than a minute of data
+    console.log('Getting sensor data for: ', new Date(since));
+
+    // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
+    // Note: if `until` argument is explicitly provided, we do not restrict it.
+    if (until === undefined) {
+      until = Math.min(start, since + 120 * 1000);
+    }
+
+    const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {
         const imuSince = gnss[0].system_time;
-        const imuUntil = Math.min(gnss[gnss.length - 1].system_time, until ?? imuSince + 120 * 1000); // restricting the IMU query to 2 min max, to prevent accidental overloads
+        const imuUntil = gnss[gnss.length - 1].system_time;
         const imu = await fetchImuLogsByTime(imuSince, imuUntil);
         const images = await getFramesFromFS(imuSince, imuUntil);
         const duration = (imuUntil - imuSince) / 1000;

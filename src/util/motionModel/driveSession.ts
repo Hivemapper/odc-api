@@ -158,7 +158,8 @@ export class DriveSession {
     if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
       return this.draftFrameKm.getLastTime();
     }
-    return (await getLastTimestamp()) ?? this.startedAt;
+    const date = (await getLastTimestamp()) ?? this.startedAt;
+    return Math.max(date, Date.now() - 60 * 1000);
   }
 
   async getNextFrameKMToProcess(): Promise<FrameKM | null> {
