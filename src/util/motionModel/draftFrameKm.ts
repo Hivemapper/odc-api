@@ -11,6 +11,8 @@ import {
 import { isGnss, isImage, isImu } from 'util/sensor';
 import { MAX_SPEED, MIN_SPEED, getConfig } from './config';
 import { CAMERA_TYPE } from 'config';
+import { insertErrorLog } from 'sqlite/error';
+import { Instrumentation } from 'util/instrumentation';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
@@ -29,6 +31,8 @@ export class DraftFrameKm {
       this.maybeAdd(data);
     }
   }
+
+  prevHighSpeedEvent = 0;
 
   maybeAdd(data: SensorData): boolean {
 
@@ -80,13 +84,35 @@ export class DraftFrameKm {
        */
       if (speed > MAX_SPEED) {
         // too fast or GPS is not accurate, cut
+        insertErrorLog('Speed is to high ' + Math.round(speed) + ' ' + Math.round(deltaTime) + ' so cutting');
         console.log('===== SPEED IS TOO HIGH, ' + speed + ', ' + deltaTime + ', CUTTING =====');
+        if (!this.prevHighSpeedEvent || (Date.now() - this.prevHighSpeedEvent > 10000)) {
+          Instrumentation.add({
+            event: 'DashcamCutReason',
+            message: JSON.stringify({
+              reason: 'HighSpeed',
+              speed,
+              distance,
+              deltaTime,
+            }),
+          });
+          this.prevHighSpeedEvent = Date.now();
+        }
         return false;
       }
 
       if (distance > getConfig().DX * 2) {
         // travelled too far, cut
+        insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
+        Instrumentation.add({
+          event: 'DashcamCutReason',
+          message: JSON.stringify({
+            reason: 'TravelledTooFar',
+            distance,
+            deltaTime,
+          }),
+        });
         return false;
       }
 
@@ -107,6 +133,13 @@ export class DraftFrameKm {
           console.log(
             '===== FRAMERATE DROPPED, FOR ' + deltaTime + ', IGNORE FOR NOW =====',
           );
+          Instrumentation.add({
+            event: 'DashcamCutReason',
+            message: JSON.stringify({
+              reason: 'FpsDrop',
+              deltaTime,
+            }),
+          });
         }
         this.data.push(data);
         return true;
@@ -139,7 +172,7 @@ export class DraftFrameKm {
     if (this.data.length) {
       const lastGps = this.getGpsData()?.pop();
       if (lastGps) {
-        return lastGps.time;
+        return lastGps.system_time;
       } else {
         return this.data[this.data.length - 1].system_time;
       }

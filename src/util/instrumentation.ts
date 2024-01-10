@@ -1,7 +1,7 @@
 import { API_VERSION, EVENTS_LOG_PATH } from 'config';
 import { InstrumentationData } from 'types';
 import { DopKpi, GnssDopKpi } from 'types/instrumentation';
-import { Dilution, GNSS } from 'types/motionModel';
+import { Dilution } from 'types/motionModel';
 import { getSessionId, getCpuLoad, getTimeFromBoot, ensureFileExists } from 'util/index';
 import { promises } from 'fs';
 import lockfile from 'proper-lockfile';
@@ -18,6 +18,8 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamRejectedGps',
   'DashcamRepairedCursors',
   'DashcamRepairedGps',
+  'DashcamSensorDataFreq',
+  'DashcamCutReason',
   'DashcamMotionModelReport',
   'DashcamFailedPackingFrameKm',
   'DashcamShowedOutOfSpaceWarning',

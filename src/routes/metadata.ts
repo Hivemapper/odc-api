@@ -7,11 +7,12 @@ import { setMostRecentPing } from 'services/heartBeat';
 import { getNumFramesFromChunkName } from 'util/framekm';
 import { join } from 'path';
 import { promisify } from 'util';
+import { ensureAclPassed } from './middleware/acl';
 
 const MAX_RESPONSE_SIZE = 10000;
 const router = Router();
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', ensureAclPassed, async (req: Request, res: Response) => {
   try {
     const files = await promises.readdir(METADATA_ROOT_FOLDER);
 

@@ -18,6 +18,7 @@ import {
 } from 'util/framekm';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from './config';
+import { getDeviceInfo } from 'services/deviceInfo';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -158,6 +159,7 @@ export const packMetadata = async (
     }
   }
   if (numBytes) {
+    const deviceInfo = getDeviceInfo();
     const metadataJSON = {
       bundle: {
         name,
@@ -166,6 +168,7 @@ export const packMetadata = async (
         deviceType: CAMERA_TYPE,
         quality: getQuality(),
         firmwareVersion: API_VERSION,
+        ssid: deviceInfo?.ssid,
         loraDeviceId: undefined,
         keyframeDistance: getConfig().DX,
         resolution: '2k',

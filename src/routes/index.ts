@@ -32,11 +32,13 @@ import previewRouter from './preview';
 import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getLockTime } from 'util/lock';
+import { getLockTime, ifTimeSet } from 'util/lock';
 import { addAppConnectedLog, getSessionId, readLast2MB } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
+import { querySensorData } from 'sqlite/common';
+import { SensorRecord } from 'types/sqlite';
 
 const router = Router();
 let isAppConnected = false;
@@ -98,6 +100,7 @@ router.get('/info', async (req: Request, res: Response) => {
 });
 
 router.get('/ping', (req, res) => {
+  const deviceInfo = getDeviceInfo();
   setMostRecentPing(Date.now());
   res.json({
     healthy: true,
@@ -106,6 +109,7 @@ router.get('/ping', (req, res) => {
     dashcam: CAMERA_TYPE,
     sessionId: getSessionId(),
     ...getLockTime(),
+    ...deviceInfo,
   });
   exec('touch ' + HEALTH_MARKER_PATH);
   if (!isAppConnected) {
@@ -248,6 +252,42 @@ router.post('/cmd/sync', async (req, res) => {
   } catch (error: unknown) {
     res.json({ error });
   }
+});
+
+
+
+router.get('/sensordata/:since', async (req: Request, res: Response) => {
+  let since: number;
+
+  try {
+    since = parseInt(req.params.since);
+    if (since === 0) {
+      since = Date.now() - 1000;
+    }
+  } catch (e) {
+    console.log(e);
+    res.statusCode = 400;
+    res.json({ err: 'since must be a positive integer' });
+    return;
+  }
+
+  if (!ifTimeSet()) {
+    res.statusCode = 400;
+    res.json({ err: 'dashcam is not ready' });
+    return;
+  }
+
+  const { gnss, imu } = await querySensorData(Date.now() - since);
+
+  const sensordata : SensorRecord[] = [];
+  gnss.forEach((value) => {
+    sensordata.push({sensor: "gnss", ...value})
+  })
+  imu.forEach((value) => {
+    sensordata.push({sensor: "imu", ...value})
+  })
+
+  res.json(sensordata);
 });
 
 export default router;

@@ -80,4 +80,12 @@ export type FrameKmRecord = {
     frame_idx?: number;
   };
 
+  export type ErrorRecord = {
+    system_time: number;
+    service_name: string;
+    message: string;
+  }
+
   export type FrameKM = FrameKmRecord[];
+  
+  export type SensorRecord = (GnssRecord | ImuRecord) & {sensor: string};
