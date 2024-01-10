@@ -124,15 +124,14 @@ def find_latest_jpg(directory):
 
 def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_threads):
 
-  ie = IECore()
-
   currently_processing = set()
   q = queue.Queue()
   sqlite = SQLite()
 
   def worker():
+    ie = IECore()
     session_sm = ie.import_network(model_file=model_path, device_name=device)
-    model_hash_sm = '6e12a935a195df151b7d47bff84220d860bc19b94b03b0c20a5a9182e3f4e9c1'
+    model_hash_sm = '9d7e463c3288f3caadb0c2709238cc2b62433c1d100138fdd8ab12131d6ffa8e'
     input_blob = next(iter(session_sm.input_info))
     model_shape = session_sm.input_info[input_blob].input_data.shape[2]
 
@@ -169,7 +168,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
     print('Starting watcher')
 
     while True:
-      start_process = time.perf_counter()
+      # start_process = time.perf_counter()
       images = sqlite.get_frames_for_ml(num_threads)
       for image in images:
         print(image)
@@ -177,8 +176,8 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
           currently_processing.add(image[0])
           q.put(image)
       q.join()
-      if len(images) > 0:
-        print(f"Processed {len(images)} images in {(time.perf_counter() - start_process) * 1000} ms")
+      # if len(images) > 0:
+      #   print(f"Processed {len(images)} images in {(time.perf_counter() - start_process) * 1000} ms")
 
       # disable ML for preview
       # try:
