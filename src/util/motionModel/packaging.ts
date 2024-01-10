@@ -225,6 +225,7 @@ export const packMetadata = async (
       frames: validatedFrames,
     };
     if (privacyModelHash) {
+      const firstFrame = framesMetadata[framesMetadata.length - 1];
       const lastFrame = framesMetadata[framesMetadata.length - 1];
       Instrumentation.add({
         event: 'DashcamML',
@@ -235,6 +236,7 @@ export const packMetadata = async (
           read_time: Math.round(metrics.read_time / validatedFrames.length),
           write_time: Math.round(metrics.write_time / validatedFrames.length),
           blur_time: Math.round(metrics.blur_time / validatedFrames.length),
+          avg_per_frame: Math.round((lastFrame.ml_processed_at || 0) - (firstFrame.ml_processed_at || 0)),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0))
         }),
       });

@@ -48,4 +48,3 @@ class SQLite:
             cursor.execute('INSERT INTO error_logs (message, service_name, system_time) VALUES (?, ?)', (str(error), "object-detection", now.strftime("%Y-%m-%d %H:%M:%S.00000")))
             conn.commit()
 
-sqlite = SQLite()

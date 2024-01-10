@@ -7,7 +7,7 @@ import threading
 from collections import deque
 import time
 from yolov8.utils import nms, xywh2xyxy
-import sqlite
+from sqlite import SQLite
 import image
 from openvino.inference_engine import IECore
 
@@ -126,15 +126,16 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
 
   ie = IECore()
 
-  session_sm = ie.import_network(model_file=model_path, device_name=device)
-  model_hash_sm = '6e12a935a195df151b7d47bff84220d860bc19b94b03b0c20a5a9182e3f4e9c1'
-  input_blob = next(iter(session_sm.input_info))
-  model_shape = session_sm.input_info[input_blob].input_data.shape[2]
-
   currently_processing = set()
   q = queue.Queue()
+  sqlite = SQLite()
 
   def worker():
+    session_sm = ie.import_network(model_file=model_path, device_name=device)
+    model_hash_sm = '6e12a935a195df151b7d47bff84220d860bc19b94b03b0c20a5a9182e3f4e9c1'
+    input_blob = next(iter(session_sm.input_info))
+    model_shape = session_sm.input_info[input_blob].input_data.shape[2]
+
     while True:
       image = q.get()
 

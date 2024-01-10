@@ -120,7 +120,7 @@ export const createFrameKMTable = async (): Promise<void> => {
     ml_read_time INTEGER,
     ml_write_time INTEGER,
     ml_inference_time INTEGER,
-    ml_blut_time INTEGER,
+    ml_blur_time INTEGER,
     ml_processed_at INTEGER
   );`;
   try {
