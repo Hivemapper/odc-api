@@ -37,7 +37,7 @@ export const getFrameKmsCount = async (): Promise<number> => {
   const { isDashcamMLEnabled } = getConfig();
   
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
-    isDashcamMLEnabled ? ' WHERE model_hash IS NOT NULL' : ''
+    isDashcamMLEnabled ? ' WHERE ml_model_hash IS NOT NULL' : ''
   };`;
 
   try {

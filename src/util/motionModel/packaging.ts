@@ -125,9 +125,14 @@ export const packMetadata = async (
 ): Promise<FramesMetadata[]> => {
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
-  const privacyModelHash = undefined;
+  let privacyModelHash = undefined;
   const privacyDetections: DetectionsByFrame = {};
-  let totalProcessedTime = 0;
+  const metrics = {
+    read_time: 0,
+    write_time: 0,
+    inference_time: 0,
+    blur_time: 0,
+  };
 
   for (let i = 0; i < framesMetadata.length; i++) {
     const m: FrameKmRecord = framesMetadata[i];
@@ -162,7 +167,12 @@ export const packMetadata = async (
       };
       validatedFrames.push(frame);
       if (m.ml_model_hash) {
-        totalProcessedTime += m.inference_time || 0;
+        privacyModelHash = m.ml_model_hash;
+        metrics.inference_time += m.ml_inference_time || 0;
+        metrics.read_time += m.ml_read_time || 0;
+        metrics.write_time += m.ml_write_time || 0;
+        metrics.blur_time += m.ml_blur_time || 0;
+
         let detections = [];
         try {
           detections = JSON.parse(m.ml_detections || '[]');
@@ -179,15 +189,15 @@ export const packMetadata = async (
             }
             return [
               class_name,
-              Math.floor(d[0][0]),
-              Math.floor(d[0][1]),
+              Math.max(0, Math.floor(d[0][0])),
+              Math.max(0, Math.floor(d[0][1])),
               Math.ceil(d[0][2]),
               Math.ceil(d[0][3]),
               d[1]
             ];
           });
           if (sanitizedDetections.length) {
-            privacyDetections[validatedFrames.length - 1] = sanitizedDetections;
+            privacyDetections[validatedFrames.length] = sanitizedDetections;
           }
         }
       }
@@ -221,8 +231,11 @@ export const packMetadata = async (
         size: validatedFrames.length,
         message: JSON.stringify({
           hash: privacyModelHash,
-          inference_time: Math.round(totalProcessedTime / validatedFrames.length),
-          processing_delay: Math.round(Date.now() - (lastFrame.created_at || 0))
+          inference_time: Math.round(metrics.inference_time / validatedFrames.length),
+          read_time: Math.round(metrics.read_time / validatedFrames.length),
+          write_time: Math.round(metrics.write_time / validatedFrames.length),
+          blur_time: Math.round(metrics.blur_time / validatedFrames.length),
+          processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0))
         }),
       });
     }

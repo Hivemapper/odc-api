@@ -9,9 +9,9 @@ def load(image_path, width, height, tensor_type):
   elif tensor_type == 'float16':
     dtype = np.float16
   img = cv2.imread(image_path)
-  resized_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+  # resized_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
   #keep original image for blurring
-  resized_img = letterbox(resized_img, (width, height))[0]
+  resized_img = letterbox(img, (width, height))[0]
   # resized_img = cv2.resize(img, (width, height), cv2.INTER_NEAREST)
   resized_img = resized_img.transpose(2, 0, 1)
   tensor = resized_img[np.newaxis, :, :, :].astype(dtype)
