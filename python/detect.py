@@ -74,8 +74,9 @@ def detect(image_path, session, model_shape, input_blob, conf_threshold, nms_thr
 def blur(img, boxes):
     for box in boxes:
         box = box.astype(int)
+        # filter out large boxes and boxes on the hood
         if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
-            continue
+          continue
         roi = img[box[1]:box[3], box[0]:box[2]]
         #downscale
         small_roi = cv2.resize(roi, (int(roi.shape[1] * 0.2), int(roi.shape[0] * 0.2)), interpolation=cv2.INTER_NEAREST)

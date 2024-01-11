@@ -1,6 +1,4 @@
-import { getConfig } from 'util/motionModel/config';
 import { db, getAsync, runAsync } from './index';
-import { getMaxFrameKmLength } from 'util/framekm';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { distance } from 'util/geomath';
 import { join } from 'path';
@@ -9,6 +7,7 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from './config';
 
 export const isFrameKmComplete = async (): Promise<boolean> => {
   try {
@@ -34,7 +33,7 @@ export const getFramesCount = async (): Promise<number> => {
 };
 
 export const getFrameKmsCount = async (): Promise<number> => {
-  const { isDashcamMLEnabled } = getConfig();
+  const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
   
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
     isDashcamMLEnabled ? ' WHERE ml_model_hash IS NOT NULL' : ''
@@ -192,14 +191,19 @@ export const addFramesToFrameKm = async (
   console.log(
     'GOING TO ADD ' + rows.length + ' FRAMES. ' + (force ? ' FORCED!!' : ''),
   );
-  const { isTripTrimmingEnabled, TrimDistance } = getConfig();
+  const { 
+    isTripTrimmingEnabled, 
+    TrimDistance, 
+    DX, 
+    FrameKmLengthMeters 
+  } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'DX', 'FrameKmLengthMeters']);
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
     const framesLeftToTrim = Math.ceil(
-      (TrimDistance - metersTrimmed) / getConfig().DX,
+      (TrimDistance - metersTrimmed) / DX,
     );
     const rowsToIgnore = rows.slice(0, framesLeftToTrim);
-    metersTrimmed += rowsToIgnore.length * getConfig().DX;
+    metersTrimmed += rowsToIgnore.length * DX;
     rows = rows.slice(framesLeftToTrim);
     console.log('TRIMMED ' + rowsToIgnore.length);
   }
@@ -217,7 +221,7 @@ export const addFramesToFrameKm = async (
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        if (isPrivateLocation(row.latitude, row.longitude)) {
+        if (await isPrivateLocation(row.latitude, row.longitude)) {
           console.log('PRIVATE ZONE. Ignored');
           continue;
         }
@@ -233,7 +237,7 @@ export const addFramesToFrameKm = async (
             // sanity check for accidental insert of the wrong sample into framekm
             const distanceBetweenFrames = distance(last, row);
             if (
-              distanceBetweenFrames > getConfig().DX * 2 &&
+              distanceBetweenFrames > DX * 2 &&
               !forceFrameKmSwitch
             ) {
               insertErrorLog('Distance between frames is more than allowed: ' + distanceBetweenFrames);
@@ -249,7 +253,7 @@ export const addFramesToFrameKm = async (
             if (fkm_id === lastFkmId) {
               frame_idx = Number(last.frame_idx) + 1;
             }
-            if (frame_idx > getMaxFrameKmLength()) {
+            if (frame_idx > Math.round(FrameKmLengthMeters / DX)) {
               console.log('FRAMEKM IS COMPLETE!! SWITCHING TO NEXT ONE.');
               fkm_id++;
               frame_idx = 1;

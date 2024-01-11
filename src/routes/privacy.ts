@@ -20,13 +20,13 @@ router.post('/', (req, res) => {
     }
 });
 
-router.post('/check', (req, res) => {
+router.post('/check', async (req, res) => {
     try {
         if (!req.body.lat || !req.body.lon) {
             res.json({ error: 'Need to provide lat and lon' });
         }
         res.json({
-            isPrivate: isPrivateLocation(req.body.lat, req.body.lon),
+            isPrivate: await isPrivateLocation(req.body.lat, req.body.lon),
         });
     } catch (error: unknown) {
         console.log(error);

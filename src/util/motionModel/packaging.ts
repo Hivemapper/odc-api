@@ -17,8 +17,8 @@ import {
   getFrameKmTelemetry,
 } from 'util/framekm';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
+import { getConfig } from 'sqlite/config';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -46,24 +46,14 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       }
       return;
     }
-    // TODO: revisit when back to ML topic
-    // if (!destFolder && getConfig().isDashcamMLEnabled) {
-    //   destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
-    //   if (existsSync(destFolder)) {
-    //     rmdirSync(destFolder, { recursive: true });
-    //   }
-    //   await new Promise(resolve => {
-    //     mkdir(destFolder, resolve);
-    //   });
-    // }
+
     const start = Date.now();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
         frameKm.map((item: FrameKmRecord) => item.image_name || ''),
         finalBundleName,
         0,
-        framesFolder,
-        false,
+        framesFolder
       ),
       15000,
     );
@@ -206,6 +196,7 @@ export const packMetadata = async (
   }
   if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
+    const DX = await getConfig('DX');
     const metadataJSON = {
       bundle: {
         name,
@@ -216,7 +207,7 @@ export const packMetadata = async (
         firmwareVersion: API_VERSION,
         ssid: deviceInfo?.ssid,
         loraDeviceId: undefined,
-        keyframeDistance: getConfig().DX,
+        keyframeDistance: DX,
         resolution: '2k',
         version: '1.8',
         privacyModelHash,

@@ -1,29 +1,16 @@
 import { Router, Request, Response } from 'express';
-import { getConfig, loadConfig } from 'util/motionModel/config';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE, ML_MODELS, ML_ROOT_FOLDER } from '../config';
+import { readFileSync, rmSync, writeFileSync } from 'fs';
+import { CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE } from '../config';
 
 import { isCameraBridgeServiceActive, restartCamera } from '../services/heartBeat';
 import * as console from 'console';
+import { getFullConfig, updateConfig } from 'sqlite/config';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const config = getConfig();
-    config.modelHashes = {};
-    if (!existsSync(ML_ROOT_FOLDER)) {
-      mkdirSync(ML_ROOT_FOLDER);
-    }
-    for (const key in ML_MODELS) {
-      const hashPath = `${ML_MODELS[key]}.hash`;
-      if (existsSync(hashPath)) {
-        const hash = readFileSync(hashPath, { encoding: 'utf-8' });
-        config.modelHashes[key] = hash.trim();
-      } else {
-        config.modelHashes[key] = 'bd6127e2e4dc5d4aafd996aaed558af6';
-      }
-    }
+    const config = await getFullConfig();
     res.json(config);
   } catch (error: unknown) {
     res.json({ error });
@@ -32,7 +19,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    if (req?.body?.config) loadConfig(req.body.config, true);
+    if (req?.body?.config) updateConfig(req.body.config);
     res.json({
       output: 'done',
     });
@@ -44,7 +31,8 @@ router.post('/', async (req: Request, res: Response) => {
 /* TODO: deprecated, do not remove or enhance */
 router.get('/motionmodel', async (req: Request, res: Response) => {
   try {
-    res.json(getConfig());
+    const config = await getFullConfig();
+    res.json(config);
   } catch (error: unknown) {
     res.json({ error });
   }
@@ -53,7 +41,7 @@ router.get('/motionmodel', async (req: Request, res: Response) => {
 /* TODO: deprecated, do not remove or enhance */
 router.post('/motionmodel', async (req: Request, res: Response) => {
   try {
-    if (req?.body?.config) loadConfig(req.body.config, true);
+    if (req?.body?.config) updateConfig(req.body.config);
     res.json({
       output: 'done',
     });

@@ -9,10 +9,11 @@ import {
   latLonDistance,
 } from 'util/geomath';
 import { isGnss, isImage, isImu } from 'util/sensor';
-import { MAX_SPEED, MIN_SPEED, getConfig } from './config';
+import { MAX_SPEED, MIN_SPEED } from './config';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
@@ -23,18 +24,18 @@ export class DraftFrameKm {
   lastImageTimestamp = 0;
   totalDistance = 0;
 
-  constructor(data?: SensorData) {
+  constructor(data?: SensorData, DX?: number) {
     this.data = [];
     this.lastGnss = null;
 
     if (data) {
-      this.maybeAdd(data);
+      this.maybeAdd(data, DX || 8);
     }
   }
 
   prevHighSpeedEvent = 0;
 
-  maybeAdd(data: SensorData): boolean {
+  maybeAdd(data: SensorData, DX: number): boolean {
 
     if (!this.data.length) {
       if (isGnss(data)) {
@@ -101,7 +102,7 @@ export class DraftFrameKm {
         return false;
       }
 
-      if (distance > getConfig().DX * 2) {
+      if (distance > DX * 2) {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
@@ -181,9 +182,9 @@ export class DraftFrameKm {
     }
   }
 
-  getEvenlyDistancedFramesFromSensorData(
+  async getEvenlyDistancedFramesFromSensorData(
     prevKeyFrames: FrameKmRecord[],
-  ): FrameKmRecord[] {
+  ): Promise<FrameKmRecord[]> {
     let prevGNSS: GnssRecord | null = null;
     let nextGNSS: GnssRecord | null = null;
     let lastIMU: ImuRecord | null = null;
@@ -197,6 +198,8 @@ export class DraftFrameKm {
     let prevSelected = null;
     let gps: { longitude: number; latitude: number }[] = [];
     let gpsCounter = 0;
+
+    const DX = await getConfig('DX');
 
     if (prevKeyFrames.length) {
       // Get 3 previous points for CatmulRom curve
@@ -256,7 +259,7 @@ export class DraftFrameKm {
           nextGNSS.system_time >= closestFrame.system_time &&
           spaceCurve &&
           curveLength && prevCurveLength && curveLength > prevCurveLength && 
-          (!prevSelected || distance(prevSelected, nextGNSS) > getConfig().DX)
+          (!prevSelected || distance(prevSelected, nextGNSS) > DX)
         ) {
           // get accurate coordinates for this frame from CatmulRom curve
           const scratch: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
@@ -287,7 +290,7 @@ export class DraftFrameKm {
           const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 1 : 0.5;
           if (
             !prevSelected ||
-            distance(prevSelected, frameCoordinates) > getConfig().DX - allowed_gap
+            distance(prevSelected, frameCoordinates) > DX - allowed_gap
           ) {
             if (prevSelected) {
               console.log(

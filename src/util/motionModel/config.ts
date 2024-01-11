@@ -1,6 +1,4 @@
-import { MOTION_MODEL_CONFIG } from 'config';
-import { writeFile } from 'fs';
-import { MotionModelConfig, RawLogsConfiguration } from 'types/motionModel';
+import { SystemConfig, RawLogsConfiguration } from 'types/motionModel';
 
 export const MIN_SPEED = 0.15; // meter per seconds
 export const MAX_SPEED = 40; // meter per seconds
@@ -12,7 +10,7 @@ const defaultImu = {
   params: [1, 1, 1, 0, 1],
 };
 
-let config: MotionModelConfig = {
+const config: SystemConfig = {
   DX: 8,
   GnssFilter: {
     '3dLock': true,
@@ -44,32 +42,11 @@ let config: MotionModelConfig = {
   privacyRadius: 200,
 };
 
-export const loadConfig = (
-  _config: MotionModelConfig,
-  updateFile?: boolean,
-) => {
-  if (isValidConfig(_config)) {
-    config = { ...config, ..._config };
-    if (updateFile) {
-      writeFile(
-        MOTION_MODEL_CONFIG,
-        JSON.stringify(config),
-        {
-          encoding: 'utf-8',
-        },
-        () => {},
-      );
-    }
-  } else {
-    console.log('trying to load invalid dashcam configuration: ', _config);
-  }
-};
-
-export const getConfig = (): MotionModelConfig => {
+export const getDefaultConfig = (): SystemConfig => {
   return config;
 };
 
-export const isValidConfig = (_config: MotionModelConfig) => {
+export const isValidConfig = (_config: SystemConfig) => {
   const isValid =
     _config &&
     Number(_config.DX) &&

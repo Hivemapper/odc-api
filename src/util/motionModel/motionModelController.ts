@@ -26,7 +26,7 @@ export async function MotionModelController() {
       await session.getLastTime(),
     );
 
-    session.ingestData(gnss, imu, images);
+    await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
 
     // TODO: utilise raw logs: collect, pack, etc here

@@ -25,17 +25,18 @@ export type RawLogsConfiguration = {
   maxCollectedBytes: 5000000 // in bytes, default is 50 mgs
 }
 
-export type MotionModelConfig = {
+export type GnssFilter = {
+  hdop?: number;
+  gdop?: number;
+  pdop?: number;
+  cep?: number;
+  '3dLock': boolean;
+  minSatellites: number;
+  eph?: number;
+}
+export type SystemConfig = {
   DX: number;
-  GnssFilter: {
-    hdop?: number;
-    gdop?: number;
-    pdop?: number;
-    cep?: number;
-    '3dLock': boolean;
-    minSatellites: number;
-    eph?: number;
-  };
+  GnssFilter: GnssFilter;
   Privacy: {
     numThreads?: number,
     confThreshold?: number,

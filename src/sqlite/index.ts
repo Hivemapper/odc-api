@@ -83,6 +83,7 @@ export const runSchemaAsync = (db: Database, sql: string) => {
 export const initialise = async (): Promise<void> => {
   await createFrameKMTable();
   await createFrameTable();
+  await createConfigurationTable();
 };
 
 export const createFrameKMTable = async (): Promise<void> => {
@@ -141,6 +142,20 @@ export const createFrameTable = async (): Promise<void> => {
     await runSchemaAsync(db, createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the frames table:', error);
+    throw error;
+  }
+};
+
+export const createConfigurationTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS config (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT
+    );`;
+  try {
+    await runSchemaAsync(db, createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the config table:', error);
     throw error;
   }
 };
