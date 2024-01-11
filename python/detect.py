@@ -72,33 +72,18 @@ def detect(image_path, session, model_shape, input_blob, conf_threshold, nms_thr
     return detections, metrics
 
 def blur(img, boxes):
-  #Downscale & blur
-  downscale_size = (int(img.shape[1] * 0.2), int(img.shape[0] * 0.2))
-  img_downscaled = cv2.resize(img, downscale_size, interpolation=cv2.INTER_NEAREST)
-  img_blurred = cv2.GaussianBlur(img_downscaled, (5, 5), 1.5)
+    for box in boxes:
+        box = box.astype(int)
+        # filter out large boxes and boxes on the hood
+        if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
+          continue
+        roi = img[box[1]:box[3], box[0]:box[2]]
 
-  # Upscale
-  upscale_size = (img.shape[1], img.shape[0])
-  img_upscaled = cv2.resize(img_blurred, upscale_size, interpolation=cv2.INTER_NEAREST)
+        blurred_roi = cv2.GaussianBlur(roi, (5, 5), 1.5)
+        # much faster than making downscale+blur+upscale+composite
+        img[box[1]:box[3], box[0]:box[2]] = blurred_roi
 
-  # Mask from bounding boxes
-  mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
-
-  for box in boxes:
-    box = box.astype(int)
-    # filter out large boxes and boxes on the hood
-    if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
-      continue
-    cv2.rectangle(mask, (box[0], box[1]), (box[2], box[3]), 255, -1)
-
-  # Composite
-  composite_img = cv2.bitwise_and(img_upscaled, img_upscaled, mask=mask)
-  mask_inv = cv2.bitwise_not(mask)
-  img_unmasked = cv2.bitwise_and(img, img, mask=mask_inv)
-  result = cv2.add(composite_img, img_unmasked)
-  # result = draw(result, conf_threshold, boxes[indices], scores[indices], class_ids[indices], CLASS_NAMES)
-
-  return result
+    return img
 
 def find_latest_jpg(directory):
     global blurred_images
