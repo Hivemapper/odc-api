@@ -82,6 +82,7 @@ export const runSchemaAsync = (db: Database, sql: string) => {
 
 export const initialise = async (): Promise<void> => {
   await createFrameKMTable();
+  await createHealthStateTable();
   await createFrameTable();
 };
 
@@ -121,6 +122,13 @@ export const createFrameKMTable = async (): Promise<void> => {
     ml_write_time INTEGER,
     ml_inference_time INTEGER,
     ml_blur_time INTEGER,
+    ml_downscale_time INTEGER,
+    ml_upscale_time INTEGER,
+    ml_mask_time INTEGER,
+    ml_composite_time INTEGER,
+    ml_load_time INTEGER,
+    ml_transpose_time INTEGER,
+    ml_letterbox_time INTEGER,
     ml_processed_at INTEGER
   );`;
   try {
@@ -141,6 +149,20 @@ export const createFrameTable = async (): Promise<void> => {
     await runSchemaAsync(db, createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the frames table:', error);
+    throw error;
+  }
+};
+
+export const createHealthStateTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS health_state (
+    service_name TEXT PRIMARY KEY NOT NULL,
+    status TEXT NOT NULL
+    );`;
+  try {
+    await runSchemaAsync(db, createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the health state table:', error);
     throw error;
   }
 };

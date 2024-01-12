@@ -2,6 +2,7 @@ import { querySensorData } from 'sqlite/common';
 import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from './config';
 
 const QUERY_WINDOW_SIZE = 10 * 1000;
 
@@ -20,6 +21,11 @@ export async function MotionModelController() {
     if (!session.ready()) {
       setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
       return;
+    }
+
+    if (getConfig().isDashcamMLEnabled) {
+      // Repair ML job if needed
+      await session.checkObjectDetectionService();
     }
 
     const { gnss, imu, images } = await querySensorData(

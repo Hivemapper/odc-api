@@ -19,7 +19,7 @@ import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
 import { distance } from 'util/geomath';
 import { LatLon } from 'types/motionModel';
-import { exec } from 'child_process';
+import { exec, spawnSync } from 'child_process';
 import {
   CAMERA_TYPE,
   DATA_LOGGER_SERVICE,
@@ -28,6 +28,7 @@ import {
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
+import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 
 let sessionTrimmed = false;
 
@@ -234,6 +235,45 @@ export class DriveSession {
         message: JSON.stringify({ serviceRepaired: 'data-logger' }),
       });
     });
+  }
+
+  async checkObjectDetectionService() {
+    try {
+      // service should be active
+      const result = spawnSync('systemctl', ['is-active', 'object-detection'], {
+        encoding: 'utf-8',
+      });
+  
+      if (result.error) {
+        console.log('failed to check if camera running:', result.error);
+        return false;
+      }
+      const res = result.stdout.trim();
+      if (res !== 'active') {
+        exec('systemctl restart object-detection');
+        Instrumentation.add({
+          event: 'DashcamApiRepaired',
+          message: JSON.stringify({ serviceRepaired: 'object-detection' }),
+        });
+        return;
+      }
+    } catch (e) {
+      console.log('failed to check if camera running:', e);
+    }
+
+    try {
+      const status = await getServiceStatus('object-detection');
+      if (status === 'failed') {
+        await setServiceStatus('object-detection', 'restarting');
+        exec('systemctl restart object-detection');
+        Instrumentation.add({
+          event: 'DashcamApiRepaired',
+          message: JSON.stringify({ serviceRepaired: 'object-detection' }),
+        });
+      }
+    } catch {
+      //
+    }
   }
 
   repairCameraBridge() {

@@ -1,5 +1,6 @@
-import { MOTION_MODEL_CONFIG } from 'config';
+import { CAMERA_TYPE, MOTION_MODEL_CONFIG } from 'config';
 import { writeFile } from 'fs';
+import { CameraType } from 'types';
 import { MotionModelConfig, RawLogsConfiguration } from 'types/motionModel';
 
 export const MIN_SPEED = 0.15; // meter per seconds
@@ -84,7 +85,7 @@ export const isValidConfig = (_config: MotionModelConfig) => {
   }
   _config.isImuMovementDetectionEnabled = false;
   _config.isLightCheckDisabled = false;
-  _config.isDashcamMLEnabled = true; // FORCE ENABLE FOR TESTING. TODO: REMOVE
+  _config.isDashcamMLEnabled = CAMERA_TYPE === CameraType.HdcS; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
   return isValid;
 };
 

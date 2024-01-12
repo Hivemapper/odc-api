@@ -28,6 +28,7 @@ import {
 import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 import { Instrumentation } from './instrumentation';
+import { cpus } from 'os';
 
 let sessionId: string;
 
@@ -272,6 +273,32 @@ export const addAppConnectedLog = () => {
       event: 'DashcamAppConnected',
     });
   }
+}
+
+export const getCpuUsage = () => { 
+  const cpusInfo: any = cpus()
+
+  let user = 0;
+  let nice = 0;
+  let sys = 0;
+  let idle = 0;
+  let irq = 0;
+  let total = 0;
+
+  for(const cpu of cpusInfo){
+      user += cpu?.times?.user || 0;
+      nice += cpu?.times?.nice || 0;
+      sys += cpu?.times?.sys || 0;
+      irq += cpu?.times?.irq || 0;
+      idle += cpu?.times?.idle || 0;
+  }
+
+  total = user + nice + sys + idle + irq;
+
+  return {
+      'idle': idle, 
+      'total': total
+  };
 }
 
 export const getCpuLoad = (callback: (load: number) => void) => {
