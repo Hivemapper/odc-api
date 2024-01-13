@@ -1,5 +1,5 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import {
   Stats,
   mkdir,
@@ -7,7 +7,6 @@ import {
   createReadStream,
   createWriteStream,
   writeFileSync,
-  promises,
 } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';
@@ -16,7 +15,6 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { getConfig } from './motionModel/config';
 import { FrameKMTelemetry } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';

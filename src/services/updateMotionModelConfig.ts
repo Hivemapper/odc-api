@@ -1,17 +1,16 @@
 import { MOTION_MODEL_CONFIG } from 'config';
 import { readFile } from 'fs';
 import { jsonrepair } from 'jsonrepair';
-import { getConfig, updateConfig } from 'sqlite/config';
+import { getConfig, getDefaultConfig, updateConfig } from 'sqlite/config';
 import { IService } from 'types';
 import { fileExists } from 'util/index';
-import { getDefaultConfig } from 'util/motionModel/config';
 
 export const UpdateMotionModelConfigService: IService = {
   execute: async () => {
-    console.log('Updating system config');
     const DX = await getConfig('DX');
 
     if (!DX) {
+      console.log('Updating system config');
       const defaultConfig = getDefaultConfig();
       const exists = await fileExists(MOTION_MODEL_CONFIG);
       if (exists) {

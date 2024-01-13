@@ -9,7 +9,6 @@ import {
   latLonDistance,
 } from 'util/geomath';
 import { isGnss, isImage, isImu } from 'util/sensor';
-import { MAX_SPEED, MIN_SPEED } from './config';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
@@ -17,6 +16,8 @@ import { getConfig } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
+export const MIN_SPEED = 0.15; // meter per seconds
+export const MAX_SPEED = 40; // meter per seconds
 
 export class DraftFrameKm {
   data: SensorData[];
