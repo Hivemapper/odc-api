@@ -34,7 +34,6 @@ export type SystemConfig = {
     iouThreshold?: number,
   }
   MaxPendingTime: number;
-  isImuMovementDetectionEnabled: boolean;
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
   isTripTrimmingEnabled: boolean;

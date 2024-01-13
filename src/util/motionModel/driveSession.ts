@@ -67,14 +67,14 @@ export class DriveSession {
       }
 
       if (!this.draftFrameKm) {
-        this.draftFrameKm = new DraftFrameKm(data, DX);
+        this.draftFrameKm = new DraftFrameKm(data);
         continue;
       }
 
-      const added = this.draftFrameKm.maybeAdd(data, DX);
+      const added = this.draftFrameKm.maybeAdd(data);
       if (!added) {
         this.frameKmsToProcess.push(this.draftFrameKm);
-        this.draftFrameKm = new DraftFrameKm(data, DX);
+        this.draftFrameKm = new DraftFrameKm(data);
       }
     }
     if (this.draftFrameKm) {
@@ -89,7 +89,7 @@ export class DriveSession {
     const isContinuous = !this.frameKmsToProcess.length;
     for (let i = 0; i < this.frameKmsToProcess.length; i++) {
       const curFrameKm = this.frameKmsToProcess[i];
-      const newFrames = await curFrameKm.getEvenlyDistancedFramesFromSensorData(
+      const newFrames = curFrameKm.getEvenlyDistancedFramesFromSensorData(
         i === 0 ? prevKeyFrames : [],
       );
       if (newFrames.length) {
@@ -104,7 +104,7 @@ export class DriveSession {
     console.log('traversing draft');
     // what's up with current draft
     const newFrames =
-      await this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
+      this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
         isContinuous ? prevKeyFrames : [],
       ) || [];
     if (newFrames.length > 1) {
@@ -120,7 +120,7 @@ export class DriveSession {
         lastGpsElem?.time,
       );
       const DX = await getConfig('DX');
-      this.draftFrameKm = new DraftFrameKm(lastGpsElem, DX);
+      this.draftFrameKm = new DraftFrameKm(lastGpsElem);
     } else {
       console.log('Not enough frames to add yet, ', newFrames.length);
       if (this.draftFrameKm) {
