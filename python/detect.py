@@ -16,8 +16,6 @@ IMAGE_WIDTH = 2028
 IMAGE_HEIGHT = 1024
 IMAGE_SIZE_PX = IMAGE_WIDTH * IMAGE_HEIGHT
 
-blurred_images = deque()
-
 def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
     # Rescale boxes to original image dimensions
     # paying attention to paddings of squared detections
@@ -74,19 +72,30 @@ def detect(image_name, image_path, session, model_shape, input_blob, conf_thresh
     return detections, metrics
 
 def blur(img, boxes, metrics):
-  #calc box sizes to determine the optimal blur strategy
-  total_box_size = sum((box[2] - box[0]) * (box[3] - box[1]) for box in boxes)
-  if total_box_size < 0.5 * IMAGE_SIZE_PX and len(boxes) < 50:
+  blur_per_boxes = False
+  if len(boxes) < 30:
+    #calc box sizes to determine the optimal blur strategy
+    total_box_size = sum((box[2] - box[0]) * (box[3] - box[1]) for box in boxes)
+    if total_box_size < 0.5 * IMAGE_SIZE_PX:
+      blur_per_boxes = True
+
+  if blur_per_boxes:
     for box in boxes:
       box = box.astype(int)
       # filter out large boxes and boxes on the hood
       if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
         continue
       roi = img[box[1]:box[3], box[0]:box[2]]
-
-      blurred_roi = cv2.GaussianBlur(roi, (5, 5), 1.5)
-      # much faster than making downscale+blur+upscale+composite
+      #downscale
+      small_roi = cv2.resize(roi, (int(roi.shape[1] * 0.2), int(roi.shape[0] * 0.2)), interpolation=cv2.INTER_NEAREST)
+      #blur
+      blurred_small_roi = cv2.GaussianBlur(small_roi, (5, 5), 1.5)
+      #upscale
+      blurred_roi = cv2.resize(blurred_small_roi, (roi.shape[1], roi.shape[0]), interpolation=cv2.INTER_NEAREST)
+      #apply
       img[box[1]:box[3], box[0]:box[2]] = blurred_roi
+
+    return img, metrics
   else:
     #Downscale & blur
     start = time.perf_counter()
@@ -123,28 +132,6 @@ def blur(img, boxes, metrics):
     metrics['composite_time'] = (time.perf_counter() - start) * 1000
 
     return result, metrics
-
-def find_latest_jpg(directory):
-    global blurred_images
-    latest_file = None
-    latest_time = 0
-
-    with os.scandir(directory) as it:
-        for entry in it:
-            if entry.is_file() and entry.name.lower().endswith('.jpg') and entry.name != 'cam0pipe.jpg':
-                file_ctime = entry.stat().st_ctime
-                if file_ctime > latest_time:
-                    latest_time = file_ctime
-                    latest_file = entry.path
-
-    if len(blurred_images) > 10:
-      try: 
-        file = blurred_images.popleft()
-        os.remove(file)
-        print('removed: ' + file)
-      except Exception as e:
-        print(e)
-    return latest_file
 
 def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_threads):
 
@@ -216,27 +203,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
       if len(currently_processing) > 0:
         sqlite.set_service_status('failed')
 
-      # if len(images) > 0:
-      #   print(f"Processed {len(images)} images in {(time.perf_counter() - start_process) * 1000} ms")
-
-      # disable ML for preview
-      # try:
-      #   latest_image = find_latest_jpg('/tmp/recording/pics')
-      #   if latest_image:
-      #     print(latest_image)
-      #     detect(latest_image, session_sm, conf_threshold, nms_threshold, tensor_type, True)
-      #     blurred_images.append(latest_image.rsplit('.', 1)[0] + '.jpeg')
-      # except Exception as e:
-      #   print(f"Error finding latest image. Error: {e}")
-      #   if "RequestInference" in str(e):
-      #     ie = IECore()
-      #     session_sm = ie.import_network(model_file=model_path, device_name=device)
-      #   try:
-      #     sqlite.log_error(e)
-      #   except Exception as e:
-      #     print(f"Error logging error: {e}")
-
-      time.sleep(2 if len(images) == 0 else 0.1)
+      time.sleep(3 if len(images) == 0 else 0.1)
 
   except KeyboardInterrupt:
     print('Watcher stopped by user')

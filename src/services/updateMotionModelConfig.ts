@@ -7,7 +7,7 @@ import { fileExists } from 'util/index';
 
 export const UpdateMotionModelConfigService: IService = {
   execute: async () => {
-    const DX = await getConfig('DX');
+    const DX = await getConfig('DX', true);
 
     if (!DX) {
       console.log('Updating system config');

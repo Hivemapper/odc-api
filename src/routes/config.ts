@@ -4,7 +4,7 @@ import { CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE } fr
 
 import { isCameraBridgeServiceActive, restartCamera } from '../services/heartBeat';
 import * as console from 'console';
-import { getFullConfig, updateConfig } from 'sqlite/config';
+import { getConfig, getFullConfig, updateConfig } from 'sqlite/config';
 
 const router = Router();
 
@@ -25,6 +25,17 @@ router.post('/', async (req: Request, res: Response) => {
     });
   } catch (e) {
     res.json({ e });
+  }
+});
+
+router.get('/key/:name', async (req: Request, res: Response) => {
+  try {
+    const value = await getConfig(req.params.name);
+    const response: any = {};
+    response[req.params.name] = value;
+    res.send(response);
+  } catch (error) {
+    res.status(500).send({ error });
   }
 });
 

@@ -77,14 +77,10 @@ export class DriveSession {
         this.draftFrameKm = new DraftFrameKm(data);
       }
     }
-    if (this.draftFrameKm) {
-      console.log('Data in draft: ', this.draftFrameKm.getData().length);
-    }
   }
 
   async getSamplesAndSyncWithDb() {
     // get prev frames for proper frame stitching
-    console.log('traversing full packages');
     const prevKeyFrames = await getExistingFramesMetadata();
     const isContinuous = !this.frameKmsToProcess.length;
     for (let i = 0; i < this.frameKmsToProcess.length; i++) {
@@ -101,7 +97,6 @@ export class DriveSession {
     }
     this.frameKmsToProcess = [];
 
-    console.log('traversing draft');
     // what's up with current draft
     const newFrames =
       this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
@@ -111,18 +106,8 @@ export class DriveSession {
       // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);
       const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
-      console.log(
-        'last gps to consider: ',
-        distance(
-          newFrames[newFrames.length - 1] as LatLon,
-          lastGpsElem as LatLon,
-        ),
-        lastGpsElem?.time,
-      );
-      const DX = await getConfig('DX');
       this.draftFrameKm = new DraftFrameKm(lastGpsElem);
     } else {
-      console.log('Not enough frames to add yet, ', newFrames.length);
       if (this.draftFrameKm) {
         if (this.draftFrameKm.getData().length > 100000) {
           console.log('SANITIZING THE DATA');

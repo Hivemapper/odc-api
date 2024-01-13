@@ -226,7 +226,6 @@ export class DraftFrameKm {
           closestFrame = { ...sensorData } as IImage;
           prevGNSS = { ...nextGNSS } as GnssRecord;
           prevCurveLength = curveLength;
-          console.log('image came, waiting for next gnss', prevCurveLength);
           nextGNSS = null;
         } else if (isGnss(sensorData)) {
           let prevDist = 0;
@@ -234,9 +233,6 @@ export class DraftFrameKm {
             prevDist = distance(nextGNSS, (sensorData as GnssRecord));
           }
           nextGNSS = { ...sensorData } as GnssRecord;
-          if (prevSelected) {
-            console.log('gnss, distance: ', distance(prevSelected, nextGNSS), prevDist);
-          }
           gps.push({ ...sensorData } as GnssRecord);
           spaceCurve = catmullRomCurve(
             gps,
@@ -280,7 +276,6 @@ export class DraftFrameKm {
               latitude: scratch.y,
             };
           } catch (e: unknown) {
-            console.log('Failed taking v. Defaulting to next gnss');
             frameCoordinates = {
               longitude: nextGNSS.longitude,
               latitude: nextGNSS.latitude,
@@ -293,13 +288,6 @@ export class DraftFrameKm {
             !prevSelected ||
             distance(prevSelected, frameCoordinates) > DX - allowed_gap
           ) {
-            if (prevSelected) {
-              console.log(
-                'distance for frame: ' + distance(prevSelected, frameCoordinates),
-              );
-            } else {
-              console.log('got default first frame');
-            }
             // get interpolated gnss metadata
             const interpolatedGnssMetadata = interpolate(
               prevGNSS,
@@ -315,10 +303,6 @@ export class DraftFrameKm {
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];
-          } else {
-            if (prevSelected) {
-              console.log('not enough distance: ', distance(prevSelected, frameCoordinates));
-            }
           }
         }
       } catch (e: unknown) {

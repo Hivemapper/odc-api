@@ -9,7 +9,7 @@ import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
-import { promiseWithTimeout, getQuality } from 'util/index';
+import { promiseWithTimeout, getQuality, getCpuUsage } from 'util/index';
 import {
   MAX_PER_FRAME_BYTES,
   MIN_PER_FRAME_BYTES,
@@ -165,8 +165,8 @@ export const packMetadata = async (
         // detections: m.ml_detections || '',
       };
       validatedFrames.push(frame);
+      privacyModelHash = m.ml_model_hash;
       if (m.ml_model_hash) {
-        privacyModelHash = m.ml_model_hash;
         metrics.inference_time += m.ml_inference_time || 0;
         metrics.read_time += m.ml_read_time || 0;
         metrics.write_time += m.ml_write_time || 0;
@@ -256,7 +256,8 @@ export const packMetadata = async (
           num_detections: metrics.num_detections,
           avg_per_frame: Math.round((lastFrame.ml_processed_at || 0) - (firstFrame.ml_processed_at || 0)),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
-          ram_used: freemem(),
+          free_ram: Math.round(freemem() / 1024 / 1024),
+          cpu_usage: getCpuUsage(),
           name
         }),
       });

@@ -27,9 +27,8 @@ const defaultConfig: SystemConfig = {
 
 const cachedConfig: { [key: string]: any } = {};
 
-export const getConfig = async (keys: string | string[]) => {
-  const isArray = Array.isArray(keys);
-  const selectSQL = isArray
+export const getConfig = async (keys: string | string[], ignoreCache = false) => {
+  const selectSQL = Array.isArray(keys)
     ? `SELECT key, value FROM config WHERE key IN (${keys
         .map(() => '?')
         .join(', ')})`
@@ -37,17 +36,17 @@ export const getConfig = async (keys: string | string[]) => {
 
   try {
     const rows = (
-      isArray
+      Array.isArray(keys)
         ? await getAsync(db, selectSQL, keys)
-        : [await getAsync(db, selectSQL, [keys])]
+        : await getAsync(db, selectSQL, [keys])
     ) as { key: string; value: any }[];
 
     // Transform the result based on the input type
-    if (isArray) {
+    if (Array.isArray(keys)) {
       // Return an object with key-value pairs
       return rows.reduce((acc: any, row: any) => {
-        let value = rows[0] ? JSON.parse(rows[0].value) : undefined;
-        if (value === undefined) {
+        let value = rows[0]?.value  ? JSON.parse(rows[0].value) : undefined;
+        if (value === undefined && !ignoreCache) {
           value = getCachedValue(row.key);
         } else {
           // cache it
@@ -58,8 +57,8 @@ export const getConfig = async (keys: string | string[]) => {
       }, {});
     } else {
       // Return the value for the single key
-      let value = rows[0] ? JSON.parse(rows[0].value) : undefined;
-      if (value === undefined) {
+      let value = rows[0]?.value ? JSON.parse(rows[0].value) : undefined;
+      if (value === undefined && !ignoreCache) {
         value = getCachedValue(keys);
       } else {
         // cache it
@@ -69,7 +68,10 @@ export const getConfig = async (keys: string | string[]) => {
     }
   } catch (error) {
     console.error('Error during retrieving from config table:', error);
-    return isArray ? keys.reduce((acc: any, key: any) => {
+    if (ignoreCache) {
+      return undefined;
+    }
+    return Array.isArray(keys) ? keys.reduce((acc: any, key: any) => {
       acc[key] = getCachedValue(key);
       return acc;
     }, {}) : getCachedValue(keys);
@@ -85,7 +87,9 @@ export const getFullConfig = async () => {
     }[];
     const config: { [key: string]: any } = {};
     rows.forEach(row => {
-      config[row.key] = JSON.parse(row.value);
+      if (row && row.value !== undefined) {
+        config[row.key] = JSON.parse(row.value); 
+      }
     });
     return config;
   } catch (error) {
@@ -103,6 +107,7 @@ export const updateConfig = async (
   const queryParams = [];
 
   if (!isValidConfig(configItems)) {
+    console.log('Config is invalid');
     return;
   }
 
@@ -156,7 +161,7 @@ export const isValidConfig = (_config: SystemConfig) => {
     typeof _config.GnssFilter === 'object';
 
   _config.isLightCheckDisabled = false;
-  _config.isDashcamMLEnabled = CAMERA_TYPE === CameraType.HdcS; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
+  _config.isDashcamMLEnabled = _config.isDashcamMLEnabled && CAMERA_TYPE === CameraType.HdcS; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
   return isValid;
 };
 
