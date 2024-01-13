@@ -5,6 +5,7 @@ import { resetDB } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
 import { fetchLastNGnssRecords } from 'sqlite/gnss';
+import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
 
 const router = Router();
@@ -90,6 +91,17 @@ router.get('/framekm/add/:name/:speed', async (req, res) => {
     
     res.send({
       done: true,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/state/:name', async (req, res) => {
+  try {
+    const status = await getServiceStatus(req.params.name);
+    res.send({
+      status
     });
   } catch (error) {
     res.status(500).send({ error });

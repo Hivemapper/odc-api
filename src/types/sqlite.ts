@@ -84,6 +84,13 @@ export type FrameKmRecord = {
     ml_blur_time?: number;
     ml_inference_time?: number;
     ml_processed_at?: number;
+    ml_downscale_time?: number;
+    ml_upscale_time?: number;
+    ml_mask_time?: number;
+    ml_composite_time?: number;
+    ml_load_time?: number;
+    ml_transpose_time?: number;
+    ml_letterbox_time?: number;
     frame_idx?: number;
   };
 

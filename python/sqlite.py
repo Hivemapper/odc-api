@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-db_name = '/data/recording/data-logger.v1.4.1.db'
+db_name = '/data/recording/data-logger.v1.4.2.db'
 
 class SQLite:
     def __init__(self):
@@ -42,13 +42,32 @@ class SQLite:
             blur_time = metrics.get('blur_time', 0)
             write_time = metrics.get('write_time', 0)
 
-            cursor.execute('UPDATE framekms SET ml_model_hash=?, ml_detections=?, ml_processed_at=?, ml_inference_time=?, ml_read_time=?, ml_blur_time=?, ml_write_time=? WHERE image_name=?', (ml_model_hash, ml_detections_json, now, inference_time, read_time, blur_time, write_time, image_name))
+            downscale_time = metrics.get('downscale_time', 0)
+            upscale_time = metrics.get('upscale_time', 0)
+            mask_time = metrics.get('mask_time', 0)
+            composite_time = metrics.get('composite_time', 0)
+
+            load_time = metrics.get('load_time', 0)
+            letterbox_time = metrics.get('letterbox_time', 0)
+            transpose_time = metrics.get('transpose_time', 0)
+
+            cursor.execute('UPDATE framekms SET ml_model_hash=?, ml_detections=?, ml_processed_at=?, ml_inference_time=?, ml_read_time=?, ml_blur_time=?, ml_write_time=?, ml_downscale_time=?, ml_upscale_time=?, ml_mask_time=?, ml_composite_time=?, ml_load_time=?, ml_transpose_time=?, ml_letterbox_time=? WHERE image_name=?', (ml_model_hash, ml_detections_json, now, inference_time, read_time, blur_time, write_time, downscale_time, upscale_time, mask_time, composite_time, load_time, transpose_time, letterbox_time, image_name))
             conn.commit()
 
     def log_error(self, error):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             now = datetime.now()
-            cursor.execute('INSERT INTO error_logs (message, service_name, system_time) VALUES (?, ?)', (str(error), "object-detection", now.strftime("%Y-%m-%d %H:%M:%S.00000")))
+            cursor.execute('INSERT INTO error_logs (message, service_name, system_time) VALUES (?, ?, ?)', (str(error), "object-detection", now.strftime("%Y-%m-%d %H:%M:%S.00000")))
+            conn.commit()
+
+    def set_service_status(self, status, service_name = 'object-detection'):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = """
+                INSERT OR REPLACE INTO health_state (service_name, status)
+                VALUES (?, ?)
+            """
+            cursor.execute(query, (service_name, status))
             conn.commit()
 
