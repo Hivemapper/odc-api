@@ -45,7 +45,7 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
     if (Array.isArray(keys)) {
       // Return an object with key-value pairs
       return rows.reduce((acc: any, row: any) => {
-        let value = rows[0]?.value  ? JSON.parse(rows[0].value) : undefined;
+        let value = row?.value  ? JSON.parse(row.value) : undefined;
         if (value === undefined && !ignoreCache) {
           value = getCachedValue(row.key);
         } else {
