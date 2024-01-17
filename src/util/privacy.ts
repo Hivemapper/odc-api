@@ -1,17 +1,17 @@
 import KDBush from 'kdbush';
 import { latLonToWebMercator } from './geomath';
-import { getConfig } from './motionModel/config';
+import { getConfig } from 'sqlite/config';
 
 const DEFAULT_RADIUS = 200;
 let privateZones: KDBush | undefined;
 
-export const isPrivateLocation = (lat: number, lon: number): boolean => {
+export const isPrivateLocation = async (lat: number, lon: number): Promise<boolean> => {
   if (!lat || !lon) {
     return false;
   }
-  const config = getConfig();
+  const { privacyRadius } = await getConfig('privacyRadius');
   const { x, y } = latLonToWebMercator(lat, lon);
-  const radius = config?.privacyRadius || DEFAULT_RADIUS;
+  const radius = privacyRadius || DEFAULT_RADIUS;
   return privateZones ? !!privateZones.within(x, y, radius * 1.25).length : false;
 }
 

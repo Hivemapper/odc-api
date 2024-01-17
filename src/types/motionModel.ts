@@ -16,38 +16,24 @@ export type FrameKMOutput = {
   images: ICameraFile[];
 };
 
-export type RawLogsConfiguration = {
-  isEnabled: boolean;
-  interval: number; // if 0, will fire for every FrameKM
-  snapshotSize: 30, // will take last N seconds, if 0 - will match with FrameKM start-end
-  includeGps: true // whether to include GPS or not, true is default
-  includeImu: true // whether to include IMU or not, true is default
-  maxCollectedBytes: 5000000 // in bytes, default is 50 mgs
+export type GnssFilter = {
+  hdop?: number;
+  gdop?: number;
+  pdop?: number;
+  cep?: number;
+  '3dLock': boolean;
+  minSatellites: number;
+  eph?: number;
 }
-
-export type MotionModelConfig = {
+export type SystemConfig = {
   DX: number;
-  GnssFilter: {
-    hdop?: number;
-    gdop?: number;
-    pdop?: number;
-    cep?: number;
-    '3dLock': boolean;
-    minSatellites: number;
-    eph?: number;
-  };
+  GnssFilter: GnssFilter;
   Privacy: {
     numThreads?: number,
     confThreshold?: number,
     iouThreshold?: number,
   }
-  ImuFilter: {
-    threshold: number;
-    alpha: number;
-    params: number[];
-  };
   MaxPendingTime: number;
-  isImuMovementDetectionEnabled: boolean;
   isCornerDetectionEnabled: boolean;
   isLightCheckDisabled: boolean;
   isTripTrimmingEnabled: boolean;
@@ -56,7 +42,6 @@ export type MotionModelConfig = {
   isDashcamMLEnabled: boolean;
   isGyroCalibrationEnabled: boolean;
   isAccelerometerCalibrationEnabled: boolean;
-  rawLogsConfiguration: RawLogsConfiguration;
   privacyRadius?: number;
   modelHashes?: Record<string, string>;
 };

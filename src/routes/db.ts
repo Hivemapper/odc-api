@@ -120,4 +120,15 @@ router.get('/reset', async (req, res) => {
   }
 });
 
+router.get('/resetconfig', async (req, res) => {
+  try {
+    await runAsync(db, 'DELETE FROM config;');
+    res.send({
+      done: true,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
 export default router;

@@ -9,7 +9,7 @@ import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
-import { promiseWithTimeout, getQuality } from 'util/index';
+import { promiseWithTimeout, getQuality, getCpuUsage } from 'util/index';
 import {
   MAX_PER_FRAME_BYTES,
   MIN_PER_FRAME_BYTES,
@@ -17,8 +17,8 @@ import {
   getFrameKmTelemetry,
 } from 'util/framekm';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
+import { getConfig } from 'sqlite/config';
 import { freemem } from 'os';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
@@ -47,24 +47,14 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       }
       return;
     }
-    // TODO: revisit when back to ML topic
-    // if (!destFolder && getConfig().isDashcamMLEnabled) {
-    //   destFolder = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/_' + bundleName + '_bundled';
-    //   if (existsSync(destFolder)) {
-    //     rmdirSync(destFolder, { recursive: true });
-    //   }
-    //   await new Promise(resolve => {
-    //     mkdir(destFolder, resolve);
-    //   });
-    // }
+
     const start = Date.now();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
         frameKm.map((item: FrameKmRecord) => item.image_name || ''),
         finalBundleName,
         0,
-        framesFolder,
-        false,
+        framesFolder
       ),
       15000,
     );
@@ -175,8 +165,8 @@ export const packMetadata = async (
         // detections: m.ml_detections || '',
       };
       validatedFrames.push(frame);
+      privacyModelHash = m.ml_model_hash;
       if (m.ml_model_hash) {
-        privacyModelHash = m.ml_model_hash;
         metrics.inference_time += m.ml_inference_time || 0;
         metrics.read_time += m.ml_read_time || 0;
         metrics.write_time += m.ml_write_time || 0;
@@ -225,6 +215,7 @@ export const packMetadata = async (
   }
   if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
+    const DX = await getConfig('DX');
     const metadataJSON = {
       bundle: {
         name,
@@ -235,7 +226,7 @@ export const packMetadata = async (
         firmwareVersion: API_VERSION,
         ssid: deviceInfo?.ssid,
         loraDeviceId: undefined,
-        keyframeDistance: getConfig().DX,
+        keyframeDistance: DX,
         resolution: '2k',
         version: '1.8',
         privacyModelHash,
@@ -244,8 +235,16 @@ export const packMetadata = async (
       frames: validatedFrames,
     };
     if (privacyModelHash) {
-      const firstFrame = framesMetadata[framesMetadata.length - 1];
+      const firstFrame = framesMetadata[0];
       const lastFrame = framesMetadata[framesMetadata.length - 1];
+      const {
+        load_time,
+        inference_time,
+        write_time,
+        blur_time
+      } = metrics;
+      const total_time = (load_time + inference_time + write_time + blur_time) / 4; // 4 threads
+
       Instrumentation.add({
         event: 'DashcamML',
         size: validatedFrames.length,
@@ -262,10 +261,12 @@ export const packMetadata = async (
           load_time: Math.round(metrics.load_time / validatedFrames.length),
           transpose_time: Math.round(metrics.transpose_time / validatedFrames.length),
           letterbox_time: Math.round(metrics.letterbox_time / validatedFrames.length),
+          per_frame_ml: Math.round(total_time / validatedFrames.length),
           num_detections: metrics.num_detections,
-          avg_per_frame: Math.round((lastFrame.ml_processed_at || 0) - (firstFrame.ml_processed_at || 0)),
+          per_frame_col: Math.round((lastFrame.time - firstFrame.time) / validatedFrames.length),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
-          ram_used: freemem(),
+          free_ram: Math.round(freemem() / 1024 / 1024),
+          cpu_usage: getCpuUsage(),
           name
         }),
       });

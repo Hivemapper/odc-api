@@ -221,13 +221,13 @@ export const HeartBeatService: IService = {
             lastTimeCheckWasPrivate = false;
           } else {
             if (isCameraActive && gpsSample && isGpsLock(gpsSample)) {
-              if (isPrivateLocation(gpsSample.latitude, gpsSample.longitude)) {
+              if (await isPrivateLocation(gpsSample.latitude, gpsSample.longitude)) {
                 lastTimeCheckWasPrivate = true;
                 cameraLED = COLORS.PINK;
               } else {
                 lastTimeCheckWasPrivate = false;
                 if (ifTimeSet() && lastGpsPoint?.timestamp) {
-                  if (isEnoughLightForGnss(lastGpsPoint)) {
+                  if (await isEnoughLightForGnss(lastGpsPoint)) {
                     cameraLED = COLORS.GREEN;
                   } else {
                     cameraLED = COLORS.DIM;

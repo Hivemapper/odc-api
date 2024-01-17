@@ -5,12 +5,12 @@ import numpy as np
 from typing import Tuple
 
 def load(image_path, width, height, tensor_type, metrics):
-  dtype = None
-  if tensor_type == 'float32':
-    dtype = np.float32
-  elif tensor_type == 'float16':
-    dtype = np.float16
+  dtype = np.float32 if tensor_type == 'float32' else np.float16
+
   start = time.perf_counter()
+
+  # img = Image.open(image_path)
+  # img = np.array(img)
   img = cv2.imread(image_path)
   metrics['read_time'] = (time.perf_counter() - start) * 1000
   # resized_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -20,8 +20,7 @@ def load(image_path, width, height, tensor_type, metrics):
   metrics['letterbox_time'] = (time.perf_counter() - start) * 1000
   # resized_img = cv2.resize(img, (width, height), cv2.INTER_NEAREST)
   start = time.perf_counter()
-  resized_img = resized_img.transpose(2, 0, 1)
-  tensor = resized_img[np.newaxis, :, :, :].astype(dtype)
+  tensor = resized_img.transpose(2, 0, 1)[np.newaxis, :].astype(dtype)
   metrics['transpose_time'] = (time.perf_counter() - start) * 1000
 
   #returns tensor and reference on original image
@@ -52,7 +51,7 @@ def letterbox(img: np.ndarray, new_shape:Tuple[int, int], color:Tuple[int, int, 
   dh /= 2
 
   if shape[::-1] != new_unpad:  # resize
-    img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+    img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_NEAREST)
   top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
   left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
   img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border

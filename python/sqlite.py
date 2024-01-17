@@ -24,6 +24,10 @@ class SQLite:
     def get_frames_for_ml(self, limit=10):
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            cursor.execute('SELECT value FROM config WHERE key = "isDashcamMLEnabled"')
+            is_enabled = cursor.fetchone()
+            if not is_enabled or is_enabled[0] == 'false':
+                return []
             cursor.execute('SELECT image_name, image_path, speed FROM framekms WHERE ml_model_hash is NULL ORDER BY time LIMIT ?', (limit,))
             return cursor.fetchall()
 

@@ -285,7 +285,7 @@ export const getCpuUsage = () => {
   let irq = 0;
   let total = 0;
 
-  for(const cpu of cpusInfo){
+  for (const cpu of cpusInfo) {
       user += cpu?.times?.user || 0;
       nice += cpu?.times?.nice || 0;
       sys += cpu?.times?.sys || 0;
@@ -295,10 +295,7 @@ export const getCpuUsage = () => {
 
   total = user + nice + sys + idle + irq;
 
-  return {
-      'idle': idle, 
-      'total': total
-  };
+  return total ? Math.round(100 * (total - idle) / total) : 0;
 }
 
 export const getCpuLoad = (callback: (load: number) => void) => {

@@ -4,7 +4,6 @@ import { isGnss, isImage, isImu } from 'util/sensor';
 import { isGoodQualityGnssRecord } from 'util/gnss';
 import { FrameKM, GnssRecord, ImuRecord } from 'types/sqlite';
 import { timeIsMostLikelyLight } from 'util/daylight';
-import { getConfig } from './config';
 import {
   addFramesToFrameKm,
   getExistingFramesMetadata,
@@ -17,8 +16,7 @@ import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
-import { distance } from 'util/geomath';
-import { LatLon } from 'types/motionModel';
+import { GnssFilter } from 'types/motionModel';
 import { exec, spawnSync } from 'child_process';
 import {
   CAMERA_TYPE,
@@ -28,6 +26,7 @@ import {
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 
 let sessionTrimmed = false;
@@ -42,7 +41,7 @@ export class DriveSession {
     this.trimDistance = trimDistance;
   }
 
-  ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
+  async ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
     // check if no sensor data is missing — otherwise repair services
     this.checkForMissingSensorData(gnss, imu, images);
 
@@ -58,8 +57,10 @@ export class DriveSession {
       .filter(s => s)
       .sort((a, b) => a.system_time - b.system_time);
 
+    const { GnssFilter, MaxPendingTime, DX } = await getConfig(['GnssFilter', 'MaxPendingTime', 'DX']);
+
     for (const data of sensorData) {
-      if (!this.dataIsGoodEnough(data)) {
+      if (!this.dataIsGoodEnough(data, GnssFilter, MaxPendingTime)) {
         continue;
       }
 
@@ -74,14 +75,10 @@ export class DriveSession {
         this.draftFrameKm = new DraftFrameKm(data);
       }
     }
-    if (this.draftFrameKm) {
-      console.log('Data in draft: ', this.draftFrameKm.getData().length);
-    }
   }
 
   async getSamplesAndSyncWithDb() {
     // get prev frames for proper frame stitching
-    console.log('traversing full packages');
     const prevKeyFrames = await getExistingFramesMetadata();
     const isContinuous = !this.frameKmsToProcess.length;
     for (let i = 0; i < this.frameKmsToProcess.length; i++) {
@@ -98,7 +95,6 @@ export class DriveSession {
     }
     this.frameKmsToProcess = [];
 
-    console.log('traversing draft');
     // what's up with current draft
     const newFrames =
       this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
@@ -108,17 +104,8 @@ export class DriveSession {
       // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);
       const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
-      console.log(
-        'last gps to consider: ',
-        distance(
-          newFrames[newFrames.length - 1] as LatLon,
-          lastGpsElem as LatLon,
-        ),
-        lastGpsElem?.time,
-      );
       this.draftFrameKm = new DraftFrameKm(lastGpsElem);
     } else {
-      console.log('Not enough frames to add yet, ', newFrames.length);
       if (this.draftFrameKm) {
         if (this.draftFrameKm.getData().length > 100000) {
           console.log('SANITIZING THE DATA');
@@ -129,18 +116,18 @@ export class DriveSession {
     }
   }
 
-  dataIsGoodEnough(data: SensorData) {
+  dataIsGoodEnough(data: SensorData, gnssFilter: GnssFilter, maxPendingTime: number) {
     if (isGnss(data)) {
       const gnss: GnssRecord = data as GnssRecord;
 
       return (
-        isGoodQualityGnssRecord(gnss) &&
+        isGoodQualityGnssRecord(gnss, gnssFilter) &&
         timeIsMostLikelyLight(
           new Date(gnss.time),
           gnss.longitude,
           gnss.latitude,
         ) &&
-        gnss.time > Date.now() - getConfig().MaxPendingTime
+        gnss.time > Date.now() - maxPendingTime
       );
     } else if (isImu(data)) {
       return isImuValid(data as ImuRecord);
@@ -167,7 +154,7 @@ export class DriveSession {
       const fkmId = await getFirstFrameKmId();
       return await getFrameKm(fkmId);
     } else {
-      const { isTripTrimmingEnabled, TrimDistance, DX } = getConfig();
+      const { isTripTrimmingEnabled, TrimDistance, DX } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'DX']);
 
       if (!sessionTrimmed && isTripTrimmingEnabled) {
         // END TRIP TRIMMING

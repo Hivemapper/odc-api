@@ -1,5 +1,5 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import {
   Stats,
   mkdir,
@@ -7,7 +7,6 @@ import {
   createReadStream,
   createWriteStream,
   writeFileSync,
-  promises,
 } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';
@@ -16,7 +15,6 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { getConfig } from './motionModel/config';
 import { FrameKMTelemetry } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
@@ -35,16 +33,12 @@ export const concatFrames = async (
   frames: string[],
   framekmName: string,
   retryCount = 0,
-  frameRootFolder = FRAMES_ROOT_FOLDER,
-  disableMLCheck = false,
-  destFolder?: string,
+  frameRootFolder = FRAMES_ROOT_FOLDER
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
-  const isDashcamMLEnabled = getConfig().isDashcamMLEnabled && destFolder && !disableMLCheck;
-  const frameKmFolder = isDashcamMLEnabled ? UNPROCESSED_FRAMEKM_ROOT_FOLDER : FRAMEKM_ROOT_FOLDER;
   try {
     await new Promise(resolve => {
-      mkdir(frameKmFolder, resolve);
+      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
     });
   } catch (e: unknown) {
     console.log(e);
@@ -96,25 +90,9 @@ export const concatFrames = async (
       return bytesMap;
     }
 
-    const outputFilePath = frameKmFolder + '/' + framekmName;
+    const outputFilePath = FRAMEKM_ROOT_FOLDER + '/' + framekmName;
 
     try {
-      if (isDashcamMLEnabled && destFolder) {
-        try {
-          await new Promise(resolve => {
-            mkdir(destFolder, resolve);
-          });
-        } catch (e: unknown) {
-          console.log(e);
-        }
-        for (const file of validFrames) {
-          const filePath = FRAMES_ROOT_FOLDER + '/' + file.name;
-          await promises.copyFile(filePath, destFolder + '/' + framekmName + 'ww' + file.name);
-          bytesMap[file.name] = file.size;
-          totalBytes += file.size;
-        }
-        await sleep(200);
-      } else {
         writeFileSync(outputFilePath, '');
         for (const file of validFrames) {
           const filePath = frameRootFolder + '/' + file.name;
@@ -142,7 +120,6 @@ export const concatFrames = async (
           await sleep(retryDelay);
           return concatFrames(frames, framekmName, retryCount + 1);
         }
-      }
     } catch (error) {
       console.log(`Error during concatenation:`, error);
       console.log('Waiting a bit before retrying concatenation...');
@@ -194,14 +171,6 @@ export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): 
     }
   }
   return telemetry;
-}
-
-export const getMaxFrameKmLength = () => {
-  const {
-    FrameKmLengthMeters,
-    DX,
-  } = getConfig();
-  return Math.round(FrameKmLengthMeters / DX);
 }
 
 export const getNumFramesFromChunkName = (name: string) => {
