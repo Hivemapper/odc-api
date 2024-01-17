@@ -83,41 +83,44 @@ def blur(img, boxes, metrics):
     for box in boxes:
       box = box.astype(int)
       # filter out large boxes and boxes on the hood
-      if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
+      if box[2] - box[0] > 0.8 * IMAGE_WIDTH and box[1] > 0.5 * IMAGE_HEIGHT:
         continue
       roi = img[box[1]:box[3], box[0]:box[2]]
-      #downscale
-      small_roi = cv2.resize(roi, (int(roi.shape[1] * 0.2), int(roi.shape[0] * 0.2)), interpolation=cv2.INTER_NEAREST)
-      #blur
-      blurred_small_roi = cv2.GaussianBlur(small_roi, (5, 5), 1.5)
-      #upscale
-      blurred_roi = cv2.resize(blurred_small_roi, (roi.shape[1], roi.shape[0]), interpolation=cv2.INTER_NEAREST)
-      #apply
-      img[box[1]:box[3], box[0]:box[2]] = blurred_roi
+      roi_downscale_width = int(roi.shape[1] * 0.2)
+      roi_downscale_height = int(roi.shape[0] * 0.2)
+      if roi_downscale_width > 0 and roi_downscale_height > 0:
+        #downscale
+        small_roi = cv2.resize(roi, (roi_downscale_width, roi_downscale_height), interpolation=cv2.INTER_NEAREST)
+        #blur
+        blurred_small_roi = cv2.GaussianBlur(small_roi, (5, 5), 1.5)
+        #upscale
+        blurred_roi = cv2.resize(blurred_small_roi, (roi.shape[1], roi.shape[0]), interpolation=cv2.INTER_NEAREST)
+        #apply
+        img[box[1]:box[3], box[0]:box[2]] = blurred_roi
 
     return img, metrics
   else:
     #Downscale & blur
     start = time.perf_counter()
-    downscale_size = (int(img.shape[1] * 0.2), int(img.shape[0] * 0.2))
+    downscale_size = (int(IMAGE_WIDTH * 0.2), int(IMAGE_HEIGHT * 0.2))
     img_downscaled = cv2.resize(img, downscale_size, interpolation=cv2.INTER_NEAREST)
     img_blurred = cv2.GaussianBlur(img_downscaled, (5, 5), 1.5)
     metrics['downscale_time'] = (time.perf_counter() - start) * 1000
 
     # Upscale
     start = time.perf_counter()
-    upscale_size = (img.shape[1], img.shape[0])
+    upscale_size = (IMAGE_WIDTH, IMAGE_HEIGHT)
     img_upscaled = cv2.resize(img_blurred, upscale_size, interpolation=cv2.INTER_NEAREST)
     metrics['upscale_time'] = (time.perf_counter() - start) * 1000
 
     # Mask from bounding boxes
     start = time.perf_counter()
-    mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
+    mask = np.zeros((IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.uint8)
 
     for box in boxes:
       box = box.astype(int)
       # filter out large boxes and boxes on the hood
-      if box[2] - box[0] > 0.8 * img.shape[1] and box[1] > 0.5 * img.shape[0]:
+      if box[2] - box[0] > 0.8 * IMAGE_WIDTH and box[1] > 0.5 * IMAGE_HEIGHT:
         continue
       cv2.rectangle(mask, (box[0], box[1]), (box[2], box[3]), 255, -1)
 
@@ -194,7 +197,6 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
       # start_process = time.perf_counter()
       images = sqlite.get_frames_for_ml(num_threads)
       for image in images:
-        print(image)
         if image[0] not in currently_processing:
           currently_processing.add(image[0])
           q.put(image)

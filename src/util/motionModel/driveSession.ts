@@ -16,9 +16,7 @@ import { ifTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
-import { distance } from 'util/geomath';
 import { GnssFilter } from 'types/motionModel';
-import { LatLon } from 'types/motionModel';
 import { exec, spawnSync } from 'child_process';
 import {
   CAMERA_TYPE,

@@ -235,8 +235,16 @@ export const packMetadata = async (
       frames: validatedFrames,
     };
     if (privacyModelHash) {
-      const firstFrame = framesMetadata[framesMetadata.length - 1];
+      const firstFrame = framesMetadata[0];
       const lastFrame = framesMetadata[framesMetadata.length - 1];
+      const {
+        load_time,
+        inference_time,
+        write_time,
+        blur_time
+      } = metrics;
+      const total_time = (load_time + inference_time + write_time + blur_time) / 4; // 4 threads
+
       Instrumentation.add({
         event: 'DashcamML',
         size: validatedFrames.length,
@@ -253,8 +261,9 @@ export const packMetadata = async (
           load_time: Math.round(metrics.load_time / validatedFrames.length),
           transpose_time: Math.round(metrics.transpose_time / validatedFrames.length),
           letterbox_time: Math.round(metrics.letterbox_time / validatedFrames.length),
+          per_frame_ml: Math.round(total_time / validatedFrames.length),
           num_detections: metrics.num_detections,
-          avg_per_frame: Math.round((lastFrame.ml_processed_at || 0) - (firstFrame.ml_processed_at || 0)),
+          per_frame_col: Math.round((lastFrame.time - firstFrame.time) / validatedFrames.length),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
           free_ram: Math.round(freemem() / 1024 / 1024),
           cpu_usage: getCpuUsage(),
