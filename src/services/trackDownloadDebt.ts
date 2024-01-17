@@ -1,11 +1,11 @@
 import { exec, spawn } from 'child_process';
-import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER } from 'config';
+import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER } from 'config';
 import { getOldestFileDateInDirectory } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME, ifTimeSet } from 'util/lock';
-import { getConfig } from 'util/motionModel/config';
 import { IService } from '../types';
 import { isIntegrityCheckDone } from './integrityCheck';
+import { getConfig } from 'sqlite/config';
 
 const HIGHWATER_MARK_GB = 20;
 
@@ -103,10 +103,12 @@ export const TrackDownloadDebt: IService = {
               diff,
             );
 
+            const MaxPendingTime = await getConfig('MaxPendingTime');
+
             const isFileTooOld =
               now > DEFAULT_TIME &&
               oldestFileTs > DEFAULT_TIME &&
-              diff > getConfig().MaxPendingTime - 1000 * 60 * 60 * 24;
+              diff > MaxPendingTime - 1000 * 60 * 60 * 24;
             if (isFileTooOld && !firedOldFileEvent) {
               firedOldFileEvent = true;
               Instrumentation.add({

@@ -1,8 +1,8 @@
 import { exec } from 'child_process';
 import { IMU_CALIBRATOR_PATH } from 'config';
 import { promisify } from 'util';
-import { getConfig } from 'util/motionModel/config';
 import { IService } from '../types';
+import { getConfig } from 'sqlite/config';
 
 const calibrate = async (sensor: string) => {
   const awaitableExec = promisify(exec);
@@ -22,7 +22,7 @@ const calibrate = async (sensor: string) => {
 
 export const InitIMUCalibrationService: IService = {
   execute: async () => {
-    const config = getConfig();
+    const config = await getConfig(['isGyroCalibrationEnabled', 'isAccelerometerCalibrationEnabled']);
 
     if (config.isGyroCalibrationEnabled) {
       await calibrate('gyro');

@@ -29,6 +29,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamCommandExecuted',
   'DashcamDop',
   'DashcamFps',
+  'DashcamML',
   'DashcamImuFreq',
   'DashcamAppConnected',
   'DashcamApiRepaired',

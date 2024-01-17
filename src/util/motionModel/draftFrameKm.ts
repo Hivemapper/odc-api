@@ -9,13 +9,15 @@ import {
   latLonDistance,
 } from 'util/geomath';
 import { isGnss, isImage, isImu } from 'util/sensor';
-import { MAX_SPEED, MIN_SPEED, getConfig } from './config';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
+import { getCachedValue, getConfig } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
+export const MIN_SPEED = 0.15; // meter per seconds
+export const MAX_SPEED = 40; // meter per seconds
 
 export class DraftFrameKm {
   data: SensorData[];
@@ -101,7 +103,7 @@ export class DraftFrameKm {
         return false;
       }
 
-      if (distance > getConfig().DX * 2) {
+      if (distance > getCachedValue('DX') * 2) {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
@@ -198,6 +200,8 @@ export class DraftFrameKm {
     let gps: { longitude: number; latitude: number }[] = [];
     let gpsCounter = 0;
 
+    const DX = getCachedValue('DX');
+
     if (prevKeyFrames.length) {
       // Get 3 previous points for CatmulRom curve
       gps = prevKeyFrames.slice(-3);
@@ -222,7 +226,6 @@ export class DraftFrameKm {
           closestFrame = { ...sensorData } as IImage;
           prevGNSS = { ...nextGNSS } as GnssRecord;
           prevCurveLength = curveLength;
-          console.log('image came, waiting for next gnss', prevCurveLength);
           nextGNSS = null;
         } else if (isGnss(sensorData)) {
           let prevDist = 0;
@@ -230,9 +233,6 @@ export class DraftFrameKm {
             prevDist = distance(nextGNSS, (sensorData as GnssRecord));
           }
           nextGNSS = { ...sensorData } as GnssRecord;
-          if (prevSelected) {
-            console.log('gnss, distance: ', distance(prevSelected, nextGNSS), prevDist);
-          }
           gps.push({ ...sensorData } as GnssRecord);
           spaceCurve = catmullRomCurve(
             gps,
@@ -256,7 +256,7 @@ export class DraftFrameKm {
           nextGNSS.system_time >= closestFrame.system_time &&
           spaceCurve &&
           curveLength && prevCurveLength && curveLength > prevCurveLength && 
-          (!prevSelected || distance(prevSelected, nextGNSS) > getConfig().DX)
+          (!prevSelected || distance(prevSelected, nextGNSS) > DX)
         ) {
           // get accurate coordinates for this frame from CatmulRom curve
           const scratch: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
@@ -276,7 +276,6 @@ export class DraftFrameKm {
               latitude: scratch.y,
             };
           } catch (e: unknown) {
-            console.log('Failed taking v. Defaulting to next gnss');
             frameCoordinates = {
               longitude: nextGNSS.longitude,
               latitude: nextGNSS.latitude,
@@ -287,15 +286,8 @@ export class DraftFrameKm {
           const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 1 : 0.5;
           if (
             !prevSelected ||
-            distance(prevSelected, frameCoordinates) > getConfig().DX - allowed_gap
+            distance(prevSelected, frameCoordinates) > DX - allowed_gap
           ) {
-            if (prevSelected) {
-              console.log(
-                'distance for frame: ' + distance(prevSelected, frameCoordinates),
-              );
-            } else {
-              console.log('got default first frame');
-            }
             // get interpolated gnss metadata
             const interpolatedGnssMetadata = interpolate(
               prevGNSS,
@@ -311,10 +303,6 @@ export class DraftFrameKm {
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];
-          } else {
-            if (prevSelected) {
-              console.log('not enough distance: ', distance(prevSelected, frameCoordinates));
-            }
           }
         }
       } catch (e: unknown) {

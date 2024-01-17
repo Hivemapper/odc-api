@@ -2,6 +2,7 @@ import { querySensorData } from 'sqlite/common';
 import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from 'sqlite/config';
 
 const QUERY_WINDOW_SIZE = 10 * 1000;
 
@@ -22,11 +23,16 @@ export async function MotionModelController() {
       return;
     }
 
+    if (await getConfig('isDashcamMLEnabled')) {
+      // Repair ML job if needed
+      await session.checkObjectDetectionService();
+    }
+
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(),
     );
 
-    session.ingestData(gnss, imu, images);
+    await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
 
     // TODO: utilise raw logs: collect, pack, etc here
