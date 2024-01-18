@@ -5,7 +5,8 @@ import { fetchImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
 import { insertFrames } from './frames';
 import { db, runAsync } from 'sqlite';
-import { Instrumentation } from 'util/instrumentation';
+import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
+import { GnssDopKpi } from 'types/instrumentation';
 
 let accumulated = 0;
 let accumDuration = 0;
@@ -59,6 +60,16 @@ export const querySensorData = async (
           accumImuFreq = 0;
           accumImageFreq = 0;
           accumDuration = 0;
+          try {
+            const dopKpi: GnssDopKpi = getGnssDopKpi(gnss);
+            Instrumentation.add({
+              event: 'DashcamDop',
+              size: gnss.length,
+              message: JSON.stringify(dopKpi),
+            });
+          } catch (e: unknown) {
+            console.log(e);
+          }
         }
   
         console.log(
