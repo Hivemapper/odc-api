@@ -70,4 +70,9 @@ class SQLite:
             """
             cursor.execute(query, (service_name, status))
             conn.commit()
+    def get_model_name(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT value FROM config WHERE key = "privacyModel"')
+            return cursor.fetchone()[0]
 

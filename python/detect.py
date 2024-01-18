@@ -9,6 +9,7 @@ import time
 from yolov8.utils import nms, xywh2xyxy
 from sqlite import SQLite
 import image
+import util
 from openvino.inference_engine import IECore
 
 SPEED_THRESHOLD_FOR_OPTIMISED_MODEL = 60 # miles per hour
@@ -136,16 +137,18 @@ def blur(img, boxes, metrics):
 
     return result, metrics
 
-def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_threads):
+def main(tensor_type, device, conf_threshold, nms_threshold, num_threads):
 
   currently_processing = set()
   q = queue.Queue()
   sqlite = SQLite()
+  
+  model_path = util.get_model_path(sqlite)
+  model_hash = util.get_hash(model_path)
 
   def worker():
     ie = IECore()
     session_sm = ie.import_network(model_file=model_path, device_name=device)
-    model_hash_sm = '9d7e463c3288f3caadb0c2709238cc2b62433c1d100138fdd8ab12131d6ffa8e'
     input_blob = next(iter(session_sm.input_info))
     model_shape = session_sm.input_info[input_blob].input_data.shape[2]
     errors_counter = 0
@@ -158,7 +161,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
         # is_optimised = image[1] > SPEED_THRESHOLD_FOR_OPTIMISED_MODEL
         # session = session_sm if is_optimised else session_md
         detections, metrics = detect(image[0], image[1], session_sm, model_shape, input_blob, conf_threshold, nms_threshold, tensor_type)
-        sqlite.set_frame_ml(image[0], model_hash_sm, detections, metrics)
+        sqlite.set_frame_ml(image[0], model_hash, detections, metrics)
       except Exception as e:
 
         errors_counter += 1
@@ -166,7 +169,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
           errors_counter = 0
           sqlite.set_service_status('failed')
 
-        sqlite.set_frame_ml(image[0], model_hash_sm, [], {})
+        sqlite.set_frame_ml(image[0], model_hash, [], {})
         print(f"Error processing frame {image[0]}. Error: {e}")
         try: 
           if "VpualCoreNNExecutor" in str(e) or "NnXlinkPlg" in str(e):
@@ -225,7 +228,6 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   main(
-    args.model_path,
     args.tensor_type,
     args.device,
     args.conf_threshold,
