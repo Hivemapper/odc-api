@@ -2,7 +2,7 @@ import { exec, spawn } from 'child_process';
 import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER, RAW_DATA_ROOT_FOLDER } from 'config';
 import { getOldestFileDateInDirectory } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
-import { DEFAULT_TIME, ifTimeSet } from 'util/lock';
+import { DEFAULT_TIME, isTimeSet } from 'util/lock';
 import { getConfig } from 'util/motionModel/config';
 import { IService } from '../types';
 import { isIntegrityCheckDone } from './integrityCheck';
@@ -88,7 +88,7 @@ export const TrackDownloadDebt: IService = {
           } else {
             isAppConnectionRequired = false;
             
-            if (!ifTimeSet()) {
+            if (!isTimeSet()) {
               console.log('Time is not set yet, will check the oldest file timestamp later');
               return;
             }
