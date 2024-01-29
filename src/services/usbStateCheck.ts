@@ -9,7 +9,7 @@ const awaitableExec = promisify(exec);
 
 let previousUsbMountedState : boolean | null = null;
 
-export const usbStateCheckService: IService = {
+export const UsbStateCheckService: IService = {
   execute: async () => {
     console.log('checking usb mount');
     const usbMountPoint = parse(USB_WRITE_PATH).dir; 

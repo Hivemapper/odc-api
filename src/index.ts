@@ -19,7 +19,7 @@ import console_stamp from 'console-stamp';
 import { Instrumentation } from 'util/instrumentation';
 import { DEFAULT_TIME } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
-import { usbStateCheckService } from 'services/usbStateCheck';
+import { UsbStateCheckService } from 'services/usbStateCheck';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -77,7 +77,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(LoadPrivacyService);
-    serviceRunner.add(usbStateCheckService);
+    serviceRunner.add(UsbStateCheckService);
     // serviceRunner.add(LogDiskUsageService);
 
     // Execute motion model
