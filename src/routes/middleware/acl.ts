@@ -10,57 +10,52 @@ import { Instrumentation } from 'util/instrumentation';
 const execPromise = promisify(exec);
 
 export async function ensureAclPassed(req: Request, res: Response, next: NextFunction) {
-
   try {
     const accessControlList = await getAccessControlListFromCamera();
     let aclResult = {
-      acl: null
+        acl: null
     };
     let fleetEntityId = null;
-
     if (accessControlList && req?.headers?.cookie) {
-      fleetEntityId = parseCookie(req.headers.cookie, 'aclId');
-
-      const data = fromHexString(accessControlList);
-      try {
-        aclResult = JSON.parse(String.fromCharCode(...data));
-      } catch (e: unknown) {
-        // console.log('Error parsing ACL JSON:', e);
-      }
-  
-      if (aclResult?.acl && fleetEntityId && typeof fleetEntityId === 'string') {
-  
-        const isAclPassed = isWhitelisted(fleetEntityId, aclResult?.acl);
-  
-        if (isAclPassed) {
-          next();
-          return;
+        fleetEntityId = parseCookie(req.headers.cookie, 'aclId');
+        const data = fromHexString(accessControlList);
+        try {
+            aclResult = JSON.parse(String.fromCharCode(...data));
         }
-      }
-      if (!aclResult?.acl) {
-        next();
-        return;
-      }
+        catch (e) {
+            // console.log('Error parsing ACL JSON:', e);
+        }
+        if (aclResult?.acl && fleetEntityId && typeof fleetEntityId === 'string') {
+            const isAclPassed = isWhitelisted(fleetEntityId, aclResult?.acl);
+            if (isAclPassed) {
+                next();
+                return;
+            }
+        }
+        if (!aclResult?.acl) {
+            next();
+            return;
+        }
     }
     else {
-      next();
-      return;
+        next();
+        return;
     }
-  
     console.log("[ACL] Control reached middleware ensureAclPassed returning empty array", req?.headers?.cookie, aclResult?.acl);
     Instrumentation.add({
-      event: 'DashcamApiError',
-      message: 'ACL restriction',
+        event: 'DashcamApiError',
+        message: 'ACL restriction',
     });
     res.json([]);
-  } catch (error: unknown) {
+}
+catch (error) {
     console.log('Error processing ACL', error);
     Instrumentation.add({
-      event: 'DashcamApiError',
-      message: 'ACL error',
+        event: 'DashcamApiError',
+        message: 'ACL error',
     });
     next();
-  }
+}
 }
 
 export const getAccessControlListFromCamera = async () => {
@@ -78,7 +73,6 @@ export const getAccessControlListFromCamera = async () => {
 };
 
 const isWhitelisted = (fleetEntityId: string, acl: any): boolean => {
-  console.log("[ACL] Control reached middleware ensureAclPassed in function whitelisted", acl);
   if (fleetEntityId === undefined) {
     return false;
   }

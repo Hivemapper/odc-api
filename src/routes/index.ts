@@ -254,8 +254,6 @@ router.post('/cmd/sync', async (req, res) => {
   }
 });
 
-
-
 router.get('/sensordata/:since', async (req: Request, res: Response) => {
   let since: number;
 
@@ -279,13 +277,52 @@ router.get('/sensordata/:since', async (req: Request, res: Response) => {
 
   const { gnss, imu } = await querySensorData(Date.now() - since);
 
-  const sensordata : SensorRecord[] = [];
-  gnss.forEach((value) => {
-    sensordata.push({sensor: "gnss", ...value})
-  })
-  imu.forEach((value) => {
-    sensordata.push({sensor: "imu", ...value})
-  })
+  const sensordata: SensorRecord[] = [];
+  gnss.forEach(value => {
+    sensordata.push({ sensor: 'gnss', ...value });
+  });
+  imu.forEach(value => {
+    sensordata.push({ sensor: 'imu', ...value });
+  });
+
+  res.json(sensordata);
+});
+
+router.get('/sensorquery', async (req: Request, res: Response) => {
+  let since = 0;
+  let until = 0;
+
+  try {
+    since = parseInt(req.query.since as string);
+  } catch (e) {
+    console.log(e);
+    res.status(400).json('Failed to parse required field: since');
+  }
+  try {
+    until = parseInt(req.query.until as string);
+  } catch (e) {
+    console.log(e);
+    until = Date.now();
+  }
+
+  if (!ifTimeSet()) {
+    res.statusCode = 400;
+    res.json({ err: 'dashcam is not ready' });
+    return;
+  }
+
+  console.log('-------------------------');
+  console.log(since, until);
+  console.log(Date.now());
+
+  const { gnss, imu } = await querySensorData(since, until);
+  const sensordata: SensorRecord[] = [];
+  gnss.forEach(value => {
+    sensordata.push({ sensor: 'gnss', ...value });
+  });
+  imu.forEach(value => {
+    sensordata.push({ sensor: 'imu', ...value });
+  });
 
   res.json(sensordata);
 });
