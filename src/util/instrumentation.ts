@@ -92,10 +92,7 @@ export class InstrumentationClass {
 
 export const Instrumentation = new InstrumentationClass();
 
-export const getGnssDopKpi = (
-  gnssArray: GnssRecord[],
-  validRecords: GnssRecord[],
-): GnssDopKpi => {
+export const getGnssDopKpi = (gnssArray: GnssRecord[]): GnssDopKpi => {
   const dopKpi: DopKpi = {
     min: 99,
     max: 99,
@@ -103,7 +100,6 @@ export const getGnssDopKpi = (
     median: 99,
     sum: 99,
     count: 0,
-    filtered: 0,
   };
   const ephKpi: DopKpi = {
     min: 999,
@@ -112,7 +108,6 @@ export const getGnssDopKpi = (
     median: 999,
     sum: 999,
     count: 0,
-    filtered: 0,
   };
   const gnssKpi: GnssDopKpi = {
     xdop: { ...dopKpi },
@@ -168,8 +163,7 @@ export const getGnssDopKpi = (
             median,
             sum: Number(Number(sum).toFixed(2)),
             count,
-            mean: Number(Number(sum / count).toFixed(2)),
-            filtered: validRecords.length,
+            mean: Number(Number(sum / count).toFixed(2))
           };
         }
       }

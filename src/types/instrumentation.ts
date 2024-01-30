@@ -5,7 +5,6 @@ export type DopKpi = {
   mean: number;
   sum: number;
   count: number;
-  filtered: number;
 };
 
 export type GnssDopKpi = {
