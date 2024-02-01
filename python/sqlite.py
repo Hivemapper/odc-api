@@ -28,7 +28,21 @@ class SQLite:
             is_enabled = cursor.fetchone()
             if not is_enabled or is_enabled[0] == 'false':
                 return []
-            cursor.execute('SELECT image_name, image_path, speed FROM framekms WHERE ml_model_hash is NULL ORDER BY time LIMIT ?', (limit,))
+            
+            cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL')
+            min_framekm_id = cursor.fetchone()[0]
+            
+            if min_framekm_id is None:
+                return []
+
+            cursor.execute('''
+                SELECT image_name, image_path, speed 
+                FROM framekms 
+                WHERE ml_model_hash is NULL AND fkm_id = ? 
+                ORDER BY time 
+                LIMIT ?
+            ''', (min_framekm_id, limit))
+            
             return cursor.fetchall()
 
     def set_frame_ml(self, image_name, ml_model_hash, ml_detections, metrics = {}):

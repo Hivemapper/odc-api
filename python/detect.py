@@ -149,16 +149,21 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
     input_blob = next(iter(session_sm.input_info))
     model_shape = session_sm.input_info[input_blob].input_data.shape[2]
     errors_counter = 0
+    retry_counters = {}
 
     while True:
       image = q.get()
+      image_name = image[0]
 
       try:
         # to switch between two models depending on speed, temporarily disabled
         # is_optimised = image[1] > SPEED_THRESHOLD_FOR_OPTIMISED_MODEL
         # session = session_sm if is_optimised else session_md
-        detections, metrics = detect(image[0], image[1], session_sm, model_shape, input_blob, conf_threshold, nms_threshold, tensor_type)
-        sqlite.set_frame_ml(image[0], model_hash_sm, detections, metrics)
+        if image_name not in retry_counters:
+            retry_counters[image_name] = 0
+        detections, metrics = detect(image_name, image[1], session_sm, model_shape, input_blob, conf_threshold, nms_threshold, tensor_type)
+        sqlite.set_frame_ml(image_name, model_hash_sm, detections, metrics)
+        retry_counters.pop(image_name, None)
       except Exception as e:
 
         errors_counter += 1
@@ -166,8 +171,13 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
           errors_counter = 0
           sqlite.set_service_status('failed')
 
-        sqlite.set_frame_ml(image[0], model_hash_sm, [], {})
-        print(f"Error processing frame {image[0]}. Error: {e}")
+        retry_counters[image_name] += 1
+        if retry_counters[image_name] >= 3:
+            # Record the failure after 3 retries
+            sqlite.set_frame_ml(image_name, 'failed', {'error': str(e)}, {})
+            retry_counters.pop(image_name, None) 
+
+        print(f"Error processing frame {image_name}. Error: {e}")
         try: 
           if "VpualCoreNNExecutor" in str(e) or "NnXlinkPlg" in str(e):
             ie = IECore()
