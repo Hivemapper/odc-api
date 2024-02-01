@@ -15,7 +15,6 @@ export const getUsbState = (): boolean => {
 
 export const UsbStateCheckService: IService = {
   execute: async () => {
-    console.log('checking usb mount');
     const usbMountPoint = parse(USB_WRITE_PATH).dir; 
     
     let usbIsMounted = true;
@@ -25,7 +24,6 @@ export const UsbStateCheckService: IService = {
       usbIsMounted = false;
     }
 
-    console.log(`prev ${previousUsbMountedState} now ${usbIsMounted}`);
     if (previousUsbMountedState != usbIsMounted) {
       Instrumentation.add({
         event: 'DashcamUSBState',
@@ -35,7 +33,6 @@ export const UsbStateCheckService: IService = {
       }),
       previousUsbMountedState = usbIsMounted;
     }
-
   },
   interval: 15000,
 };
