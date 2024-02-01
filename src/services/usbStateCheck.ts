@@ -9,6 +9,10 @@ const awaitableExec = promisify(exec);
 
 let previousUsbMountedState : boolean | null = null;
 
+export const getUsbState = (): boolean => {
+  return Boolean(previousUsbMountedState);
+}
+
 export const UsbStateCheckService: IService = {
   execute: async () => {
     console.log('checking usb mount');
@@ -24,7 +28,7 @@ export const UsbStateCheckService: IService = {
     console.log(`prev ${previousUsbMountedState} now ${usbIsMounted}`);
     if (previousUsbMountedState != usbIsMounted) {
       Instrumentation.add({
-        event: 'USBState',
+        event: 'DashcamUSBState',
         message: JSON.stringify({
           status: usbIsMounted ? 'connected' : 'disconnected',
         })
@@ -33,5 +37,5 @@ export const UsbStateCheckService: IService = {
     }
 
   },
-  interval: 5000,
+  interval: 15000,
 };
