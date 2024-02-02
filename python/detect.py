@@ -139,6 +139,7 @@ def blur(img, boxes, metrics):
 def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_threads):
 
   currently_processing = set()
+  retry_counters = {}
   q = queue.Queue()
   sqlite = SQLite()
 
@@ -149,7 +150,6 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
     input_blob = next(iter(session_sm.input_info))
     model_shape = session_sm.input_info[input_blob].input_data.shape[2]
     errors_counter = 0
-    retry_counters = {}
 
     while True:
       image = q.get()
@@ -182,6 +182,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
           if "VpualCoreNNExecutor" in str(e) or "NnXlinkPlg" in str(e):
             ie = IECore()
             session_sm = ie.import_network(model_file=model_path, device_name=device)
+            time.sleep(2)
         except Exception as err:
            sqlite.set_service_status('failed')
 
@@ -215,7 +216,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
       if len(currently_processing) > 0:
         sqlite.set_service_status('failed')
 
-      time.sleep(3 if len(images) == 0 else 0.1)
+      time.sleep(3 if len(images) == 0 else 1 if len(retry_counters) > 0 else 0.1)
 
   except KeyboardInterrupt:
     print('Watcher stopped by user')

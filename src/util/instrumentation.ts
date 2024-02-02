@@ -119,6 +119,7 @@ export const getGnssDopKpi = (gnssArray: GnssRecord[]): GnssDopKpi => {
     vdop: { ...dopKpi },
     tdop: { ...dopKpi },
     gdop: { ...dopKpi },
+    rf_jam_ind: { ...dopKpi },
     eph: { ...ephKpi },
   };
 
@@ -142,6 +143,7 @@ export const getGnssDopKpi = (gnssArray: GnssRecord[]): GnssDopKpi => {
         'vdop',
         'tdop',
         'gdop',
+        'rf_jam_ind',
         'eph',
       ];
       for (const key of dopKeys) {
