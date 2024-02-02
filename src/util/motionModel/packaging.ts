@@ -117,6 +117,8 @@ export const packMetadata = async (
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
   let privacyModelHash = undefined;
+  let mlFailed = false;
+  let mlError = 'Unknown';
   const privacyDetections: DetectionsByFrame = {};
   const metrics = {
     read_time: 0,
@@ -165,8 +167,8 @@ export const packMetadata = async (
         // detections: m.ml_detections || '',
       };
       validatedFrames.push(frame);
-      privacyModelHash = m.ml_model_hash;
-      if (m.ml_model_hash) {
+
+      if (m.ml_model_hash && !mlFailed) {
         metrics.inference_time += m.ml_inference_time || 0;
         metrics.read_time += m.ml_read_time || 0;
         metrics.write_time += m.ml_write_time || 0;
@@ -187,26 +189,32 @@ export const packMetadata = async (
         } catch (e: unknown) {
           console.log('Error parsing detections');
         }
-        if (detections?.length) {
-          const sanitizedDetections = detections.filter((d: any) => d && d.length === 3 && d[0].length === 4).map((d: any) => {
-            let class_name = 'unknown';
-            try {
-              class_name = CLASS_NAMES[d[2]]
-            } catch {
-              //
+        if (detections?.error || m.ml_model_hash === 'failed') {
+          mlFailed = true;
+          mlError = detections?.error || 'Unknown';
+        } else {
+          privacyModelHash = m.ml_model_hash;
+          if (detections?.length) {
+            const sanitizedDetections = detections.filter((d: any) => d && d.length === 3 && d[0].length === 4).map((d: any) => {
+              let class_name = 'unknown';
+              try {
+                class_name = CLASS_NAMES[d[2]]
+              } catch {
+                //
+              }
+              metrics.num_detections++;
+              return [
+                class_name,
+                Math.max(0, Math.floor(d[0][0])),
+                Math.max(0, Math.floor(d[0][1])),
+                Math.ceil(d[0][2]),
+                Math.ceil(d[0][3]),
+                d[1]
+              ];
+            });
+            if (sanitizedDetections.length) {
+              privacyDetections[validatedFrames.length] = sanitizedDetections;
             }
-            metrics.num_detections++;
-            return [
-              class_name,
-              Math.max(0, Math.floor(d[0][0])),
-              Math.max(0, Math.floor(d[0][1])),
-              Math.ceil(d[0][2]),
-              Math.ceil(d[0][3]),
-              d[1]
-            ];
-          });
-          if (sanitizedDetections.length) {
-            privacyDetections[validatedFrames.length] = sanitizedDetections;
           }
         }
       }
@@ -229,12 +237,12 @@ export const packMetadata = async (
         keyframeDistance: DX,
         resolution: '2k',
         version: '1.8',
-        privacyModelHash,
-        privacyDetections: privacyModelHash && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
+        privacyModelHash: mlFailed ? undefined : privacyModelHash,
+        privacyDetections: privacyModelHash && !mlFailed && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
       },
       frames: validatedFrames,
     };
-    if (privacyModelHash) {
+    if (privacyModelHash && !mlFailed) {
       const firstFrame = framesMetadata[0];
       const lastFrame = framesMetadata[framesMetadata.length - 1];
       const {
@@ -265,6 +273,18 @@ export const packMetadata = async (
           num_detections: metrics.num_detections,
           per_frame_col: Math.round((lastFrame.time - firstFrame.time) / validatedFrames.length),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
+          free_ram: Math.round(freemem() / 1024 / 1024),
+          cpu_usage: getCpuUsage(),
+          name
+        }),
+      });
+    } else if (mlFailed) {
+      Instrumentation.add({
+        event: 'DashcamMLFailed',
+        size: validatedFrames.length,
+        message: JSON.stringify({
+          hash: privacyModelHash,
+          error: mlError,
           free_ram: Math.round(freemem() / 1024 / 1024),
           cpu_usage: getCpuUsage(),
           name

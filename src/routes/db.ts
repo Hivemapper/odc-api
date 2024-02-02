@@ -1,3 +1,4 @@
+import { DB_PATH } from 'config';
 import { Router } from 'express';
 import { readdirSync } from 'fs';
 import { db, runAsync } from 'sqlite';
@@ -54,6 +55,16 @@ router.get('/framekm/count', async (req, res) => {
     const count = await getFramesCount();
     res.send({
       count,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/path', async (req, res) => {
+  try {
+    res.send({
+      path: DB_PATH,
     });
   } catch (error) {
     res.status(500).send({ error });
