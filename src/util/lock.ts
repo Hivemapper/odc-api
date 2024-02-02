@@ -2,14 +2,9 @@ import { exec, ExecException } from 'child_process';
 
 export const DEFAULT_TIME = 1704096000000; // 2024-01-01, dashcam default time is less than this date. So once the date is bigger, we know that system time is set
 let lockTime = 0;
-let isTimeSet = false;
 
-export const ifTimeSet = () => {
-  if (isTimeSet) {
-    return true;
-  }
-  isTimeSet = Date.now() > DEFAULT_TIME;
-  return isTimeSet;
+export const isTimeSet = () => {
+  return Date.now() > DEFAULT_TIME;
 };
 
 export const setLockTime = (ttff: number) => {
