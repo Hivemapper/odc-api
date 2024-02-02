@@ -12,7 +12,7 @@ import {
   getLastTimestamp,
   isFrameKmComplete,
 } from 'sqlite/framekm';
-import { ifTimeSet } from 'util/lock';
+import { isTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
@@ -139,7 +139,7 @@ export class DriveSession {
   }
 
   ready() {
-    return ifTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
+    return isTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
   }
 
   async getLastTime() {

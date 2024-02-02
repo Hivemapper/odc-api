@@ -41,6 +41,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamFirmwareUploaded',
   'DashcamLog',
   'GpsLock',
+  'DashcamUSBState',
 ]);
 
 async function appendEventLog(event: string) {

@@ -175,7 +175,7 @@ export const getExistingFramesMetadata = async (limit = 3): Promise<any[]> => {
       `SELECT * FROM framekms ORDER BY time DESC LIMIT ${limit};`,
     );
 
-    return rows?.length ? rows.reverse() : [];
+    return rows ? rows.reverse() : [];
   } catch (error) {
     console.error('Error fetching frames:', error);
     return [];

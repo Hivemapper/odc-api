@@ -11,7 +11,7 @@ import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { ifTimeSet, setLockTime } from 'util/lock';
+import { isTimeSet, setLockTime } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/gnss';
 import { COLORS, updateLED } from '../util/led';
 import {
@@ -148,7 +148,7 @@ export const HeartBeatService: IService = {
 
       const isCameraActive = await isCameraBridgeServiceActive();
 
-      if (!isCameraActive && ifTimeSet() && hasBeenLockOnce) {
+      if (!isCameraActive && isTimeSet() && hasBeenLockOnce) {
         console.log('Starting the camera', new Date());
         restartCamera();
       }
@@ -194,7 +194,7 @@ export const HeartBeatService: IService = {
           }
           isLock = false;
 
-          if (isCameraActive && (!hasBeenLockOnce || !ifTimeSet())) {
+          if (isCameraActive && (!hasBeenLockOnce || !isTimeSet())) {
             exec(CMD.STOP_CAMERA);
             console.log(
               'Camera intentionally stopped cause Lock is not there yet or Time is not set', Date.now()
@@ -226,7 +226,7 @@ export const HeartBeatService: IService = {
                 cameraLED = COLORS.PINK;
               } else {
                 lastTimeCheckWasPrivate = false;
-                if (ifTimeSet() && lastGpsPoint?.timestamp) {
+                if (isTimeSet() && lastGpsPoint?.timestamp) {
                   if (await isEnoughLightForGnss(lastGpsPoint)) {
                     cameraLED = COLORS.GREEN;
                   } else {

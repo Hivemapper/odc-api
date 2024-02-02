@@ -32,7 +32,7 @@ import previewRouter from './preview';
 import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getLockTime, ifTimeSet } from 'util/lock';
+import { getLockTime, isTimeSet } from 'util/lock';
 import { addAppConnectedLog, getSessionId, readLast2MB } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
@@ -269,7 +269,7 @@ router.get('/sensordata/:since', async (req: Request, res: Response) => {
     return;
   }
 
-  if (!ifTimeSet()) {
+  if (!isTimeSet()) {
     res.statusCode = 400;
     res.json({ err: 'dashcam is not ready' });
     return;
@@ -305,7 +305,7 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
     until = Date.now();
   }
 
-  if (!ifTimeSet()) {
+  if (!isTimeSet()) {
     res.statusCode = 400;
     res.json({ err: 'dashcam is not ready' });
     return;

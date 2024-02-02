@@ -17,8 +17,9 @@ import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
 import console_stamp from 'console-stamp';
 import { Instrumentation } from 'util/instrumentation';
-import { DEFAULT_TIME } from 'util/lock';
+import { isTimeSet } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
+import { UsbStateCheckService } from 'services/usbStateCheck';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -56,7 +57,7 @@ export async function initAppServer(): Promise<Application> {
 
   try {
     setSessionId();
-    if (Date.now() > DEFAULT_TIME) {
+    if (isTimeSet()) {
       Instrumentation.setHotLoad(true);
     }
     Instrumentation.add({
@@ -76,6 +77,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(LoadPrivacyService);
+    serviceRunner.add(UsbStateCheckService);
     // serviceRunner.add(LogDiskUsageService);
 
     // Execute motion model

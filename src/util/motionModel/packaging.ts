@@ -20,6 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { getConfig } from 'sqlite/config';
 import { freemem } from 'os';
+import { getUsbState } from 'services/usbStateCheck';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -87,6 +88,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           name: finalBundleName,
           numFrames: frameKm?.length,
           duration: Date.now() - start,
+          usbInserted: getUsbState(),
           ...framekmTelemetry,
         }),
       });
