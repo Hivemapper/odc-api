@@ -1,3 +1,4 @@
+import { DB_PATH } from 'config';
 import { Router } from 'express';
 import { resetDB } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
@@ -12,6 +13,16 @@ router.get('/gnss/:n', async (req, res) => {
   try {
     const rows = await fetchLastNGnssRecords(Number(n));
     res.send(rows);
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/path', async (req, res) => {
+  try {
+    res.send({
+      path: DB_PATH,
+    });
   } catch (error) {
     res.status(500).send({ error });
   }

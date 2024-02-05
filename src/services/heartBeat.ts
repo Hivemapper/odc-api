@@ -150,7 +150,7 @@ export const HeartBeatService: IService = {
 
       if (!isCameraActive && isTimeSet() && hasBeenLockOnce) {
         console.log('Starting the camera', new Date());
-        startCamera();
+        restartCamera();
       }
 
       let gpsLED: any = null;
