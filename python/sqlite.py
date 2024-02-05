@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-db_name = '/data/recording/data-logger.v1.4.2.db'
+db_name = '/data/recording/data-logger.v1.4.3.db'
 
 class SQLite:
     def __init__(self):
