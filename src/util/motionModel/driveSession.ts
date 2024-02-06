@@ -156,7 +156,7 @@ export class DriveSession {
 
   async getLastTime() {
     if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
-      return this.draftFrameKm.getLastTime();
+      return Math.max(this.draftFrameKm.getLastTime(), Date.now() - 60 * 1000);
     }
     const date = (await getLastTimestamp()) ?? this.startedAt;
     return Math.max(date, Date.now() - 60 * 1000);
