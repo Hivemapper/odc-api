@@ -229,7 +229,7 @@ if __name__ == '__main__':
   parser.add_argument('--model_path', type=str)
   parser.add_argument('--tensor_type', type=str, default='float16')
   parser.add_argument('--device', type=str, default='VPUX')
-  parser.add_argument('--conf_threshold', type=float, default=0.4)
+  parser.add_argument('--conf_threshold', type=float, default=0.2)
   parser.add_argument('--nms_threshold', type=float, default=0.9)
   parser.add_argument('--num_threads', type=int, default=4)
 
