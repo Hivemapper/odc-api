@@ -14,7 +14,7 @@ export async function MotionModelController() {
     let frameKMToProcess = await session.getNextFrameKMToProcess();
     while (frameKMToProcess?.length) {
       await packFrameKm(frameKMToProcess);
-      frameKMToProcess = await session.getNextFrameKMToProcess();
+      frameKMToProcess = await session.getNextFrameKMToProcess(true);
     }
 
     // Do not query sensor data if dashcam session is not ready

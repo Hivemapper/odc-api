@@ -9,9 +9,9 @@ import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from './config';
 
-export const isFrameKmComplete = async (): Promise<boolean> => {
+export const isFrameKmComplete = async (mlEnabled = false): Promise<boolean> => {
   try {
-    const totalFrameKmsInTable = await getFrameKmsCount();
+    const totalFrameKmsInTable = await getFrameKmsCount(mlEnabled);
     return totalFrameKmsInTable > 1;
   } catch (error) {
     console.error('Error checking if framekm is complete:', error);
@@ -32,11 +32,9 @@ export const getFramesCount = async (): Promise<number> => {
   }
 };
 
-export const getFrameKmsCount = async (): Promise<number> => {
-  const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
-  
+export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
-    isDashcamMLEnabled ? ' WHERE ml_model_hash IS NOT NULL' : ''
+    mlEnabled ? ' WHERE ml_model_hash IS NOT NULL AND postponed = 0' : ''
   };`;
 
   try {
@@ -64,16 +62,52 @@ export const getLatestFrameKmId = async (): Promise<number | undefined> => {
   }
 };
 
-export const getFirstFrameKmId = async (): Promise<number | undefined> => {
+export const getFirstFrameKmId = async (mlEnabled = false): Promise<number | undefined> => {
   try {
+    const query = `SELECT MIN(fkm_id) AS firstFkmId FROM framekms${
+      mlEnabled ? ' WHERE postponed = 0' : ''
+    };`;
     const firstFkmIdRow: any = await getAsync(
       db,
-      'SELECT MIN(fkm_id) AS firstFkmId FROM framekms;',
+      query,
     );
     return firstFkmIdRow.length ? firstFkmIdRow[0].firstFkmId : null;
   } catch (error) {
     console.error('Error fetching first fkm_id:', error);
     return undefined;
+  }
+};
+
+export const getFirstPostponedFrameKm = async (): Promise<number | undefined> => {
+  try {
+    const firstPostponed: any = await getAsync(
+      db,
+      `SELECT MIN(fkm_id) AS firstFkmId FROM framekms WHERE postponed = 1;`,
+    );
+    return firstPostponed.length ? firstPostponed[0].firstFkmId : null;
+  } catch (error) {
+    console.error('Error fetching postponed fkm_id:', error);
+    return undefined;
+  }
+};
+
+export const postponeFrameKm = async (frameKmId: number): Promise<boolean> => {
+  try {
+    await runAsync(db, 'UPDATE framekms SET postponed = 1 WHERE fkm_id = ?;', [frameKmId]);
+    return true;
+  } catch (error) {
+    console.error('Error clearing framekms table:', error);
+    return false;
+  }
+};
+
+export const moveFrameKmBackToQueue = async (frameKmId: number): Promise<boolean> => {
+  try {
+    await runAsync(db, 'UPDATE framekms SET postponed = 0, error = "" WHERE fkm_id = ?;', [frameKmId]);
+    return true;
+  } catch (error) {
+    console.error('Error clearing framekms table:', error);
+    return false;
   }
 };
 
