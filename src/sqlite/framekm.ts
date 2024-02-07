@@ -34,7 +34,7 @@ export const getFramesCount = async (): Promise<number> => {
 
 export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
-    mlEnabled ? ' WHERE ml_model_hash IS NOT NULL AND postponed = 0' : ''
+    mlEnabled ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0' : ''
   };`;
 
   try {

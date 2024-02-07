@@ -29,7 +29,7 @@ class SQLite:
             if not is_enabled or is_enabled[0] == 'false':
                 return []
             
-            cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL AND postponed = 0')
+            cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed = 0')
             min_framekm_id = cursor.fetchone()[0]
             
             if min_framekm_id is None:
