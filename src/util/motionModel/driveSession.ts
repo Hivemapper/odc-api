@@ -8,9 +8,12 @@ import {
   addFramesToFrameKm,
   getExistingFramesMetadata,
   getFirstFrameKmId,
+  getFirstPostponedFrameKm,
   getFrameKm,
+  getFrameKmName,
   getLastTimestamp,
   isFrameKmComplete,
+  moveFrameKmBackToQueue,
 } from 'sqlite/framekm';
 import { isTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
@@ -144,15 +147,16 @@ export class DriveSession {
 
   async getLastTime() {
     if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
-      return this.draftFrameKm.getLastTime();
+      return Math.max(this.draftFrameKm.getLastTime(), Date.now() - 60 * 1000);
     }
     const date = (await getLastTimestamp()) ?? this.startedAt;
     return Math.max(date, Date.now() - 60 * 1000);
   }
 
-  async getNextFrameKMToProcess(): Promise<FrameKM | null> {
-    if (await isFrameKmComplete()) {
-      const fkmId = await getFirstFrameKmId();
+  async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
+    const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
+    if (await isFrameKmComplete(isDashcamMLEnabled)) {
+      const fkmId = await getFirstFrameKmId(isDashcamMLEnabled);
       return await getFrameKm(fkmId);
     } else {
       const { isTripTrimmingEnabled, TrimDistance, DX } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'DX']);
@@ -177,6 +181,21 @@ export class DriveSession {
           }
         } else {
           return null;
+        }
+      }
+
+      if (isDashcamMLEnabled && !ignorePostponed) {
+        const firstPostponed = await getFirstPostponedFrameKm();
+        if (firstPostponed) {
+          await moveFrameKmBackToQueue(firstPostponed);
+          const name = await getFrameKmName(firstPostponed);
+          console.log('Moving back to the queue: ', name);
+          Instrumentation.add({
+            event: 'DashcamScheduledFrameKmToReprocess',
+            message: JSON.stringify({
+              name
+            }),
+          });
         }
       }
       return null;

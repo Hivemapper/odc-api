@@ -92,6 +92,8 @@ export type FrameKmRecord = {
     ml_transpose_time?: number;
     ml_letterbox_time?: number;
     frame_idx?: number;
+    postponed?: number;
+    error?: string;
   };
 
   export type ErrorRecord = {

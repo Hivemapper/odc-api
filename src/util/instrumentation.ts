@@ -38,6 +38,8 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamApiError',
   'DashcamPackedFrameKm',
   'DashcamPackedPostProcessedFrameKm',
+  'DashcamMLPostponed',
+  'DashcamScheduledFrameKmToReprocess',
   'DashcamFirmwareUploaded',
   'DashcamLog',
   'GpsLock',

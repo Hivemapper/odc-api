@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-db_name = '/data/recording/data-logger.v1.4.3.db'
+db_name = '/data/recording/data-logger.v1.4.4.db'
 
 class SQLite:
     def __init__(self):
@@ -29,21 +29,27 @@ class SQLite:
             if not is_enabled or is_enabled[0] == 'false':
                 return []
             
-            cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL')
+            cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed = 0')
             min_framekm_id = cursor.fetchone()[0]
             
             if min_framekm_id is None:
                 return []
 
             cursor.execute('''
-                SELECT image_name, image_path, speed 
+                SELECT image_name, image_path, speed, fkm_id 
                 FROM framekms 
-                WHERE ml_model_hash is NULL AND fkm_id = ? 
+                WHERE ml_model_hash is NULL AND (error is NULL OR error = "") AND fkm_id = ? 
                 ORDER BY time 
                 LIMIT ?
             ''', (min_framekm_id, limit))
             
             return cursor.fetchall()
+
+    def set_error(self, image_name, error):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('UPDATE framekms SET error=? WHERE image_name=?', (error, image_name))
+            conn.commit()
 
     def set_frame_ml(self, image_name, ml_model_hash, ml_detections, metrics = {}):
         with self.get_connection() as conn:
@@ -67,6 +73,8 @@ class SQLite:
 
             cursor.execute('UPDATE framekms SET ml_model_hash=?, ml_detections=?, ml_processed_at=?, ml_inference_time=?, ml_read_time=?, ml_blur_time=?, ml_write_time=?, ml_downscale_time=?, ml_upscale_time=?, ml_mask_time=?, ml_composite_time=?, ml_load_time=?, ml_transpose_time=?, ml_letterbox_time=? WHERE image_name=?', (ml_model_hash, ml_detections_json, now, inference_time, read_time, blur_time, write_time, downscale_time, upscale_time, mask_time, composite_time, load_time, transpose_time, letterbox_time, image_name))
             conn.commit()
+
+    
 
     def log_error(self, error):
         with self.get_connection() as conn:

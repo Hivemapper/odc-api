@@ -173,8 +173,8 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
 
         retry_counters[image_name] += 1
         if retry_counters[image_name] >= 3:
-            # Record the failure after 3 retries
-            sqlite.set_frame_ml(image_name, 'failed', {'error': str(e)}, {})
+            # Postpone framekm
+            sqlite.set_error(image_name, str(e))
             retry_counters.pop(image_name, None) 
 
         print(f"Error processing frame {image_name}. Error: {e}")
@@ -229,7 +229,7 @@ if __name__ == '__main__':
   parser.add_argument('--model_path', type=str)
   parser.add_argument('--tensor_type', type=str, default='float16')
   parser.add_argument('--device', type=str, default='VPUX')
-  parser.add_argument('--conf_threshold', type=float, default=0.4)
+  parser.add_argument('--conf_threshold', type=float, default=0.2)
   parser.add_argument('--nms_threshold', type=float, default=0.9)
   parser.add_argument('--num_threads', type=int, default=4)
 

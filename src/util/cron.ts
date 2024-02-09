@@ -1,5 +1,5 @@
 import { execSync, spawn } from 'child_process';
-import { CAMERA_TYPE, CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
+import { API_VERSION, CAMERA_TYPE, CRON_CONFIG, CRON_EXECUTED_TASKS_PATH } from 'config';
 import { appendFile, writeFile } from 'fs';
 import {
   ICronConditionMethod,
@@ -8,6 +8,7 @@ import {
   ICronJobConfig,
 } from 'types';
 import { Instrumentation } from './instrumentation';
+import { resetDB } from 'sqlite/common';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;
@@ -224,12 +225,21 @@ export const createCronJobExecutor = (
       console.log('Command ' + cmd + ' ignored for ' + CAMERA_TYPE);
       return;
     }
+    if (config.firmware && config.firmware !== API_VERSION) {
+      console.log(`Command ${cmd} is set to be executed on ${config.firmware} but dashcam has ${API_VERSION}`);
+      return;
+    }
     try {
       console.log('Command executed: ' + cmd);
       if (config.frequency.oncePerDevice) {
         cacheExecutionForDevice(config.id);
       }
-      const child = spawn(cmd || '', { shell: true });
+      let child: any;
+      if (cmd === 'reset_db') {
+        resetDB();
+      } else {
+        child = spawn(cmd || '', { shell: true });
+      }
       Instrumentation.add({
         event: 'DashcamCommandExecuted',
         message: JSON.stringify({
@@ -241,34 +251,38 @@ export const createCronJobExecutor = (
       if (config.timeout) {
         timeout = setTimeout(() => {
           console.log('Command timed out:', cmd);
-          child.kill(); // Terminate the process after the timeout
+          if (child) {
+            child.kill(); // Terminate the process after the timeout
+          }
         }, config.timeout);
       }
       let output = '';
-      child.stdout.setEncoding('utf8');
-      child.stdout.on('data', data => {
-        output += data.toString();
-      });
-      child.on('error', err => {
-        console.log('Error executing command: ' + err);
-      });
-      child.on('close', async code => {
-        console.log('Command finished: ' + cmd);
-        if (timeout) {
-          clearTimeout(timeout);
-        }
-        if (code !== 0) {
-          console.log('Failed with code: ', code);
-        }
-        if (output && config.log) {
-          console.log(output);
-        }
-        if (Array.isArray(command) && command.length) {
-          executeOneOrMany(command);
-        } else {
-          isRunning = false;
-        }
-      });
+      if (child) {
+        child.stdout.setEncoding('utf8');
+        child.stdout.on('data', (data: any) => {
+          output += data.toString();
+        });
+        child.on('error', (err: any) => {
+          console.log('Error executing command: ' + err);
+        });
+        child.on('close', async (code: number) => {
+          console.log('Command finished: ' + cmd);
+          if (timeout) {
+            clearTimeout(timeout);
+          }
+          if (code !== 0) {
+            console.log('Failed with code: ', code);
+          }
+          if (output && config.log) {
+            console.log(output);
+          }
+          if (Array.isArray(command) && command.length) {
+            executeOneOrMany(command);
+          } else {
+            isRunning = false;
+          }
+        });
+      }
     } catch (e: unknown) {
       console.log('Failed executing command', e);
     }
