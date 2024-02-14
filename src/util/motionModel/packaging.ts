@@ -20,7 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { getUsbState } from 'services/usbStateCheck';
-import { ANONYMOUS_ID_FILE } from 'services/anonymousID';
+import { ANONYMOUS_ID_FILE } from 'config';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');

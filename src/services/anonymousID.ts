@@ -1,8 +1,7 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { IService } from '../types';
 import { generate } from 'shortid';
-
-export const ANONYMOUS_ID_FILE = '/mnt/data/anonymousId.txt';
+import { ANONYMOUS_ID_FILE } from 'config';
 
 export const AnonymousIDService: IService = {
   execute: async () => {

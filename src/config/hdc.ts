@@ -66,6 +66,7 @@ export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/mnt/data/camera_bridge_config.json';
 export const CAMERA_BRIDGE_CONFIG_FILE_HASH =
   '/mnt/data/camera_bridge_config.hash';
+export const ANONYMOUS_ID_FILE = '/mnt/data/anonymousId.txt';
 
 export const CMD = {
   RESTART_CAMERA: 'systemctl restart camera-bridge',
