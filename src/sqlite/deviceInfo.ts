@@ -1,6 +1,8 @@
 import { generate } from 'shortid';
 import { db, getAsync, runAsync } from './index';
 
+const ANONYMOUS_ID_FIELD = "anonymousId";
+
 export const addDeviceInfo = async (): Promise<void> => {
     const anonymousId = generate();
     return new Promise(async (resolve) => {
@@ -11,7 +13,7 @@ export const addDeviceInfo = async (): Promise<void> => {
         `;
         try {
             await runAsync(db, insertSQL, [
-                "anonymousId",
+                ANONYMOUS_ID_FIELD,
                 anonymousId,
             ]);
         } catch (error) {
@@ -25,7 +27,7 @@ export const getAnonymousID = async (): Promise<number> => {
     try {
         const row: any = await getAsync(
             db,
-            "SELECT value FROM deviceInfo WHERE key='anonymousId';",
+            `SELECT value FROM deviceInfo WHERE key=${ANONYMOUS_ID_FIELD};`,
         );
         return row[0]?.value;
     } catch (error) {
