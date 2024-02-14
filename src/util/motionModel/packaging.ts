@@ -4,7 +4,7 @@ import {
   METADATA_ROOT_FOLDER,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
 } from 'config';
-import { existsSync, mkdirSync, promises, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
 import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
