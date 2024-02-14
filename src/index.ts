@@ -46,7 +46,7 @@ export async function initAppServer(): Promise<Application> {
     server = app.listen(PORT, resolve);
   });
   console.log(
-    `Dashcam API (process ${process.pid}) started and listening on hariiiiiiiiiii ${PORT}`,
+    `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
   );
 
   try {
