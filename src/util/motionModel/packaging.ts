@@ -4,7 +4,7 @@ import {
   METADATA_ROOT_FOLDER,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
 } from 'config';
-import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, promises, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
 import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
@@ -20,6 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { getUsbState } from 'services/usbStateCheck';
+import { ANONYMOUS_ID_FILE } from 'services/anonymousID';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -162,6 +163,7 @@ export const packMetadata = async (
   }
   if (numBytes) {
     const deviceInfo = getDeviceInfo();
+    const deviceAnonymousId = readFileSync(ANONYMOUS_ID_FILE,{ encoding: 'utf-8' });
     const metadataJSON = {
       bundle: {
         name,
@@ -175,6 +177,7 @@ export const packMetadata = async (
         keyframeDistance: getConfig().DX,
         resolution: '2k',
         version: '1.8',
+        deviceAnonymousId: deviceAnonymousId,
       },
       frames: validatedFrames,
     };

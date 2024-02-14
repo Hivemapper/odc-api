@@ -20,6 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { isTimeSet } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
 import { UsbStateCheckService } from 'services/usbStateCheck';
+import { AnonymousIDService } from 'services/anonymousID';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -45,7 +46,7 @@ export async function initAppServer(): Promise<Application> {
     server = app.listen(PORT, resolve);
   });
   console.log(
-    `Dashcam API (process ${process.pid}) started and listening on ${PORT}`,
+    `Dashcam API (process ${process.pid}) started and listening on hariiiiiiiiiii ${PORT}`,
   );
 
   try {
@@ -78,6 +79,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(UsbStateCheckService);
+    serviceRunner.add(AnonymousIDService);
     // serviceRunner.add(LogDiskUsageService);
 
     // Execute motion model
