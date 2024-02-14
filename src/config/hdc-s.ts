@@ -11,7 +11,7 @@ export const FRAMES_ROOT_FOLDER = '/tmp/recording/pics';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
-export const DB_PATH = '/data/recording/data-logger.v1.4.2.db';
+export const DB_PATH = '/data/recording/data-logger.v1.4.3.db';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
@@ -67,7 +67,6 @@ export const GPS_MGA_OFFLINE_FILE = '/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/data/mgaoffline.hash';
 export const DATA_LOGGER_SERVICE = 'hivemapper-data-logger';
 export const FOLDER_PURGER_SERVICE = 'hivemapper-folder-purger';
-export const ANONYMOUS_ID_FILE = '/data/anonymousId.txt';
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 

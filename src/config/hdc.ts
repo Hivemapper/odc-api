@@ -11,7 +11,7 @@ export const FRAMEKM_ROOT_FOLDER = '/mnt/data/framekm';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/mnt/data/unprocessed_framekm';
 export const RAW_DATA_ROOT_FOLDER = '/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = '/mnt/data/request';
-export const DB_PATH = '/mnt/data/data-logger.v1.4.2.db';
+export const DB_PATH = '/mnt/data/data-logger.v1.4.3.db';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/mnt/data/mgaoffline.hash';
@@ -66,7 +66,6 @@ export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/mnt/data/camera_bridge_config.json';
 export const CAMERA_BRIDGE_CONFIG_FILE_HASH =
   '/mnt/data/camera_bridge_config.hash';
-export const ANONYMOUS_ID_FILE = '/mnt/data/anonymousId.txt';
 
 export const CMD = {
   RESTART_CAMERA: 'systemctl restart camera-bridge',

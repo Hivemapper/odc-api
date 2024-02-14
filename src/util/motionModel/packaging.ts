@@ -20,7 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { getUsbState } from 'services/usbStateCheck';
-import { ANONYMOUS_ID_FILE } from 'config';
+import { getAnonymousID } from 'sqlite/deviceInfo';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -163,7 +163,7 @@ export const packMetadata = async (
   }
   if (numBytes) {
     const deviceInfo = getDeviceInfo();
-    const deviceAnonymousId = readFileSync(ANONYMOUS_ID_FILE,{ encoding: 'utf-8' });
+    const deviceAnonymousId = await getAnonymousID();
     const metadataJSON = {
       bundle: {
         name,
