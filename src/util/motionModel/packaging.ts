@@ -163,7 +163,7 @@ export const packMetadata = async (
   }
   if (numBytes) {
     const deviceInfo = getDeviceInfo();
-    const deviceAnonymousId = await getAnonymousID();
+    const deviceId = await getAnonymousID();
     const metadataJSON = {
       bundle: {
         name,
@@ -177,7 +177,7 @@ export const packMetadata = async (
         keyframeDistance: getConfig().DX,
         resolution: '2k',
         version: '1.8',
-        deviceAnonymousId: deviceAnonymousId,
+        deviceId: deviceId,
       },
       frames: validatedFrames,
     };

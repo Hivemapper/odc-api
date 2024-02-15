@@ -1,6 +1,7 @@
 import { Database } from 'sqlite3';
 import { DB_PATH } from 'config';
-import { addDeviceInfo, getAnonymousID } from './deviceInfo';
+import { ANONYMOUS_ID_FIELD, insertIntoDeviceInfo } from './deviceInfo';
+import { generate } from 'shortid';
 
 export const connectDB = (callback?: () => void): Database => {
   console.log('[SQLITE] CONNECT DB');
@@ -85,7 +86,8 @@ export const initialise = async (): Promise<void> => {
   await createFrameKMTable();
   await createFrameTable();
   await createDeviceInfoTable();
-  await addDeviceInfo();
+  const anonymousId = generate();
+  await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
 };
 
 export const createFrameKMTable = async (): Promise<void> => {

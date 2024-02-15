@@ -1,10 +1,12 @@
 import { generate } from 'shortid';
 import { db, getAsync, runAsync } from './index';
 
-const ANONYMOUS_ID_FIELD = "anonymousId";
+export const ANONYMOUS_ID_FIELD = "anonymousId";
 
-export const addDeviceInfo = async (): Promise<void> => {
-    const anonymousId = generate();
+export const insertIntoDeviceInfo = async (
+    key: string,
+    value: string,
+): Promise<void> => { 
     return new Promise(async (resolve) => {
         const insertSQL = `
           INSERT OR IGNORE INTO deviceInfo (
@@ -13,8 +15,8 @@ export const addDeviceInfo = async (): Promise<void> => {
         `;
         try {
             await runAsync(db, insertSQL, [
-                ANONYMOUS_ID_FIELD,
-                anonymousId,
+                key,
+                value,
             ]);
         } catch (error) {
             console.error('Error adding row to Device Info table:', error);
