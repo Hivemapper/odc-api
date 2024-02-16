@@ -21,6 +21,7 @@ import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { getUsbState } from 'services/usbStateCheck';
 import { getAnonymousID } from 'sqlite/deviceInfo';
+import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -164,6 +165,7 @@ export const packMetadata = async (
   if (numBytes) {
     const deviceInfo = getDeviceInfo();
     const deviceId = await getAnonymousID();
+    const gnssAuth = (await fetchGnssAuthLogsByTime(validatedFrames[0].systemTime!, validatedFrames[validatedFrames.length - 1].systemTime!, 1))[0]
     const metadataJSON = {
       bundle: {
         name,
@@ -178,6 +180,11 @@ export const packMetadata = async (
         resolution: '2k',
         version: '1.8',
         deviceId: deviceId,
+        gnssAuthBuffer: gnssAuth?.buffer,
+        gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
+        gnssAuthBufferHash: gnssAuth?.buffer_hash,
+        gnssAuthSessionId: gnssAuth?.session_id,
+        gnssAuthSignature: gnssAuth?.signature
       },
       frames: validatedFrames,
     };
