@@ -1,7 +1,5 @@
 import { db, getAsync, runAsync } from './index';
 import { SystemConfig } from 'types/motionModel';
-import { CAMERA_TYPE } from 'config';
-import { CameraType } from 'types';
 
 const defaultConfig: SystemConfig = {
   DX: 8,
@@ -16,7 +14,7 @@ const defaultConfig: SystemConfig = {
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   isCornerDetectionEnabled: true,
   isLightCheckDisabled: false,
-  isDashcamMLEnabled: false,
+  isDashcamMLEnabled: true,
   isGyroCalibrationEnabled: false,
   isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
@@ -161,7 +159,7 @@ export const isValidConfig = (_config: SystemConfig) => {
     typeof _config.GnssFilter === 'object';
 
   _config.isLightCheckDisabled = false;
-  _config.isDashcamMLEnabled = _config.isDashcamMLEnabled && CAMERA_TYPE === CameraType.HdcS; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
+  _config.isDashcamMLEnabled = true; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
   return isValid;
 };
 

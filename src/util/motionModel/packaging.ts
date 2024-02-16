@@ -151,6 +151,8 @@ export const packMetadata = async (
     letterbox_time: 0,
   };
 
+  const grid: any = {};
+
   for (let i = 0; i < framesMetadata.length; i++) {
     const m: FrameKmRecord = framesMetadata[i];
     const bytes = bytesMap[m.image_name || ''];
@@ -198,6 +200,9 @@ export const packMetadata = async (
         metrics.load_time += m.ml_load_time || 0;
         metrics.transpose_time += m.ml_transpose_time || 0;
         metrics.letterbox_time += m.ml_letterbox_time || 0;
+        if (m.ml_grid) {
+          grid[m.ml_grid] = (grid[m.ml_grid] || 0) + 1;
+        }
 
         let detections = [];
         try {
@@ -281,6 +286,7 @@ export const packMetadata = async (
           transpose_time: Math.round(metrics.transpose_time / validatedFrames.length),
           letterbox_time: Math.round(metrics.letterbox_time / validatedFrames.length),
           per_frame_ml: Math.round(total_time / validatedFrames.length),
+          grid: JSON.stringify(grid),
           num_detections: metrics.num_detections,
           per_frame_col: Math.round((lastFrame.time - firstFrame.time) / validatedFrames.length),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),

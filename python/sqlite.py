@@ -2,10 +2,8 @@ import sqlite3
 import json
 from datetime import datetime
 
-db_name = '/data/recording/data-logger.v1.4.4.db'
-
 class SQLite:
-    def __init__(self):
+    def __init__(self, db_name):
         self.db_name = db_name
         self.ensure_wal_mode()
 
@@ -24,16 +22,16 @@ class SQLite:
     def get_frames_for_ml(self, limit=10):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT value FROM config WHERE key = "isDashcamMLEnabled"')
-            is_enabled = cursor.fetchone()
-            if not is_enabled or is_enabled[0] == 'false':
-                return []
+            # cursor.execute('SELECT value FROM config WHERE key = "isDashcamMLEnabled"')
+            # is_enabled = cursor.fetchone()
+            # if not is_enabled or is_enabled[0] == 'false':
+            #     return [], 0
             
             cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed = 0')
             min_framekm_id = cursor.fetchone()[0]
             
             if min_framekm_id is None:
-                return []
+                return [], 0
 
             cursor.execute('''
                 SELECT image_name, image_path, speed, fkm_id 
@@ -43,7 +41,16 @@ class SQLite:
                 LIMIT ?
             ''', (min_framekm_id, limit))
             
-            return cursor.fetchall()
+            images = cursor.fetchall()
+
+            cursor.execute('''
+                SELECT COUNT(*) 
+                FROM framekms 
+                WHERE ml_model_hash is NULL AND (error is NULL OR error = "")
+            ''')
+            total = cursor.fetchall()
+
+            return images, total[0][0]
 
     def set_error(self, image_name, error):
         with self.get_connection() as conn:
@@ -68,13 +75,12 @@ class SQLite:
             composite_time = metrics.get('composite_time', 0)
 
             load_time = metrics.get('load_time', 0)
+            grid = metrics.get('grid', 0)
             letterbox_time = metrics.get('letterbox_time', 0)
             transpose_time = metrics.get('transpose_time', 0)
 
-            cursor.execute('UPDATE framekms SET ml_model_hash=?, ml_detections=?, ml_processed_at=?, ml_inference_time=?, ml_read_time=?, ml_blur_time=?, ml_write_time=?, ml_downscale_time=?, ml_upscale_time=?, ml_mask_time=?, ml_composite_time=?, ml_load_time=?, ml_transpose_time=?, ml_letterbox_time=? WHERE image_name=?', (ml_model_hash, ml_detections_json, now, inference_time, read_time, blur_time, write_time, downscale_time, upscale_time, mask_time, composite_time, load_time, transpose_time, letterbox_time, image_name))
+            cursor.execute('UPDATE framekms SET ml_model_hash=?, ml_detections=?, ml_processed_at=?, ml_inference_time=?, ml_read_time=?, ml_blur_time=?, ml_write_time=?, ml_downscale_time=?, ml_upscale_time=?, ml_mask_time=?, ml_composite_time=?, ml_load_time=?, ml_transpose_time=?, ml_letterbox_time=?, ml_grid=? WHERE image_name=?', (ml_model_hash, ml_detections_json, now, inference_time, read_time, blur_time, write_time, downscale_time, upscale_time, mask_time, composite_time, load_time, transpose_time, letterbox_time, grid, image_name))
             conn.commit()
-
-    
 
     def log_error(self, error):
         with self.get_connection() as conn:
@@ -92,4 +98,3 @@ class SQLite:
             """
             cursor.execute(query, (service_name, status))
             conn.commit()
-

@@ -1,4 +1,4 @@
-import { DB_PATH } from 'config';
+import { CAMERA_TYPE, DB_PATH } from 'config';
 import { Router } from 'express';
 import { readdirSync } from 'fs';
 import { db, runAsync } from 'sqlite';
@@ -8,6 +8,7 @@ import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
 import { fetchLastNGnssRecords } from 'sqlite/gnss';
 import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
+import { CameraType } from 'types';
 
 const router = Router();
 
@@ -83,20 +84,25 @@ router.get('/framekm/clear', async (req, res) => {
   }
 });
 
+let fkm_id = 0;
 router.get('/framekm/add/:name/:speed', async (req, res) => {
   try {
-    const files = readdirSync('/data/python/frames/' + req.params.name);
+    const dummyPath = CAMERA_TYPE === CameraType.Hdc ? '/mnt/data/python/frames/' : '/data/python/frames/';
+    const files = readdirSync(dummyPath + req.params.name);
+    fkm_id++;
     for (const file of files) {
       const insertSQL = `
         INSERT INTO framekms (
-          image_name, image_path, speed, created_at
-        ) VALUES (?, ?, ?, ?);
+          image_name, image_path, speed, created_at, fkm_id
+        ) VALUES (?, ?, ?, ?, ?);
       `;
+
       await runAsync(db, insertSQL, [
         file,
-        '/data/python/frames/' + req.params.name,
+        dummyPath + req.params.name,
         Number(req.params.speed),
         Date.now(),
+        fkm_id
       ]);
     }
     
