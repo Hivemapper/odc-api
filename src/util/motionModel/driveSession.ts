@@ -35,7 +35,7 @@ import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 let sessionTrimmed = false;
 
 export class DriveSession {
-  startedAt = new Date();
+  startedAt = 1708122784000;
   frameKmsToProcess: DraftFrameKm[] = [];
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
@@ -142,15 +142,16 @@ export class DriveSession {
   }
 
   ready() {
-    return isTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
+    return true;
   }
 
   async getLastTime() {
     if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
-      return Math.max(this.draftFrameKm.getLastTime(), Date.now() - 60 * 1000);
+      return this.draftFrameKm.getLastTime();
     }
-    const date = (await getLastTimestamp()) ?? this.startedAt;
-    return Math.max(date, Date.now() - 60 * 1000);
+    const date = (await getLastTimestamp()) || this.startedAt;
+    console.log(await getLastTimestamp(), this.startedAt, date);
+    return date;
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
@@ -210,6 +211,7 @@ export class DriveSession {
     imu: ImuRecord[],
     images: IImage[],
   ) {
+    return false;
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
       if (this.possibleGnssImuProblemCounter === 3) {

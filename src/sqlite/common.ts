@@ -3,7 +3,7 @@ import { GnssRecord, ImuRecord } from 'types/sqlite';
 import { fetchGnssLogsByTime } from './gnss';
 import { fetchImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
-import { insertFrames } from './frames';
+import { getFramesFromDb, insertFrames } from './frames';
 import { db, runAsync } from 'sqlite';
 import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
 import { GnssDopKpi } from 'types/instrumentation';
@@ -19,20 +19,22 @@ export const querySensorData = async (
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[] }> => {
   try {
     const start = Date.now();
-    console.log('Getting sensor data for: ', new Date(since));
 
     // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
     // Note: if `until` argument is explicitly provided, we do not restrict it.
+
     if (until === undefined) {
       until = Math.min(start, since + 120 * 1000);
     }
+    console.log('Getting sensor data for: ', new Date(since));
 
     const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {
         const imuSince = gnss[0].system_time;
         const imuUntil = gnss[gnss.length - 1].system_time;
         const imu = await fetchImuLogsByTime(imuSince, imuUntil);
-        const images = await getFramesFromFS(imuSince, imuUntil);
+        // const images = await getFramesFromFS(imuSince, imuUntil);
+        const images = await getFramesFromDb(imuSince, imuUntil);
         const duration = (imuUntil - imuSince) / 1000;
       if (duration > 0) {
         const GnssFreq = gnss.length / duration;

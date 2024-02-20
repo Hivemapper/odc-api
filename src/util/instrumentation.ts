@@ -67,13 +67,20 @@ async function appendEventLog(event: string) {
 
 export class InstrumentationClass {
   private isHotLoad: boolean;
+  private cutReasons: any[] = []
   constructor() {
     this.isHotLoad = false;
+  }
+  public getCutReasons() {
+    return this.cutReasons;
   }
   public add(record: InstrumentationData) {
     if (!VALID_DASHCAM_EVENTS.has(record.event)) {
       console.log('Invalid event name: ' + record.event);
       return;
+    }
+    if (record.event === 'DashcamCutReason') {
+      this.cutReasons.push(record.message);
     }
     try {
       getCpuLoad((cpuLoad: number) => {

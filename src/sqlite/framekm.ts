@@ -32,6 +32,26 @@ export const getFramesCount = async (): Promise<number> => {
   }
 };
 
+export const getAllFrameKmLength = async (): Promise<number[]> => {
+  try {
+    const query = `
+      SELECT fkm_id, COUNT(*) as count
+      FROM framekms
+      GROUP BY fkm_id
+      ORDER BY fkm_id;
+    `;
+
+    // Use getAsync to execute the query
+    const rows: any = await getAsync(db, query);
+
+    // Extract the count from each row and return it as an array
+    return rows?.length && rows.map((row: any) => row.count);
+  } catch (error) {
+    console.error('Error retrieving framekms lengths:', error);
+    return [];
+  }
+};
+
 export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
     mlEnabled ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0' : ''
@@ -298,14 +318,17 @@ export const addFramesToFrameKm = async (
             UNPROCESSED_FRAMEKM_ROOT_FOLDER,
             String(fkm_id),
           );
-          if (!existsSync(destination)) {
-            await promises.mkdir(destination, { recursive: true });
-          }
-          await promises.copyFile(
-            join(FRAMES_ROOT_FOLDER, row.image_name),
-            join(destination, row.image_name),
-          );
+          // if (!existsSync(destination)) {
+          //   await promises.mkdir(destination, { recursive: true });
+          // }
+          // await promises.copyFile(
+          //   join(FRAMES_ROOT_FOLDER, row.image_name),
+          //   join(destination, row.image_name),
+          // );
           console.log('About to add frame: ', row.image_name, fkm_id, frame_idx);
+
+          // REMOVE!!!
+          row.altitude = 0;
 
           await runAsync(db, insertSQL, [
             fkm_id,

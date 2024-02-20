@@ -3,19 +3,20 @@ import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from 'sqlite/config';
+import { getAllFrameKmLength } from 'sqlite/framekm';
 
-const QUERY_WINDOW_SIZE = 10 * 1000;
+const QUERY_WINDOW_SIZE = 1 * 1000;
 
 let session = new DriveSession();
 
 export async function MotionModelController() {
   try {
     // Pack any FrameKMs if ready
-    let frameKMToProcess = await session.getNextFrameKMToProcess();
-    while (frameKMToProcess?.length) {
-      await packFrameKm(frameKMToProcess);
-      frameKMToProcess = await session.getNextFrameKMToProcess(true);
-    }
+    // let frameKMToProcess = await session.getNextFrameKMToProcess();
+    // while (frameKMToProcess?.length) {
+    //   await packFrameKm(frameKMToProcess);
+    //   frameKMToProcess = await session.getNextFrameKMToProcess(true);
+    // }
 
     // Do not query sensor data if dashcam session is not ready
     if (!session.ready()) {
@@ -34,6 +35,9 @@ export async function MotionModelController() {
 
     await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
+
+    console.log(await getAllFrameKmLength());
+    console.log(Instrumentation.getCutReasons());
 
     // TODO: utilise raw logs: collect, pack, etc here
   } catch (e: unknown) {

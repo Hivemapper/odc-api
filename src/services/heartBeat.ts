@@ -58,6 +58,7 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 };
 
 export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
+  return false;
   try {
     const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
       encoding: 'utf-8',

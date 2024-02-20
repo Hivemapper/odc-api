@@ -72,7 +72,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(UpdateMotionModelConfigService);
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(IntegrityCheckService);
-    serviceRunner.add(DeviceInfoService);
+    // serviceRunner.add(DeviceInfoService);
     serviceRunner.add(InitIMUCalibrationService);
     serviceRunner.add(InitCronService);
     serviceRunner.add(TrackDownloadDebt);

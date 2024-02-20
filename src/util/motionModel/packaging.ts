@@ -44,7 +44,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       console.log('SHORT FRAMEKM THROWN AWAY', frameKm.length);
       if (frameKm.length) {
         await deleteFrameKm(frameKm[0].fkm_id);
-        await promises.rmdir(framesFolder, { recursive: true });
+        // await promises.rmdir(framesFolder, { recursive: true });
       }
       return;
     }
@@ -65,52 +65,52 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
 
-    const start = Date.now();
-    const bytesMap = await promiseWithTimeout(
-      concatFrames(
-        frameKm.map((item: FrameKmRecord) => item.image_name || ''),
-        finalBundleName,
-        0,
-        framesFolder
-      ),
-      15000,
-    );
-    let totalBytes = 0;
-    if (bytesMap && Object.keys(bytesMap).length) {
-      totalBytes = (Object.values(bytesMap) as number[]).reduce(
-        (acc: number, curr: number | undefined) => acc + (Number(curr) || 0),
-        0,
-      );
-      await promiseWithTimeout(
-        packMetadata(finalBundleName, frameKm, bytesMap),
-        5000,
-      );
+    // const start = Date.now();
+    // const bytesMap = await promiseWithTimeout(
+    //   concatFrames(
+    //     frameKm.map((item: FrameKmRecord) => item.image_name || ''),
+    //     finalBundleName,
+    //     0,
+    //     framesFolder
+    //   ),
+    //   15000,
+    // );
+    // let totalBytes = 0;
+    // if (bytesMap && Object.keys(bytesMap).length) {
+    //   totalBytes = (Object.values(bytesMap) as number[]).reduce(
+    //     (acc: number, curr: number | undefined) => acc + (Number(curr) || 0),
+    //     0,
+    //   );
+    //   await promiseWithTimeout(
+    //     packMetadata(finalBundleName, frameKm, bytesMap),
+    //     5000,
+    //   );
 
-      let framekmTelemetry: FrameKMTelemetry = {
-        systemtime: Date.now(),
-      };
-      try {
-        framekmTelemetry = await promiseWithTimeout(
-          getFrameKmTelemetry(framesFolder, frameKm),
-          5000,
-        );
-      } catch (error: unknown) {
-        console.log('Error getting telemetry', error);
-      }
-      Instrumentation.add({
-        event: 'DashcamPackedFrameKm',
-        size: totalBytes,
-        message: JSON.stringify({
-          name: finalBundleName,
-          numFrames: frameKm?.length,
-          duration: Date.now() - start,
-          usbInserted: getUsbState(),
-          ...framekmTelemetry,
-        }),
-      });
-    }
+    //   let framekmTelemetry: FrameKMTelemetry = {
+    //     systemtime: Date.now(),
+    //   };
+    //   try {
+    //     framekmTelemetry = await promiseWithTimeout(
+    //       getFrameKmTelemetry(framesFolder, frameKm),
+    //       5000,
+    //     );
+    //   } catch (error: unknown) {
+    //     console.log('Error getting telemetry', error);
+    //   }
+    //   Instrumentation.add({
+    //     event: 'DashcamPackedFrameKm',
+    //     size: totalBytes,
+    //     message: JSON.stringify({
+    //       name: finalBundleName,
+    //       numFrames: frameKm?.length,
+    //       duration: Date.now() - start,
+    //       usbInserted: getUsbState(),
+    //       ...framekmTelemetry,
+    //     }),
+    //   });
+    // }
     await deleteFrameKm(frameKm[0].fkm_id);
-    await promises.rmdir(framesFolder, { recursive: true });
+    // await promises.rmdir(framesFolder, { recursive: true });
     
   } catch (error: unknown) {
     Instrumentation.add({
@@ -202,6 +202,8 @@ export const packMetadata = async (
         metrics.letterbox_time += m.ml_letterbox_time || 0;
         if (m.ml_grid) {
           grid[m.ml_grid] = (grid[m.ml_grid] || 0) + 1;
+        } else {
+          grid[1] = (grid[1] || 0) + 1;
         }
 
         let detections = [];

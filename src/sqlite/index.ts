@@ -81,6 +81,7 @@ export const runSchemaAsync = (db: Database, sql: string) => {
 };
 
 export const initialise = async (): Promise<void> => {
+  await runSchemaAsync(db, "PRAGMA journal_mode=WAL;");
   await createFrameKMTable();
   await createHealthStateTable();
   await createFrameTable();
@@ -137,6 +138,7 @@ export const createFrameKMTable = async (): Promise<void> => {
   );`;
   try {
     await runSchemaAsync(db, createTableSQL);
+    await runSchemaAsync(db, 'DELETE FROM framekms');
   } catch (error) {
     console.error('Error during initialisation of tables:', error);
     throw error;

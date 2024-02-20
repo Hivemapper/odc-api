@@ -26,6 +26,9 @@ const defaultConfig: SystemConfig = {
 const cachedConfig: { [key: string]: any } = {};
 
 export const getConfig = async (keys: string | string[], ignoreCache = false) => {
+  if (keys === 'isDashcamMLEnabled') {
+    return false;
+  }
   const selectSQL = Array.isArray(keys)
     ? `SELECT key, value FROM config WHERE key IN (${keys
         .map(() => '?')

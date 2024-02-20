@@ -1,8 +1,6 @@
-import {
-    ML_MODELS, ML_ROOT_FOLDER,
-  } from '../config';
-  import { Router } from 'express';
-  import { existsSync, mkdirSync, renameSync, writeFileSync } from 'fs';
+
+import { Router } from 'express';
+import { existsSync, mkdirSync, renameSync, writeFileSync } from 'fs';
 //import { restartPrivacyProcess } from 'services/privacyWatcher';
 
   const router = Router();
@@ -15,21 +13,21 @@ import {
    */
   router.post('/commit', (req, res) => {
     try {
-      if (!req.body.type || !req.body.hash || !req.body.path) {
-        res.json({ error: 'need to provide model type, tmp file path & updated hash' });
-        return;
-      }
-      const modelPath = ML_MODELS[req.body.type];
-      if (!modelPath) {
-        res.json({ error: 'model type is not supported' });
-        return;
-      }
-      if (!existsSync(ML_ROOT_FOLDER)) {
-        mkdirSync(ML_ROOT_FOLDER);
-      }
-      renameSync(req.body.path, modelPath);
-      writeFileSync(modelPath + '.hash', req.body.hash, { encoding: 'utf-8' });
-      // restartPrivacyProcess();
+      // if (!req.body.type || !req.body.hash || !req.body.path) {
+      //   res.json({ error: 'need to provide model type, tmp file path & updated hash' });
+      //   return;
+      // }
+      // const modelPath = ML_MODELS[req.body.type];
+      // if (!modelPath) {
+      //   res.json({ error: 'model type is not supported' });
+      //   return;
+      // }
+      // if (!existsSync(ML_ROOT_FOLDER)) {
+      //   mkdirSync(ML_ROOT_FOLDER);
+      // }
+      // renameSync(req.body.path, modelPath);
+      // writeFileSync(modelPath + '.hash', req.body.hash, { encoding: 'utf-8' });
+      // // restartPrivacyProcess();
       res.json({ done: true } );
     } catch (error: unknown) {
       res.json({ error });
