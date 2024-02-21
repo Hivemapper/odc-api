@@ -1,5 +1,7 @@
 import { Database } from 'sqlite3';
 import { DB_PATH } from 'config';
+import { ANONYMOUS_ID_FIELD, insertIntoDeviceInfo } from './deviceInfo';
+import { generate } from 'shortid';
 
 export const connectDB = (callback?: () => void): Database => {
   console.log('[SQLITE] CONNECT DB');
@@ -83,6 +85,9 @@ export const runSchemaAsync = (db: Database, sql: string) => {
 export const initialise = async (): Promise<void> => {
   await createFrameKMTable();
   await createFrameTable();
+  await createDeviceInfoTable();
+  const anonymousId = generate();
+  await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
 };
 
 export const createFrameKMTable = async (): Promise<void> => {
@@ -134,6 +139,20 @@ export const createFrameTable = async (): Promise<void> => {
     await runSchemaAsync(db, createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the frames table:', error);
+    throw error;
+  }
+};
+
+export const createDeviceInfoTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS deviceInfo (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+    );`;
+  try {
+    await runSchemaAsync(db, createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the device info table:', error);
     throw error;
   }
 };

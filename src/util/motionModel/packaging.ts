@@ -20,6 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from './config';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { getUsbState } from 'services/usbStateCheck';
+import { getAnonymousID } from 'sqlite/deviceInfo';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -162,6 +163,7 @@ export const packMetadata = async (
   }
   if (numBytes) {
     const deviceInfo = getDeviceInfo();
+    const deviceId = await getAnonymousID();
     const metadataJSON = {
       bundle: {
         name,
@@ -175,6 +177,7 @@ export const packMetadata = async (
         keyframeDistance: getConfig().DX,
         resolution: '2k',
         version: '1.8',
+        deviceId: deviceId,
       },
       frames: validatedFrames,
     };
