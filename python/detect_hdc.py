@@ -46,7 +46,11 @@ def combine_images(images, grid_size, model_size):
             # Read and resize image to fit in the grid cell
             img = cv2.imread(img_path)
             orig_images.append(img)
-            resized_img = image.letterbox(img, (cell_width, cell_height))[0]
+            if img is None:
+              # if input img is broken or empty
+              resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
+            else:
+              resized_img = image.letterbox(img, (cell_width, cell_height))[0]
         else:
             # Use an empty (black) image for spots without images
             resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
