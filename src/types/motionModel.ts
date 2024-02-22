@@ -44,6 +44,10 @@ export type SystemConfig = {
   isAccelerometerCalibrationEnabled: boolean;
   privacyRadius?: number;
   modelHashes?: Record<string, string>;
+  PrivacyModelPath?: string;
+  PrivacyModelHash?: string;
+  PrivacyConfThreshold?: number;
+  PrivacyNmsThreshold?: number;
 };
 
 export type GNSS = {

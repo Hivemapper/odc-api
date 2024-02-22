@@ -1,3 +1,4 @@
+import { ML_MODEL_PATH } from 'config';
 import { db, getAsync, runAsync } from './index';
 import { SystemConfig } from 'types/motionModel';
 
@@ -21,6 +22,10 @@ const defaultConfig: SystemConfig = {
   TrimDistance: 100,
   FrameKmLengthMeters: 1000,
   privacyRadius: 200,
+  PrivacyModelPath: ML_MODEL_PATH,
+  PrivacyModelHash: '',
+  PrivacyConfThreshold: 0.3,
+  PrivacyNmsThreshold: 0.9
 };
 
 const cachedConfig: { [key: string]: any } = {};

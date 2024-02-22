@@ -14,14 +14,15 @@ width = 2028
 height = 1024
 image_size_px = width * height
 
-def xywh2xyxy(boxes):
-  x, y, w, h = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
+def xywh2xyxy(box):
+    x, y, w, h = box
 
-  x_min = (x - w / 2) * width
-  y_min = (y - h / 2) * height
-  x_max = (x + w / 2) * width
-  y_max = (y + h / 2) * height
-  return np.stack([x_min, y_min, x_max, y_max], axis=1).astype(np.float32)
+    x_min = (x - w / 2) * width
+    y_min = (y - h / 2) * height
+    x_max = (x + w / 2) * width
+    y_max = (y + h / 2) * height
+
+    return np.array([x_min, y_min, x_max, y_max], dtype=np.float32)
 
 def combine_images(images, grid_size, model_size):
     # Size of each cell in the grid
@@ -121,10 +122,14 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
           prediction = output[0, :, i]
           scores = prediction[4:]  # Extract class probabilities
           max_score = np.max(scores)  # Find the maximum score (confidence)
-          if max_score >= 0.4:
+          if max_score >= conf_threshold:
               class_id = np.argmax(scores)  # Determine the class with the highest probability
-              box = prediction[:4]  # Extract bounding box coordinates
-              predictions.append([class_id, max_score, *box])
+              box = xywh2xyxy(prediction[:4])  # Extract and convert bounding box coordinates
+              # filter out large boxes and boxes on the hood
+              if box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height:
+                continue
+              else:
+                predictions.append([class_id, max_score, *box])
 
       # Convert to numpy array
       predictions = np.array(predictions)
@@ -133,17 +138,14 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
       scores = []
       class_ids = []
       if len(predictions) > 0:
-        # Extract and convert bounding boxes
-        boxes = xywh2xyxy(predictions[:, 2:6])
-
         # Perform Non-maximum suppression
-        indices = cv2.dnn.NMSBoxes(boxes.tolist(), predictions[:, 1].tolist(), conf_threshold, nms_threshold)
+        indices = cv2.dnn.NMSBoxes(predictions[:, 2:6].tolist(), predictions[:, 1].tolist(), conf_threshold, nms_threshold)
 
         # Extract the final predictions after NMS
         final_predictions = predictions[indices.flatten()]
-        boxes = xywh2xyxy(final_predictions[:, 2:6])
-        scores = predictions[:, 1].tolist()
-        class_ids = predictions[:, 0].astype(int).tolist()
+        boxes = final_predictions[:, 2:6]
+        scores = final_predictions[:, 1].tolist()
+        class_ids = final_predictions[:, 0].astype(int).tolist()
 
       if len(scores) == 0:
           for i, image in enumerate(images):
@@ -205,9 +207,6 @@ def blur(img, boxes, metrics):
   if blur_per_boxes:
     for box in boxes:
       box = box.astype(int)
-      # filter out large boxes and boxes on the hood
-      if box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height:
-        continue
       roi = img[box[1]:box[3], box[0]:box[2]]
       roi_downscale_width = int(roi.shape[1] * 0.2)
       roi_downscale_height = int(roi.shape[0] * 0.2)
@@ -354,7 +353,7 @@ if __name__ == '__main__':
   parser.add_argument('--model_path', type=str)
   parser.add_argument('--conf_threshold', type=float, default=0.3)
   parser.add_argument('--nms_threshold', type=float, default=0.9)
-  parser.add_argument('--num_threads', type=int, default=4)
+  parser.add_argument('--num_threads', type=int, default=6)
 
   args = parser.parse_args()
 

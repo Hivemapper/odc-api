@@ -269,6 +269,8 @@ export const packMetadata = async (
       } = metrics;
       const total_time = (load_time + inference_time + write_time + blur_time) / 4; // 4 threads
 
+      const { PrivacyConfThreshold, PrivacyNmsThreshold } = await getConfig(['PrivacyConfThreshold', 'PrivacyNmsThreshold']);
+
       Instrumentation.add({
         event: 'DashcamML',
         size: validatedFrames.length,
@@ -292,6 +294,8 @@ export const packMetadata = async (
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
           free_ram: Math.round(freemem() / 1024 / 1024),
           cpu_usage: getCpuUsage(),
+          conf_threshold: PrivacyConfThreshold || 0.3,
+          nms_threshold: PrivacyNmsThreshold || 0.9,
           name
         }),
       });

@@ -53,6 +53,7 @@ export const UPLOAD_PATH = __dirname + '/../../../data/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/home/root/cron_config';
 export const ML_ROOT_FOLDER = '/data/models';
+export const ML_MODEL_PATH = '/opt/object-detection/model.blob';
 export const ML_MODELS: Record<string, string> = {
   PVC: '/data/recording/models/pvc.onnx'
 }

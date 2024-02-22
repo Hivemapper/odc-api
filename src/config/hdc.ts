@@ -54,6 +54,7 @@ export const NETWORK_BOOT_CONFIG_PATH =
   '/mnt/data/wifi.cfg';
 export const DEVICE_INFO_LOG_FILE = '/tmp/dump.bin';
 export const CRON_CONFIG = '/mnt/data/cron_config';
+export const ML_MODEL_PATH = '/opt/dashcam/bin/n640_float16.tflite';
 export const ML_MODELS: Record<string, string> = {
   PVC: '/mnt/data/pvc.onnx'
 }

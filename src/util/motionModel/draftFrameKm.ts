@@ -283,7 +283,7 @@ export class DraftFrameKm {
           }
   
           // Making sure it's not too close to previous frame
-          const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 1 : 0.5;
+          const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 2 : 0.5;
           if (
             !prevSelected ||
             distance(prevSelected, frameCoordinates) > DX - allowed_gap
