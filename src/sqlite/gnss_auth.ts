@@ -13,8 +13,6 @@ export const fetchGnssAuthLogsByTime  = async (from: number, to?: number, limit?
         args.push(convertTimestampToDbFormat(to));
     }
 
-    console.log('gnssauth here');
-
     if (limit) {
         query += ` LIMIT ?`
         args.push(String(limit));
