@@ -3,7 +3,6 @@ import { GnssAuthRecord } from 'types/sqlite';
 import { convertTimestampToDbFormat } from 'util/index';
 
 
-// Only grabs the first one
 export const fetchGnssAuthLogsByTime  = async (from: number, to?: number, limit?: number): Promise<GnssAuthRecord[]> => {
     let query = `SELECT * FROM gnss_auth WHERE system_time > ?`;
     const args = [convertTimestampToDbFormat(from)];
