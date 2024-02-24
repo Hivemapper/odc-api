@@ -48,6 +48,9 @@ export type SystemConfig = {
   PrivacyModelHash?: string;
   PrivacyConfThreshold?: number;
   PrivacyNmsThreshold?: number;
+  PrivacyNumThreads?: number;
+  HdcSwappiness?: number;
+  HdcsSwappiness?: number;
 };
 
 export type GNSS = {

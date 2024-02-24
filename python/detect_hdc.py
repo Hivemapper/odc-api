@@ -44,13 +44,20 @@ def combine_images(images, grid_size, model_size):
             img_path = image.get_path(images[i][0], images[i][1], "/tmp/recording/pic")
 
             # Read and resize image to fit in the grid cell
-            img = cv2.imread(img_path)
+            img = None
+            try: 
+              img = cv2.imread(img_path)
+            except Exception as e:
+              print(e)
             orig_images.append(img)
             if img is None:
               # if input img is broken or empty
               resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
             else:
-              resized_img = image.letterbox(img, (cell_width, cell_height))[0]
+              if grid_size > 1:
+                resized_img = cv2.resize(img, (cell_width, cell_height), interpolation=cv2.INTER_NEAREST)
+              else:
+                resized_img = image.letterbox(img, (cell_width, cell_height))[0]
         else:
             # Use an empty (black) image for spots without images
             resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
@@ -64,14 +71,16 @@ def combine_images(images, grid_size, model_size):
 
     return combined_img, orig_images
 
-def transform_box(box, w_offset=0, h_offset=0, multiplier=2):
+def transform_box(box, w_offset=0, h_offset=0, grid_size=1):
   ratio = width / height
-  padding = (width - height) / 2 
+  padding = (width - height) / 2 if grid_size == 1 else 0
+  x_multiplier = grid_size
+  y_multiplier = grid_size * ratio if grid_size == 1 else grid_size
   new_box = np.floor(np.array([
-    (box[0] - w_offset) * multiplier,
-    (box[1] - h_offset) * multiplier * ratio - padding,
-    (box[2] - w_offset) * multiplier,
-    (box[3] - h_offset) * multiplier * ratio - padding
+    (box[0] - w_offset) * x_multiplier,
+    (box[1] - h_offset) * y_multiplier - padding,
+    (box[2] - w_offset) * x_multiplier,
+    (box[3] - h_offset) * y_multiplier - padding
   ])).astype(int)
   
   # Making sure all the box coordinates are within the boundaries
@@ -258,15 +267,17 @@ def blur(img, boxes, metrics):
 
     return result, metrics
 
-def main(model_path, conf_threshold, nms_threshold, num_threads):
+def main():
 
   retry_counters = {}
   q = queue.Queue()
   sqlite = SQLite('/mnt/data/data-logger.v1.4.5.db')
+  config = sqlite.get_privacy_config()
+  print(config)
 
   def worker():
-    model = interpreter.Interpreter(model_path)
-    model_hash = 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1'
+    model = interpreter.Interpreter(config["PrivacyModelPath"])
+    model_hash = config["PrivacyModelHash"]
     model.allocate_tensors()
     input_details = model.get_input_details()
     output_details = model.get_output_details()
@@ -282,7 +293,7 @@ def main(model_path, conf_threshold, nms_threshold, num_threads):
             if image_name not in retry_counters:
                 retry_counters[image_name] = 0
 
-          unprocessed_images, error = detect(images, model, input_details, output_details, conf_threshold, nms_threshold, sqlite, model_hash)
+          unprocessed_images, error = detect(images, model, input_details, output_details, config["PrivacyConfThreshold"], config["PrivacyNmsThreshold"], sqlite, model_hash)
           for image in enumerate(images):
             image_name = image[0]
             if image_name in unprocessed_images:
@@ -308,7 +319,7 @@ def main(model_path, conf_threshold, nms_threshold, num_threads):
       q.task_done()
 
   # init threads
-  for i in range(num_threads):
+  for i in range(config["PrivacyNumThreads"]):
     threading.Thread(target=worker, daemon=True).start()
 
   # init watcher
@@ -321,13 +332,13 @@ def main(model_path, conf_threshold, nms_threshold, num_threads):
       print(total)
       
       # Depending on how big is the processing queue,
-      if total > 30:
+      if total > 40:
         # split on groups of 9
         images = [images[i:i + 9] for i in range(0, len(images), 9)]
         # push every group to queue
         for group in images:
           q.put(group)
-      elif total > 10:
+      elif total > 15:
         # split on groups of 4
         images = [images[i:i + 4] for i in range(0, len(images), 4)]
         # push every group to queue
@@ -349,17 +360,4 @@ def main(model_path, conf_threshold, nms_threshold, num_threads):
     raise e
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--model_path', type=str)
-  parser.add_argument('--conf_threshold', type=float, default=0.3)
-  parser.add_argument('--nms_threshold', type=float, default=0.9)
-  parser.add_argument('--num_threads', type=int, default=6)
-
-  args = parser.parse_args()
-
-  main(
-    args.model_path,
-    args.conf_threshold,
-    args.nms_threshold,
-    args.num_threads
-  )
+  main()

@@ -1,6 +1,8 @@
 import { ML_MODEL_PATH } from 'config';
 import { db, getAsync, runAsync } from './index';
 import { SystemConfig } from 'types/motionModel';
+import { exec } from 'child_process';
+import { IServiceRestart } from 'types';
 
 const defaultConfig: SystemConfig = {
   DX: 8,
@@ -15,7 +17,7 @@ const defaultConfig: SystemConfig = {
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   isCornerDetectionEnabled: true,
   isLightCheckDisabled: false,
-  isDashcamMLEnabled: true,
+  isDashcamMLEnabled: false,
   isGyroCalibrationEnabled: false,
   isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
@@ -23,9 +25,12 @@ const defaultConfig: SystemConfig = {
   FrameKmLengthMeters: 1000,
   privacyRadius: 200,
   PrivacyModelPath: ML_MODEL_PATH,
-  PrivacyModelHash: '',
-  PrivacyConfThreshold: 0.3,
-  PrivacyNmsThreshold: 0.9
+  PrivacyModelHash: 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1',
+  PrivacyConfThreshold: 0.2,
+  PrivacyNmsThreshold: 0.9,
+  PrivacyNumThreads: 6,
+  HdcSwappiness: 20,
+  HdcsSwappiness: 60,
 };
 
 const cachedConfig: { [key: string]: any } = {};
@@ -118,15 +123,48 @@ export const updateConfig = async (
     valueTuples.push(`(?, ?)`);
     queryParams.push(key, JSON.stringify(configItems[key as keyof SystemConfig]));
   }
-
   insertSQL += valueTuples.join(', ');
 
   try {
     await runAsync(db, insertSQL, queryParams);
+    await shouldRestartServices(configItems);
   } catch (error) {
     console.error('Error during bulk inserting/updating config table:', error);
   }
 };
+
+export const shouldRestartServices = async (configItems: SystemConfig) => {
+  const servicesToRestart: IServiceRestart = {};
+
+  // If any of those keys updated, we need to restart object-detection service
+  const objectDetectionConfigKeys = [
+    'isDashcamMLEnabled', 
+    'PrivacyModelPath', 
+    'PrivacyModelHash', 
+    'PrivacyConfThreshold', 
+    'PrivacyNmsThreshold', 
+    'PrivacyNumThreads'
+  ];
+  // const dataLoggerConfigKeys = ['...']
+
+  for (const key of Object.keys(configItems)) {
+    if (objectDetectionConfigKeys.includes(key)) {
+      const currentVal = await getConfig(key);
+      const newVal = configItems[key as keyof SystemConfig];
+      if (currentVal !== newVal) {
+        servicesToRestart.objectDetection = true;
+      }
+    }
+    // if (dataLoggerConfigKeys.includes(key)) {
+    //   ...
+    // }
+  }
+  
+  if (servicesToRestart.objectDetection) {
+    console.log('Config updated for object-detection service. Restaring');
+    exec('systemctl restart object-detection');
+  }
+}
 
 export const updateConfigKey = async (key: string, value: any) => {
   const insertSQL = `INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)`;
@@ -164,7 +202,6 @@ export const isValidConfig = (_config: SystemConfig) => {
     typeof _config.GnssFilter === 'object';
 
   _config.isLightCheckDisabled = false;
-  _config.isDashcamMLEnabled = true; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
   return isValid;
 };
 
