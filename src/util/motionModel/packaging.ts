@@ -18,7 +18,7 @@ import {
 } from 'util/framekm';
 import { Instrumentation } from 'util/instrumentation';
 import { getDeviceInfo } from 'services/deviceInfo';
-import { getConfig } from 'sqlite/config';
+import { getConfig, getDX } from 'sqlite/config';
 import { freemem } from 'os';
 import { getUsbState } from 'services/usbStateCheck';
 
@@ -239,7 +239,7 @@ export const packMetadata = async (
   }
   if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
-    const DX = await getConfig('DX');
+    const DX = getDX();
     const metadataJSON = {
       bundle: {
         name,

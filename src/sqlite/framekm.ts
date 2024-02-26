@@ -7,7 +7,7 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig } from './config';
+import { getConfig, getDX } from './config';
 
 export const isFrameKmComplete = async (mlEnabled = false): Promise<boolean> => {
   try {
@@ -228,9 +228,9 @@ export const addFramesToFrameKm = async (
   const { 
     isTripTrimmingEnabled, 
     TrimDistance, 
-    DX, 
     FrameKmLengthMeters 
-  } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'DX', 'FrameKmLengthMeters']);
+  } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'FrameKmLengthMeters']);
+  const DX = getDX();
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
     const framesLeftToTrim = Math.ceil(

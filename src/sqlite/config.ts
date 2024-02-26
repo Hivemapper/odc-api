@@ -192,6 +192,11 @@ export const getCachedValue = (key: string) => {
   return cachedConfig[key] !== undefined ? cachedConfig[key] : defaultConfig[key as keyof SystemConfig];
 }
 
+export const getDX = () => {
+  let dx = getCachedValue('DX');
+  return dx;
+}
+
 export const isValidConfig = (_config: SystemConfig) => {
   const isValid =
     _config &&

@@ -55,10 +55,10 @@ class SQLite:
         
     def get_privacy_config(self):
         default_values = {
-            'PrivacyModelPath': '/opt/dashcam/bin/model.tflite',
-            'PrivacyModelHash': 'blablabla',
-            'PrivacyConfThreshold': Decimal('0.2'),
-            'PrivacyNmsThreshold': Decimal('0.9'),
+            'PrivacyModelPath': '/opt/dashcam/bin/n640_float16.tflite',
+            'PrivacyModelHash': 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1',
+            'PrivacyConfThreshold': 0.2,
+            'PrivacyNmsThreshold': 0.9,
             'PrivacyNumThreads': 6
         }
         config = default_values.copy()
@@ -72,12 +72,12 @@ class SQLite:
                     if result:
                         value = result[0]
                         # Convert to appropriate type based on default value
-                        if isinstance(default_value, Decimal):
-                            config[key] = Decimal(value)
+                        if isinstance(default_value, float):
+                            config[key] = float(value)
                         elif isinstance(default_value, int):
                             config[key] = int(value)
                         else:
-                            config[key] = value
+                            config[key] = str(value).strip('"')
         except Exception as e:
             print(e)
 

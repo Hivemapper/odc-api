@@ -29,7 +29,7 @@ import {
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig } from 'sqlite/config';
+import { getConfig, getDX } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 
 let sessionTrimmed = false;
@@ -60,7 +60,7 @@ export class DriveSession {
       .filter(s => s)
       .sort((a, b) => a.system_time - b.system_time);
 
-    const { GnssFilter, MaxPendingTime, DX } = await getConfig(['GnssFilter', 'MaxPendingTime', 'DX']);
+    const { GnssFilter, MaxPendingTime } = await getConfig(['GnssFilter', 'MaxPendingTime']);
 
     for (const data of sensorData) {
       if (!this.dataIsGoodEnough(data, GnssFilter, MaxPendingTime)) {
@@ -159,7 +159,8 @@ export class DriveSession {
       const fkmId = await getFirstFrameKmId(isDashcamMLEnabled);
       return await getFrameKm(fkmId);
     } else {
-      const { isTripTrimmingEnabled, TrimDistance, DX } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'DX']);
+      const { isTripTrimmingEnabled, TrimDistance } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance']);
+      const DX = getDX();
 
       if (!sessionTrimmed && isTripTrimmingEnabled) {
         // END TRIP TRIMMING

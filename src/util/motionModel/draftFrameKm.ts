@@ -12,7 +12,7 @@ import { isGnss, isImage, isImu } from 'util/sensor';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
-import { getCachedValue, getConfig } from 'sqlite/config';
+import { getDX } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
@@ -103,7 +103,7 @@ export class DraftFrameKm {
         return false;
       }
 
-      if (distance > getCachedValue('DX') * 2) {
+      if (distance > getDX() * 2) {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
@@ -200,7 +200,7 @@ export class DraftFrameKm {
     let gps: { longitude: number; latitude: number }[] = [];
     let gpsCounter = 0;
 
-    const DX = getCachedValue('DX');
+    const DX = getDX();
 
     if (prevKeyFrames.length) {
       // Get 3 previous points for CatmulRom curve
