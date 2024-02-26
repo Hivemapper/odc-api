@@ -3,6 +3,7 @@ import { db, getAsync, runAsync } from './index';
 import { SystemConfig } from 'types/motionModel';
 import { exec } from 'child_process';
 import { IServiceRestart } from 'types';
+import { Instrumentation } from 'util/instrumentation';
 
 const defaultConfig: SystemConfig = {
   DX: 8,
@@ -29,6 +30,7 @@ const defaultConfig: SystemConfig = {
   PrivacyConfThreshold: 0.2,
   PrivacyNmsThreshold: 0.9,
   PrivacyNumThreads: 6,
+  SpeedToIncreaseDx: 30, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
 };
@@ -192,9 +194,29 @@ export const getCachedValue = (key: string) => {
   return cachedConfig[key] !== undefined ? cachedConfig[key] : defaultConfig[key as keyof SystemConfig];
 }
 
+let FAST_SPEED_COLLECTION_MODE = false;
 export const getDX = () => {
   let dx = getCachedValue('DX');
+  if (FAST_SPEED_COLLECTION_MODE) {
+    dx *= 1.5;
+  }
   return dx;
+}
+
+let lastTimeChanged = 0;
+export const setFastSpeedCollectionMode = (value: boolean) => {
+  if (value !== FAST_SPEED_COLLECTION_MODE) {
+    const period = lastTimeChanged ? Date.now() - lastTimeChanged : 0;
+    Instrumentation.add({
+      event: 'DashcamFastSpeedCollection',
+      message: JSON.stringify({
+        mode: value,
+        period
+      })
+    });
+    lastTimeChanged = Date.now();
+  }
+  FAST_SPEED_COLLECTION_MODE = value;
 }
 
 export const isValidConfig = (_config: SystemConfig) => {

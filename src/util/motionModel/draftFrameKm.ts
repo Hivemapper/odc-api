@@ -12,7 +12,7 @@ import { isGnss, isImage, isImu } from 'util/sensor';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
-import { getDX } from 'sqlite/config';
+import { getCachedValue, getDX, setFastSpeedCollectionMode } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
@@ -24,6 +24,7 @@ export class DraftFrameKm {
   lastGnss: GnssRecord | null;
   lastImageTimestamp = 0;
   totalDistance = 0;
+  highSpeedRecordsInARow = 0;
 
   constructor(data?: SensorData) {
     this.data = [];
@@ -81,6 +82,7 @@ export class DraftFrameKm {
         return true;
       }
 
+      const SpeedToIncreaseDx = getCachedValue('SpeedToIncreaseDx');
       /**
        * Should we add this point, or should we cut the FrameKM already?
        */
@@ -102,6 +104,14 @@ export class DraftFrameKm {
         }
         return false;
       }
+      
+      if (speed > SpeedToIncreaseDx) {
+        this.highSpeedRecordsInARow++;
+      } else {
+        this.highSpeedRecordsInARow = 0;
+      }
+
+      setFastSpeedCollectionMode(this.highSpeedRecordsInARow > 200); // 200 records in a row is about 30 secs of data
 
       if (distance > getDX() * 2) {
         // travelled too far, cut

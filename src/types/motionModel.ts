@@ -49,6 +49,7 @@ export type SystemConfig = {
   PrivacyConfThreshold?: number;
   PrivacyNmsThreshold?: number;
   PrivacyNumThreads?: number;
+  SpeedToIncreaseDx?: number;
   HdcSwappiness?: number;
   HdcsSwappiness?: number;
 };
