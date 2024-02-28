@@ -166,8 +166,8 @@ export const packMetadata = async (
     const deviceInfo = getDeviceInfo();
     const deviceId = await getAnonymousID();
 
-    const startTime = validatedFrames.at(0)?.systemTime ?? Date.now();
-    const endTime = validatedFrames.at(-1)?.systemTime ?? Date.now();
+    const startTime = validatedFrames.at(0)?.t || Date.now();
+    const endTime = validatedFrames.at(-1)?.t || Date.now();
     const gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
     const metadataJSON = {
       bundle: {
