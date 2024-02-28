@@ -1,49 +1,62 @@
 import { Database } from 'sqlite3';
 import { DB_PATH } from 'config';
 
-export const connectDB = (callback?: () => void): Database => {
-  console.log('[SQLITE] CONNECT DB');
-  return new Database(DB_PATH, err => {
-    if (err) {
-      console.error('[SQLITE] DB connect error', err.message);
-      throw err;
-    } else {
-      callback?.();
+const MAX_RETRIES = 5;
+const RETRY_INTERVAL = 2000;
+
+let dbInstance: Database | null = null;
+let connectionPromise: Promise<Database> | null = null;
+
+export const getDb = async (): Promise<Database> => {
+  if (!dbInstance) {
+    if (!connectionPromise) {
+      connectionPromise = connectDB(initialise);
     }
-  });
+    try {
+      dbInstance = await connectionPromise;
+    } finally {
+      connectionPromise = null;
+    }
+  }
+  return dbInstance;
 };
 
-export const listAllTables = (callback: (tables: string[]) => void): void => {
-  const query = "SELECT name FROM sqlite_master WHERE type='table';";
+export const connectDB = async (initialiseDB: () => Promise<void>): Promise<Database> => {
+  let attempts = 0;
 
-  // Array to store the names of all tables
-  const tables: string[] = [];
+  const connect = (): Promise<Database> => {
+    return new Promise((resolve, reject) => {
+      const db = new Database(DB_PATH, async (err) => {
+        if (err) {
+          console.error('[SQLITE] DB connect error on attempt', attempts, err.message);
+          reject(err);
+        } else {
+          console.log('[SQLITE] CONNECT DB');
+          await initialiseDB();
+          resolve(db);
+        }
+      });
+    });
+  };
 
-  db.each(
-    query,
-    (err: any, row: any) => {
-      if (err) {
-        console.error('[SQLITE] Error fetching tables', err.message);
-        return;
+  while (attempts < MAX_RETRIES) {
+    try {
+      return await connect();
+    } catch (err) {
+      attempts++;
+      if (attempts >= MAX_RETRIES) {
+        throw err;
       }
-      tables.push(row.name);
-    },
-    (err: any) => {
-      // This callback gets executed when all rows have been retrieved
-      if (err) {
-        console.error(
-          '[SQLITE] Error completing the fetch operation',
-          err.message,
-        );
-        return;
-      }
-      callback(tables);
-    },
-  );
+      console.log(`[SQLITE] Retrying connection in ${RETRY_INTERVAL / 1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
+    }
+  }
+
+  throw new Error('[SQLITE] Unable to connect to the database after maximum retries');
 };
 
-// Helper function to promisify db.run
-export const runAsync = (db: Database, sql: string, params: any[] = []) => {
+export const runAsync = async (sql: string, params: any[] = []) => {
+  const db = await getDb();
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
       if (err) {
@@ -55,8 +68,8 @@ export const runAsync = (db: Database, sql: string, params: any[] = []) => {
   });
 };
 
-// Helper function to promisify db.all for running SELECT queries
-export const getAsync = (db: Database, sql: string, params: any[] = []) => {
+export const getAsync = async (sql: string, params: any[] = []) => {
+  const db = await getDb();
   return new Promise((resolve, reject) => {
     db.all(sql, params, (err, rows) => {
       if (err) {
@@ -68,7 +81,8 @@ export const getAsync = (db: Database, sql: string, params: any[] = []) => {
   });
 };
 
-export const runSchemaAsync = (db: Database, sql: string) => {
+export const runSchemaAsync = async (sql: string) => {
+  const db = await getDb();
   return new Promise((resolve, reject) => {
     db.run(sql, function (err) {
       if (err) {
@@ -85,7 +99,18 @@ export const initialise = async (): Promise<void> => {
   await createHealthStateTable();
   await createFrameTable();
   await createConfigurationTable();
+  await performSoftMigrations();
 };
+
+export const performSoftMigrations = async (): Promise<void> => {
+  // add dx INTEGER field to framekm table, if doesn't exist, default to 0
+  const addDxToFramekm = `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`;
+  try {
+    await runSchemaAsync(addDxToFramekm);
+  } catch (error) {
+    console.error('Error during adding dx field to framekms table:', error);
+  }
+}
 
 export const createFrameKMTable = async (): Promise<void> => {
   const createTableSQL = `
@@ -136,7 +161,7 @@ export const createFrameKMTable = async (): Promise<void> => {
     error TEXT
   );`;
   try {
-    await runSchemaAsync(db, createTableSQL);
+    await runSchemaAsync(createTableSQL);
   } catch (error) {
     console.error('Error during initialisation of tables:', error);
     throw error;
@@ -150,7 +175,7 @@ export const createFrameTable = async (): Promise<void> => {
     image_name TEXT NOT NULL
     );`;
   try {
-    await runSchemaAsync(db, createTableSQL);
+    await runSchemaAsync(createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the frames table:', error);
     throw error;
@@ -164,7 +189,7 @@ export const createConfigurationTable = async (): Promise<void> => {
       value TEXT
     );`;
   try {
-    await runSchemaAsync(db, createTableSQL);
+    await runSchemaAsync(createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the config table:', error);
     throw error;
@@ -178,11 +203,9 @@ export const createHealthStateTable = async (): Promise<void> => {
     status TEXT NOT NULL
     );`;
   try {
-    await runSchemaAsync(db, createTableSQL);
+    await runSchemaAsync(createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the health state table:', error);
     throw error;
   }
 };
-
-export const db: Database = connectDB(initialise);

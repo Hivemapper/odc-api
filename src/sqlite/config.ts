@@ -1,8 +1,8 @@
-import { ML_MODEL_PATH } from 'config';
-import { db, getAsync, runAsync } from './index';
+import { CAMERA_TYPE, ML_MODEL_PATH } from 'config';
+import { getAsync, runAsync } from './index';
 import { SystemConfig } from 'types/motionModel';
 import { exec } from 'child_process';
-import { IServiceRestart } from 'types';
+import { CameraType, IServiceRestart } from 'types';
 import { Instrumentation } from 'util/instrumentation';
 
 const defaultConfig: SystemConfig = {
@@ -23,6 +23,7 @@ const defaultConfig: SystemConfig = {
   isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
+  lastTrimmed: 0,
   FrameKmLengthMeters: 1000,
   privacyRadius: 200,
   PrivacyModelPath: ML_MODEL_PATH,
@@ -30,7 +31,7 @@ const defaultConfig: SystemConfig = {
   PrivacyConfThreshold: 0.2,
   PrivacyNmsThreshold: 0.9,
   PrivacyNumThreads: 6,
-  SpeedToIncreaseDx: 30, // in meters per second
+  SpeedToIncreaseDx: 22, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
 };
@@ -47,8 +48,8 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
   try {
     const rows = (
       Array.isArray(keys)
-        ? await getAsync(db, selectSQL, keys)
-        : await getAsync(db, selectSQL, [keys])
+        ? await getAsync(selectSQL, keys)
+        : await getAsync(selectSQL, [keys])
     ) as { key: string; value: any }[];
 
     // Transform the result based on the input type
@@ -62,7 +63,11 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
           // cache it
           cachedConfig[row.key] = value;
         }
-        acc[row.key] = value;
+        if (row.key === 'isDashcamMLEnabled') {
+          acc['isDashcamMLEnabled'] = true;
+        } else {
+          acc[row.key] = value;
+        }
         return acc;
       }, {});
     } else {
@@ -74,7 +79,11 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
         // cache it
         cachedConfig[keys] = value;
       }
-      return value;
+      if (keys === 'isDashcamMLEnabled') {
+        return true;
+      } else {
+        return value;
+      }
     }
   } catch (error) {
     console.error('Error during retrieving from config table:', error);
@@ -91,7 +100,7 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
 export const getFullConfig = async () => {
   const selectSQL = `SELECT * FROM config`;
   try {
-    const rows = (await getAsync(db, selectSQL)) as {
+    const rows = (await getAsync(selectSQL)) as {
       key: string;
       value: string;
     }[];
@@ -105,6 +114,17 @@ export const getFullConfig = async () => {
   } catch (error) {
     console.error('Error during retrieving from config table:', error);
     return {};
+  }
+};
+
+export const setConfig = async (key: string, value: any) => {
+  const insertSQL = `INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)`;
+  const valueJSON = JSON.stringify(value);
+
+  try {
+    await runAsync(insertSQL, [key, valueJSON]);
+  } catch (error) {
+    console.error('Error during inserting into config table:', error);
   }
 };
 
@@ -128,7 +148,7 @@ export const updateConfig = async (
   insertSQL += valueTuples.join(', ');
 
   try {
-    await runAsync(db, insertSQL, queryParams);
+    await runAsync(insertSQL, queryParams);
     await shouldRestartServices(configItems);
   } catch (error) {
     console.error('Error during bulk inserting/updating config table:', error);
@@ -173,7 +193,7 @@ export const updateConfigKey = async (key: string, value: any) => {
   const valueJSON = JSON.stringify(value);
 
   try {
-    await runAsync(db, insertSQL, [key, valueJSON]);
+    await runAsync(insertSQL, [key, valueJSON]);
   } catch (error) {
     console.error('Error during inserting into config table:', error);
   }
@@ -197,10 +217,10 @@ export const getCachedValue = (key: string) => {
 let FAST_SPEED_COLLECTION_MODE = false;
 export const getDX = () => {
   let dx = getCachedValue('DX');
-  if (FAST_SPEED_COLLECTION_MODE) {
+  if (FAST_SPEED_COLLECTION_MODE && CAMERA_TYPE === CameraType.Hdc) {
     dx *= 1.5;
   }
-  return dx;
+  return Math.round(dx);
 }
 
 let lastTimeChanged = 0;

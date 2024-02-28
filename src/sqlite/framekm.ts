@@ -1,4 +1,4 @@
-import { db, getAsync, runAsync } from './index';
+import { getAsync, runAsync } from './index';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { distance } from 'util/geomath';
 import { join } from 'path';
@@ -7,9 +7,11 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig, getDX } from './config';
+import { getConfig, getDX, setConfig } from './config';
 
-export const isFrameKmComplete = async (mlEnabled = false): Promise<boolean> => {
+export const isFrameKmComplete = async (
+  mlEnabled = false,
+): Promise<boolean> => {
   try {
     const totalFrameKmsInTable = await getFrameKmsCount(mlEnabled);
     return totalFrameKmsInTable > 1;
@@ -21,10 +23,7 @@ export const isFrameKmComplete = async (mlEnabled = false): Promise<boolean> => 
 
 export const getFramesCount = async (): Promise<number> => {
   try {
-    const row: any = await getAsync(
-      db,
-      'SELECT COUNT(*) AS count FROM framekms;',
-    );
+    const row: any = await getAsync('SELECT COUNT(*) AS count FROM framekms;');
     return row.length ? row[0].count : 0;
   } catch (error) {
     console.error('Error checking frames count:', error);
@@ -34,14 +33,13 @@ export const getFramesCount = async (): Promise<number> => {
 
 export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
-    mlEnabled ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0' : ''
+    mlEnabled
+      ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0'
+      : ''
   };`;
 
   try {
-    const row: any = await getAsync(
-      db,
-      query,
-    );
+    const row: any = await getAsync(query);
     return row.length ? row[0].distinctCount : 0;
   } catch (error) {
     console.error('Error checking distinct fkm_id count:', error);
@@ -52,7 +50,6 @@ export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
 export const getLatestFrameKmId = async (): Promise<number | undefined> => {
   try {
     const latestFkmIdRow: any = await getAsync(
-      db,
       'SELECT MAX(fkm_id) AS latestFkmId FROM framekms;',
     );
     return latestFkmIdRow.length ? latestFkmIdRow[0].latestFkmId : null;
@@ -62,15 +59,14 @@ export const getLatestFrameKmId = async (): Promise<number | undefined> => {
   }
 };
 
-export const getFirstFrameKmId = async (mlEnabled = false): Promise<number | undefined> => {
+export const getFirstFrameKmId = async (
+  mlEnabled = false,
+): Promise<number | undefined> => {
   try {
     const query = `SELECT MIN(fkm_id) AS firstFkmId FROM framekms${
       mlEnabled ? ' WHERE postponed = 0' : ''
     };`;
-    const firstFkmIdRow: any = await getAsync(
-      db,
-      query,
-    );
+    const firstFkmIdRow: any = await getAsync(query);
     return firstFkmIdRow.length ? firstFkmIdRow[0].firstFkmId : null;
   } catch (error) {
     console.error('Error fetching first fkm_id:', error);
@@ -78,10 +74,11 @@ export const getFirstFrameKmId = async (mlEnabled = false): Promise<number | und
   }
 };
 
-export const getFirstPostponedFrameKm = async (): Promise<number | undefined> => {
+export const getFirstPostponedFrameKm = async (): Promise<
+  number | undefined
+> => {
   try {
     const firstPostponed: any = await getAsync(
-      db,
       `SELECT MIN(fkm_id) AS firstFkmId FROM framekms WHERE postponed = 1;`,
     );
     return firstPostponed.length ? firstPostponed[0].firstFkmId : null;
@@ -93,7 +90,9 @@ export const getFirstPostponedFrameKm = async (): Promise<number | undefined> =>
 
 export const postponeFrameKm = async (frameKmId: number): Promise<boolean> => {
   try {
-    await runAsync(db, 'UPDATE framekms SET postponed = 1 WHERE fkm_id = ?;', [frameKmId]);
+    await runAsync('UPDATE framekms SET postponed = 1 WHERE fkm_id = ?;', [
+      frameKmId,
+    ]);
     return true;
   } catch (error) {
     console.error('Error clearing framekms table:', error);
@@ -101,9 +100,14 @@ export const postponeFrameKm = async (frameKmId: number): Promise<boolean> => {
   }
 };
 
-export const moveFrameKmBackToQueue = async (frameKmId: number): Promise<boolean> => {
+export const moveFrameKmBackToQueue = async (
+  frameKmId: number,
+): Promise<boolean> => {
   try {
-    await runAsync(db, 'UPDATE framekms SET postponed = 0, error = "" WHERE fkm_id = ?;', [frameKmId]);
+    await runAsync(
+      'UPDATE framekms SET postponed = 0, error = "" WHERE fkm_id = ?;',
+      [frameKmId],
+    );
     return true;
   } catch (error) {
     console.error('Error clearing framekms table:', error);
@@ -130,7 +134,6 @@ export const getFrameKm = async (
 
   try {
     const rows = await getAsync(
-      db,
       'SELECT * FROM framekms WHERE fkm_id = ? ORDER BY time;',
       [fkmId],
     );
@@ -143,7 +146,7 @@ export const getFrameKm = async (
 
 export const getAllFrameKms = async (): Promise<FrameKM> => {
   try {
-    const rows = await getAsync(db, 'SELECT * FROM framekms ORDER BY time DESC;');
+    const rows = await getAsync('SELECT * FROM framekms ORDER BY time DESC;');
     return rows as FrameKM;
   } catch (error) {
     console.error('Error fetching current framekm:', error);
@@ -153,7 +156,7 @@ export const getAllFrameKms = async (): Promise<FrameKM> => {
 
 export const clearAll = async (): Promise<boolean> => {
   try {
-    await runAsync(db, 'DELETE FROM framekms;');
+    await runAsync('DELETE FROM framekms;');
     return true;
   } catch (error) {
     console.error('Error clearing framekms table:', error);
@@ -170,7 +173,7 @@ export const deleteFrameKm = async (
   }
 
   try {
-    await runAsync(db, 'DELETE FROM framekms WHERE fkm_id = ?;', [fkmId]);
+    await runAsync('DELETE FROM framekms WHERE fkm_id = ?;', [fkmId]);
     return true;
   } catch (error) {
     console.error('Error deleting framekm:', error);
@@ -191,7 +194,6 @@ export const getLastTimestamp = async (): Promise<number> => {
 export const getLastRecord = async (): Promise<any> => {
   try {
     const row: any = await getAsync(
-      db,
       'SELECT * FROM framekms ORDER BY time DESC LIMIT 1;',
     );
     return row && row.length && row[0].longitude ? row[0] : null;
@@ -205,7 +207,6 @@ export const getLastRecord = async (): Promise<any> => {
 export const getExistingFramesMetadata = async (limit = 3): Promise<any[]> => {
   try {
     const rows: any = await getAsync(
-      db,
       `SELECT * FROM framekms ORDER BY time DESC LIMIT ${limit};`,
     );
 
@@ -225,32 +226,40 @@ export const addFramesToFrameKm = async (
   console.log(
     'GOING TO ADD ' + rows.length + ' FRAMES. ' + (force ? ' FORCED!!' : ''),
   );
-  const { 
-    isTripTrimmingEnabled, 
-    TrimDistance, 
-    FrameKmLengthMeters 
-  } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'FrameKmLengthMeters']);
+  const { isTripTrimmingEnabled, TrimDistance, FrameKmLengthMeters, lastTrimmed } =
+    await getConfig([
+      'isTripTrimmingEnabled',
+      'TrimDistance',
+      'FrameKmLengthMeters',
+      'lastTrimmed'
+    ]);
   const DX = getDX();
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
-    const framesLeftToTrim = Math.ceil(
-      (TrimDistance - metersTrimmed) / DX,
-    );
-    const rowsToIgnore = rows.slice(0, framesLeftToTrim);
-    metersTrimmed += rowsToIgnore.length * DX;
-    rows = rows.slice(framesLeftToTrim);
-    console.log('TRIMMED ' + rowsToIgnore.length);
+    if (lastTrimmed && Math.abs(Date.now() - Number(lastTrimmed)) < 1000 * 60 * 5) {
+      metersTrimmed = TrimDistance;
+      console.log('ALREADY TRIMMED');
+    } else {
+      const framesLeftToTrim = Math.ceil((TrimDistance - metersTrimmed) / DX);
+      const rowsToIgnore = rows.slice(0, framesLeftToTrim);
+      metersTrimmed += rowsToIgnore.length * DX;
+      rows = rows.slice(framesLeftToTrim);
+      console.log('TRIMMED ' + rowsToIgnore.length);
+      if (metersTrimmed >= TrimDistance) {
+        await setConfig('lastTrimmed', Date.now());
+      }
+    }
   }
 
   if (rows.length) {
-    return new Promise(async (resolve) => {
+    return new Promise(async resolve => {
       const insertSQL = `
         INSERT INTO framekms (
-          fkm_id, image_name, image_path, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
+          fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop,
           time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -264,17 +273,26 @@ export const addFramesToFrameKm = async (
           let fkm_id = 1;
           let frame_idx = 1;
           if (last && last.fkm_id) {
-            console.log('surprise, last inserted: ', last.fkm_id, last.frame_idx);
             const lastFkmId = Number(last.fkm_id) || 1;
             const forceFrameKmSwitch = force && i === 0;
             fkm_id = forceFrameKmSwitch ? lastFkmId + 1 : lastFkmId;
             // sanity check for accidental insert of the wrong sample into framekm
             const distanceBetweenFrames = distance(last, row);
-            if (
-              distanceBetweenFrames > DX * 2 &&
-              !forceFrameKmSwitch
-            ) {
-              insertErrorLog('Distance between frames is more than allowed: ' + distanceBetweenFrames);
+            if (row.dx !== last.dx) {
+              Instrumentation.add({
+                event: 'DashcamCutReason',
+                message: JSON.stringify({
+                  reason: 'ChangedDX',
+                  prev: last.dx,
+                  current: row.dx,
+                }),
+              });
+              fkm_id++;
+            } else if (distanceBetweenFrames > DX * 2 && !forceFrameKmSwitch) {
+              insertErrorLog(
+                'Distance between frames is more than allowed: ' +
+                  distanceBetweenFrames,
+              );
               Instrumentation.add({
                 event: 'DashcamCutReason',
                 message: JSON.stringify({
@@ -305,12 +323,18 @@ export const addFramesToFrameKm = async (
             join(FRAMES_ROOT_FOLDER, row.image_name),
             join(destination, row.image_name),
           );
-          console.log('About to add frame: ', row.image_name, fkm_id, frame_idx);
+          console.log(
+            'About to add frame: ',
+            row.image_name,
+            fkm_id,
+            frame_idx,
+          );
 
-          await runAsync(db, insertSQL, [
+          await runAsync(insertSQL, [
             fkm_id,
             row.image_name,
             destination,
+            row.dx,
             row.acc_x,
             row.acc_y,
             row.acc_z,
@@ -357,7 +381,7 @@ export const clearOutdated = async (): Promise<void> => {
     `;
 
     // Execute the query with the timestamp parameter
-    await runAsync(db, deleteQuery, [threeDaysAgo]);
+    await runAsync(deleteQuery, [threeDaysAgo]);
 
     console.log('Outdated records cleared.');
   } catch (error) {

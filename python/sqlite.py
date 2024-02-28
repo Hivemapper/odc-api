@@ -23,10 +23,10 @@ class SQLite:
     def get_frames_for_ml(self, limit=10):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT value FROM config WHERE key = "isDashcamMLEnabled"')
-            is_enabled = cursor.fetchone()
-            if not is_enabled or is_enabled[0] == 'false':
-                return [], 0
+            # cursor.execute('SELECT value FROM config WHERE key = "isDashcamMLEnabled"')
+            # is_enabled = cursor.fetchone()
+            # if not is_enabled or is_enabled[0] == 'false':
+            #     return [], 0
             
             cursor.execute('SELECT MIN(fkm_id) FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed = 0')
             min_framekm_id = cursor.fetchone()[0]
@@ -57,30 +57,29 @@ class SQLite:
         default_values = {
             'PrivacyModelPath': '/opt/dashcam/bin/n640_float16.tflite',
             'PrivacyModelHash': 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1',
-            'PrivacyConfThreshold': 0.2,
+            'PrivacyConfThreshold': 0.3,
             'PrivacyNmsThreshold': 0.9,
             'PrivacyNumThreads': 6
         }
         config = default_values.copy()
 
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                for key, default_value in default_values.items():
-                    cursor.execute('SELECT value FROM config WHERE key = ?', (key,))
-                    result = cursor.fetchone()
-                    if result:
-                        value = result[0]
-                        # Convert to appropriate type based on default value
-                        if isinstance(default_value, float):
-                            config[key] = float(value)
-                        elif isinstance(default_value, int):
-                            config[key] = int(value)
-                        else:
-                            config[key] = str(value).strip('"')
-        except Exception as e:
-            print(e)
-
+        # try:
+        #     with self.get_connection() as conn:
+        #         cursor = conn.cursor()
+        #         for key, default_value in default_values.items():
+        #             cursor.execute('SELECT value FROM config WHERE key = ?', (key,))
+        #             result = cursor.fetchone()
+        #             if result:
+        #                 value = result[0]
+        #                 # Convert to appropriate type based on default value
+        #                 if isinstance(default_value, float):
+        #                     config[key] = float(value)
+        #                 elif isinstance(default_value, int):
+        #                     config[key] = int(value)
+        #                 else:
+        #                     config[key] = str(value).strip('"')
+        # except Exception as e:
+        #     print(e)
         return config
 
     def set_error(self, image_name, error):

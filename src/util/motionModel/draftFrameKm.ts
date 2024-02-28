@@ -25,6 +25,7 @@ export class DraftFrameKm {
   lastImageTimestamp = 0;
   totalDistance = 0;
   highSpeedRecordsInARow = 0;
+  lowSpeedRecordsInARow = 0;
 
   constructor(data?: SensorData) {
     this.data = [];
@@ -107,11 +108,17 @@ export class DraftFrameKm {
       
       if (speed > SpeedToIncreaseDx) {
         this.highSpeedRecordsInARow++;
+        this.lowSpeedRecordsInARow = 0;
       } else {
+        this.lowSpeedRecordsInARow++;
         this.highSpeedRecordsInARow = 0;
       }
 
-      setFastSpeedCollectionMode(this.highSpeedRecordsInARow > 200); // 200 records in a row is about 30 secs of data
+      if (this.highSpeedRecordsInARow > 100) { // 15 seconds of moving fast
+        setFastSpeedCollectionMode(true);
+      } else if (this.lowSpeedRecordsInARow > 70) { // 10 seconds of moving slow. We cannot switch immediately, cause it will cut FrameKMs a lot
+        setFastSpeedCollectionMode(false);
+      }
 
       if (distance > getDX() * 2) {
         // travelled too far, cut
@@ -293,12 +300,12 @@ export class DraftFrameKm {
           }
   
           // Making sure it's not too close to previous frame
-          const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 2 : 0.5;
+          const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 1 : 0.5;
           if (
             !prevSelected ||
             distance(prevSelected, frameCoordinates) > DX - allowed_gap
           ) {
-            // get interpolated gnss metadata
+            // get interpolated gnss metadata, everything except lat & lon (they go from curve)
             const interpolatedGnssMetadata = interpolate(
               prevGNSS,
               nextGNSS,
@@ -310,6 +317,7 @@ export class DraftFrameKm {
               ...interpolatedGnssMetadata, // linear-interpolated gnss metadata, like hdop etc
               ...closestFrame, // frame name and system time
               ...frameCoordinates, // lat and lon from curve
+              dx: DX,
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];

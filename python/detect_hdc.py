@@ -54,10 +54,7 @@ def combine_images(images, grid_size, model_size):
               # if input img is broken or empty
               resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
             else:
-              if grid_size > 1:
-                resized_img = cv2.resize(img, (cell_width, cell_height), interpolation=cv2.INTER_NEAREST)
-              else:
-                resized_img = image.letterbox(img, (cell_width, cell_height))[0]
+              resized_img = image.letterbox(img, (cell_width, cell_height))[0]
         else:
             # Use an empty (black) image for spots without images
             resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
@@ -73,9 +70,9 @@ def combine_images(images, grid_size, model_size):
 
 def transform_box(box, w_offset=0, h_offset=0, grid_size=1):
   ratio = width / height
-  padding = (width - height) / 2 if grid_size == 1 else 0
+  padding = (width - height) / 2
   x_multiplier = grid_size
-  y_multiplier = grid_size * ratio if grid_size == 1 else grid_size
+  y_multiplier = grid_size * ratio
   new_box = np.floor(np.array([
     (box[0] - w_offset) * x_multiplier,
     (box[1] - h_offset) * y_multiplier - padding,
@@ -176,7 +173,7 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
           box = transform_box(box, w_offset, h_offset, grid_size)
 
           # filter out large boxes and boxes on the hood
-          if box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height:
+          if (box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height) or (box[2] - box[0] > 0.7 * width and box[3] - box[1] > 0.7 * height):
             continue
           grouped_boxes[image_index].append(box)
           grouped_scores[image_index].append(score)
@@ -207,7 +204,6 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
       print(e)
       return unprocessed_images, e 
 
-
 def blur(img, boxes, metrics):
   blur_per_boxes = False
   if len(boxes) < 30:
@@ -219,6 +215,9 @@ def blur(img, boxes, metrics):
   if blur_per_boxes:
     for box in boxes:
       box = box.astype(int)
+      # filter out large boxes and boxes on the hood
+      if (box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height) or (box[2] - box[0] > 0.7 * width and box[3] - box[1] > 0.7 * height):
+        continue
       roi = img[box[1]:box[3], box[0]:box[2]]
       roi_downscale_width = int(roi.shape[1] * 0.2)
       roi_downscale_height = int(roi.shape[0] * 0.2)
@@ -332,13 +331,7 @@ def main():
       print(total)
       
       # Depending on how big is the processing queue,
-      if total > 40:
-        # split on groups of 9
-        images = [images[i:i + 9] for i in range(0, len(images), 9)]
-        # push every group to queue
-        for group in images:
-          q.put(group)
-      elif total > 15:
+      if total > 15:
         # split on groups of 4
         images = [images[i:i + 4] for i in range(0, len(images), 4)]
         # push every group to queue

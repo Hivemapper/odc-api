@@ -4,7 +4,7 @@ import { fetchGnssLogsByTime } from './gnss';
 import { fetchImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
 import { insertFrames } from './frames';
-import { db, runAsync } from 'sqlite';
+import { runAsync } from 'sqlite';
 import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
 import { GnssDopKpi } from 'types/instrumentation';
 
@@ -100,11 +100,11 @@ export const querySensorData = async (
 export const resetDB = async () => {
   try {
     console.log('RESETTING DB');
-    await runAsync(db, 'DELETE FROM framekms;');
-    await runAsync(db, 'DELETE FROM gnss;');
-    await runAsync(db, 'DELETE FROM imu;');
-    await runAsync(db, 'DELETE FROM frames;');
-    await runAsync(db, 'DELETE FROM error_logs;');
+    await runAsync('DELETE FROM framekms;');
+    await runAsync('DELETE FROM gnss;');
+    await runAsync('DELETE FROM imu;');
+    await runAsync('DELETE FROM frames;');
+    await runAsync('DELETE FROM error_logs;');
   } catch (error) {
     console.error('Error clearing tables:', error);
   }

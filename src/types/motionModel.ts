@@ -38,6 +38,7 @@ export type SystemConfig = {
   isLightCheckDisabled: boolean;
   isTripTrimmingEnabled: boolean;
   TrimDistance: number;
+  lastTrimmed: number;
   FrameKmLengthMeters: number;
   isDashcamMLEnabled: boolean;
   isGyroCalibrationEnabled: boolean;
