@@ -1,8 +1,11 @@
 import { Database } from 'sqlite3';
 import { DB_PATH } from 'config';
 
-const MAX_RETRIES = 5;
-const RETRY_INTERVAL = 2000;
+const MAX_RETRIES_CONNECT = 5;
+const RETRY_INTERVAL_CONNECT = 2000;
+
+const MAX_RETRIES_QUERY = 3;
+const RETRY_INTERVAL_QUERY = 500;
 
 let dbInstance: Database | null = null;
 let connectionPromise: Promise<Database> | null = null;
@@ -31,7 +34,8 @@ export const connectDB = async (initialiseDB: () => Promise<void>): Promise<Data
           console.error('[SQLITE] DB connect error on attempt', attempts, err.message);
           reject(err);
         } else {
-          console.log('[SQLITE] CONNECT DB');
+          console.log('[LOG] CONNECT DB');
+          dbInstance = db;
           await initialiseDB();
           resolve(db);
         }
@@ -39,16 +43,16 @@ export const connectDB = async (initialiseDB: () => Promise<void>): Promise<Data
     });
   };
 
-  while (attempts < MAX_RETRIES) {
+  while (attempts < MAX_RETRIES_CONNECT) {
     try {
       return await connect();
     } catch (err) {
       attempts++;
-      if (attempts >= MAX_RETRIES) {
+      if (attempts >= MAX_RETRIES_CONNECT) {
         throw err;
       }
-      console.log(`[SQLITE] Retrying connection in ${RETRY_INTERVAL / 1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
+      console.log(`[SQLITE] Retrying connection in ${RETRY_INTERVAL_CONNECT / 1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_CONNECT));
     }
   }
 
@@ -57,29 +61,57 @@ export const connectDB = async (initialiseDB: () => Promise<void>): Promise<Data
 
 export const runAsync = async (sql: string, params: any[] = []) => {
   const db = await getDb();
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) {
-        reject(err);
+
+  for (let attempt = 0; attempt < MAX_RETRIES_QUERY; attempt++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        db.run(sql, params, function (err) {
+          if (err) {
+            reject(err);
+          } else {
+            if (attempt > 0) {
+              console.log(`[SQLITE] Retry ${attempt + 1}: Operation successful after ${attempt} retries`);
+            }
+            resolve(this);
+          }
+        });
+      });
+    } catch (err: any) {
+      if (err.code === 'SQLITE_BUSY' && attempt < MAX_RETRIES_QUERY - 1) {
+        console.log(`[SQLITE] Retry ${attempt + 1}: Retrying operation in ${RETRY_INTERVAL_QUERY / 1000} seconds... Query: ${sql}`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_QUERY));
       } else {
-        resolve(this);
+        throw err;
       }
-    });
-  });
+    }
+  }
 };
 
 export const getAsync = async (sql: string, params: any[] = []) => {
   const db = await getDb();
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        reject(err);
+
+  for (let attempt = 0; attempt < MAX_RETRIES_QUERY; attempt++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+    } catch (err: any) {
+      if (err.code === 'SQLITE_BUSY' && attempt < MAX_RETRIES_QUERY - 1) {
+        console.log(`[SQLITE] Retry ${attempt + 1}: Retrying operation in ${RETRY_INTERVAL_QUERY / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_QUERY));
       } else {
-        resolve(rows);
+        throw err;
       }
-    });
-  });
+    }
+  }
 };
+
 
 export const runSchemaAsync = async (sql: string) => {
   const db = await getDb();
@@ -95,11 +127,14 @@ export const runSchemaAsync = async (sql: string) => {
 };
 
 export const initialise = async (): Promise<void> => {
+  console.log('LOG: Initialising tables');
   await createFrameKMTable();
   await createHealthStateTable();
   await createFrameTable();
   await createConfigurationTable();
+  console.log('LOG: Tables created');
   await performSoftMigrations();
+  console.log('LOG: migrated!');
 };
 
 export const performSoftMigrations = async (): Promise<void> => {

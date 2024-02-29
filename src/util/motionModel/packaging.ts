@@ -103,6 +103,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         message: JSON.stringify({
           name: finalBundleName,
           numFrames: frameKm?.length,
+          dx: frameKm[0].dx,
           duration: Date.now() - start,
           usbInserted: getUsbState(),
           ...framekmTelemetry,

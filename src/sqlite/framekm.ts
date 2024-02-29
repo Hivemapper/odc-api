@@ -7,7 +7,7 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig, getDX, setConfig } from './config';
+import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -272,6 +272,8 @@ export const addFramesToFrameKm = async (
           const last = await getLastRecord();
           let fkm_id = 1;
           let frame_idx = 1;
+          let cutoffIndex = getCutoffIndex(DX);
+
           if (last && last.fkm_id) {
             const lastFkmId = Number(last.fkm_id) || 1;
             const forceFrameKmSwitch = force && i === 0;
@@ -288,7 +290,7 @@ export const addFramesToFrameKm = async (
                 }),
               });
               fkm_id++;
-            } else if (distanceBetweenFrames > DX * 2 && !forceFrameKmSwitch) {
+            } else if (distanceBetweenFrames > DX * cutoffIndex && !forceFrameKmSwitch) {
               insertErrorLog(
                 'Distance between frames is more than allowed: ' +
                   distanceBetweenFrames,

@@ -31,7 +31,7 @@ const defaultConfig: SystemConfig = {
   PrivacyConfThreshold: 0.2,
   PrivacyNmsThreshold: 0.9,
   PrivacyNumThreads: 6,
-  SpeedToIncreaseDx: 22, // in meters per second
+  SpeedToIncreaseDx: 24, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
 };
@@ -237,6 +237,14 @@ export const setFastSpeedCollectionMode = (value: boolean) => {
     lastTimeChanged = Date.now();
   }
   FAST_SPEED_COLLECTION_MODE = value;
+}
+
+export const getCutoffIndex = (currentDx: number) => {
+  let dx = getCachedValue('DX');
+  if (currentDx > dx) {
+    return 1.5;
+  }
+  return 2;
 }
 
 export const isValidConfig = (_config: SystemConfig) => {
