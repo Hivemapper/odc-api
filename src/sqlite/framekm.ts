@@ -172,12 +172,52 @@ export const deleteFrameKm = async (
     return false;
   }
 
+  const copySQL = `
+    INSERT INTO packed_framekms
+    SELECT * FROM framekms WHERE fkm_id = ?;
+  `;
+
+  try {
+    await runAsync(copySQL, [fkmId]);
+    await maintainPackedFrameKmTable();
+  } catch (error) {
+    console.error('Error copying rows:', error);
+  }
+
   try {
     await runAsync('DELETE FROM framekms WHERE fkm_id = ?;', [fkmId]);
     return true;
   } catch (error) {
     console.error('Error deleting framekm:', error);
     return false;
+  }
+};
+
+export const maintainPackedFrameKmTable = async (): Promise<void> => {
+  const maxRows = 5000;
+  const checkRowCountSQL = `
+    SELECT COUNT(*) AS row_count FROM packed_framekms;
+  `;
+
+  try {
+    const result: any = await runAsync(checkRowCountSQL);
+    if (result?.length) {
+      const currentRowCount = result[0].row_count;
+
+      if (currentRowCount && currentRowCount > maxRows) {
+        const rowsToDelete = currentRowCount - maxRows;
+  
+        const deleteOldestSQL = `
+          DELETE FROM packed_framekms WHERE image_name IN (
+            SELECT image_name FROM packed_framekms ORDER BY created_at ASC LIMIT ?
+          );
+        `;
+        await runAsync(deleteOldestSQL, [rowsToDelete]);
+        console.log(`${rowsToDelete} old rows deleted from framekms to maintain row limit.`);
+      }
+    }
+  } catch (error) {
+    console.error('Error maintaining packed_framekm table:', error);
   }
 };
 

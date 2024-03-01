@@ -128,7 +128,8 @@ export const runSchemaAsync = async (sql: string) => {
 
 export const initialise = async (): Promise<void> => {
   console.log('LOG: Initialising tables');
-  await createFrameKMTable();
+  await createFrameKMTable('framekms');
+  await createFrameKMTable('packed_framekms');
   await createHealthStateTable();
   await createFrameTable();
   await createConfigurationTable();
@@ -147,9 +148,9 @@ export const performSoftMigrations = async (): Promise<void> => {
   }
 }
 
-export const createFrameKMTable = async (): Promise<void> => {
+export const createFrameKMTable = async (tableName: string): Promise<void> => {
   const createTableSQL = `
-  CREATE TABLE IF NOT EXISTS framekms (
+  CREATE TABLE IF NOT EXISTS ${tableName} (
     fkm_id INTEGER,
     image_name TEXT PRIMARY KEY NOT NULL,
     image_path TEXT,
