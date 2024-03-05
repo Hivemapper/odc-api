@@ -10,7 +10,7 @@ import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
-// import { LogDiskUsageService } from 'services/logDiskUsage';
+import { SetSwappinessService } from 'services/setSwappiness';
 import { LoadPrivacyService } from 'services/loadPrivacy';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
@@ -78,7 +78,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(UsbStateCheckService);
-    // serviceRunner.add(LogDiskUsageService);
+    serviceRunner.add(SetSwappinessService);
 
     // Execute motion model
     MotionModelController();

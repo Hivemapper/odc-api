@@ -1,7 +1,7 @@
 import { CAMERA_TYPE, DB_PATH } from 'config';
 import { Router } from 'express';
 import { readdirSync } from 'fs';
-import { db, runAsync } from 'sqlite';
+import { runAsync } from 'sqlite';
 import { resetDB } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
@@ -97,7 +97,7 @@ router.get('/framekm/add/:name/:speed', async (req, res) => {
         ) VALUES (?, ?, ?, ?, ?);
       `;
 
-      await runAsync(db, insertSQL, [
+      await runAsync(insertSQL, [
         file,
         dummyPath + req.params.name,
         Number(req.params.speed),
@@ -139,7 +139,7 @@ router.get('/reset', async (req, res) => {
 
 router.get('/resetconfig', async (req, res) => {
   try {
-    await runAsync(db, 'DELETE FROM config;');
+    await runAsync('DELETE FROM config;');
     res.send({
       done: true,
     });

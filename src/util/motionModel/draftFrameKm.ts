@@ -12,7 +12,7 @@ import { isGnss, isImage, isImu } from 'util/sensor';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
-import { getCachedValue, getConfig } from 'sqlite/config';
+import { getCachedValue, getDX, setFastSpeedCollectionMode } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
@@ -24,6 +24,8 @@ export class DraftFrameKm {
   lastGnss: GnssRecord | null;
   lastImageTimestamp = 0;
   totalDistance = 0;
+  highSpeedRecordsInARow = 0;
+  lowSpeedRecordsInARow = 0;
 
   constructor(data?: SensorData) {
     this.data = [];
@@ -81,6 +83,7 @@ export class DraftFrameKm {
         return true;
       }
 
+      const SpeedToIncreaseDx = getCachedValue('SpeedToIncreaseDx');
       /**
        * Should we add this point, or should we cut the FrameKM already?
        */
@@ -102,8 +105,22 @@ export class DraftFrameKm {
         }
         return false;
       }
+      
+      if (speed > SpeedToIncreaseDx) {
+        this.highSpeedRecordsInARow++;
+        this.lowSpeedRecordsInARow = 0;
+      } else {
+        this.lowSpeedRecordsInARow++;
+        this.highSpeedRecordsInARow = 0;
+      }
 
-      if (distance > getCachedValue('DX') * 2) {
+      if (this.highSpeedRecordsInARow > 100) { // 15 seconds of moving fast
+        setFastSpeedCollectionMode(true);
+      } else if (this.lowSpeedRecordsInARow > 70) { // 10 seconds of moving slow. We cannot switch immediately, cause it will cut FrameKMs a lot
+        setFastSpeedCollectionMode(false);
+      }
+
+      if (distance > getDX() * 2) {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
@@ -200,7 +217,7 @@ export class DraftFrameKm {
     let gps: { longitude: number; latitude: number }[] = [];
     let gpsCounter = 0;
 
-    const DX = getCachedValue('DX');
+    const DX = getDX();
 
     if (prevKeyFrames.length) {
       // Get 3 previous points for CatmulRom curve
@@ -288,7 +305,7 @@ export class DraftFrameKm {
             !prevSelected ||
             distance(prevSelected, frameCoordinates) > DX - allowed_gap
           ) {
-            // get interpolated gnss metadata
+            // get interpolated gnss metadata, everything except lat & lon (they go from curve)
             const interpolatedGnssMetadata = interpolate(
               prevGNSS,
               nextGNSS,
@@ -300,6 +317,7 @@ export class DraftFrameKm {
               ...interpolatedGnssMetadata, // linear-interpolated gnss metadata, like hdop etc
               ...closestFrame, // frame name and system time
               ...frameCoordinates, // lat and lon from curve
+              dx: DX,
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];

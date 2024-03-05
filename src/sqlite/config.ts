@@ -1,5 +1,9 @@
-import { db, getAsync, runAsync } from './index';
+import { CAMERA_TYPE, ML_MODEL_PATH } from 'config';
+import { getAsync, runAsync } from './index';
 import { SystemConfig } from 'types/motionModel';
+import { exec } from 'child_process';
+import { CameraType, IServiceRestart } from 'types';
+import { Instrumentation } from 'util/instrumentation';
 
 const defaultConfig: SystemConfig = {
   DX: 8,
@@ -19,8 +23,17 @@ const defaultConfig: SystemConfig = {
   isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
+  lastTrimmed: 0,
   FrameKmLengthMeters: 1000,
   privacyRadius: 200,
+  PrivacyModelPath: ML_MODEL_PATH,
+  PrivacyModelHash: 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1',
+  PrivacyConfThreshold: 0.2,
+  PrivacyNmsThreshold: 0.9,
+  PrivacyNumThreads: 6,
+  SpeedToIncreaseDx: 24, // in meters per second
+  HdcSwappiness: 20,
+  HdcsSwappiness: 60,
 };
 
 const cachedConfig: { [key: string]: any } = {};
@@ -35,8 +48,8 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
   try {
     const rows = (
       Array.isArray(keys)
-        ? await getAsync(db, selectSQL, keys)
-        : await getAsync(db, selectSQL, [keys])
+        ? await getAsync(selectSQL, keys)
+        : await getAsync(selectSQL, [keys])
     ) as { key: string; value: any }[];
 
     // Transform the result based on the input type
@@ -79,7 +92,7 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
 export const getFullConfig = async () => {
   const selectSQL = `SELECT * FROM config`;
   try {
-    const rows = (await getAsync(db, selectSQL)) as {
+    const rows = (await getAsync(selectSQL)) as {
       key: string;
       value: string;
     }[];
@@ -93,6 +106,17 @@ export const getFullConfig = async () => {
   } catch (error) {
     console.error('Error during retrieving from config table:', error);
     return {};
+  }
+};
+
+export const setConfig = async (key: string, value: any) => {
+  const insertSQL = `INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)`;
+  const valueJSON = JSON.stringify(value);
+
+  try {
+    await runAsync(insertSQL, [key, valueJSON]);
+  } catch (error) {
+    console.error('Error during inserting into config table:', error);
   }
 };
 
@@ -113,22 +137,55 @@ export const updateConfig = async (
     valueTuples.push(`(?, ?)`);
     queryParams.push(key, JSON.stringify(configItems[key as keyof SystemConfig]));
   }
-
   insertSQL += valueTuples.join(', ');
 
   try {
-    await runAsync(db, insertSQL, queryParams);
+    await runAsync(insertSQL, queryParams);
+    await shouldRestartServices(configItems);
   } catch (error) {
     console.error('Error during bulk inserting/updating config table:', error);
   }
 };
+
+export const shouldRestartServices = async (configItems: SystemConfig) => {
+  const servicesToRestart: IServiceRestart = {};
+
+  // If any of those keys updated, we need to restart object-detection service
+  const objectDetectionConfigKeys = [
+    'isDashcamMLEnabled', 
+    // 'PrivacyModelPath', 
+    // 'PrivacyModelHash', 
+    // 'PrivacyConfThreshold', 
+    // 'PrivacyNmsThreshold', 
+    // 'PrivacyNumThreads'
+  ];
+  // const dataLoggerConfigKeys = ['...']
+
+  for (const key of Object.keys(configItems)) {
+    if (objectDetectionConfigKeys.includes(key)) {
+      const currentVal = await getConfig(key);
+      const newVal = configItems[key as keyof SystemConfig];
+      if (currentVal != newVal) {
+        servicesToRestart.objectDetection = true;
+      }
+    }
+    // if (dataLoggerConfigKeys.includes(key)) {
+    //   ...
+    // }
+  }
+  
+  if (servicesToRestart.objectDetection) {
+    console.log('Config updated for object-detection service. Restaring');
+    exec('systemctl restart object-detection');
+  }
+}
 
 export const updateConfigKey = async (key: string, value: any) => {
   const insertSQL = `INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)`;
   const valueJSON = JSON.stringify(value);
 
   try {
-    await runAsync(db, insertSQL, [key, valueJSON]);
+    await runAsync(insertSQL, [key, valueJSON]);
   } catch (error) {
     console.error('Error during inserting into config table:', error);
   }
@@ -149,6 +206,39 @@ export const getCachedValue = (key: string) => {
   return cachedConfig[key] !== undefined ? cachedConfig[key] : defaultConfig[key as keyof SystemConfig];
 }
 
+let FAST_SPEED_COLLECTION_MODE = false;
+export const getDX = () => {
+  let dx = getCachedValue('DX');
+  if (FAST_SPEED_COLLECTION_MODE && CAMERA_TYPE === CameraType.Hdc) {
+    dx *= 1.5;
+  }
+  return Math.round(dx);
+}
+
+let lastTimeChanged = 0;
+export const setFastSpeedCollectionMode = (value: boolean) => {
+  if (value !== FAST_SPEED_COLLECTION_MODE) {
+    const period = lastTimeChanged ? Date.now() - lastTimeChanged : 0;
+    Instrumentation.add({
+      event: 'DashcamFastSpeedCollection',
+      message: JSON.stringify({
+        mode: value,
+        period
+      })
+    });
+    lastTimeChanged = Date.now();
+  }
+  FAST_SPEED_COLLECTION_MODE = value;
+}
+
+export const getCutoffIndex = (currentDx: number) => {
+  let dx = getCachedValue('DX');
+  if (currentDx > dx) {
+    return 1.5;
+  }
+  return 2;
+}
+
 export const isValidConfig = (_config: SystemConfig) => {
   const isValid =
     _config &&
@@ -159,7 +249,6 @@ export const isValidConfig = (_config: SystemConfig) => {
     typeof _config.GnssFilter === 'object';
 
   _config.isLightCheckDisabled = false;
-  _config.isDashcamMLEnabled = true; // FORCE ENABLE FOR HDC-S TESTING. TODO: REMOVE
   return isValid;
 };
 
