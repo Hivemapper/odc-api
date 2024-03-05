@@ -139,14 +139,22 @@ export const initialise = async (): Promise<void> => {
 };
 
 export const performSoftMigrations = async (): Promise<void> => {
-  // add dx INTEGER field to framekm table, if doesn't exist, default to 0
-  const addDxToFramekm = `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`;
-  try {
-    await runSchemaAsync(addDxToFramekm);
-  } catch (error) {
-    console.error('Error during adding dx field to framekms table:', error);
+  const migrationCommands = [
+    `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
+    // Add more ALTER TABLE commands here as needed
+  ];
+
+  for (const command of migrationCommands) {
+    try {
+      await runSchemaAsync(command);
+      console.log(`Successfully executed migration command: ${command}`);
+    } catch (error) {
+      console.error(`Error during execution of migration command (${command}):`, error);
+    }
   }
-}
+};
+
 
 export const createFrameKMTable = async (tableName: string): Promise<void> => {
   const createTableSQL = `

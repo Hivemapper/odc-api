@@ -18,7 +18,7 @@ const defaultConfig: SystemConfig = {
   MaxPendingTime: 1000 * 60 * 60 * 24 * 10,
   isCornerDetectionEnabled: true,
   isLightCheckDisabled: false,
-  isDashcamMLEnabled: false,
+  isDashcamMLEnabled: true,
   isGyroCalibrationEnabled: false,
   isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
@@ -63,11 +63,7 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
           // cache it
           cachedConfig[row.key] = value;
         }
-        if (row.key === 'isDashcamMLEnabled') {
-          acc['isDashcamMLEnabled'] = true;
-        } else {
-          acc[row.key] = value;
-        }
+        acc[row.key] = value;
         return acc;
       }, {});
     } else {
@@ -79,11 +75,7 @@ export const getConfig = async (keys: string | string[], ignoreCache = false) =>
         // cache it
         cachedConfig[keys] = value;
       }
-      if (keys === 'isDashcamMLEnabled') {
-        return true;
-      } else {
-        return value;
-      }
+      return value;
     }
   } catch (error) {
     console.error('Error during retrieving from config table:', error);
@@ -161,11 +153,11 @@ export const shouldRestartServices = async (configItems: SystemConfig) => {
   // If any of those keys updated, we need to restart object-detection service
   const objectDetectionConfigKeys = [
     'isDashcamMLEnabled', 
-    'PrivacyModelPath', 
-    'PrivacyModelHash', 
-    'PrivacyConfThreshold', 
-    'PrivacyNmsThreshold', 
-    'PrivacyNumThreads'
+    // 'PrivacyModelPath', 
+    // 'PrivacyModelHash', 
+    // 'PrivacyConfThreshold', 
+    // 'PrivacyNmsThreshold', 
+    // 'PrivacyNumThreads'
   ];
   // const dataLoggerConfigKeys = ['...']
 
@@ -173,7 +165,7 @@ export const shouldRestartServices = async (configItems: SystemConfig) => {
     if (objectDetectionConfigKeys.includes(key)) {
       const currentVal = await getConfig(key);
       const newVal = configItems[key as keyof SystemConfig];
-      if (currentVal !== newVal) {
+      if (currentVal != newVal) {
         servicesToRestart.objectDetection = true;
       }
     }

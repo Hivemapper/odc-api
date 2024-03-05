@@ -14,24 +14,28 @@ width = 2028
 height = 1024
 image_size_px = width * height
 
-def xywh2xyxy(box):
+def xywh2xyxy(box, model_size):
     x, y, w, h = box
 
-    x_min = (x - w / 2) * width
-    y_min = (y - h / 2) * height
-    x_max = (x + w / 2) * width
-    y_max = (y + h / 2) * height
+    x_min = (x - w / 2) * model_size
+    y_min = (y - h / 2) * model_size
+    x_max = (x + w / 2) * model_size
+    y_max = (y + h / 2) * model_size
 
     return np.array([x_min, y_min, x_max, y_max], dtype=np.float32)
 
 def combine_images(images, grid_size, model_size):
-    # Size of each cell in the grid
-    cell_width = model_size // grid_size
-    cell_height = model_size // grid_size
+    # Adjust the number of cells based on the grid size
+    if grid_size == 1:  # 1x2 grid
+        total_cells = 2  # Two cells stacked vertically
+        cell_width = model_size
+        cell_height = model_size // 2
+    else:  # 2x2 grid
+        total_cells = grid_size * grid_size
+        cell_width = cell_height = model_size // grid_size
 
     # Initialize a blank grid
     combined_img = np.zeros((model_size, model_size, 3), dtype=np.float32)
-    total_cells = grid_size * grid_size
     orig_images = []
 
     for i in range(total_cells):
@@ -54,7 +58,7 @@ def combine_images(images, grid_size, model_size):
               # if input img is broken or empty
               resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
             else:
-              resized_img = image.letterbox(img, (cell_width, cell_height))[0]
+                resized_img = cv2.resize(img, (cell_width, cell_height), interpolation=cv2.INTER_NEAREST)
         else:
             # Use an empty (black) image for spots without images
             resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
@@ -68,42 +72,55 @@ def combine_images(images, grid_size, model_size):
 
     return combined_img, orig_images
 
-def transform_box(box, w_offset=0, h_offset=0, grid_size=1):
-  ratio = width / height
-  padding = (width - height) / 2
-  x_multiplier = grid_size
-  y_multiplier = grid_size * ratio
-  new_box = np.floor(np.array([
-    (box[0] - w_offset) * x_multiplier,
-    (box[1] - h_offset) * y_multiplier - padding,
-    (box[2] - w_offset) * x_multiplier,
-    (box[3] - h_offset) * y_multiplier - padding
-  ])).astype(int)
-  
-  # Making sure all the box coordinates are within the boundaries
-  if width is not None:
-    new_box[::2] = np.clip(new_box[::2], 0, width)  # for x-coordinates
-  if height is not None:
-    new_box[1::2] = np.clip(new_box[1::2], 0, height)  # for y-coordinates
-  return new_box
+def transform_box(box, model_size, grid_size, index):
+    # Determine cell dimensions based on grid size
+    if grid_size == 1:  # 1x2 grid
+        cell_width = model_size
+        cell_height = model_size // 2
+        w_offset = 0
+        h_offset = index * cell_height
+    else:  # 2x2 grid
+        cell_width = cell_height = model_size // 2
+        w_offset = (index % 2) * cell_width
+        h_offset = (index // 2) * cell_height
 
-def determine_image_index(box, w, h, grid_size):
-  x_index = int(box[0] // w)
-  y_index = int(box[1] // h)
-  return y_index * grid_size + x_index
+    # Calculate scale factors
+    scale_w = width / cell_width
+    scale_h = height / cell_height
 
-def rescale_boxes(boxes, img_width, img_height, model_width, model_height):
-    # Rescale boxes to original image dimensions
-    # paying attention to paddings of squared detections
-    input_shape = np.array([model_width, model_height, model_width, model_height])
-    aspect_ratio = img_width / img_height
-    resize_ratio = model_width / img_width
-    padding = (model_height - img_height * resize_ratio) / 2
+    # Transform the box coordinates
+    new_box = [
+        (box[0] - w_offset) * scale_w,
+        (box[1] - h_offset) * scale_h,
+        (box[2] - w_offset) * scale_w,
+        (box[3] - h_offset) * scale_h
+    ]
 
-    boxes -= np.array([0, padding, 0, padding])
-    boxes = np.divide(boxes, input_shape, dtype=np.float32)
-    boxes *= np.array([img_width, img_height * aspect_ratio, img_width, img_height * aspect_ratio])
-    return boxes
+    # Clipping the coordinates to make sure they are within image boundaries
+    new_box[::2] = np.clip(new_box[::2], 0, width)
+    new_box[1::2] = np.clip(new_box[1::2], 0, height)
+
+    return np.floor(new_box).astype(int)
+
+
+def determine_image_index(box, model_size, grid_size):
+    # For a 1x2 grid, width is the model width and height is half of the model height
+    if grid_size == 1:
+        cell_width = model_size
+        cell_height = model_size // 2
+    # For a 2x2 grid, both width and height are half of the model size
+    else:
+        cell_width = cell_height = model_size // 2
+
+    x_index = int(box[0] // cell_width)
+    y_index = int(box[1] // cell_height)
+    
+    # For a 1x2 grid, the index is simply the y_index
+    if grid_size == 1:
+        return y_index
+    # For a 2x2 grid, calculate the index based on both x and y indices
+    else:
+        return y_index * 2 + x_index  # Assuming grid_size is 2 for a 2x2 grid
 
 def detect(images, model, input_details, output_details, conf_threshold, nms_threshold, sqlite, model_hash):
     metrics = {}
@@ -113,7 +130,7 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
     try:
       # Read and preprocess the image
       start_read = time.perf_counter()
-      grid_size = 3 if len(images) > 4 else 2 if len(images) > 1 else 1
+      grid_size = 2 if len(images) > 2 else 1
       metrics['grid'] = grid_size
 
       model_size = input_details[0]['shape'][1]
@@ -134,7 +151,7 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
           max_score = np.max(scores)  # Find the maximum score (confidence)
           if max_score >= conf_threshold:
               class_id = np.argmax(scores)  # Determine the class with the highest probability
-              box = xywh2xyxy(prediction[:4])  # Extract and convert bounding box coordinates
+              box = xywh2xyxy(prediction[:4], model_size)  # Extract and convert bounding box coordinates
               predictions.append([class_id, max_score, *box])
 
       # Convert to numpy array
@@ -158,23 +175,25 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
             sqlite.set_frame_ml(image[0], model_hash, [], metrics)
           return set(), None
 
-      grouped_boxes = [[] for _ in range(grid_size*grid_size)]
-      grouped_scores = [[] for _ in range(grid_size*grid_size)]
-      grouped_classes = [[] for _ in range(grid_size*grid_size)]
-      w2 = int(width/grid_size)
-      h2 = int(height/grid_size)
-      offsets = [(i * w2, j * h2) for j in range(grid_size) for i in range(grid_size)]
+      total_images = 2 if grid_size == 1 else 4
+      grouped_boxes = [[] for _ in range(total_images)]
+      grouped_scores = [[] for _ in range(total_images)]
+      grouped_classes = [[] for _ in range(total_images)]
 
       # Split boxes between initial images
       for box, score, class_id in zip(boxes, scores, class_ids):
-          image_index = determine_image_index(box, w2, h2, grid_size)
+          image_index = determine_image_index(box, model_size, grid_size)
 
-          w_offset, h_offset = offsets[image_index]
-          box = transform_box(box, w_offset, h_offset, grid_size)
+          box = transform_box(box, model_size, grid_size, image_index)
 
           # filter out large boxes and boxes on the hood
           if (box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height) or (box[2] - box[0] > 0.7 * width and box[3] - box[1] > 0.7 * height):
             continue
+
+          # if box is pretty big (1/6 of frame or bigger), let's be extra-confident in prediction
+          if ((box[2] - box[0]) * (box[3] - box[1]) > (image_size_px / 6) and score < conf_threshold + 0.1):
+            continue
+
           grouped_boxes[image_index].append(box)
           grouped_scores[image_index].append(score)
           grouped_classes[image_index].append(class_id)
@@ -275,12 +294,21 @@ def main():
   print(config)
 
   def worker():
-    model = interpreter.Interpreter(config["PrivacyModelPath"])
-    model_hash = config["PrivacyModelHash"]
-    model.allocate_tensors()
-    input_details = model.get_input_details()
-    output_details = model.get_output_details()
+    single_model = interpreter.Interpreter(config["PrivacyModelPath"])
+    single_model_hash = config["PrivacyModelHash"]
+    single_model.allocate_tensors()
+    single_input_details = single_model.get_input_details()
+    single_output_details = single_model.get_output_details()
+
+    grid_model = interpreter.Interpreter(config["PrivacyModelGridPath"])
+    grid_model_hash = config["PrivacyModelGridHash"]
+    grid_model.allocate_tensors()
+    grid_input_details = grid_model.get_input_details()
+    grid_output_details = grid_model.get_output_details()
+
     errors_counter = 0
+    conf_threshold = config["PrivacyConfThreshold"]
+    nms_threshold = config["PrivacyNmsThreshold"]
 
     while True:
       images = q.get()
@@ -292,7 +320,14 @@ def main():
             if image_name not in retry_counters:
                 retry_counters[image_name] = 0
 
-          unprocessed_images, error = detect(images, model, input_details, output_details, config["PrivacyConfThreshold"], config["PrivacyNmsThreshold"], sqlite, model_hash)
+          is_grid = len(images) > 2
+          model = grid_model if is_grid else single_model
+          model_hash = grid_model_hash if is_grid else single_model_hash
+          input_details = grid_input_details if is_grid else single_input_details
+          output_details = grid_output_details if is_grid else single_output_details
+          conf = conf_threshold - 0.1 if is_grid else conf_threshold
+
+          unprocessed_images, error = detect(images, model, input_details, output_details, conf, nms_threshold, sqlite, model_hash)
           for image in enumerate(images):
             image_name = image[0]
             if image_name in unprocessed_images:
@@ -314,37 +349,75 @@ def main():
         if errors_counter > 10:
           errors_counter = 0
           sqlite.set_service_status('failed')
-        
+        try: 
+          if "inference" in str(e).lower() or "interpreter" in str(e).lower:
+            single_model = interpreter.Interpreter(config["PrivacyModelPath"])
+            single_model_hash = config["PrivacyModelHash"]
+            single_model.allocate_tensors()
+            single_input_details = single_model.get_input_details()
+            single_output_details = single_model.get_output_details()
+
+            grid_model = interpreter.Interpreter(config["PrivacyModelGridPath"])
+            grid_model_hash = config["PrivacyModelGridHash"]
+            grid_model.allocate_tensors()
+            grid_input_details = grid_model.get_input_details()
+            grid_output_details = grid_model.get_output_details()
+            time.sleep(2)
+        except Exception as err:
+          sqlite.set_service_status('failed')
+        try:
+          sqlite.log_error(e)
+        except Exception as e:
+          print(f"Error logging error: {e}")
       q.task_done()
 
   # init threads
   for i in range(config["PrivacyNumThreads"]):
     threading.Thread(target=worker, daemon=True).start()
+    time.sleep(1)
 
   # init watcher
   try:
     print('Starting watcher')
     sqlite.set_service_status('healthy')
+    prev_images_len = 0
+    empty_loops = 0
+    low_speed_threshold = config["LowSpeedThreshold"]
 
     while True:
       images, total = sqlite.get_frames_for_ml(50)
       print(total)
-      
-      # Depending on how big is the processing queue,
-      if total > 15:
-        # split on groups of 4
-        images = [images[i:i + 4] for i in range(0, len(images), 4)]
-        # push every group to queue
-        for group in images:
+    
+      if len(images) > 0:
+        # Divide images into low-speed and high-speed groups
+        low_speed_images = [img for img in images if img[2] <= low_speed_threshold]
+        high_speed_images = [img for img in images if img[2] > low_speed_threshold]
+
+        # Group images for 1x2 grid (low-speed)
+        for i in range(0, len(low_speed_images), 2):
+          group = low_speed_images[i:i + 2]
           q.put(group)
-      elif total > 0:
-        #split on single images arrays
-        for image in images:
-          q.put([image])
+          time.sleep(0.1)
+
+        # Group images for 2x2 grid (high-speed)
+        for i in range(0, len(high_speed_images), 4):
+          group = high_speed_images[i:i + 4]
+          q.put(group)
+          time.sleep(0.1)
+
 
       q.join()
 
-      time.sleep(3 if len(images) == 0 else 1 if len(retry_counters) > 0 else 0.1)
+      if (prev_images_len == len(images) and prev_images_len > 0):
+        empty_loops += 1
+        if empty_loops > 10:
+          empty_loops = 0
+          sqlite.set_service_status('failed')
+      else:
+        empty_loops = 0
+      prev_images_len = len(images)
+
+      time.sleep(3 if len(images) == 0 else 1 if (len(retry_counters) > 0 or empty_loops > 0) else 0.2)
 
   except KeyboardInterrupt:
     print('Watcher stopped by user')
