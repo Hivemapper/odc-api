@@ -103,6 +103,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         message: JSON.stringify({
           name: finalBundleName,
           numFrames: frameKm?.length,
+          dx: frameKm[0].dx,
           duration: Date.now() - start,
           usbInserted: getUsbState(),
           ...framekmTelemetry,
@@ -179,10 +180,7 @@ export const packMetadata = async (
         acc_z: m.acc_z,
         gyro_x: m.gyro_x,
         gyro_y: m.gyro_y,
-        gyro_z: m.gyro_z,
-        // TODO: revisit with ML iteration
-        // hash: m.ml_model_hash || '',
-        // detections: m.ml_detections || '',
+        gyro_z: m.gyro_z
       };
       validatedFrames.push(frame);
 
@@ -250,7 +248,7 @@ export const packMetadata = async (
         firmwareVersion: API_VERSION,
         ssid: deviceInfo?.ssid,
         loraDeviceId: undefined,
-        keyframeDistance: DX,
+        keyframeDistance: framesMetadata[0].dx || DX,
         resolution: '2k',
         version: '1.8',
         privacyModelHash,
@@ -267,7 +265,7 @@ export const packMetadata = async (
         write_time,
         blur_time
       } = metrics;
-      const total_time = (load_time + inference_time + write_time + blur_time) / 4; // 4 threads
+      const total_time = (load_time + inference_time + write_time + blur_time) / 6; // 6 threads
 
       const { PrivacyConfThreshold, PrivacyNmsThreshold } = await getConfig(['PrivacyConfThreshold', 'PrivacyNmsThreshold']);
 

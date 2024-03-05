@@ -41,6 +41,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamMLPostponed',
   'DashcamScheduledFrameKmToReprocess',
   'DashcamFirmwareUploaded',
+  'DashcamFastSpeedCollection',
   'DashcamLog',
   'GpsLock',
   'DashcamUSBState',
