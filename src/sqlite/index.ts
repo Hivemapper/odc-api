@@ -4,7 +4,7 @@ import { ANONYMOUS_ID_FIELD, insertIntoDeviceInfo } from './deviceInfo';
 import { generate } from 'shortid';
 
 export const connectDB = (callback?: () => void): Database => {
-  console.log('[SQLITE] CONNECT DB');
+  console.log(`[SQLITE] CONNECT DB ${DB_PATH}`);
   return new Database(DB_PATH, err => {
     if (err) {
       console.error('[SQLITE] DB connect error', err.message);
