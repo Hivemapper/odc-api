@@ -1,5 +1,7 @@
 import { Database } from 'sqlite3';
 import { DB_PATH } from 'config';
+import { ANONYMOUS_ID_FIELD, insertIntoDeviceInfo } from './deviceInfo';
+import { generate } from 'shortid';
 
 const MAX_RETRIES_CONNECT = 5;
 const RETRY_INTERVAL_CONNECT = 2000;
@@ -134,6 +136,9 @@ export const initialise = async (): Promise<void> => {
   await createFrameTable();
   await createConfigurationTable();
   console.log('LOG: Tables created');
+  await createDeviceInfoTable();
+  const anonymousId = generate();
+  await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
   await performSoftMigrations();
   console.log('LOG: migrated!');
 };
@@ -236,6 +241,19 @@ export const createConfigurationTable = async (): Promise<void> => {
     await runSchemaAsync(createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the config table:', error);
+    throw error;
+  }
+};
+export const createDeviceInfoTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS deviceInfo (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+    );`;
+  try {
+    await runSchemaAsync(createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the device info table:', error);
     throw error;
   }
 };

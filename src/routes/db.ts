@@ -22,6 +22,16 @@ router.get('/gnss/:n', async (req, res) => {
   }
 });
 
+router.get('/path', async (req, res) => {
+  try {
+    res.send({
+      path: DB_PATH,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
 router.get('/imu/:n', async (req, res) => {
   const { n } = req.params;
   try {

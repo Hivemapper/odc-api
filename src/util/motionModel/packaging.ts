@@ -21,6 +21,8 @@ import { getDeviceInfo } from 'services/deviceInfo';
 import { getConfig, getDX } from 'sqlite/config';
 import { freemem } from 'os';
 import { getUsbState } from 'services/usbStateCheck';
+import { getAnonymousID } from 'sqlite/deviceInfo';
+import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -30,6 +32,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
   
   let finalBundleName;
   let frameKmName;
+  const deviceId = await getAnonymousID();
   try {
     const frameKmId = frameKm[0].fkm_id;
     frameKmName = await getFrameKmName(frameKmId);
@@ -104,6 +107,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           name: finalBundleName,
           numFrames: frameKm?.length,
           dx: frameKm[0].dx,
+          deviceId,
           duration: Date.now() - start,
           usbInserted: getUsbState(),
           ...framekmTelemetry,
@@ -119,6 +123,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       message: JSON.stringify({
         name: finalBundleName || frameKmName,
         reason: 'Motion Model Error',
+        deviceId,
         error,
       }),
     });
@@ -238,6 +243,11 @@ export const packMetadata = async (
   if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
     const DX = getDX();
+    const deviceId = await getAnonymousID();
+    const startTime = validatedFrames.at(0)?.t || Date.now();
+    const endTime = validatedFrames.at(-1)?.t || Date.now();
+    const gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
+
     const metadataJSON = {
       bundle: {
         name,
@@ -253,6 +263,12 @@ export const packMetadata = async (
         version: '1.8',
         privacyModelHash,
         privacyDetections: privacyModelHash && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
+        deviceId: deviceId,
+        gnssAuthBuffer: gnssAuth?.buffer,
+        gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
+        gnssAuthBufferHash: gnssAuth?.buffer_hash,
+        gnssAuthSessionId: gnssAuth?.session_id,
+        gnssAuthSignature: gnssAuth?.signature
       },
       frames: validatedFrames,
     };
@@ -294,6 +310,7 @@ export const packMetadata = async (
           cpu_usage: getCpuUsage(),
           conf_threshold: PrivacyConfThreshold || 0.3,
           nms_threshold: PrivacyNmsThreshold || 0.9,
+          deviceId,
           name
         }),
       });

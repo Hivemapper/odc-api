@@ -50,6 +50,16 @@ export interface GnssRecord {
     rxm_measx: string;
 }
 
+export interface GnssAuthRecord {
+  id: number;
+  buffer: string;
+  buffer_message_num: number;
+  buffer_hash: string;
+  session_id: string;
+  signature: string;
+  system_time: number;
+}
+
 export type FrameKmRecord = {
     fkm_id?: number;
     image_name: string;
