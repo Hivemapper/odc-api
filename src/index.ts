@@ -20,6 +20,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { isTimeSet } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
 import { UsbStateCheckService } from 'services/usbStateCheck';
+import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -87,6 +88,8 @@ export async function initAppServer(): Promise<Application> {
   } catch (e: unknown) {
     console.log('Error running services:', e);
   }
+
+  console.log(`publicKey: ${await getPublicKeyFromEeprom()}`);
 
   try {
     initUbxSessionAndSignatures();
