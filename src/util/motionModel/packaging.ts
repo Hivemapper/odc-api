@@ -24,6 +24,8 @@ import { getAnonymousID } from 'sqlite/deviceInfo';
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
 
+const CHANCE_OF_GNSS_AUTH_CHECK = 1.0;
+
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
   if (!frameKm.length) {
@@ -170,10 +172,9 @@ export const packMetadata = async (
     const startTime = validatedFrames.at(0)?.t || Date.now();
     const endTime = validatedFrames.at(-1)?.t || Date.now();
 
-    const CHANCE_OF_CHECK = 1.0;
     let gnssAuth : GnssAuthRecord | undefined;
     let publicKey = '';
-    if (Math.random() <= CHANCE_OF_CHECK) {
+    if (Math.random() <= CHANCE_OF_GNSS_AUTH_CHECK) {
       gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
       publicKey = await getPublicKeyFromEeprom();
     }
