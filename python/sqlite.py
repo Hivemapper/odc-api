@@ -55,11 +55,11 @@ class SQLite:
         
     def get_privacy_config(self):
         default_values = {
-            'PrivacyModelPath': '/opt/dashcam/bin/n640_float16.tflite',
-            'PrivacyModelHash': 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1',
-            'PrivacyModelGridPath': '/opt/dashcam/bin/n640_2x2_float16.tflite',
-            'PrivacyModelGridHash': 'ca6c60c041e62bb175be9e1b3295674777780967e92cf7d6750b90fc3a8525bd',
-            'LowSpeedThreshold': 15,
+            'PrivacyModelPath': '/opt/dashcam/bin/n800_1x2_float16.tflite',
+            'PrivacyModelHash': 'aed96116f29ed50e6844e5a5861c3d2316a6d2fb7a00afc4d248da8702d4e434',
+            'PrivacyModelGridPath': '/opt/dashcam/bin/n800_2x2_float16.tflite',
+            'PrivacyModelGridHash': 'e2f5488db4aa6bb0b1dba82476a238ca899c804cbee580f398051d62b7874702',
+            'LowSpeedThreshold': 17,
             'PrivacyConfThreshold': 0.3,
             'PrivacyNmsThreshold': 0.9,
             'PrivacyNumThreads': 4

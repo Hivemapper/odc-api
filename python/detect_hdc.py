@@ -14,13 +14,13 @@ width = 2028
 height = 1024
 image_size_px = width * height
 
-def xywh2xyxy(box, model_size):
+def xywh2xyxy(box, model_size, grid_size):
     x, y, w, h = box
-
-    x_min = (x - w / 2) * model_size
-    y_min = (y - h / 2) * model_size
-    x_max = (x + w / 2) * model_size
-    y_max = (y + h / 2) * model_size
+    multiplier = model_size if grid_size > 1 else 1
+    x_min = (x - w / 2) * multiplier
+    y_min = (y - h / 2) * multiplier
+    x_max = (x + w / 2) * multiplier
+    y_max = (y + h / 2) * multiplier
 
     return np.array([x_min, y_min, x_max, y_max], dtype=np.float32)
 
@@ -131,6 +131,7 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
       # Read and preprocess the image
       start_read = time.perf_counter()
       grid_size = 2 if len(images) > 2 else 1
+      print("grid", grid_size)
       metrics['grid'] = grid_size
 
       model_size = input_details[0]['shape'][1]
@@ -151,7 +152,7 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
           max_score = np.max(scores)  # Find the maximum score (confidence)
           if max_score >= conf_threshold:
               class_id = np.argmax(scores)  # Determine the class with the highest probability
-              box = xywh2xyxy(prediction[:4], model_size)  # Extract and convert bounding box coordinates
+              box = xywh2xyxy(prediction[:4], model_size, grid_size)  # Extract and convert bounding box coordinates
               predictions.append([class_id, max_score, *box])
 
       # Convert to numpy array
@@ -385,23 +386,26 @@ def main():
     low_speed_threshold = config["LowSpeedThreshold"]
 
     while True:
-      images, total = sqlite.get_frames_for_ml(50)
+      images, total = sqlite.get_frames_for_ml(48)
       print(total)
     
       if len(images) > 0:
         # Divide images into low-speed and high-speed groups
+        print(images[0][2], images[0][2] <= low_speed_threshold)
         low_speed_images = [img for img in images if img[2] <= low_speed_threshold]
         high_speed_images = [img for img in images if img[2] > low_speed_threshold]
 
         # Group images for 1x2 grid (low-speed)
         for i in range(0, len(low_speed_images), 2):
           group = low_speed_images[i:i + 2]
+          print("pushing to 1x2")
           q.put(group)
           time.sleep(0.1)
 
         # Group images for 2x2 grid (high-speed)
         for i in range(0, len(high_speed_images), 4):
           group = high_speed_images[i:i + 4]
+          print("pushing to 2x2")
           q.put(group)
           time.sleep(0.1)
 

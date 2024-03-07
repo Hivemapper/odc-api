@@ -1,4 +1,4 @@
-import { db } from './index';
+import { getDb } from './index';
 import { GnssAuthRecord } from 'types/sqlite';
 import { convertTimestampToDbFormat } from 'util/index';
 
@@ -17,6 +17,7 @@ export const fetchGnssAuthLogsByTime  = async (from: number, to?: number, limit?
         args.push(String(limit));
     }
 
+    const db = await getDb();
     return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: GnssAuthRecord[]) => {
             if (err) {

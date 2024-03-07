@@ -246,7 +246,7 @@ export const packMetadata = async (
     const deviceId = await getAnonymousID();
     const startTime = validatedFrames.at(0)?.t || Date.now();
     const endTime = validatedFrames.at(-1)?.t || Date.now();
-    const gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
+    // const gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
 
     const metadataJSON = {
       bundle: {
@@ -264,11 +264,11 @@ export const packMetadata = async (
         privacyModelHash,
         privacyDetections: privacyModelHash && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
         deviceId: deviceId,
-        gnssAuthBuffer: gnssAuth?.buffer,
-        gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
-        gnssAuthBufferHash: gnssAuth?.buffer_hash,
-        gnssAuthSessionId: gnssAuth?.session_id,
-        gnssAuthSignature: gnssAuth?.signature
+        gnssAuthBuffer: undefined,
+        gnssAuthBufferMessageNum: undefined,
+        gnssAuthBufferHash: undefined,
+        gnssAuthSessionId: undefined,
+        gnssAuthSignature: undefined
       },
       frames: validatedFrames,
     };
