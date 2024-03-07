@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
 import { deleteFrameKm, getFrameKmName } from 'sqlite/framekm';
 import { FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
-import { FrameKM, FrameKmRecord } from 'types/sqlite';
+import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality } from 'util/index';
 import {
   MAX_PER_FRAME_BYTES,
@@ -22,6 +22,9 @@ import { getDeviceInfo } from 'services/deviceInfo';
 import { getUsbState } from 'services/usbStateCheck';
 import { getAnonymousID } from 'sqlite/deviceInfo';
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
+import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
+
+const CHANCE_OF_GNSS_AUTH_CHECK = 1.0;
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -168,7 +171,14 @@ export const packMetadata = async (
 
     const startTime = validatedFrames.at(0)?.t || Date.now();
     const endTime = validatedFrames.at(-1)?.t || Date.now();
-    const gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
+
+    let gnssAuth : GnssAuthRecord | undefined;
+    let publicKey = '';
+    if (Math.random() <= CHANCE_OF_GNSS_AUTH_CHECK) {
+      gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
+      publicKey = await getPublicKeyFromEeprom();
+    }
+
     const metadataJSON = {
       bundle: {
         name,
@@ -187,7 +197,8 @@ export const packMetadata = async (
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
         gnssAuthBufferHash: gnssAuth?.buffer_hash,
         gnssAuthSessionId: gnssAuth?.session_id,
-        gnssAuthSignature: gnssAuth?.signature
+        gnssAuthSignature: gnssAuth?.signature,
+        gnssAuthPublicKey: publicKey,
       },
       frames: validatedFrames,
     };
