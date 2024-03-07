@@ -89,8 +89,6 @@ export async function initAppServer(): Promise<Application> {
     console.log('Error running services:', e);
   }
 
-  console.log(`publicKey: ${await getPublicKeyFromEeprom()}`);
-
   try {
     initUbxSessionAndSignatures();
   } catch (e: unknown) {
