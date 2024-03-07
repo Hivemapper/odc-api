@@ -98,4 +98,4 @@ export type FrameKmRecord = {
 
   export type FrameKM = FrameKmRecord[];
   
-  export type SensorRecord = (GnssRecord | ImuRecord) & {sensor: string};
+  export type SensorRecord = (GnssRecord | ImuRecord) & {sensor: string, deviceId: number};

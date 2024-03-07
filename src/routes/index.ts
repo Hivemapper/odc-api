@@ -39,6 +39,7 @@ import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
 import { querySensorData } from 'sqlite/common';
 import { SensorRecord } from 'types/sqlite';
+import { getAnonymousID } from 'sqlite/deviceInfo';
 
 const router = Router();
 let isAppConnected = false;
@@ -254,40 +255,6 @@ router.post('/cmd/sync', async (req, res) => {
   }
 });
 
-router.get('/sensordata/:since', async (req: Request, res: Response) => {
-  let since: number;
-
-  try {
-    since = parseInt(req.params.since);
-    if (since === 0) {
-      since = Date.now() - 1000;
-    }
-  } catch (e) {
-    console.log(e);
-    res.statusCode = 400;
-    res.json({ err: 'since must be a positive integer' });
-    return;
-  }
-
-  if (!isTimeSet()) {
-    res.statusCode = 400;
-    res.json({ err: 'dashcam is not ready' });
-    return;
-  }
-
-  const { gnss, imu } = await querySensorData(Date.now() - since);
-
-  const sensordata: SensorRecord[] = [];
-  gnss.forEach(value => {
-    sensordata.push({ sensor: 'gnss', ...value });
-  });
-  imu.forEach(value => {
-    sensordata.push({ sensor: 'imu', ...value });
-  });
-
-  res.json(sensordata);
-});
-
 router.get('/sensorquery', async (req: Request, res: Response) => {
   let since = 0;
   let until = 0;
@@ -311,17 +278,14 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
     return;
   }
 
-  console.log('-------------------------');
-  console.log(since, until);
-  console.log(Date.now());
-
   const { gnss, imu } = await querySensorData(since, until);
+  const deviceId = await getAnonymousID();
   const sensordata: SensorRecord[] = [];
   gnss.forEach(value => {
-    sensordata.push({ sensor: 'gnss', ...value });
+    sensordata.push({ sensor: 'gnss', deviceId: deviceId, ...value });
   });
   imu.forEach(value => {
-    sensordata.push({ sensor: 'imu', ...value });
+    sensordata.push({ sensor: 'imu', deviceId: deviceId, ...value });
   });
 
   res.json(sensordata);
