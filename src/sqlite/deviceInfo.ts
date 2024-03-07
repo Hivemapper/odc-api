@@ -25,7 +25,7 @@ export const insertIntoDeviceInfo = async (
     });
 };
 
-export const getAnonymousID = async (): Promise<number> => {
+export const getAnonymousID = async (): Promise<string> => {
     try {
         const row: any = await getAsync(
             db,
@@ -34,6 +34,6 @@ export const getAnonymousID = async (): Promise<number> => {
         return row[0]?.value;
     } catch (error) {
         console.error('Error getting anonymous ID from Device Info table:', error);
-        return 0;
+        return '';
     }
 };
