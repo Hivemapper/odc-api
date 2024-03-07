@@ -20,7 +20,6 @@ import { Instrumentation } from 'util/instrumentation';
 import { isTimeSet } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
 import { UsbStateCheckService } from 'services/usbStateCheck';
-import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
