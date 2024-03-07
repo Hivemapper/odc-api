@@ -29,7 +29,7 @@ export const getAnonymousID = async (): Promise<string> => {
     try {
         const row: any = await getAsync(
             db,
-            `SELECT value FROM deviceInfo WHERE key=${ANONYMOUS_ID_FIELD};`,
+            `SELECT value FROM deviceInfo WHERE key='${ANONYMOUS_ID_FIELD}';`,
         );
         return row[0]?.value;
     } catch (error) {
