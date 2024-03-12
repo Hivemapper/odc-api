@@ -34,8 +34,7 @@ export async function MotionModelController() {
 
     await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
-
-    // TODO: utilise raw logs: collect, pack, etc here
+    await session.doHealthCheck();
   } catch (e: unknown) {
     console.log('Critical motion model controller error, investigate: ', e);
     Instrumentation.add({

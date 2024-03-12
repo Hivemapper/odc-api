@@ -52,7 +52,11 @@ def combine_images(images, grid_size, model_size):
             try: 
               img = cv2.imread(img_path)
             except Exception as e:
-              print(e)
+              try:
+                 img = cv2.imread(os.path.join(images[i][1], images[i][0]))
+              except Exception as err:
+                print(err)
+            
             orig_images.append(img)
             if img is None:
               # if input img is broken or empty
@@ -188,11 +192,11 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
           box = transform_box(box, model_size, grid_size, image_index)
 
           # filter out large boxes and boxes on the hood
-          if (box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height) or (box[2] - box[0] > 0.7 * width and box[3] - box[1] > 0.7 * height):
+          if (box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height):
             continue
 
           # if box is pretty big (1/6 of frame or bigger), let's be extra-confident in prediction
-          if ((box[2] - box[0]) * (box[3] - box[1]) > (image_size_px / 6) and score < conf_threshold + 0.1):
+          if ((box[2] - box[0]) * (box[3] - box[1]) > (image_size_px / 6) and score < conf_threshold + 0.2):
             continue
 
           grouped_boxes[image_index].append(box)
@@ -235,9 +239,6 @@ def blur(img, boxes, metrics):
   if blur_per_boxes:
     for box in boxes:
       box = box.astype(int)
-      # filter out large boxes and boxes on the hood
-      if (box[2] - box[0] > 0.8 * width and box[1] > 0.5 * height) or (box[2] - box[0] > 0.7 * width and box[3] - box[1] > 0.7 * height):
-        continue
       roi = img[box[1]:box[3], box[0]:box[2]]
       roi_downscale_width = int(roi.shape[1] * 0.2)
       roi_downscale_height = int(roi.shape[0] * 0.2)
@@ -326,7 +327,7 @@ def main():
           model_hash = grid_model_hash if is_grid else single_model_hash
           input_details = grid_input_details if is_grid else single_input_details
           output_details = grid_output_details if is_grid else single_output_details
-          conf = conf_threshold - 0.1 if is_grid else conf_threshold
+          conf = conf_threshold - 0.05 if is_grid else conf_threshold
 
           unprocessed_images, error = detect(images, model, input_details, output_details, conf, nms_threshold, sqlite, model_hash)
           for image in enumerate(images):

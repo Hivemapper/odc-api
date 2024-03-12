@@ -6,7 +6,7 @@ import {
 } from 'config';
 import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
-import { deleteFrameKm, getFrameKmName, postponeFrameKm } from 'sqlite/framekm';
+import { deleteFrameKm, getFrameKmName, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality, getCpuUsage } from 'util/index';
@@ -22,7 +22,6 @@ import { getConfig, getDX } from 'sqlite/config';
 import { freemem } from 'os';
 import { getUsbState } from 'services/usbStateCheck';
 import { getAnonymousID } from 'sqlite/deviceInfo';
-import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -47,7 +46,6 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       console.log('SHORT FRAMEKM THROWN AWAY', frameKm.length);
       if (frameKm.length) {
         await deleteFrameKm(frameKm[0].fkm_id);
-        await promises.rmdir(framesFolder, { recursive: true });
       }
       return;
     }
@@ -115,7 +113,6 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       });
     }
     await deleteFrameKm(frameKm[0].fkm_id);
-    await promises.rmdir(framesFolder, { recursive: true });
     
   } catch (error: unknown) {
     Instrumentation.add({
@@ -285,6 +282,8 @@ export const packMetadata = async (
 
       const { PrivacyConfThreshold, PrivacyNmsThreshold } = await getConfig(['PrivacyConfThreshold', 'PrivacyNmsThreshold']);
 
+      const queue_size = await getFramesCount();
+
       Instrumentation.add({
         event: 'DashcamML',
         size: validatedFrames.length,
@@ -310,6 +309,7 @@ export const packMetadata = async (
           cpu_usage: getCpuUsage(),
           conf_threshold: PrivacyConfThreshold || 0.3,
           nms_threshold: PrivacyNmsThreshold || 0.9,
+          queue_size,
           deviceId,
           name
         }),

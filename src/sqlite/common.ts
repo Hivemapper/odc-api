@@ -103,6 +103,7 @@ export const resetDB = async () => {
   try {
     console.log('RESETTING DB');
     await runAsync('DELETE FROM framekms;');
+    await runAsync('DELETE FROM packed_framekms;');
     await runAsync('DELETE FROM gnss;');
     await runAsync('DELETE FROM imu;');
     await runAsync('DELETE FROM frames;');

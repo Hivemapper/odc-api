@@ -47,27 +47,15 @@ export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   }
 };
 
-export const getLatestFrameKmId = async (): Promise<number | undefined> => {
-  try {
-    const latestFkmIdRow: any = await getAsync(
-      'SELECT MAX(fkm_id) AS latestFkmId FROM framekms;',
-    );
-    return latestFkmIdRow.length ? latestFkmIdRow[0].latestFkmId : null;
-  } catch (error) {
-    console.error('Error fetching latest fkm_id:', error);
-    return undefined;
-  }
-};
-
 export const getFirstFrameKmId = async (
   mlEnabled = false,
 ): Promise<number | undefined> => {
   try {
-    const query = `SELECT MIN(fkm_id) AS firstFkmId FROM framekms${
-      mlEnabled ? ' WHERE postponed = 0' : ''
+    const query = `SELECT fkm_id FROM framekms${
+      mlEnabled ? ' WHERE postponed = 0' : ' ORDER BY time LIMIT 1;'
     };`;
     const firstFkmIdRow: any = await getAsync(query);
-    return firstFkmIdRow.length ? firstFkmIdRow[0].firstFkmId : null;
+    return firstFkmIdRow.length ? firstFkmIdRow[0].fkm_id : null;
   } catch (error) {
     console.error('Error fetching first fkm_id:', error);
     return undefined;
@@ -77,11 +65,11 @@ export const getFirstFrameKmId = async (
 export const getFirstPostponedFrameKm = async (): Promise<
   number | undefined
 > => {
-  try {
+  try { 
     const firstPostponed: any = await getAsync(
-      `SELECT MIN(fkm_id) AS firstFkmId FROM framekms WHERE postponed = 1;`,
+      `SELECT fkm_id AS firstFkmId FROM framekms WHERE postponed = 1 ORDER BY time LIMIT 1;`,
     );
-    return firstPostponed.length ? firstPostponed[0].firstFkmId : null;
+    return firstPostponed.length ? firstPostponed[0].fkm_id : null;
   } catch (error) {
     console.error('Error fetching postponed fkm_id:', error);
     return undefined;
@@ -112,16 +100,6 @@ export const moveFrameKmBackToQueue = async (
   } catch (error) {
     console.error('Error clearing framekms table:', error);
     return false;
-  }
-};
-
-export const getCurrentFrameKm = async (): Promise<FrameKM> => {
-  try {
-    const fkmId = await getLatestFrameKmId();
-    return await getFrameKm(fkmId);
-  } catch (error) {
-    console.error('Error fetching current frame km:', error);
-    return [];
   }
 };
 
@@ -186,9 +164,19 @@ export const deleteFrameKm = async (
 
   try {
     await runAsync('DELETE FROM framekms WHERE fkm_id = ?;', [fkmId]);
-    return true;
   } catch (error) {
     console.error('Error deleting framekm:', error);
+  }
+
+  try {
+    const framesFolder = join(
+      UNPROCESSED_FRAMEKM_ROOT_FOLDER,
+      String(fkmId),
+    );
+    await promises.rmdir(framesFolder, { recursive: true });
+    return true;
+  } catch (e: unknown) {
+    console.error('Error deleting framekm folder:', e);
     return false;
   }
 };
@@ -200,10 +188,9 @@ export const maintainPackedFrameKmTable = async (): Promise<void> => {
   `;
 
   try {
-    const result: any = await runAsync(checkRowCountSQL);
+    const result: any = await getAsync(checkRowCountSQL);
     if (result?.length) {
       const currentRowCount = result[0].row_count;
-
       if (currentRowCount && currentRowCount > maxRows) {
         const rowsToDelete = currentRowCount - maxRows;
   
@@ -235,6 +222,18 @@ export const getLastRecord = async (): Promise<any> => {
   try {
     const row: any = await getAsync(
       'SELECT * FROM framekms ORDER BY time DESC LIMIT 1;',
+    );
+    return row && row.length && row[0].longitude ? row[0] : null;
+  } catch (error) {
+    console.error('Error fetching last inserted record:', error);
+    return null;
+  }
+};
+
+export const getFirstRecord = async (): Promise<any> => {
+  try {
+    const row: any = await getAsync(
+      'SELECT * FROM framekms ORDER BY time LIMIT 1;',
     );
     return row && row.length && row[0].longitude ? row[0] : null;
   } catch (error) {

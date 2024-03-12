@@ -6,11 +6,14 @@ import { FrameKM, GnssRecord, ImuRecord } from 'types/sqlite';
 import { timeIsMostLikelyLight } from 'util/daylight';
 import {
   addFramesToFrameKm,
+  deleteFrameKm,
   getExistingFramesMetadata,
   getFirstFrameKmId,
   getFirstPostponedFrameKm,
+  getFirstRecord,
   getFrameKm,
   getFrameKmName,
+  getFrameKmsCount,
   getLastTimestamp,
   isFrameKmComplete,
   moveFrameKmBackToQueue,
@@ -229,6 +232,49 @@ export class DriveSession {
       }
     } else {
       this.possibleImagerProblemCounter = 0;
+    }
+  }
+
+  lastCheckedKmId: number | null = null;
+  lastCheckedFrameKmSize: number | null = null;
+  countFaultyIterations = 0;
+
+  async doHealthCheck() {
+    try {
+      const firstRecord = await getFirstRecord();
+      const firstKmId = firstRecord?.fkm_id;
+      const framekms = await getFrameKmsCount(false);
+      if (!this.lastCheckedFrameKmSize) {
+        this.lastCheckedFrameKmSize = framekms;
+      }
+      if (framekms > this.lastCheckedFrameKmSize && firstKmId) {
+        this.lastCheckedFrameKmSize = framekms;
+        // FrameKM table is growing
+        if (!this.lastCheckedKmId) {
+          this.lastCheckedKmId = firstKmId;
+        } else if (firstKmId === this.lastCheckedKmId) {
+          // but first FrameKM to be processed stays the same
+          this.countFaultyIterations++;
+          if (this.countFaultyIterations > 15) {
+            // processing stuck, need to delete first framekm to unblock
+            this.countFaultyIterations = 0;
+            await deleteFrameKm(firstKmId);
+            Instrumentation.add({
+              event: 'DashcamUnblocked',
+              message: JSON.stringify({ 
+                count: framekms,
+                firstId: firstKmId,
+               }),
+            });
+            exec('systemctl restart object-detection');
+          }
+        } else {
+          this.countFaultyIterations = 0;
+          this.lastCheckedKmId = firstKmId;
+        }
+      }
+    } catch (e: unknown) {
+      console.log('Error during health check:', e);
     }
   }
 
