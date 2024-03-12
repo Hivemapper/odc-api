@@ -52,8 +52,8 @@ export const getFirstFrameKmId = async (
 ): Promise<number | undefined> => {
   try {
     const query = `SELECT fkm_id FROM framekms${
-      mlEnabled ? ' WHERE postponed = 0' : ' ORDER BY time LIMIT 1;'
-    };`;
+      mlEnabled ? ' WHERE postponed = 0' : ''
+    } ORDER BY time LIMIT 1;`;
     const firstFkmIdRow: any = await getAsync(query);
     return firstFkmIdRow.length ? firstFkmIdRow[0].fkm_id : null;
   } catch (error) {
@@ -164,6 +164,7 @@ export const deleteFrameKm = async (
 
   try {
     await runAsync('DELETE FROM framekms WHERE fkm_id = ?;', [fkmId]);
+    console.log('Succesfully deleted: ', fkmId);
   } catch (error) {
     console.error('Error deleting framekm:', error);
   }
@@ -223,7 +224,7 @@ export const getLastRecord = async (): Promise<any> => {
     const row: any = await getAsync(
       'SELECT * FROM framekms ORDER BY time DESC LIMIT 1;',
     );
-    return row && row.length && row[0].longitude ? row[0] : null;
+    return row && row.length && row[0].fkm_id ? row[0] : null;
   } catch (error) {
     console.error('Error fetching last inserted record:', error);
     return null;
@@ -235,7 +236,7 @@ export const getFirstRecord = async (): Promise<any> => {
     const row: any = await getAsync(
       'SELECT * FROM framekms ORDER BY time LIMIT 1;',
     );
-    return row && row.length && row[0].longitude ? row[0] : null;
+    return row && row.length && row[0].fkm_id ? row[0] : null;
   } catch (error) {
     console.error('Error fetching last inserted record:', error);
     return null;
