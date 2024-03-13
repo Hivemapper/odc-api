@@ -22,6 +22,9 @@ export async function MotionModelController() {
       setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
       return;
     }
+    if (!session.started) {
+      session.start();
+    }
 
     if (await getConfig('isDashcamMLEnabled')) {
       // Repair ML job if needed

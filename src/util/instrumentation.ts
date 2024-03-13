@@ -44,6 +44,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamDiskUsage',
   'DashcamInvalidFrameKm',
   'DashcamEmptyFrameKm',
+  'DashcamReboot',
   'DashcamScheduledFrameKmToReprocess',
   'DashcamFirmwareUploaded',
   'DashcamFastSpeedCollection',

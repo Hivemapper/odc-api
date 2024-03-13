@@ -4,7 +4,7 @@ import { readdirSync } from 'fs';
 import { runAsync } from 'sqlite';
 import { resetDB } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
-import { clearAll, getAllFrameKms, getFramesCount } from 'sqlite/framekm';
+import { clearAll, getAllFrameKms, getEstimatedProcessingTime, getFramesCount } from 'sqlite/framekm';
 import { fetchLastNGnssRecords } from 'sqlite/gnss';
 import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
@@ -66,6 +66,17 @@ router.get('/framekm/count', async (req, res) => {
     const count = await getFramesCount();
     res.send({
       count,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/framekm/estimate', async (req, res) => {
+  try {
+    const seconds = await getEstimatedProcessingTime();
+    res.send({
+      seconds,
     });
   } catch (error) {
     res.status(500).send({ error });

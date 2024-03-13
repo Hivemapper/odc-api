@@ -9,7 +9,7 @@ import { join } from 'path';
 import { deleteFrameKm, getFrameKmName, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
-import { promiseWithTimeout, getQuality, getCpuUsage } from 'util/index';
+import { promiseWithTimeout, getQuality, getCpuUsage, getSystemTemp } from 'util/index';
 import {
   MAX_PER_FRAME_BYTES,
   MIN_PER_FRAME_BYTES,
@@ -52,14 +52,16 @@ export const packFrameKm = async (frameKm: FrameKM) => {
 
     const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
     const frameWithError = frameKm.find((f) => f.error);
-    if (isDashcamMLEnabled && frameWithError?.fkm_id) {
-      console.log('Error found, postponing Framekm: ', frameKmName, frameWithError.error);
-      await postponeFrameKm(frameWithError.fkm_id);
+    const framesWithMissedML = frameKm.find((f) => !f.ml_model_hash);
+    const errorFrame = frameWithError || framesWithMissedML;
+    if (isDashcamMLEnabled && errorFrame?.fkm_id) {
+      console.log('Error found, postponing Framekm: ', frameKmName, errorFrame.error);
+      await postponeFrameKm(errorFrame.fkm_id);
       Instrumentation.add({
         event: 'DashcamMLPostponed',
         size: frameKm.length,
         message: JSON.stringify({
-          error: frameWithError.error,
+          error: errorFrame.error,
           name: frameKmName
         }),
       });
@@ -98,6 +100,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       } catch (error: unknown) {
         console.log('Error getting telemetry', error);
       }
+      const temperature = await getSystemTemp();
       Instrumentation.add({
         event: 'DashcamPackedFrameKm',
         size: totalBytes,
@@ -106,6 +109,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           numFrames: frameKm?.length,
           dx: frameKm[0].dx,
           deviceId,
+          temperature,
           duration: Date.now() - start,
           usbInserted: getUsbState(),
           ...framekmTelemetry,

@@ -24,6 +24,7 @@ const defaultConfig: SystemConfig = {
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
   lastTrimmed: 0,
+  lastTimeIterated: 0,
   FrameKmLengthMeters: 1000,
   privacyRadius: 200,
   PrivacyModelPath: ML_MODEL_PATH,

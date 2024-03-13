@@ -31,6 +31,30 @@ export const getFramesCount = async (): Promise<number> => {
   }
 };
 
+export const getEstimatedProcessingTime = async (): Promise<number> => {
+  try {
+    // SQL query with conditional aggregation
+    const query = `
+      SELECT
+        SUM(CASE WHEN speed <= 17 THEN 1 ELSE 0 END) AS speed_low,
+        SUM(CASE WHEN speed > 17 THEN 1 ELSE 0 END) AS speed_high
+      FROM framekms WHERE ml_model_hash IS NULL AND error IS NULL AND postponed != 1;
+    `;
+    const rows: any = await getAsync(query);
+
+    // Assuming 'rows' will have a single record with the counts
+    if (rows && rows.length > 0) {
+      const speedLow = rows[0].speed_low || 0;
+      const speedHigh = rows[0].speed_high || 0;
+      return Math.round(speedLow * 0.6 + speedHigh * 0.3);
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error checking frames count:', error);
+    return 0;
+  }
+};
+
 export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
     mlEnabled
@@ -62,6 +86,17 @@ export const getFirstFrameKmId = async (
   }
 };
 
+export const getLastFrameKmId = async (): Promise<number | undefined> => {
+  try {
+    const query = `SELECT fkm_id FROM framekms ORDER BY time DESC LIMIT 1;`;
+    const lastFkmIdRow: any = await getAsync(query);
+    return lastFkmIdRow.length ? lastFkmIdRow[0].fkm_id : null;
+  } catch (error) {
+    console.error('Error fetching first fkm_id:', error);
+    return undefined;
+  }
+};
+
 export const getFirstPostponedFrameKm = async (): Promise<
   number | undefined
 > => {
@@ -84,6 +119,28 @@ export const postponeFrameKm = async (frameKmId: number): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('Error clearing framekms table:', error);
+    return false;
+  }
+};
+
+export const postponeEndTrim = async (frameKmId: number): Promise<boolean> => {
+  try {
+    await runAsync('UPDATE framekms SET postponed = 2 WHERE fkm_id = ?;', [
+      frameKmId
+    ]);
+    return true;
+  } catch (error) {
+    console.error('Error postponing the end trim:', error);
+    return false;
+  }
+};
+
+export const restoreEndTrim = async (): Promise<boolean> => {
+  try {
+    await runAsync('UPDATE framekms SET postponed = 0 WHERE postponed = 2;');
+    return true;
+  } catch (error) {
+    console.error('Error restoring the end trim:', error);
     return false;
   }
 };
@@ -122,6 +179,16 @@ export const getFrameKm = async (
   }
 };
 
+export const getPostponedEndTrim = async (): Promise<FrameKM> => {
+  try {
+    const rows = await getAsync('SELECT * FROM framekms WHERE postponed = 2 ORDER BY time;');
+    return rows as FrameKM;
+  } catch (error) {
+    console.error('Error fetching current framekm:', error);
+    return [];
+  }
+};
+
 export const getAllFrameKms = async (): Promise<FrameKM> => {
   try {
     const rows = await getAsync('SELECT * FROM framekms ORDER BY time DESC;');
@@ -141,6 +208,17 @@ export const clearAll = async (): Promise<boolean> => {
     return false;
   }
 };
+
+export const deleteFrame = async (imageName: string, imagePath: string): Promise<boolean> => {
+  try {
+    await runAsync('DELETE FROM framekms WHERE image_name = ?;', [imageName]);
+    await promises.rm(join(imagePath, imageName));
+    return true;
+  } catch (error) {
+    console.error('Error deleting framekm:', error);
+    return false;
+  }
+}
 
 export const deleteFrameKm = async (
   fkmId: number | undefined,
@@ -258,6 +336,11 @@ export const getExistingFramesMetadata = async (limit = 3): Promise<any[]> => {
 };
 
 let metersTrimmed = 0;
+let ignoreTrim = false;
+
+export const ignoreTrimStart = () => {
+  ignoreTrim = true;
+}
 
 export const addFramesToFrameKm = async (
   rows: FrameKmRecord[],
@@ -266,28 +349,23 @@ export const addFramesToFrameKm = async (
   console.log(
     'GOING TO ADD ' + rows.length + ' FRAMES. ' + (force ? ' FORCED!!' : ''),
   );
-  const { isTripTrimmingEnabled, TrimDistance, FrameKmLengthMeters, lastTrimmed } =
+  const { isTripTrimmingEnabled, TrimDistance, FrameKmLengthMeters } =
     await getConfig([
       'isTripTrimmingEnabled',
       'TrimDistance',
-      'FrameKmLengthMeters',
-      'lastTrimmed'
+      'FrameKmLengthMeters'
     ]);
   const DX = getDX();
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
-    if (lastTrimmed && Math.abs(Date.now() - Number(lastTrimmed)) < 1000 * 60 * 5) {
+    if (ignoreTrim) {
       metersTrimmed = TrimDistance;
-      console.log('ALREADY TRIMMED');
     } else {
       const framesLeftToTrim = Math.ceil((TrimDistance - metersTrimmed) / DX);
       const rowsToIgnore = rows.slice(0, framesLeftToTrim);
       metersTrimmed += rowsToIgnore.length * DX;
       rows = rows.slice(framesLeftToTrim);
-      console.log('TRIMMED ' + rowsToIgnore.length);
-      if (metersTrimmed >= TrimDistance) {
-        await setConfig('lastTrimmed', Date.now());
-      }
+      console.log('START TRIMMED ' + rowsToIgnore.length);
     }
   }
 

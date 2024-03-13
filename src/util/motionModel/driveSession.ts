@@ -6,6 +6,7 @@ import { FrameKM, GnssRecord, ImuRecord } from 'types/sqlite';
 import { timeIsMostLikelyLight } from 'util/daylight';
 import {
   addFramesToFrameKm,
+  deleteFrame,
   deleteFrameKm,
   getExistingFramesMetadata,
   getFirstFrameKmId,
@@ -14,9 +15,14 @@ import {
   getFrameKm,
   getFrameKmName,
   getFrameKmsCount,
+  getLastFrameKmId,
   getLastTimestamp,
+  getPostponedEndTrim,
+  ignoreTrimStart,
   isFrameKmComplete,
   moveFrameKmBackToQueue,
+  postponeEndTrim,
+  restoreEndTrim,
 } from 'sqlite/framekm';
 import { isTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
@@ -32,7 +38,7 @@ import {
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig, getDX } from 'sqlite/config';
+import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 
 let sessionTrimmed = false;
@@ -42,6 +48,7 @@ export class DriveSession {
   frameKmsToProcess: DraftFrameKm[] = [];
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
+  started = false;
 
   constructor(trimDistance = 100) {
     this.trimDistance = trimDistance;
@@ -81,6 +88,34 @@ export class DriveSession {
         this.draftFrameKm = new DraftFrameKm(data);
       }
     }
+  }
+
+  async start() {
+    const lastTimeIterated = await getConfig('lastTimeIterated');
+    if (lastTimeIterated && Math.abs(Date.now() - lastTimeIterated) < 1000 * 60 * 4) {
+      await restoreEndTrim();
+      ignoreTrimStart();
+      Instrumentation.add({
+        event: 'DashcamReboot',
+        size: Math.abs(Date.now() - lastTimeIterated)
+      })
+    } else {
+      // trim last framekm (end trip trimming)
+      const frameKmToTrim = await getPostponedEndTrim();
+      const TrimDistance = await getConfig('TrimDistance');
+      const DX = getDX();
+
+      const framesToTrim = Math.min(Math.round(TrimDistance / DX), frameKmToTrim.length);
+
+      for (let i = 0; i < framesToTrim; i++) {
+        const frameToRemove = frameKmToTrim.pop();
+        if (frameToRemove?.image_name) {
+          await deleteFrame(frameToRemove.image_name, frameToRemove.image_path);
+        }
+      }
+      await restoreEndTrim();
+    }
+    this.started = true;
   }
 
   async getSamplesAndSyncWithDb() {
@@ -162,30 +197,18 @@ export class DriveSession {
       const fkmId = await getFirstFrameKmId(isDashcamMLEnabled);
       return await getFrameKm(fkmId);
     } else {
-      const { isTripTrimmingEnabled, TrimDistance } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance']);
-      const DX = getDX();
+      const isTripTrimmingEnabled = await getConfig('isTripTrimmingEnabled');
 
       if (!sessionTrimmed && isTripTrimmingEnabled) {
         // END TRIP TRIMMING
-        console.log('Trying to trim the end of the trip');
+        console.log('Postponing last framekm for trip trimming (need to wait for time)');
         sessionTrimmed = true;
-        const fkm_id = await getFirstFrameKmId();
+        const fkm_id = await getLastFrameKmId();
         console.log('FrameKM to trim', fkm_id);
         if (fkm_id) {
-          const frameKmToTrim = await getFrameKm(fkm_id);
-          const framesToTrim = Math.round(TrimDistance / DX);
-          if (frameKmToTrim.length > framesToTrim) {
-            return frameKmToTrim.slice(
-              0,
-              frameKmToTrim.length - Math.round(TrimDistance / DX),
-            );
-          } else {
-            // @ts-ignore
-            return [{ fkm_id }]; // return dummy element that will trigger the cleanup
-          }
-        } else {
-          return null;
+          await postponeEndTrim(fkm_id);
         }
+        return null;
       }
 
       if (isDashcamMLEnabled && !ignorePostponed) {
@@ -273,6 +296,7 @@ export class DriveSession {
           this.lastCheckedKmId = firstKmId;
         }
       }
+      await setConfig('lastTimeIterated', Date.now()); 
     } catch (e: unknown) {
       console.log('Error during health check:', e);
     }

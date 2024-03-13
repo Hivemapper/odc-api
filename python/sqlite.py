@@ -28,7 +28,7 @@ class SQLite:
             if is_enabled and len(is_enabled) and is_enabled[0] == 'false':
                 return [], 0
             
-            cursor.execute('SELECT fkm_id FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed = 0 ORDER BY time LIMIT 1')
+            cursor.execute('SELECT fkm_id FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed != 1 ORDER BY time LIMIT 1')
             min_framekm_id = cursor.fetchone()[0]
             
             if min_framekm_id is None:
