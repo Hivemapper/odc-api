@@ -1,13 +1,14 @@
 import { MOTION_MODEL_CONFIG } from 'config';
 import { readFile } from 'fs';
 import { jsonrepair } from 'jsonrepair';
-import { getConfig, getDefaultConfig, updateConfig } from 'sqlite/config';
+import { getConfig, getDefaultConfig, setConfig, updateConfig } from 'sqlite/config';
 import { IService } from 'types';
 import { fileExists } from 'util/index';
 
 export const UpdateMotionModelConfigService: IService = {
   execute: async () => {
     const DX = await getConfig('DX', true);
+    const isProcessingEnabled = await getConfig('isProcessingEnabled', true);
 
     if (!DX) {
       console.log('Updating system config');
@@ -36,6 +37,9 @@ export const UpdateMotionModelConfigService: IService = {
         updateConfig(defaultConfig);
       }
     }
+    if (isProcessingEnabled === undefined) {
+      await setConfig('isProcessingEnabled', true);
+    }
   },
-  delay: 200,
+  delay: 1000,
 };

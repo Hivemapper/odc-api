@@ -63,7 +63,7 @@ export interface GnssAuthRecord {
 export type FrameKmRecord = {
     fkm_id?: number;
     image_name: string;
-    image_path: string;
+    image_path?: string;
     dx?: number;
     acc_x: number;
     acc_y: number;

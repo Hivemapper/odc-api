@@ -4,7 +4,7 @@ import { CAMERA_BRIDGE_CONFIG_FILE_HASH, CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE } fr
 
 import { isCameraBridgeServiceActive, restartCamera } from '../services/heartBeat';
 import * as console from 'console';
-import { getConfig, getFullConfig, updateConfig } from 'sqlite/config';
+import { getConfig, getFullConfig, setConfig, updateConfig } from 'sqlite/config';
 
 const router = Router();
 
@@ -34,6 +34,43 @@ router.get('/key/:name', async (req: Request, res: Response) => {
     const response: any = {};
     response[req.params.name] = value;
     res.send(response);
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.post('/key', async (req: Request, res: Response) => {
+  try {
+    if (req?.body?.name) {
+      const { name, value } = req.body;
+      await setConfig(name, value);
+      res.send({
+        [name]: value,
+      });
+    } else {
+      res.send({
+        error: 'format is { name, value }'
+      })
+    }
+  } catch (error) {
+    res.json({ error });
+  }
+});
+
+router.get('/processing/toggle', async (req: Request, res: Response) => {
+  try {
+    const value = await getConfig('isProcessingEnabled');
+    if (value) {
+      await setConfig('isProcessingEnabled', false);
+      res.send({
+        processingSetTo: false,
+      })
+    } else {
+      await setConfig('isProcessingEnabled', true);
+      res.send({
+        processingSetTo: true,
+      })
+    }
   } catch (error) {
     res.status(500).send({ error });
   }

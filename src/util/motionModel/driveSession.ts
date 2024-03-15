@@ -110,7 +110,7 @@ export class DriveSession {
       for (let i = 0; i < framesToTrim; i++) {
         const frameToRemove = frameKmToTrim.pop();
         if (frameToRemove?.image_name) {
-          await deleteFrame(frameToRemove.image_name, frameToRemove.image_path);
+          await deleteFrame(frameToRemove.image_name, frameToRemove.image_path || '');
         }
       }
       await restoreEndTrim();

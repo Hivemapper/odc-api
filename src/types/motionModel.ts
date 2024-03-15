@@ -54,6 +54,7 @@ export type SystemConfig = {
   SpeedToIncreaseDx?: number;
   HdcSwappiness?: number;
   HdcsSwappiness?: number;
+  isProcessingEnabled?: boolean;
 };
 
 export type GNSS = {

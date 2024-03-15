@@ -35,6 +35,7 @@ const defaultConfig: SystemConfig = {
   SpeedToIncreaseDx: 24, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
+  isProcessingEnabled: true,
 };
 
 const cachedConfig: { [key: string]: any } = {};
