@@ -192,7 +192,6 @@ export const packMetadata = async (
         keyframeDistance: getConfig().DX,
         resolution: '2k',
         version: '1.8',
-        deviceId: deviceId,
         gnssAuthBuffer: gnssAuth?.buffer,
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
         gnssAuthBufferHash: gnssAuth?.buffer_hash,
