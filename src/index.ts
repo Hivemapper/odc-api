@@ -24,31 +24,67 @@ import { UsbStateCheckService } from 'services/usbStateCheck';
 import { readFile,writeFile,readdir } from 'fs/promises';
 import path from 'path';
 
-const cleanDeviceId = async  () => {
-  // for each file in dir
-  console.log('cleaning metadata')
-  const files = await readdir(METADATA_ROOT_FOLDER);
-  for (const file of files) {
-    try {
-      const fullPath = path.join(METADATA_ROOT_FOLDER, file)
-      const contents = await readFile(fullPath, 'ascii');
-      const parsed = JSON.parse(contents);
-      if (parsed.deviceId) {
-        console.log(`rewriting ${fullPath}`);
-        delete parsed.deviceId;
-        await writeFile(fullPath, JSON.stringify(parsed));
-      } else { 
-        console.log(`skipped ${fullPath}`);
-      }
-    } catch(e: any) {
-      console.log(`Failed to parse ${file}`);
-    }
+// const cleanDeviceId = async  () => {
+//   // for each file in dir
+//   console.log('cleaning metadata')
+//   const files = await readdir(METADATA_ROOT_FOLDER);
+//   for (const file of files) {
+//     try {
+//       const fullPath = path.join(METADATA_ROOT_FOLDER, file)
+//       const contents = await readFile(fullPath, 'ascii');
+//       const parsed = JSON.parse(contents);
+//       if (parsed.deviceId) {
+//         console.log(`rewriting ${fullPath}`);
+//         delete parsed.deviceId;
+//         await writeFile(fullPath, JSON.stringify(parsed));
+//       } else { 
+//         console.log(`skipped ${fullPath}`);
+//       }
+//     } catch(e: any) {
+//       console.log(`Failed to parse ${file}`);
+//     }
     
-  }
-}
+//   }
+// }
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
+
+  app.get('/public/metadata/:filename', async (req, res, next) => {
+    const filename = req.params.filename;
+    const fullPath = path.join(METADATA_ROOT_FOLDER, filename);
+    console.log(`reading ${fullPath}`);
+    res.setHeader("Content-Type", "application/json");
+    
+    let contents = '';
+    try {
+      contents = await readFile(fullPath, 'ascii');
+    } catch (e) {
+      console.log(`${fullPath} not found`);
+      next();
+    }
+
+    if (!filename.includes('.json')) {
+      res.status(200).send(contents);
+      next();
+    } else {
+      try {
+        console.log('removing deviceid');
+        const parsed = JSON.parse(contents);
+        delete parsed.deviceId;
+        res.status(200).send(JSON.stringify(parsed));
+        next();
+      } catch(e) {
+        console.log(e);
+        res.status(400).send();
+        next();
+      }
+    }
+  })
+
+  // Making all the files accessible via direct HTTP urls
+  app.use('/public', express.static(PUBLIC_FOLDER));
+
 
   // for the preview photos to adjust the dashcam
   app.use('/tmp', express.static(TMP_PUBLIC_FOLDER));
@@ -92,7 +128,7 @@ export async function initAppServer(): Promise<Application> {
   }
 
   try {
-    cleanDeviceId();
+    // cleanDeviceId();
 
     serviceRunner.add(UpdateMotionModelConfigService);
     serviceRunner.add(HeartBeatService);

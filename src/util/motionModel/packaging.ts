@@ -264,7 +264,7 @@ export const packMetadata = async (
         version: '1.8',
         privacyModelHash,
         privacyDetections: privacyModelHash && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
-        // deviceId: deviceId,
+        deviceId: deviceId,
         gnssAuthBuffer: undefined,
         gnssAuthBufferMessageNum: undefined,
         gnssAuthBufferHash: undefined,
