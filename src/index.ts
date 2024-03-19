@@ -2,7 +2,7 @@ import express, { Application } from 'express';
 import router from './routes';
 import { Server } from 'http';
 import busboy from 'connect-busboy';
-import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
+import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER, METADATA_ROOT_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitIMUCalibrationService } from 'services/initIMUCalibration';
@@ -21,12 +21,34 @@ import { Instrumentation } from 'util/instrumentation';
 import { isTimeSet } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
 import { UsbStateCheckService } from 'services/usbStateCheck';
+import { readFile,writeFile,readdir } from 'fs/promises';
+import path from 'path';
+
+const cleanDeviceId = async  () => {
+  // for each file in dir
+  console.log('cleaning metadata')
+  const files = await readdir(METADATA_ROOT_FOLDER);
+  for (const file of files) {
+    try {
+      const fullPath = path.join(METADATA_ROOT_FOLDER, file)
+      const contents = await readFile(fullPath, 'ascii');
+      const parsed = JSON.parse(contents);
+      if (parsed.deviceId) {
+        console.log(`rewriting ${fullPath}`);
+        delete parsed.deviceId;
+        await writeFile(fullPath, JSON.stringify(parsed));
+      } else { 
+        console.log(`skipped ${fullPath}`);
+      }
+    } catch(e: any) {
+      console.log(`Failed to parse ${file}`);
+    }
+    
+  }
+}
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
-
-  // Making all the files accessible via direct HTTP urls
-  app.use('/public', express.static(PUBLIC_FOLDER));
 
   // for the preview photos to adjust the dashcam
   app.use('/tmp', express.static(TMP_PUBLIC_FOLDER));
@@ -70,6 +92,8 @@ export async function initAppServer(): Promise<Application> {
   }
 
   try {
+    cleanDeviceId();
+
     serviceRunner.add(UpdateMotionModelConfigService);
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(IntegrityCheckService);
