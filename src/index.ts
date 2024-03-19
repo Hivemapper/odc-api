@@ -54,7 +54,6 @@ export async function initAppServer(): Promise<Application> {
     const filename = req.params.filename;
     const fullPath = path.join(METADATA_ROOT_FOLDER, filename);
     console.log(`reading ${fullPath}`);
-    res.setHeader("Content-Type", "application/json");
     
     let contents = '';
     try {
@@ -73,6 +72,7 @@ export async function initAppServer(): Promise<Application> {
         console.log('deleted deviceid');
         delete parsed.bundle.deviceId;
       }
+      res.setHeader("Content-Type", "application/json");
       res.status(200).send(JSON.stringify(parsed));
     } catch(e) {
       console.log(e);
