@@ -50,7 +50,7 @@ import path from 'path';
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
 
-  app.get('/public/metadata/:filename', async (req, res, next) => {
+  app.get('/public/metadata/:filename', async (req, res) => {
     const filename = req.params.filename;
     const fullPath = path.join(METADATA_ROOT_FOLDER, filename);
     console.log(`reading ${fullPath}`);
@@ -61,24 +61,23 @@ export async function initAppServer(): Promise<Application> {
       contents = await readFile(fullPath, 'ascii');
     } catch (e) {
       console.log(`${fullPath} not found`);
-      next();
+      res.status(404).send();
+      return;
     }
 
-    if (!filename.includes('.json')) {
-      res.status(200).send(contents);
-      next();
-    } else {
-      try {
-        console.log('removing deviceid');
-        const parsed = JSON.parse(contents);
-        delete parsed.deviceId;
-        res.status(200).send(JSON.stringify(parsed));
-        next();
-      } catch(e) {
-        console.log(e);
-        res.status(400).send();
-        next();
+    try {
+      console.log('removing deviceid');
+      const parsed = JSON.parse(contents);
+      console.log(parsed.bundle);
+      if (parsed && parsed.bundle && parsed.bundle.deviceId)
+      {
+        console.log('deleted deviceid');
+        delete parsed.bundle.deviceId;
       }
+      res.status(200).send(JSON.stringify(parsed));
+    } catch(e) {
+      console.log(e);
+      res.status(400).send();
     }
   })
 
