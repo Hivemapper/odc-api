@@ -68,7 +68,6 @@ export async function initAppServer(): Promise<Application> {
     try {
       console.log('removing deviceid');
       const parsed = JSON.parse(contents);
-      console.log(parsed.bundle);
       if (parsed && parsed.bundle && parsed.bundle.deviceId)
       {
         console.log('deleted deviceid');
