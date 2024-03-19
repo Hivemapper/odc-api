@@ -12,6 +12,7 @@ import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
 import { SetSwappinessService } from 'services/setSwappiness';
 import { StartObjectDetection } from 'services/startObjectDetection';
+import { RepairFrameKms } from 'services/repairFrameKms';
 import { LoadPrivacyService } from 'services/loadPrivacy';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
@@ -23,29 +24,6 @@ import { MotionModelController } from 'util/motionModel/motionModelController';
 import { UsbStateCheckService } from 'services/usbStateCheck';
 import { readFile,writeFile,readdir } from 'fs/promises';
 import path from 'path';
-
-// const cleanDeviceId = async  () => {
-//   // for each file in dir
-//   console.log('cleaning metadata')
-//   const files = await readdir(METADATA_ROOT_FOLDER);
-//   for (const file of files) {
-//     try {
-//       const fullPath = path.join(METADATA_ROOT_FOLDER, file)
-//       const contents = await readFile(fullPath, 'ascii');
-//       const parsed = JSON.parse(contents);
-//       if (parsed.deviceId) {
-//         console.log(`rewriting ${fullPath}`);
-//         delete parsed.deviceId;
-//         await writeFile(fullPath, JSON.stringify(parsed));
-//       } else { 
-//         console.log(`skipped ${fullPath}`);
-//       }
-//     } catch(e: any) {
-//       console.log(`Failed to parse ${file}`);
-//     }
-    
-//   }
-// }
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
@@ -126,8 +104,7 @@ export async function initAppServer(): Promise<Application> {
   }
 
   try {
-    // cleanDeviceId();
-
+    serviceRunner.add(RepairFrameKms);
     serviceRunner.add(UpdateMotionModelConfigService);
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(IntegrityCheckService);
