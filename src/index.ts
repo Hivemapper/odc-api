@@ -12,7 +12,6 @@ import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
 import { SetSwappinessService } from 'services/setSwappiness';
 import { StartObjectDetection } from 'services/startObjectDetection';
-import { RepairFrameKms } from 'services/repairFrameKms';
 import { LoadPrivacyService } from 'services/loadPrivacy';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
@@ -104,7 +103,6 @@ export async function initAppServer(): Promise<Application> {
   }
 
   try {
-    serviceRunner.add(RepairFrameKms);
     serviceRunner.add(UpdateMotionModelConfigService);
     serviceRunner.add(HeartBeatService);
     serviceRunner.add(IntegrityCheckService);
