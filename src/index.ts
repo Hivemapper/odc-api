@@ -2,7 +2,7 @@ import express, { Application } from 'express';
 import router from './routes';
 import { Server } from 'http';
 import busboy from 'connect-busboy';
-import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
+import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER, METADATA_ROOT_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitIMUCalibrationService } from 'services/initIMUCalibration';
@@ -21,12 +21,45 @@ import { Instrumentation } from 'util/instrumentation';
 import { isTimeSet } from 'util/lock';
 import { MotionModelController } from 'util/motionModel/motionModelController';
 import { UsbStateCheckService } from 'services/usbStateCheck';
+import { readFile,writeFile,readdir } from 'fs/promises';
+import path from 'path';
 
 export async function initAppServer(): Promise<Application> {
   const app: Application = express();
 
+  app.get('/public/metadata/:filename', async (req, res) => {
+    const filename = req.params.filename;
+    const fullPath = path.join(METADATA_ROOT_FOLDER, filename);
+    console.log(`reading ${fullPath}`);
+    
+    let contents = '';
+    try {
+      contents = await readFile(fullPath, 'ascii');
+    } catch (e) {
+      console.log(`${fullPath} not found`);
+      res.status(404).send();
+      return;
+    }
+
+    try {
+      console.log('removing deviceid');
+      const parsed = JSON.parse(contents);
+      if (parsed && parsed.bundle && parsed.bundle.deviceId)
+      {
+        console.log('deleted deviceid');
+        delete parsed.bundle.deviceId;
+      }
+      res.setHeader("Content-Type", "application/json");
+      res.status(200).send(JSON.stringify(parsed));
+    } catch(e) {
+      console.log(e);
+      res.status(400).send();
+    }
+  })
+
   // Making all the files accessible via direct HTTP urls
   app.use('/public', express.static(PUBLIC_FOLDER));
+
 
   // for the preview photos to adjust the dashcam
   app.use('/tmp', express.static(TMP_PUBLIC_FOLDER));
