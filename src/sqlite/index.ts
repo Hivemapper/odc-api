@@ -135,8 +135,8 @@ export const initialise = async (): Promise<void> => {
   await createHealthStateTable();
   await createFrameTable();
   await createConfigurationTable();
-  console.log('LOG: Tables created');
   await createDeviceInfoTable();
+  console.log('LOG: Tables created');
   const anonymousId = generate();
   await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
   await performSoftMigrations();
