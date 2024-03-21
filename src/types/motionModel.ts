@@ -45,6 +45,7 @@ export type SystemConfig = {
   isGyroCalibrationEnabled: boolean;
   isAccelerometerCalibrationEnabled: boolean;
   privacyRadius?: number;
+  ChanceOfGnssAuthCheck?: number;
   modelHashes?: Record<string, string>;
   PrivacyModelPath?: string;
   PrivacyModelHash?: string;

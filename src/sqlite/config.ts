@@ -23,6 +23,7 @@ const defaultConfig: SystemConfig = {
   isAccelerometerCalibrationEnabled: false,
   isTripTrimmingEnabled: true,
   TrimDistance: 100,
+  ChanceOfGnssAuthCheck: 1,
   lastTrimmed: 0,
   lastTimeIterated: 0,
   FrameKmLengthMeters: 1000,
