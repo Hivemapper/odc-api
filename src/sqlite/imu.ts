@@ -1,4 +1,4 @@
-import { db } from './index';
+import { getDb } from './index';
 import { ImuRecord } from 'types/sqlite';
 import { convertTimestampToDbFormat } from 'util/index';
 
@@ -10,6 +10,7 @@ export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<Im
         query += ` AND time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
+    const db = await getDb();
     return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: ImuRecord[]) => {
             if (err) {
@@ -27,6 +28,7 @@ export const fetchImuLogsByTime  = async (from: number, to?: number): Promise<Im
 
 export const fetchImuLogsById = async (id: number): Promise<ImuRecord[]> => {
     const query = `SELECT * FROM imu WHERE id > ?`;
+    const db = await getDb();
     return new Promise((resolve, reject) => {
         db.all(query, [id], (err: unknown, rows: ImuRecord[]) => {
             if (err) {
@@ -40,6 +42,7 @@ export const fetchImuLogsById = async (id: number): Promise<ImuRecord[]> => {
 
 export const fetchLastNImuRecords = async (n: number): Promise<ImuRecord[]> => {
     const query = `SELECT * FROM imu ORDER BY id DESC LIMIT ?`;
+    const db = await getDb();
     return new Promise((resolve, reject) => {
         db.all(query, [n], (err: unknown, rows: ImuRecord[]) => {
             if (err) {

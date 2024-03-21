@@ -1,4 +1,4 @@
-import { db, runAsync } from 'sqlite';
+import { getDb, runAsync } from 'sqlite';
 import { IImage } from 'types';
 
 export const getFramesFromDb = async (since: number, until?: number): Promise<IImage[]> => {
@@ -10,6 +10,7 @@ export const getFramesFromDb = async (since: number, until?: number): Promise<II
     args.push(until);
   }
 
+  const db = await getDb();
   return new Promise((resolve) => {
     db.all(query, args, (err, rows: IImage[]) => {
       if (err) {
@@ -48,7 +49,7 @@ export const insertFrames = async (frames: IImage[]): Promise<void> => {
       ]);
 
       const insertSQL = `INSERT OR IGNORE INTO frames (system_time, image_name) VALUES ${placeholders};`;
-      await runAsync(db, insertSQL, values);
+      await runAsync(insertSQL, values);
     }
     console.log(sanitizedFrames.length + ' frames inserted.');
   } catch (error) {
@@ -69,7 +70,7 @@ export const deleteOldestFrames = async (): Promise<void> => {
   `;
 
   try {
-    await runAsync(db, deleteSQL);
+    await runAsync(deleteSQL);
     console.log('Frames table successfully purged');
   } catch (error) {
     console.error('Error while deleting oldest frames:', error);

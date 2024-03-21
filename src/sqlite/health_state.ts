@@ -1,10 +1,10 @@
-import { db, getAsync, runAsync } from 'sqlite';
+import { getAsync, runAsync } from 'sqlite';
 
 export const getServiceStatus = async (serviceName: string) => {
   const selectSQL = `SELECT status FROM health_state WHERE service_name = ?`;
 
   try {
-    const row = (await getAsync(db, selectSQL, [serviceName])) as {
+    const row = (await getAsync(selectSQL, [serviceName])) as {
       status: string;
     }[];
     return row && row.length ? row[0].status : undefined;
@@ -23,7 +23,7 @@ export const setServiceStatus = async (serviceName: string, status: string) => {
       VALUES (?, ?)`;
 
   try {
-    await runAsync(db, insertOrReplaceSQL, [serviceName, status]);
+    await runAsync(insertOrReplaceSQL, [serviceName, status]);
   } catch (error) {
     console.error('Error during setting status in health state table:', error);
     throw error;

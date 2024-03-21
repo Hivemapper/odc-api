@@ -64,6 +64,7 @@ export type FrameKmRecord = {
     fkm_id?: number;
     image_name: string;
     image_path?: string;
+    dx?: number;
     acc_x: number;
     acc_y: number;
     acc_z: number;
@@ -101,6 +102,7 @@ export type FrameKmRecord = {
     ml_load_time?: number;
     ml_transpose_time?: number;
     ml_letterbox_time?: number;
+    ml_grid?: number;
     frame_idx?: number;
     postponed?: number;
     error?: string;

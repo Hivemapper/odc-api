@@ -105,6 +105,7 @@ export const concatFrames = async (
           }
           bytesMap[fileName] = file.size;
           totalBytes += file.size;
+          await sleep(10);
         }
         await sleep(500);
   

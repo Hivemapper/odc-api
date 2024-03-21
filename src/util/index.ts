@@ -298,6 +298,16 @@ export const getCpuUsage = () => {
   return total ? Math.round(100 * (total - idle) / total) : 0;
 }
 
+export const getSystemTemp = async () => {
+  try {
+      const data = await promises.readFile('/sys/class/thermal/thermal_zone0/temp', 'utf8');
+      return parseInt(data, 10) / 1000;
+  } catch (error) {
+      console.error('Error reading system temperature:', error);
+      return 0;
+  }
+}
+
 export const getCpuLoad = (callback: (load: number) => void) => {
   try {
     // Temporarilu disable CPU load check till we have optimal tool for this

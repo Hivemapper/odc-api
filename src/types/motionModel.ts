@@ -38,12 +38,24 @@ export type SystemConfig = {
   isLightCheckDisabled: boolean;
   isTripTrimmingEnabled: boolean;
   TrimDistance: number;
+  lastTrimmed: number;
+  lastTimeIterated: number;
   FrameKmLengthMeters: number;
   isDashcamMLEnabled: boolean;
   isGyroCalibrationEnabled: boolean;
   isAccelerometerCalibrationEnabled: boolean;
   privacyRadius?: number;
+  ChanceOfGnssAuthCheck?: number;
   modelHashes?: Record<string, string>;
+  PrivacyModelPath?: string;
+  PrivacyModelHash?: string;
+  PrivacyConfThreshold?: number;
+  PrivacyNmsThreshold?: number;
+  PrivacyNumThreads?: number;
+  SpeedToIncreaseDx?: number;
+  HdcSwappiness?: number;
+  HdcsSwappiness?: number;
+  isProcessingEnabled?: boolean;
 };
 
 export type GNSS = {

@@ -1,10 +1,11 @@
-import { db, runAsync } from 'sqlite';
+import { getDb, runAsync } from 'sqlite';
 import { ErrorRecord } from 'types/sqlite';
 
 export const fetchLastNErrorRecords = async (
   n: number,
 ): Promise<ErrorRecord[]> => {
   const query = `SELECT * FROM error_logs ORDER BY system_time DESC LIMIT ?`;
+  const db = await getDb();
   return new Promise((resolve, reject) => {
     db.all(query, [n], (err: unknown, rows: ErrorRecord[]) => {
       if (err) {
@@ -22,7 +23,7 @@ export const insertErrorLog = async (message: string) => {
 
   const insertSQL = `INSERT OR IGNORE INTO error_logs (system_time, service_name, message) VALUES (?, ?, ?);`;
   try {
-      await runAsync(db, insertSQL, [systemTime, 'odc-api', message]);
+      await runAsync(insertSQL, [systemTime, 'odc-api', message]);
   } catch (err) {
       console.error("Error inserting into error_logs:", err);
       throw err;

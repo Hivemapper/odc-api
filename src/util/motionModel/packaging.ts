@@ -6,10 +6,10 @@ import {
 } from 'config';
 import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
-import { deleteFrameKm, getFrameKmName, postponeFrameKm } from 'sqlite/framekm';
+import { deleteFrameKm, getFrameKmName, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
-import { promiseWithTimeout, getQuality, getCpuUsage } from 'util/index';
 import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
+import { promiseWithTimeout, getQuality, getCpuUsage, getSystemTemp } from 'util/index';
 import {
   MAX_PER_FRAME_BYTES,
   MIN_PER_FRAME_BYTES,
@@ -18,14 +18,13 @@ import {
 } from 'util/framekm';
 import { Instrumentation } from 'util/instrumentation';
 import { getDeviceInfo } from 'services/deviceInfo';
-import { getConfig } from 'sqlite/config';
+import { getConfig, getDX } from 'sqlite/config';
 import { freemem } from 'os';
 import { getUsbState } from 'services/usbStateCheck';
 import { getAnonymousID } from 'sqlite/deviceInfo';
+
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
-
-const CHANCE_OF_GNSS_AUTH_CHECK = 0.01;
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -35,6 +34,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
   
   let finalBundleName;
   let frameKmName;
+  const deviceId = await getAnonymousID();
   try {
     const frameKmId = frameKm[0].fkm_id;
     frameKmName = await getFrameKmName(frameKmId);
@@ -49,21 +49,22 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       console.log('SHORT FRAMEKM THROWN AWAY', frameKm.length);
       if (frameKm.length) {
         await deleteFrameKm(frameKm[0].fkm_id);
-        await promises.rmdir(framesFolder, { recursive: true });
       }
       return;
     }
 
     const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
     const frameWithError = frameKm.find((f) => f.error);
-    if (isDashcamMLEnabled && frameWithError?.fkm_id) {
-      console.log('Error found, postponing Framekm: ', frameKmName, frameWithError.error);
-      await postponeFrameKm(frameWithError.fkm_id);
+    const framesWithMissedML = frameKm.find((f) => !f.ml_model_hash);
+    const errorFrame = frameWithError || framesWithMissedML;
+    if (isDashcamMLEnabled && errorFrame?.fkm_id) {
+      console.log('Error found, postponing Framekm: ', frameKmName, errorFrame.error);
+      await postponeFrameKm(errorFrame.fkm_id);
       Instrumentation.add({
         event: 'DashcamMLPostponed',
         size: frameKm.length,
         message: JSON.stringify({
-          error: frameWithError.error,
+          error: errorFrame.error,
           name: frameKmName
         }),
       });
@@ -102,12 +103,16 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       } catch (error: unknown) {
         console.log('Error getting telemetry', error);
       }
+      const temperature = await getSystemTemp();
       Instrumentation.add({
         event: 'DashcamPackedFrameKm',
         size: totalBytes,
         message: JSON.stringify({
           name: finalBundleName,
           numFrames: frameKm?.length,
+          dx: frameKm[0].dx,
+          deviceId,
+          temperature,
           duration: Date.now() - start,
           usbInserted: getUsbState(),
           ...framekmTelemetry,
@@ -115,7 +120,6 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       });
     }
     await deleteFrameKm(frameKm[0].fkm_id);
-    await promises.rmdir(framesFolder, { recursive: true });
     
   } catch (error: unknown) {
     Instrumentation.add({
@@ -123,6 +127,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       message: JSON.stringify({
         name: finalBundleName || frameKmName,
         reason: 'Motion Model Error',
+        deviceId,
         error,
       }),
     });
@@ -156,6 +161,8 @@ export const packMetadata = async (
     letterbox_time: 0,
   };
 
+  const grid: any = {};
+
   for (let i = 0; i < framesMetadata.length; i++) {
     const m: FrameKmRecord = framesMetadata[i];
     const bytes = bytesMap[m.image_name || ''];
@@ -182,10 +189,7 @@ export const packMetadata = async (
         acc_z: m.acc_z,
         gyro_x: m.gyro_x,
         gyro_y: m.gyro_y,
-        gyro_z: m.gyro_z,
-        // TODO: revisit with ML iteration
-        // hash: m.ml_model_hash || '',
-        // detections: m.ml_detections || '',
+        gyro_z: m.gyro_z
       };
       validatedFrames.push(frame);
 
@@ -203,6 +207,9 @@ export const packMetadata = async (
         metrics.load_time += m.ml_load_time || 0;
         metrics.transpose_time += m.ml_transpose_time || 0;
         metrics.letterbox_time += m.ml_letterbox_time || 0;
+        if (m.ml_grid) {
+          grid[m.ml_grid] = (grid[m.ml_grid] || 0) + 1;
+        }
 
         let detections = [];
         try {
@@ -239,16 +246,14 @@ export const packMetadata = async (
   }
   if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
-
-    const DX = await getConfig('DX');
+    const DX = getDX();
     const deviceId = await getAnonymousID();
-
     const startTime = validatedFrames.at(0)?.t || Date.now();
     const endTime = validatedFrames.at(-1)?.t || Date.now();
 
     let gnssAuth : GnssAuthRecord | undefined;
     let publicKey = '';
-    if (Math.random() <= CHANCE_OF_GNSS_AUTH_CHECK) {
+    if (Math.random() <= await getConfig('ChanceOfGnssAuthCheck')) {
       gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
       publicKey = await getPublicKeyFromEeprom();
     }
@@ -263,7 +268,7 @@ export const packMetadata = async (
         firmwareVersion: API_VERSION,
         ssid: deviceInfo?.ssid,
         loraDeviceId: undefined,
-        keyframeDistance: DX,
+        keyframeDistance: framesMetadata[0].dx || DX,
         resolution: '2k',
         version: '1.8',
         privacyModelHash,
@@ -287,7 +292,11 @@ export const packMetadata = async (
         write_time,
         blur_time
       } = metrics;
-      const total_time = (load_time + inference_time + write_time + blur_time) / 4; // 4 threads
+      const total_time = (load_time + inference_time + write_time + blur_time) / 6; // 6 threads
+
+      const { PrivacyConfThreshold, PrivacyNmsThreshold } = await getConfig(['PrivacyConfThreshold', 'PrivacyNmsThreshold']);
+
+      const queue_size = await getFramesCount();
 
       Instrumentation.add({
         event: 'DashcamML',
@@ -306,11 +315,16 @@ export const packMetadata = async (
           transpose_time: Math.round(metrics.transpose_time / validatedFrames.length),
           letterbox_time: Math.round(metrics.letterbox_time / validatedFrames.length),
           per_frame_ml: Math.round(total_time / validatedFrames.length),
+          grid: JSON.stringify(grid),
           num_detections: metrics.num_detections,
           per_frame_col: Math.round((lastFrame.time - firstFrame.time) / validatedFrames.length),
           processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
           free_ram: Math.round(freemem() / 1024 / 1024),
           cpu_usage: getCpuUsage(),
+          conf_threshold: PrivacyConfThreshold || 0.3,
+          nms_threshold: PrivacyNmsThreshold || 0.9,
+          queue_size,
+          deviceId,
           name
         }),
       });

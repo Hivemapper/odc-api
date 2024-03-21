@@ -4,7 +4,6 @@ import numpy as np
 import os
 import queue
 import threading
-from collections import deque
 import time
 from yolov8.utils import nms, xywh2xyxy
 from sqlite import SQLite
@@ -34,7 +33,7 @@ def detect(image_name, image_path, session, model_shape, input_blob, conf_thresh
 
     # Read and preprocess the image
     start_read = time.perf_counter()
-    read_path = image.get_path(image_name, image_path)
+    read_path = image.get_path(image_name, image_path, "/tmp/recording/pics")
     tensor, img, metrics = image.load(read_path, model_shape, model_shape, tensor_type, metrics)
     metrics['load_time'] = (time.perf_counter() - start_read) * 1000
 
@@ -206,7 +205,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
 
     while True:
       # start_process = time.perf_counter()
-      images = sqlite.get_frames_for_ml(num_threads)
+      images, total = sqlite.get_frames_for_ml(num_threads)
       for image in images:
         if image[0] not in currently_processing:
           currently_processing.add(image[0])

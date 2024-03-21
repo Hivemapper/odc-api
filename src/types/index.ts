@@ -166,3 +166,9 @@ export interface InstrumentationData {
   usedMemory?: number;
   message?: string;
 }
+
+export interface IServiceRestart {
+  objectDetection?: boolean;
+  dataLogger?: boolean;
+  cameraBridge?: boolean;
+}

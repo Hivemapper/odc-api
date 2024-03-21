@@ -57,7 +57,7 @@ def letterbox(img: np.ndarray, new_shape:Tuple[int, int], color:Tuple[int, int, 
   img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
   return img, ratio, (dw, dh)
 
-def get_path(image_name, path):
+def get_path(image_name, path, ram_path):
     # if image is less then minute old, we can read it from RAM
     timestamp_str = image_name.split('_')[0]
 
@@ -68,7 +68,7 @@ def get_path(image_name, path):
 
         # Check if the image is younger than 1 minute
         if diff >= 0 and diff < 60:
-            return os.path.join("/tmp/recording/pics", image_name)
+            return os.path.join(ram_path, image_name)
         else:
             return os.path.join(path, image_name)
     except ValueError:
