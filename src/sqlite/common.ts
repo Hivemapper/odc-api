@@ -53,6 +53,7 @@ export const querySensorData = async (
               fps: Math.round(accumImageFreq / accumulated),
               imu: Math.round(accumImuFreq / accumulated),
               gnss: Math.round(accumGnssFreq / accumulated),
+              took: Date.now() - start,
             }),
           });
           accumulated = 0;

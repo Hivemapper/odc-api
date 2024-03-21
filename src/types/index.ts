@@ -101,6 +101,7 @@ export interface ICronJobConfig {
   if: ICronJobCondition;
   frequency: ICronJobFrequency;
   device?: CameraType;
+  firmware?: string;
   timeout?: number;
   log: boolean;
 }

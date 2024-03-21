@@ -1,6 +1,4 @@
-import { getConfig } from 'util/motionModel/config';
 import { db, getAsync, runAsync } from './index';
-import { getMaxFrameKmLength } from 'util/framekm';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { distance } from 'util/geomath';
 import { join } from 'path';
@@ -9,10 +7,11 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from './config';
 
-export const isFrameKmComplete = async (): Promise<boolean> => {
+export const isFrameKmComplete = async (mlEnabled = false): Promise<boolean> => {
   try {
-    const totalFrameKmsInTable = await getFrameKmsCount();
+    const totalFrameKmsInTable = await getFrameKmsCount(mlEnabled);
     return totalFrameKmsInTable > 1;
   } catch (error) {
     console.error('Error checking if framekm is complete:', error);
@@ -33,11 +32,15 @@ export const getFramesCount = async (): Promise<number> => {
   }
 };
 
-export const getFrameKmsCount = async (): Promise<number> => {
+export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
+  const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
+    mlEnabled ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0' : ''
+  };`;
+
   try {
     const row: any = await getAsync(
       db,
-      'SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms;',
+      query,
     );
     return row.length ? row[0].distinctCount : 0;
   } catch (error) {
@@ -59,16 +62,52 @@ export const getLatestFrameKmId = async (): Promise<number | undefined> => {
   }
 };
 
-export const getFirstFrameKmId = async (): Promise<number | undefined> => {
+export const getFirstFrameKmId = async (mlEnabled = false): Promise<number | undefined> => {
   try {
+    const query = `SELECT MIN(fkm_id) AS firstFkmId FROM framekms${
+      mlEnabled ? ' WHERE postponed = 0' : ''
+    };`;
     const firstFkmIdRow: any = await getAsync(
       db,
-      'SELECT MIN(fkm_id) AS firstFkmId FROM framekms;',
+      query,
     );
     return firstFkmIdRow.length ? firstFkmIdRow[0].firstFkmId : null;
   } catch (error) {
     console.error('Error fetching first fkm_id:', error);
     return undefined;
+  }
+};
+
+export const getFirstPostponedFrameKm = async (): Promise<number | undefined> => {
+  try {
+    const firstPostponed: any = await getAsync(
+      db,
+      `SELECT MIN(fkm_id) AS firstFkmId FROM framekms WHERE postponed = 1;`,
+    );
+    return firstPostponed.length ? firstPostponed[0].firstFkmId : null;
+  } catch (error) {
+    console.error('Error fetching postponed fkm_id:', error);
+    return undefined;
+  }
+};
+
+export const postponeFrameKm = async (frameKmId: number): Promise<boolean> => {
+  try {
+    await runAsync(db, 'UPDATE framekms SET postponed = 1 WHERE fkm_id = ?;', [frameKmId]);
+    return true;
+  } catch (error) {
+    console.error('Error clearing framekms table:', error);
+    return false;
+  }
+};
+
+export const moveFrameKmBackToQueue = async (frameKmId: number): Promise<boolean> => {
+  try {
+    await runAsync(db, 'UPDATE framekms SET postponed = 0, error = "" WHERE fkm_id = ?;', [frameKmId]);
+    return true;
+  } catch (error) {
+    console.error('Error clearing framekms table:', error);
+    return false;
   }
 };
 
@@ -186,14 +225,19 @@ export const addFramesToFrameKm = async (
   console.log(
     'GOING TO ADD ' + rows.length + ' FRAMES. ' + (force ? ' FORCED!!' : ''),
   );
-  const { isTripTrimmingEnabled, TrimDistance } = getConfig();
+  const { 
+    isTripTrimmingEnabled, 
+    TrimDistance, 
+    DX, 
+    FrameKmLengthMeters 
+  } = await getConfig(['isTripTrimmingEnabled', 'TrimDistance', 'DX', 'FrameKmLengthMeters']);
 
   if (isTripTrimmingEnabled && metersTrimmed < TrimDistance) {
     const framesLeftToTrim = Math.ceil(
-      (TrimDistance - metersTrimmed) / getConfig().DX,
+      (TrimDistance - metersTrimmed) / DX,
     );
     const rowsToIgnore = rows.slice(0, framesLeftToTrim);
-    metersTrimmed += rowsToIgnore.length * getConfig().DX;
+    metersTrimmed += rowsToIgnore.length * DX;
     rows = rows.slice(framesLeftToTrim);
     console.log('TRIMMED ' + rowsToIgnore.length);
   }
@@ -202,16 +246,16 @@ export const addFramesToFrameKm = async (
     return new Promise(async (resolve) => {
       const insertSQL = `
         INSERT INTO framekms (
-          fkm_id, image_name, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
+          fkm_id, image_name, image_path, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop,
-          time, system_time, satellites_used, dilution, eph, frame_idx
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, satellites_used, dilution, eph, frame_idx, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        if (isPrivateLocation(row.latitude, row.longitude)) {
+        if (await isPrivateLocation(row.latitude, row.longitude)) {
           console.log('PRIVATE ZONE. Ignored');
           continue;
         }
@@ -227,7 +271,7 @@ export const addFramesToFrameKm = async (
             // sanity check for accidental insert of the wrong sample into framekm
             const distanceBetweenFrames = distance(last, row);
             if (
-              distanceBetweenFrames > getConfig().DX * 2 &&
+              distanceBetweenFrames > DX * 2 &&
               !forceFrameKmSwitch
             ) {
               insertErrorLog('Distance between frames is more than allowed: ' + distanceBetweenFrames);
@@ -243,7 +287,7 @@ export const addFramesToFrameKm = async (
             if (fkm_id === lastFkmId) {
               frame_idx = Number(last.frame_idx) + 1;
             }
-            if (frame_idx > getMaxFrameKmLength()) {
+            if (frame_idx > Math.round(FrameKmLengthMeters / DX)) {
               console.log('FRAMEKM IS COMPLETE!! SWITCHING TO NEXT ONE.');
               fkm_id++;
               frame_idx = 1;
@@ -266,6 +310,7 @@ export const addFramesToFrameKm = async (
           await runAsync(db, insertSQL, [
             fkm_id,
             row.image_name,
+            destination,
             row.acc_x,
             row.acc_y,
             row.acc_z,
@@ -289,6 +334,7 @@ export const addFramesToFrameKm = async (
             row.dilution,
             row.eph,
             frame_idx,
+            Date.now(),
           ]);
         } catch (error) {
           console.error('Error adding row to framekm:', error);
