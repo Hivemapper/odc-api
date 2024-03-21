@@ -8,8 +8,8 @@ import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
 import { join } from 'path';
 import { deleteFrameKm, getFrameKmName, postponeFrameKm } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
-import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality, getCpuUsage } from 'util/index';
+import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
 import {
   MAX_PER_FRAME_BYTES,
   MIN_PER_FRAME_BYTES,
@@ -21,6 +21,11 @@ import { getDeviceInfo } from 'services/deviceInfo';
 import { getConfig } from 'sqlite/config';
 import { freemem } from 'os';
 import { getUsbState } from 'services/usbStateCheck';
+import { getAnonymousID } from 'sqlite/deviceInfo';
+import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
+import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
+
+const CHANCE_OF_GNSS_AUTH_CHECK = 0.01;
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -234,7 +239,20 @@ export const packMetadata = async (
   }
   if (numBytes && validatedFrames.length > 2) {
     const deviceInfo = getDeviceInfo();
+
     const DX = await getConfig('DX');
+    const deviceId = await getAnonymousID();
+
+    const startTime = validatedFrames.at(0)?.t || Date.now();
+    const endTime = validatedFrames.at(-1)?.t || Date.now();
+
+    let gnssAuth : GnssAuthRecord | undefined;
+    let publicKey = '';
+    if (Math.random() <= CHANCE_OF_GNSS_AUTH_CHECK) {
+      gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
+      publicKey = await getPublicKeyFromEeprom();
+    }
+
     const metadataJSON = {
       bundle: {
         name,
@@ -250,6 +268,13 @@ export const packMetadata = async (
         version: '1.8',
         privacyModelHash,
         privacyDetections: privacyModelHash && Object.keys(privacyDetections).length ? JSON.stringify(privacyDetections) : undefined,
+        deviceId: deviceId,
+        gnssAuthBuffer: gnssAuth?.buffer,
+        gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
+        gnssAuthBufferHash: gnssAuth?.buffer_hash,
+        gnssAuthSessionId: gnssAuth?.session_id,
+        gnssAuthSignature: gnssAuth?.signature,
+        gnssAuthPublicKey: publicKey,
       },
       frames: validatedFrames,
     };
