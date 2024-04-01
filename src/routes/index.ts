@@ -278,7 +278,7 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
     return;
   }
 
-  const { gnss, imu } = await querySensorData(since, until);
+  const { gnss, imu, magnetometer } = await querySensorData(since, until);
   const device_id = await getAnonymousID();
   const sensordata: SensorRecord[] = [];
   gnss.forEach(value => {
@@ -286,6 +286,9 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
   });
   imu.forEach(value => {
     sensordata.push({ sensor: 'imu', device_id: device_id, ...value });
+  });
+  magnetometer.forEach(value => {
+    sensordata.push({ sensor: 'magnetometer', device_id: device_id, ...value });
   });
 
   res.json(sensordata);
