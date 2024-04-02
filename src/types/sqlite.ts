@@ -60,6 +60,13 @@ export interface GnssAuthRecord {
   system_time: number;
 }
 
+export interface MagnetometerRecord {
+  system_time: number;
+  mag_x: number;
+  mag_y: number;
+  mag_z: number;
+}
+
 export type FrameKmRecord = {
     fkm_id?: number;
     image_name: string;
@@ -98,4 +105,4 @@ export type FrameKmRecord = {
 
   export type FrameKM = FrameKmRecord[];
   
-  export type SensorRecord = (GnssRecord | ImuRecord) & {sensor: string, device_id: string};
+  export type SensorRecord = (GnssRecord | ImuRecord | MagnetometerRecord) & {sensor: string, device_id: string};
