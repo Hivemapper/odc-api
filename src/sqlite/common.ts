@@ -1,5 +1,5 @@
 import { IImage } from 'types';
-import { GnssRecord, ImuRecord } from 'types/sqlite';
+import { GnssRecord, ImuRecord, MagnetometerRecord } from 'types/sqlite';
 import { fetchGnssLogsByTime } from './gnss';
 import { fetchImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
@@ -8,6 +8,7 @@ import { runAsync } from 'sqlite';
 import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
 import { GnssDopKpi } from 'types/instrumentation';
 import { sleep } from 'util/index';
+import { fetchMagnetometerLogsByTime } from './magnetometer';
 
 let accumulated = 0;
 let accumDuration = 0;
@@ -17,7 +18,7 @@ let accumImageFreq = 0;
 
 export const querySensorData = async (
   since: number, until?: number
-): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[] }> => {
+): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[]; magnetometer: MagnetometerRecord[] }> => {
   try {
     const start = Date.now();
     console.log('Getting sensor data for: ', new Date(since));
@@ -35,6 +36,7 @@ export const querySensorData = async (
         const imu = await fetchImuLogsByTime(imuSince, imuUntil);
         await sleep(2000); // let frame buffer to fill up if needed
         const images = await getFramesFromFS(imuSince, imuUntil);
+        const magnetometer = await fetchMagnetometerLogsByTime(imuSince, imuUntil);
         const duration = (imuUntil - imuSince) / 1000;
       if (duration > 0) {
         const GnssFreq = gnss.length / duration;
@@ -88,14 +90,14 @@ export const querySensorData = async (
       if (images.length) {
         await insertFrames(images);
       }
-      return { gnss, imu, images };
+      return { gnss, imu, images, magnetometer };
     } else {
       console.log('No valuable GNSS data fetched');
-      return { gnss: [], imu: [], images: [] };
+      return { gnss: [], imu: [], images: [], magnetometer: [] };
     }
   } catch (e: unknown) {
     console.log('Unknown sensor data fetch problem', e);
-    return { gnss: [], imu: [], images: [] };
+    return { gnss: [], imu: [], images: [], magnetometer: [] };
   }
 };
 

@@ -9,6 +9,7 @@ import { fetchLastNGnssRecords } from 'sqlite/gnss';
 import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
 import { CameraType } from 'types';
+import { fetchLastNMagnetometerRecords } from 'sqlite/magnetometer';
 
 const router = Router();
 
@@ -36,6 +37,16 @@ router.get('/imu/:n', async (req, res) => {
   const { n } = req.params;
   try {
     const rows = await fetchLastNImuRecords(Number(n));
+    res.send(rows);
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/magnetometer/:n', async (req, res) => {
+  const { n } = req.params;
+  try {
+    const rows = await fetchLastNMagnetometerRecords(Number(n));
     res.send(rows);
   } catch (error) {
     res.status(500).send({ error });
