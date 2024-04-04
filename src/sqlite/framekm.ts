@@ -8,6 +8,7 @@ import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
+import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -387,6 +388,18 @@ export const addFramesToFrameKm = async (
           continue;
         }
         try {
+          const framePath = join(FRAMES_ROOT_FOLDER, row.image_name);
+          const stat = await promises.stat(framePath);
+          if (stat.size < MIN_PER_FRAME_BYTES || stat.size > MAX_PER_FRAME_BYTES) {
+            Instrumentation.add({
+              event: 'DashcamCutReason',
+              message: JSON.stringify({
+                reason: 'FrameSize',
+                size: stat.size,
+              }),
+            });
+            continue;
+          }
           const last = await getLastRecord();
           let fkm_id = 1;
           let frame_idx = 1;
@@ -440,7 +453,7 @@ export const addFramesToFrameKm = async (
             await promises.mkdir(destination, { recursive: true });
           }
           await promises.copyFile(
-            join(FRAMES_ROOT_FOLDER, row.image_name),
+            framePath,
             join(destination, row.image_name),
           );
           console.log(
