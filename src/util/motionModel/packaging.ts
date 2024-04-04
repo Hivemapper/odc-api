@@ -252,8 +252,8 @@ export const packMetadata = async (
     const endTime = validatedFrames.at(-1)?.t || Date.now();
 
     let gnssAuth : GnssAuthRecord | undefined;
-    let publicKey = '';
-    if (Math.random() <= await getConfig('ChanceOfGnssAuthCheck')) {
+    let publicKey = undefined;
+    if (Math.random() < await getConfig('ChanceOfGnssAuthCheck')) {
       gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
       publicKey = await getPublicKeyFromEeprom();
     }
