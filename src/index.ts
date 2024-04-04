@@ -36,8 +36,8 @@ export async function initAppServer(): Promise<Application> {
       highWaterMark: 2 * 1024 * 1024, // Set 2MiB buffer
     }),
   ); 
-  app.use(express.json({limit: "500mb"}));
-  app.use(express.urlencoded({ limit: "500mb", extended: true }));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   app.use(router);
 
