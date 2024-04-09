@@ -68,7 +68,9 @@ export class DraftFrameKm {
         console.log('Potential error: GPS records with no time difference');
         return true;
       }
-      const speed = distance / ( deltaTime / 1000);
+
+      // Let's take minimum of speed from GPS and speed calculated from distance and time
+      gnss.speed = Math.min(gnss.speed, distance / ( deltaTime / 1000));
 
       /**
        * Should we add this point, or is it too soon?
@@ -87,16 +89,16 @@ export class DraftFrameKm {
       /**
        * Should we add this point, or should we cut the FrameKM already?
        */
-      if (speed > MAX_SPEED) {
+      if (gnss.speed > MAX_SPEED) {
         // too fast or GPS is not accurate, cut
-        insertErrorLog('Speed is to high ' + Math.round(speed) + ' ' + Math.round(deltaTime) + ' so cutting');
-        console.log('===== SPEED IS TOO HIGH, ' + speed + ', ' + deltaTime + ', CUTTING =====');
+        insertErrorLog('Speed is to high ' + Math.round(gnss.speed) + ' ' + Math.round(deltaTime) + ' so cutting');
+        console.log('===== SPEED IS TOO HIGH, ' + gnss.speed + ', ' + deltaTime + ', CUTTING =====');
         if (!this.prevHighSpeedEvent || (Date.now() - this.prevHighSpeedEvent > 10000)) {
           Instrumentation.add({
             event: 'DashcamCutReason',
             message: JSON.stringify({
               reason: 'HighSpeed',
-              speed,
+              speed: gnss.speed,
               distance,
               deltaTime,
             }),
@@ -106,7 +108,7 @@ export class DraftFrameKm {
         return false;
       }
       
-      if (speed > SpeedToIncreaseDx) {
+      if (gnss.speed > SpeedToIncreaseDx) {
         this.highSpeedRecordsInARow++;
         this.lowSpeedRecordsInARow = 0;
       } else {
