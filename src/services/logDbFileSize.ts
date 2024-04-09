@@ -1,0 +1,26 @@
+import { exec } from 'child_process';
+import { DB_PATH } from 'config';
+
+import { IService } from '../types';
+import { Instrumentation } from 'util/instrumentation';
+
+export const LogDbFileSize: IService = {
+  execute: async () => {
+    try {
+      exec(`du -b ${DB_PATH}`, (error, stdout) => {
+        if (error) {
+          console.log(error);
+          return;
+        }
+        const dbFileSize = parseInt(stdout.split('\t')[0]);
+        Instrumentation.add({
+          event: 'DashcamDbFileSize',
+          size: dbFileSize,
+        });
+      });
+    } catch (error: unknown) {
+      console.log(error);
+    }
+  },
+  interval: 600000, // every 10 minutes
+};
