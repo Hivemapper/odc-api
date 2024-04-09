@@ -13,6 +13,7 @@ import { IntegrityCheckService } from 'services/integrityCheck';
 import { SetSwappinessService } from 'services/setSwappiness';
 import { StartObjectDetection } from 'services/startObjectDetection';
 import { LoadPrivacyService } from 'services/loadPrivacy';
+import { LogDbFileSize } from 'services/logDbFileSize';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
@@ -81,6 +82,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(UsbStateCheckService);
     serviceRunner.add(SetSwappinessService);
     serviceRunner.add(StartObjectDetection);
+    serviceRunner.add(LogDbFileSize);
 
     // Execute motion model
     MotionModelController();

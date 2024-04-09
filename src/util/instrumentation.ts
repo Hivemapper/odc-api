@@ -32,6 +32,7 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamML',
   'DashcamMLFailed',
   'DashcamImuFreq',
+  'DashcamDbFileSize',
   'DashcamAppConnected',
   'DashcamApiRepaired',
   'DashcamPreviewImage',
