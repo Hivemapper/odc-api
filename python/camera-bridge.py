@@ -7,14 +7,15 @@ import signal
 import sys
 import threading
 from collections import deque
+import numpy as np
 from utils.sqlite import SQLite
 from utils.jpeg_tools import JpegMemoryControl
 from ml import nn_process_input_queue, handle_nn_output
 
-jpeg_root_folder = '/tmp/recording/pics'
-stereo_root_folder = '/data/recording/stereo'
+jpeg_root_folder = '/data/recording/pics'
+left_root_folder = '/data/recording/left'
+right_root_folder = '/data/recording/right'
 db_path = '/data/recording/data-logger.v1.4.5.db'
-cachedStereoQueue = deque()
 
 # Define the signal handler function
 def signal_handler(sig, frame):
@@ -35,33 +36,39 @@ def calculate_fps(prev_time, frame_count):
         prev_time = current_time
         return fps, prev_time, frame_count
     return None, prev_time, frame_count
- 
+
+def get_img_name(img, dirname, extension):
+    ts = img.getTimestamp()
+    latencyMs = int((dai.Clock.now() - ts).total_seconds() * 1000000)
+    timeNow = time.time() * 1000000
+    timestamp = int(timeNow - latencyMs)
+    timestamp_str = str(timestamp)
+    prefix = timestamp_str[:-6]
+    suffix = timestamp_str[-6:]
+    return f"{dirname}/{prefix}_{suffix}{extension}"
+
 def record_jpeg(queue, dirName):
     Path(dirName).mkdir(parents=True, exist_ok=True)
     prev_time = time.time()
     frame_count = 0
     while True:
-        img = queue.get()
-        # insert into DB frames instead
-        ts = img.getTimestamp()
-        latencyMs = int((dai.Clock.now() - ts).total_seconds() * 1000000)
-        timeNow = time.time() * 1000000
-        timestamp = int(timeNow - latencyMs)
-        timestamp_str = str(timestamp)
-        prefix = timestamp_str[:-6]
-        suffix = timestamp_str[-6:]
-        fName = f"{dirName}/{prefix}_{suffix}.jpg"
-        with open(fName, "wb") as f:
-            f.write(img.getData())
-            if frame_count % 5 == 0:  # Send every other frame to nnThread
-                db.add_frame(fName, int(ts.total_seconds() * 1000))
-            jpegMemoryControl.add(fName)
-            # print(f'Image with timestamp {fName} (latency: {int(latencyMs)})')
+        try: 
+            img = queue.get()
+            fName = get_img_name(img, dirName, ".jpg")
+            with open(fName, "wb") as f:
+                f.write(img.getData())
+                if frame_count % 5 == 0:  # Send every other frame to nnThread
+                    db.add_frame(fName, int(img.getTimestamp().total_seconds() * 1000))
+                jpegMemoryControl.add(fName)
+                # print(f'Image with timestamp {fName} (latency: {int(latencyMs)})')
 
-        frame_count += 1
-        fps, prev_time, frame_count = calculate_fps(prev_time, frame_count)
-        if fps:
-            print(f"JPEG FPS: {fps}")
+            frame_count += 1
+            fps, prev_time, frame_count = calculate_fps(prev_time, frame_count)
+            if fps:
+                print(f"JPEG FPS: {fps}")
+        except Exception as e:
+            print('JPEG write error', e)
+            time.sleep(1)
 
 def record_h265(queue, dirName):
     Path(dirName).mkdir(parents=True, exist_ok=True)
@@ -74,23 +81,27 @@ def record_h265(queue, dirName):
         #         h265Packet.getData().tofile(videoFile)  # Appends the packet data to the opened file
         #         # convert to mp4 later as part of postprocessig
 
-def record_mono(qLeft, qRight, dirName, cachedStereoQueue=None, capture_lock=None):
+def record_mono(monoQ, side, dirName, cachedStereoQueue=None, capture_lock=None):
     Path(dirName).mkdir(parents=True, exist_ok=True)
+    prev_time = time.time()
+    frame_count = 0
+    # stereoImageryMemoryControl = JpegMemoryControl(dirName)
     while True:
         try:
-            inLeft = qLeft.tryGet()
-            inRight = qRight.tryGet()
-            with capture_lock:
-                if inLeft is not None:
-                    cachedStereoQueue.append(("left", inLeft, int(inLeft.getTimestamp().total_seconds() * 1000)))
-                if inRight is not None:
-                    cachedStereoQueue.append(("right", inRight, int(inRight.getTimestamp().total_seconds() * 1000)))
-                if len(cachedStereoQueue) > 1200:
-                    # remove the oldest stereo pair
-                    cachedStereoQueue.popleft()
-                    cachedStereoQueue.popleft()
+            mono = monoQ.get()
+            # fName = get_img_name(mono, dirName, "_" + side + ".npy")
+            # np.save(fName, mono.getCvFrame())
+            # stereoImageryMemoryControl.add(fName)
+            frame_count += 1
+            fps, prev_time, frame_count = calculate_fps(prev_time, frame_count)
+            if fps:
+                print(f"{side.upper()} FPS: {fps}")
+            cachedStereoQueue.append((side, mono, int(mono.getTimestamp().total_seconds() * 1000)))
+            if len(cachedStereoQueue) > 600:
+                # remove the oldest stereo pair
+                cachedStereoQueue.popleft()
         except Exception as e:
-            print(e)
+            print('Mono queue error', side, e)
             time.sleep(1)
 
 print("DepthAI version:", dai.__version__)
@@ -100,8 +111,8 @@ pipeline = dai.Pipeline()
 
 # Define nodes for RGB
 camRgb = pipeline.create(dai.node.ColorCamera)
-videoEncH265 = pipeline.create(dai.node.VideoEncoder)
-xoutH265 = pipeline.create(dai.node.XLinkOut)
+# videoEncH265 = pipeline.create(dai.node.VideoEncoder)
+# xoutH265 = pipeline.create(dai.node.XLinkOut)
 videoEncJpeg = pipeline.create(dai.node.VideoEncoder)
 xoutJpeg = pipeline.create(dai.node.XLinkOut)
 
@@ -122,13 +133,13 @@ nnIn.setStreamName("nn_in")
 nn.setBlobPath(sys.argv[1])
 nn.input.setQueueSize(1)
 nn.input.setBlocking(False)
-nn.setNumInferenceThreads(4)
+nn.setNumInferenceThreads(1)
 
 nnIn.out.link(nn.input)
 nn.out.link(nnOut.input)
 
 #Set stream names
-xoutH265.setStreamName('h265')
+# xoutH265.setStreamName('h265')
 xoutJpeg.setStreamName('jpeg')
 xoutLeft.setStreamName('left')
 xoutRight.setStreamName('right')
@@ -136,15 +147,15 @@ xoutRight.setStreamName('right')
 # Properties RGB
 camRgb.setBoardSocket(dai.CameraBoardSocket.CAM_A)
 camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_4_K)
-camRgb.setVideoSize(3840, 2160)
+# camRgb.setVideoSize(3840, 2160)
 camRgb.setPreviewSize(2028, 1024)
 camRgb.setPreviewType(dai.ImgFrame.Type.NV12)
 camRgb.initialControl.setMisc("stride-align", 64)
 camRgb.initialControl.setMisc("scanline-align", 64)
 
-videoEncH265.setDefaultProfilePreset(30, dai.VideoEncoderProperties.Profile.H265_MAIN)
-videoEncH265.setBitrateKbps(35*1000)
-videoEncH265.setQuality(50)
+# videoEncH265.setDefaultProfilePreset(30, dai.VideoEncoderProperties.Profile.H265_MAIN)
+# videoEncH265.setBitrateKbps(35*1000)
+# videoEncH265.setQuality(50)
 videoEncJpeg.setDefaultProfilePreset(30, dai.VideoEncoderProperties.Profile.MJPEG)
 videoEncJpeg.setQuality(50)
 # Properties Mono
@@ -155,8 +166,8 @@ monoRight.setBoardSocket(dai.CameraBoardSocket.CAM_C)
 monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
 
 # Linking RGB
-camRgb.video.link(videoEncH265.input)
-videoEncH265.bitstream.link(xoutH265.input)
+# camRgb.video.link(videoEncH265.input)
+# videoEncH265.bitstream.link(xoutH265.input)
 
 camRgb.preview.link(videoEncJpeg.input)
 videoEncJpeg.bitstream.link(xoutJpeg.input)
@@ -167,33 +178,40 @@ monoLeft.out.link(xoutLeft.input)
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:
 
+    device.setLogLevel(dai.LogLevel.INFO)
+    device.setLogOutputLevel(dai.LogLevel.INFO)
     # Queue for NN input
     nnQ = device.getInputQueue("nn_in")
     jpegMemoryControl = JpegMemoryControl(jpeg_root_folder)
     db = SQLite(db_path)
     capture_lock = threading.Lock()
+    leftStereoQueue = deque()
+    rightStereoQueue = deque()
 
     # Output queue will be used to get the encoded data from the output defined above
-    qH265 = device.getOutputQueue(name="h265", maxSize=30, blocking=True)
+    # qH265 = device.getOutputQueue(name="h265", maxSize=30, blocking=True)
     qjpeg = device.getOutputQueue(name="jpeg", maxSize=30, blocking=True)
     qLeft = device.getOutputQueue(name="left", maxSize=4, blocking=True)
     qRight = device.getOutputQueue(name="right", maxSize=4, blocking=True)
     qNNOut = device.getOutputQueue(name="nn", maxSize=4, blocking=False)
     # The .h265 file is a raw stream file (not playable yet)
-    thread_h265 = threading.Thread(target=record_h265, args=(qH265, "h265",))
+    # thread_h265 = threading.Thread(target=record_h265, args=(qH265, "h265",))
     thread_jpeg = threading.Thread(target=record_jpeg, args=(qjpeg, jpeg_root_folder,))
-    thread_mono = threading.Thread(target=record_mono, args=(qLeft, qRight, stereo_root_folder,cachedStereoQueue,capture_lock,))
-    thread_nn_input = threading.Thread(target=nn_process_input_queue, args=(nnQ, cachedStereoQueue, db, jpeg_root_folder,stereo_root_folder,capture_lock,))
+    thread_left = threading.Thread(target=record_mono, args=(qLeft, "left", left_root_folder,leftStereoQueue,capture_lock,))
+    thread_right = threading.Thread(target=record_mono, args=(qRight, "right", right_root_folder,rightStereoQueue,capture_lock,))
+    thread_nn_input = threading.Thread(target=nn_process_input_queue, args=(nnQ, db, jpeg_root_folder,))
     thread_nn_output = threading.Thread(target=handle_nn_output, args=(qNNOut,db,))
 
-    thread_h265.start()
+    # thread_h265.start()
     thread_jpeg.start()
-    thread_mono.start()
+    thread_left.start()
+    thread_right.start()
     thread_nn_input.start()
     thread_nn_output.start()
 
-    thread_h265.join()
+    # thread_h265.join()
     thread_jpeg.join()
-    thread_mono.join()
+    thread_left.join()
+    thread_right.join()
     thread_nn_input.join()
     thread_nn_output.join()
