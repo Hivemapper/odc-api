@@ -110,7 +110,24 @@ export const resetDB = async () => {
     await runAsync('DELETE FROM imu;');
     await runAsync('DELETE FROM frames;');
     await runAsync('DELETE FROM error_logs;');
+    await runAsync('DELETE FROM gnss_auth;');
+    // perform VACUUM to free up the space
+    await runAsync('VACUUM;');
   } catch (error) {
     console.error('Error clearing tables:', error);
   }
 };
+
+export const resetSensorData = async () => {
+  try {
+    console.log('RESETTING SENSOR DATA');
+    await runAsync('DELETE FROM gnss;');
+    await runAsync('DELETE FROM imu;');
+    await runAsync('DELETE FROM gnss_auth;');
+    await runAsync('DELETE FROM error_logs;');
+    // perform VACUUM to free up the space
+    await runAsync('VACUUM;');
+  } catch (error) {
+    console.error('Error clearing tables:', error);
+  }
+}
