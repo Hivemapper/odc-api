@@ -2,7 +2,7 @@ import { CAMERA_TYPE, DB_PATH } from 'config';
 import { Router } from 'express';
 import { readdirSync } from 'fs';
 import { runAsync } from 'sqlite';
-import { resetDB } from 'sqlite/common';
+import { resetDB, resetSensorData } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getEstimatedProcessingTime, getFramesCount } from 'sqlite/framekm';
 import { fetchLastNGnssRecords } from 'sqlite/gnss';
@@ -161,6 +161,17 @@ router.get('/state/:name', async (req, res) => {
 router.get('/reset', async (req, res) => {
   try {
     await resetDB();
+    res.send({
+      done: true,
+    });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/sensor_reset', async (req, res) => {
+  try {
+    await resetSensorData();
     res.send({
       done: true,
     });

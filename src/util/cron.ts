@@ -8,7 +8,7 @@ import {
   ICronJobConfig,
 } from 'types';
 import { Instrumentation } from './instrumentation';
-import { resetDB } from 'sqlite/common';
+import { resetDB, resetSensorData } from 'sqlite/common';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;
@@ -237,6 +237,8 @@ export const createCronJobExecutor = (
       let child: any;
       if (cmd === 'reset_db') {
         resetDB();
+      } else if (cmd === 'reset_sensor_data') {
+        resetSensorData();
       } else {
         child = spawn(cmd || '', { shell: true });
       }
