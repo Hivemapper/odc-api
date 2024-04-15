@@ -11,7 +11,7 @@ nn_retry_counters = {}
 currently_processing = set()
 metadata_map = {}
 
-def nn_process_input_queue(nnQ, db, jpeg_root_folder):
+def nn_process_input_queue(nnQ, db, jpeg_root_folder, leftStereoQueue, rightStereoQueue):
     while True:
         # grab frame from DB
         try: 
@@ -76,7 +76,7 @@ def nn_process_input_queue(nnQ, db, jpeg_root_folder):
                         img.setData(cv2.resize(cv_frame, (640, 640)))
                         img.setType(dai.RawImgFrame.Type.BGR888p)
                         img.setTimestamp(timedelta(milliseconds=ts)) # preserving the timestamp of original
-                        metadata_map[ts] = img
+                        metadata_map[ts] = image_name
                         img.setWidth(640)
                         img.setHeight(640)
                         nnQ.send(img)  # Send to NN input queue
@@ -92,7 +92,13 @@ def handle_nn_output(queue, db):
             detData = detection.getFirstLayerFp16()
             npDetData = np.array(detData)
             # print(f'Detections array shape {npDetData.shape}')   
-            print(detection.getTensor())
+            ts = int(detection.getTimestamp().total_seconds() * 1000)
+            print('Detection timestamp:', ts)
+            if metadata_map.get(ts):
+                image_name = metadata_map[ts]
+                print('Detection for image name found:', image_name)
+            else:
+                print('Detection for image name not found')
         except Exception as e:
             print('NN output error', e)
             time.sleep(1)

@@ -79,7 +79,7 @@ def record_h265(queue, dirName):
         #     while time.time() < t_end:
         #         h265Packet = queue.get()  # Blocking call, will wait until a new data has arrived
         #         h265Packet.getData().tofile(videoFile)  # Appends the packet data to the opened file
-        #         # convert to mp4 later as part of postprocessig
+        #         # convert to mp4 later as part of postprocessing
 
 def record_mono(monoQ, side, dirName, cachedStereoQueue=None, capture_lock=None):
     Path(dirName).mkdir(parents=True, exist_ok=True)
@@ -199,7 +199,7 @@ with dai.Device(pipeline) as device:
     thread_jpeg = threading.Thread(target=record_jpeg, args=(qjpeg, jpeg_root_folder,))
     thread_left = threading.Thread(target=record_mono, args=(qLeft, "left", left_root_folder,leftStereoQueue,capture_lock,))
     thread_right = threading.Thread(target=record_mono, args=(qRight, "right", right_root_folder,rightStereoQueue,capture_lock,))
-    thread_nn_input = threading.Thread(target=nn_process_input_queue, args=(nnQ, db, jpeg_root_folder,))
+    thread_nn_input = threading.Thread(target=nn_process_input_queue, args=(nnQ, db, jpeg_root_folder,leftStereoQueue, rightStereoQueue,))
     thread_nn_output = threading.Thread(target=handle_nn_output, args=(qNNOut,db,))
 
     # thread_h265.start()
