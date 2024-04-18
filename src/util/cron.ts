@@ -8,7 +8,7 @@ import {
   ICronJobConfig,
 } from 'types';
 import { Instrumentation } from './instrumentation';
-import { resetDB, resetSensorData } from 'sqlite/common';
+import { resetDB, resetFrameKmwithCutoff, resetSensorData } from 'sqlite/common';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;
@@ -239,6 +239,8 @@ export const createCronJobExecutor = (
         resetDB();
       } else if (cmd === 'reset_sensor_data') {
         resetSensorData();
+      } else if (cmd === 'framekm_cutoff') {
+        resetFrameKmwithCutoff(config.value || 0);
       } else {
         child = spawn(cmd || '', { shell: true });
       }

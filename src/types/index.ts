@@ -103,6 +103,7 @@ export interface ICronJobConfig {
   device?: CameraType;
   firmware?: string;
   timeout?: number;
+  value?: number;
   log: boolean;
 }
 
