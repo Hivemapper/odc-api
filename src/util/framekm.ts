@@ -1,4 +1,4 @@
-import { detect, map } from 'async';
+import { map } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import {
   Stats,
@@ -17,6 +17,7 @@ import sizeOf from 'image-size';
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
 import { DetectionsByFrame, FrameKMTelemetry } from 'types/motionModel';
+
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 
