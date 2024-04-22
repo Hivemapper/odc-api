@@ -1,6 +1,8 @@
 import { querySensorData } from 'sqlite/common';
 import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
+import { Instrumentation } from 'util/instrumentation';
+import { getConfig } from 'sqlite/config';
 
 const QUERY_WINDOW_SIZE = 10 * 1000;
 
@@ -12,7 +14,7 @@ export async function MotionModelController() {
     let frameKMToProcess = await session.getNextFrameKMToProcess();
     while (frameKMToProcess?.length) {
       await packFrameKm(frameKMToProcess);
-      frameKMToProcess = await session.getNextFrameKMToProcess();
+      frameKMToProcess = await session.getNextFrameKMToProcess(true);
     }
 
     // Do not query sensor data if dashcam session is not ready
@@ -20,17 +22,28 @@ export async function MotionModelController() {
       setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
       return;
     }
+    if (!session.started) {
+      session.start();
+    }
+
+    if (await getConfig('isDashcamMLEnabled')) {
+      // Repair ML job if needed
+      await session.checkObjectDetectionService();
+    }
 
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(),
     );
 
-    session.ingestData(gnss, imu, images);
+    await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
-
-    // TODO: utilise raw logs: collect, pack, etc here
+    await session.doHealthCheck();
   } catch (e: unknown) {
     console.log('Critical motion model controller error, investigate: ', e);
+    Instrumentation.add({
+      event: 'DashcamApiError',
+      message: 'Motion model error',
+    });
     session = new DriveSession();
   }
 

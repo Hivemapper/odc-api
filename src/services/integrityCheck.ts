@@ -4,11 +4,16 @@ import {
   EVENTS_LOG_PATH,
   FRAMEKM_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
+  UNPROCESSED_FRAMEKM_ROOT_FOLDER,
   WEBSERVER_LOG_PATH,
 } from 'config';
+import { promises, readdirSync } from 'fs';
+import { join } from 'path';
+import { getFrameKm } from 'sqlite/framekm';
 import { IService } from 'types';
+import { Instrumentation } from 'util/instrumentation';
 
-let integrityCheckDone = true;
+let integrityCheckDone = false;
 
 export const isIntegrityCheckDone = () => {
   return integrityCheckDone;
@@ -22,6 +27,46 @@ export const IntegrityCheckService: IService = {
     try {
       try {
         console.log('Running data integrity check');
+        const unprocessedFrameKms = readdirSync(UNPROCESSED_FRAMEKM_ROOT_FOLDER);
+        if (unprocessedFrameKms.length > 0) {
+          for (const frameKmId of unprocessedFrameKms) {
+            if (Number(frameKmId) > 0) {
+              const frameKm = await getFrameKm(Number(frameKmId));
+              if (!frameKm.length) {
+                console.log('Empty FrameKM found: ' + frameKmId);
+                try {
+                  const framesFolder = join(
+                    UNPROCESSED_FRAMEKM_ROOT_FOLDER,
+                    frameKmId,
+                  );
+                  await promises.rmdir(framesFolder, { recursive: true });
+                  Instrumentation.add({
+                    event: 'DashcamEmptyFrameKm',
+                    message: JSON.stringify({ id: frameKmId }),
+                  });
+                } catch (e: unknown) {
+                  console.error('Error deleting framekm folder:', e);
+                }
+              }
+            } else {
+              console.log('Invalid FrameKM found: ' + frameKmId);
+              try {
+                const framesFolder = join(
+                  UNPROCESSED_FRAMEKM_ROOT_FOLDER,
+                  String(frameKmId),
+                );
+                await promises.rmdir(framesFolder, { recursive: true });
+                Instrumentation.add({
+                  event: 'DashcamInvalidFrameKm',
+                  message: JSON.stringify({ id: frameKmId }),
+                });
+              } catch (e: unknown) {
+                console.error('Error deleting framekm folder:', e);
+              }
+            }
+          }
+        }
+
         const cleanupScript = spawn('sh', [
           DATA_INTEGRITY_SCRIPT,
           FRAMEKM_ROOT_FOLDER,

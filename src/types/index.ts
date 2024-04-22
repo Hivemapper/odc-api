@@ -101,7 +101,9 @@ export interface ICronJobConfig {
   if: ICronJobCondition;
   frequency: ICronJobFrequency;
   device?: CameraType;
+  firmware?: string;
   timeout?: number;
+  value?: number;
   log: boolean;
 }
 
@@ -164,4 +166,10 @@ export interface InstrumentationData {
   session?: string;
   usedMemory?: number;
   message?: string;
+}
+
+export interface IServiceRestart {
+  objectDetection?: boolean;
+  dataLogger?: boolean;
+  cameraBridge?: boolean;
 }

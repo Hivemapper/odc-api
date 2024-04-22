@@ -2,7 +2,7 @@ import express, { Application } from 'express';
 import router from './routes';
 import { Server } from 'http';
 import busboy from 'connect-busboy';
-import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER } from './config';
+import { PUBLIC_FOLDER, PORT, TMP_PUBLIC_FOLDER, METADATA_ROOT_FOLDER } from './config';
 import { serviceRunner } from 'services';
 import { HeartBeatService } from 'services/heartBeat';
 import { InitIMUCalibrationService } from 'services/initIMUCalibration';
@@ -10,8 +10,10 @@ import { InitCronService } from 'services/initCron';
 import { UpdateMotionModelConfigService } from 'services/updateMotionModelConfig';
 import { DeviceInfoService } from 'services/deviceInfo';
 import { IntegrityCheckService } from 'services/integrityCheck';
-// import { LogDiskUsageService } from 'services/logDiskUsage';
+import { SetSwappinessService } from 'services/setSwappiness';
+import { StartObjectDetection } from 'services/startObjectDetection';
 import { LoadPrivacyService } from 'services/loadPrivacy';
+import { LogDbFileSize } from 'services/logDbFileSize';
 import { TrackDownloadDebt } from 'services/trackDownloadDebt';
 import { setSessionId, startSystemTimer } from 'util/index';
 import { initUbxSessionAndSignatures } from 'ubx/session';
@@ -34,7 +36,7 @@ export async function initAppServer(): Promise<Application> {
     busboy({
       highWaterMark: 2 * 1024 * 1024, // Set 2MiB buffer
     }),
-  ); // Handles file uploads for Over-The-Air update
+  ); 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
@@ -78,7 +80,9 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(TrackDownloadDebt);
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(UsbStateCheckService);
-    // serviceRunner.add(LogDiskUsageService);
+    serviceRunner.add(SetSwappinessService);
+    serviceRunner.add(StartObjectDetection);
+    serviceRunner.add(LogDbFileSize);
 
     // Execute motion model
     MotionModelController();

@@ -4,22 +4,32 @@ import { isGnss, isImage, isImu } from 'util/sensor';
 import { isGoodQualityGnssRecord } from 'util/gnss';
 import { FrameKM, GnssRecord, ImuRecord } from 'types/sqlite';
 import { timeIsMostLikelyLight } from 'util/daylight';
-import { getConfig } from './config';
 import {
   addFramesToFrameKm,
+  deleteFrame,
+  deleteFrameKm,
   getExistingFramesMetadata,
   getFirstFrameKmId,
+  getFirstPostponedFrameKm,
+  getFirstRecord,
   getFrameKm,
+  getFrameKmName,
+  getFrameKmsCount,
+  getLastFrameKmId,
   getLastTimestamp,
+  getPostponedEndTrim,
+  ignoreTrimStart,
   isFrameKmComplete,
+  moveFrameKmBackToQueue,
+  postponeEndTrim,
+  restoreEndTrim,
 } from 'sqlite/framekm';
 import { isTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
-import { distance } from 'util/geomath';
-import { LatLon } from 'types/motionModel';
-import { exec } from 'child_process';
+import { GnssFilter } from 'types/motionModel';
+import { exec, spawnSync } from 'child_process';
 import {
   CAMERA_TYPE,
   DATA_LOGGER_SERVICE,
@@ -28,6 +38,8 @@ import {
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
+import { getConfig, getDX, setConfig } from 'sqlite/config';
+import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 
 let sessionTrimmed = false;
 
@@ -36,12 +48,13 @@ export class DriveSession {
   frameKmsToProcess: DraftFrameKm[] = [];
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
+  started = false;
 
   constructor(trimDistance = 100) {
     this.trimDistance = trimDistance;
   }
 
-  ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
+  async ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
     // check if no sensor data is missing — otherwise repair services
     this.checkForMissingSensorData(gnss, imu, images);
 
@@ -57,8 +70,10 @@ export class DriveSession {
       .filter(s => s)
       .sort((a, b) => a.system_time - b.system_time);
 
+    const { GnssFilter, MaxPendingTime } = await getConfig(['GnssFilter', 'MaxPendingTime']);
+
     for (const data of sensorData) {
-      if (!this.dataIsGoodEnough(data)) {
+      if (!this.dataIsGoodEnough(data, GnssFilter, MaxPendingTime)) {
         continue;
       }
 
@@ -73,14 +88,38 @@ export class DriveSession {
         this.draftFrameKm = new DraftFrameKm(data);
       }
     }
-    if (this.draftFrameKm) {
-      console.log('Data in draft: ', this.draftFrameKm.getData().length);
+  }
+
+  async start() {
+    const lastTimeIterated = await getConfig('lastTimeIterated');
+    if (lastTimeIterated && Math.abs(Date.now() - lastTimeIterated) < 1000 * 60 * 4) {
+      await restoreEndTrim();
+      ignoreTrimStart();
+      Instrumentation.add({
+        event: 'DashcamReboot',
+        size: Math.abs(Date.now() - lastTimeIterated)
+      })
+    } else {
+      // trim last framekm (end trip trimming)
+      const frameKmToTrim = await getPostponedEndTrim();
+      const TrimDistance = await getConfig('TrimDistance');
+      const DX = getDX();
+
+      const framesToTrim = Math.min(Math.round(TrimDistance / DX), frameKmToTrim.length);
+
+      for (let i = 0; i < framesToTrim; i++) {
+        const frameToRemove = frameKmToTrim.pop();
+        if (frameToRemove?.image_name) {
+          await deleteFrame(frameToRemove.image_name, frameToRemove.image_path || '');
+        }
+      }
+      await restoreEndTrim();
     }
+    this.started = true;
   }
 
   async getSamplesAndSyncWithDb() {
     // get prev frames for proper frame stitching
-    console.log('traversing full packages');
     const prevKeyFrames = await getExistingFramesMetadata();
     const isContinuous = !this.frameKmsToProcess.length;
     for (let i = 0; i < this.frameKmsToProcess.length; i++) {
@@ -97,7 +136,6 @@ export class DriveSession {
     }
     this.frameKmsToProcess = [];
 
-    console.log('traversing draft');
     // what's up with current draft
     const newFrames =
       this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
@@ -107,17 +145,8 @@ export class DriveSession {
       // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);
       const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
-      console.log(
-        'last gps to consider: ',
-        distance(
-          newFrames[newFrames.length - 1] as LatLon,
-          lastGpsElem as LatLon,
-        ),
-        lastGpsElem?.time,
-      );
       this.draftFrameKm = new DraftFrameKm(lastGpsElem);
     } else {
-      console.log('Not enough frames to add yet, ', newFrames.length);
       if (this.draftFrameKm) {
         if (this.draftFrameKm.getData().length > 100000) {
           console.log('SANITIZING THE DATA');
@@ -128,18 +157,18 @@ export class DriveSession {
     }
   }
 
-  dataIsGoodEnough(data: SensorData) {
+  dataIsGoodEnough(data: SensorData, gnssFilter: GnssFilter, maxPendingTime: number) {
     if (isGnss(data)) {
       const gnss: GnssRecord = data as GnssRecord;
 
       return (
-        isGoodQualityGnssRecord(gnss) &&
+        isGoodQualityGnssRecord(gnss, gnssFilter) &&
         timeIsMostLikelyLight(
           new Date(gnss.time),
           gnss.longitude,
           gnss.latitude,
         ) &&
-        gnss.time > Date.now() - getConfig().MaxPendingTime
+        gnss.time > Date.now() - maxPendingTime
       );
     } else if (isImu(data)) {
       return isImuValid(data as ImuRecord);
@@ -162,33 +191,38 @@ export class DriveSession {
     return Math.max(date, Date.now() - 60 * 1000);
   }
 
-  async getNextFrameKMToProcess(): Promise<FrameKM | null> {
-    if (await isFrameKmComplete()) {
-      const fkmId = await getFirstFrameKmId();
+  async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
+    const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
+    if (await isFrameKmComplete(isDashcamMLEnabled)) {
+      const fkmId = await getFirstFrameKmId(isDashcamMLEnabled);
       return await getFrameKm(fkmId);
     } else {
-      const { isTripTrimmingEnabled, TrimDistance, DX } = getConfig();
+      const isTripTrimmingEnabled = await getConfig('isTripTrimmingEnabled');
 
       if (!sessionTrimmed && isTripTrimmingEnabled) {
         // END TRIP TRIMMING
-        console.log('Trying to trim the end of the trip');
+        console.log('Postponing last framekm for trip trimming (need to wait for time)');
         sessionTrimmed = true;
-        const fkm_id = await getFirstFrameKmId();
+        const fkm_id = await getLastFrameKmId();
         console.log('FrameKM to trim', fkm_id);
         if (fkm_id) {
-          const frameKmToTrim = await getFrameKm(fkm_id);
-          const framesToTrim = Math.round(TrimDistance / DX);
-          if (frameKmToTrim.length > framesToTrim) {
-            return frameKmToTrim.slice(
-              0,
-              frameKmToTrim.length - Math.round(TrimDistance / DX),
-            );
-          } else {
-            // @ts-ignore
-            return [{ fkm_id }]; // return dummy element that will trigger the cleanup
-          }
-        } else {
-          return null;
+          await postponeEndTrim(fkm_id);
+        }
+        return null;
+      }
+
+      if (isDashcamMLEnabled && !ignorePostponed) {
+        const firstPostponed = await getFirstPostponedFrameKm();
+        if (firstPostponed) {
+          await moveFrameKmBackToQueue(firstPostponed);
+          const name = await getFrameKmName(firstPostponed);
+          console.log('Moving back to the queue: ', name);
+          Instrumentation.add({
+            event: 'DashcamScheduledFrameKmToReprocess',
+            message: JSON.stringify({
+              name
+            }),
+          });
         }
       }
       return null;
@@ -224,6 +258,50 @@ export class DriveSession {
     }
   }
 
+  lastCheckedKmId: number | null = null;
+  lastCheckedFrameKmSize: number | null = null;
+  countFaultyIterations = 0;
+
+  async doHealthCheck() {
+    try {
+      const firstRecord = await getFirstRecord();
+      const firstKmId = firstRecord?.fkm_id;
+      const framekms = await getFrameKmsCount(false);
+      if (!this.lastCheckedFrameKmSize) {
+        this.lastCheckedFrameKmSize = framekms;
+      }
+      if (framekms > this.lastCheckedFrameKmSize && firstKmId) {
+        this.lastCheckedFrameKmSize = framekms;
+        // FrameKM table is growing
+        if (!this.lastCheckedKmId) {
+          this.lastCheckedKmId = firstKmId;
+        } else if (firstKmId === this.lastCheckedKmId) {
+          // but first FrameKM to be processed stays the same
+          this.countFaultyIterations++;
+          if (this.countFaultyIterations > 15) {
+            // processing stuck, need to delete first framekm to unblock
+            this.countFaultyIterations = 0;
+            await deleteFrameKm(firstKmId);
+            Instrumentation.add({
+              event: 'DashcamUnblocked',
+              message: JSON.stringify({ 
+                count: framekms,
+                firstId: firstKmId,
+               }),
+            });
+            exec('systemctl restart object-detection');
+          }
+        } else {
+          this.countFaultyIterations = 0;
+          this.lastCheckedKmId = firstKmId;
+        }
+      }
+      await setConfig('lastTimeIterated', Date.now()); 
+    } catch (e: unknown) {
+      console.log('Error during health check:', e);
+    }
+  }
+
   repairDataLogger() {
     console.log('Repairing Data Logger');
     exec(`journalctl -eu ${DATA_LOGGER_SERVICE}`, (error, stdout, stderr) => {
@@ -235,6 +313,45 @@ export class DriveSession {
         message: JSON.stringify({ serviceRepaired: 'data-logger' }),
       });
     });
+  }
+
+  async checkObjectDetectionService() {
+    try {
+      // service should be active
+      const result = spawnSync('systemctl', ['is-active', 'object-detection'], {
+        encoding: 'utf-8',
+      });
+  
+      if (result.error) {
+        console.log('failed to check if camera running:', result.error);
+        return false;
+      }
+      const res = result.stdout.trim();
+      if (res !== 'active') {
+        exec('systemctl restart object-detection');
+        Instrumentation.add({
+          event: 'DashcamApiRepaired',
+          message: JSON.stringify({ serviceRepaired: 'object-detection' }),
+        });
+        return;
+      }
+    } catch (e) {
+      console.log('failed to check if camera running:', e);
+    }
+
+    try {
+      const status = await getServiceStatus('object-detection');
+      if (status === 'failed') {
+        await setServiceStatus('object-detection', 'restarting');
+        exec('systemctl restart object-detection');
+        Instrumentation.add({
+          event: 'DashcamApiRepaired',
+          message: JSON.stringify({ serviceRepaired: 'object-detection' }),
+        });
+      }
+    } catch {
+      //
+    }
   }
 
   repairCameraBridge() {

@@ -9,19 +9,23 @@ import {
   latLonDistance,
 } from 'util/geomath';
 import { isGnss, isImage, isImu } from 'util/sensor';
-import { MAX_SPEED, MIN_SPEED, getConfig } from './config';
 import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
+import { getCachedValue, getDX, setFastSpeedCollectionMode } from 'sqlite/config';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
+export const MIN_SPEED = 0.15; // meter per seconds
+export const MAX_SPEED = 40; // meter per seconds
 
 export class DraftFrameKm {
   data: SensorData[];
   lastGnss: GnssRecord | null;
   lastImageTimestamp = 0;
   totalDistance = 0;
+  highSpeedRecordsInARow = 0;
+  lowSpeedRecordsInARow = 0;
 
   constructor(data?: SensorData) {
     this.data = [];
@@ -64,7 +68,9 @@ export class DraftFrameKm {
         console.log('Potential error: GPS records with no time difference');
         return true;
       }
-      const speed = distance / ( deltaTime / 1000);
+
+      // Let's take minimum of speed from GPS and speed calculated from distance and time
+      gnss.speed = Math.min(gnss.speed, distance / ( deltaTime / 1000));
 
       /**
        * Should we add this point, or is it too soon?
@@ -79,19 +85,20 @@ export class DraftFrameKm {
         return true;
       }
 
+      const SpeedToIncreaseDx = getCachedValue('SpeedToIncreaseDx');
       /**
        * Should we add this point, or should we cut the FrameKM already?
        */
-      if (speed > MAX_SPEED) {
+      if (gnss.speed > MAX_SPEED) {
         // too fast or GPS is not accurate, cut
-        insertErrorLog('Speed is to high ' + Math.round(speed) + ' ' + Math.round(deltaTime) + ' so cutting');
-        console.log('===== SPEED IS TOO HIGH, ' + speed + ', ' + deltaTime + ', CUTTING =====');
+        insertErrorLog('Speed is to high ' + Math.round(gnss.speed) + ' ' + Math.round(deltaTime) + ' so cutting');
+        console.log('===== SPEED IS TOO HIGH, ' + gnss.speed + ', ' + deltaTime + ', CUTTING =====');
         if (!this.prevHighSpeedEvent || (Date.now() - this.prevHighSpeedEvent > 10000)) {
           Instrumentation.add({
             event: 'DashcamCutReason',
             message: JSON.stringify({
               reason: 'HighSpeed',
-              speed,
+              speed: gnss.speed,
               distance,
               deltaTime,
             }),
@@ -100,8 +107,22 @@ export class DraftFrameKm {
         }
         return false;
       }
+      
+      if (gnss.speed > SpeedToIncreaseDx) {
+        this.highSpeedRecordsInARow++;
+        this.lowSpeedRecordsInARow = 0;
+      } else {
+        this.lowSpeedRecordsInARow++;
+        this.highSpeedRecordsInARow = 0;
+      }
 
-      if (distance > getConfig().DX * 2) {
+      if (this.highSpeedRecordsInARow > 100) { // 15 seconds of moving fast
+        setFastSpeedCollectionMode(true);
+      } else if (this.lowSpeedRecordsInARow > 70) { // 10 seconds of moving slow. We cannot switch immediately, cause it will cut FrameKMs a lot
+        setFastSpeedCollectionMode(false);
+      }
+
+      if (distance > getDX() * 2) {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
@@ -198,6 +219,8 @@ export class DraftFrameKm {
     let gps: { longitude: number; latitude: number }[] = [];
     let gpsCounter = 0;
 
+    const DX = getDX();
+
     if (prevKeyFrames.length) {
       // Get 3 previous points for CatmulRom curve
       gps = prevKeyFrames.slice(-3);
@@ -222,7 +245,6 @@ export class DraftFrameKm {
           closestFrame = { ...sensorData } as IImage;
           prevGNSS = { ...nextGNSS } as GnssRecord;
           prevCurveLength = curveLength;
-          console.log('image came, waiting for next gnss', prevCurveLength);
           nextGNSS = null;
         } else if (isGnss(sensorData)) {
           let prevDist = 0;
@@ -230,9 +252,6 @@ export class DraftFrameKm {
             prevDist = distance(nextGNSS, (sensorData as GnssRecord));
           }
           nextGNSS = { ...sensorData } as GnssRecord;
-          if (prevSelected) {
-            console.log('gnss, distance: ', distance(prevSelected, nextGNSS), prevDist);
-          }
           gps.push({ ...sensorData } as GnssRecord);
           spaceCurve = catmullRomCurve(
             gps,
@@ -256,7 +275,7 @@ export class DraftFrameKm {
           nextGNSS.system_time >= closestFrame.system_time &&
           spaceCurve &&
           curveLength && prevCurveLength && curveLength > prevCurveLength && 
-          (!prevSelected || distance(prevSelected, nextGNSS) > getConfig().DX)
+          (!prevSelected || distance(prevSelected, nextGNSS) > DX)
         ) {
           // get accurate coordinates for this frame from CatmulRom curve
           const scratch: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
@@ -276,7 +295,6 @@ export class DraftFrameKm {
               latitude: scratch.y,
             };
           } catch (e: unknown) {
-            console.log('Failed taking v. Defaulting to next gnss');
             frameCoordinates = {
               longitude: nextGNSS.longitude,
               latitude: nextGNSS.latitude,
@@ -287,16 +305,9 @@ export class DraftFrameKm {
           const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 1 : 0.5;
           if (
             !prevSelected ||
-            distance(prevSelected, frameCoordinates) > getConfig().DX - allowed_gap
+            distance(prevSelected, frameCoordinates) > DX - allowed_gap
           ) {
-            if (prevSelected) {
-              console.log(
-                'distance for frame: ' + distance(prevSelected, frameCoordinates),
-              );
-            } else {
-              console.log('got default first frame');
-            }
-            // get interpolated gnss metadata
+            // get interpolated gnss metadata, everything except lat & lon (they go from curve)
             const interpolatedGnssMetadata = interpolate(
               prevGNSS,
               nextGNSS,
@@ -308,13 +319,10 @@ export class DraftFrameKm {
               ...interpolatedGnssMetadata, // linear-interpolated gnss metadata, like hdop etc
               ...closestFrame, // frame name and system time
               ...frameCoordinates, // lat and lon from curve
+              dx: DX,
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];
-          } else {
-            if (prevSelected) {
-              console.log('not enough distance: ', distance(prevSelected, frameCoordinates));
-            }
           }
         }
       } catch (e: unknown) {

@@ -1,4 +1,4 @@
-import { db } from './index';
+import { getDb } from './index';
 import { ImuRecord, MagnetometerRecord } from 'types/sqlite';
 import { convertTimestampToDbFormat } from 'util/index';
 
@@ -10,6 +10,7 @@ export const fetchMagnetometerLogsByTime  = async (from: number, to?: number): P
         query += ` AND system_time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
+    const db = await getDb();
     return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: MagnetometerRecord[]) => {
             if (err) {
@@ -27,6 +28,7 @@ export const fetchMagnetometerLogsByTime  = async (from: number, to?: number): P
 
 export const fetchLastNMagnetometerRecords = async (n: number): Promise<MagnetometerRecord[]> => {
     const query = `SELECT * FROM magnetometer ORDER BY id DESC LIMIT ?`;
+    const db = await getDb();
     return new Promise((resolve, reject) => {
         db.all(query, [n], (err: unknown, rows: MagnetometerRecord[]) => {
             if (err) {

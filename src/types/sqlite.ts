@@ -70,6 +70,8 @@ export interface MagnetometerRecord {
 export type FrameKmRecord = {
     fkm_id?: number;
     image_name: string;
+    image_path?: string;
+    dx?: number;
     acc_x: number;
     acc_y: number;
     acc_z: number;
@@ -92,9 +94,25 @@ export type FrameKmRecord = {
     system_time: number;
     satellites_used: number;
     dilution: number;
+    created_at?: number;
     ml_model_hash?: string;
     ml_detections?: string;
+    ml_read_time?: number;
+    ml_write_time?: number;
+    ml_blur_time?: number;
+    ml_inference_time?: number;
+    ml_processed_at?: number;
+    ml_downscale_time?: number;
+    ml_upscale_time?: number;
+    ml_mask_time?: number;
+    ml_composite_time?: number;
+    ml_load_time?: number;
+    ml_transpose_time?: number;
+    ml_letterbox_time?: number;
+    ml_grid?: number;
     frame_idx?: number;
+    postponed?: number;
+    error?: string;
   };
 
   export type ErrorRecord = {

@@ -11,7 +11,7 @@ export const FRAMES_ROOT_FOLDER = '/tmp/recording/pics';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
-export const DB_PATH = '/data/recording/data-logger.v1.4.2.db';
+export const DB_PATH = '/data/recording/data-logger.v1.4.4.db';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
@@ -53,6 +53,7 @@ export const UPLOAD_PATH = __dirname + '/../../../data/';
 export const DEVICE_INFO_LOG_FILE = __dirname + '/../../../tmp/dump.bin';
 export const CRON_CONFIG = '/home/root/cron_config';
 export const ML_ROOT_FOLDER = '/data/models';
+export const ML_MODEL_PATH = '/opt/object-detection/model.blob';
 export const ML_MODELS: Record<string, string> = {
   PVC: '/data/recording/models/pvc.onnx'
 }
