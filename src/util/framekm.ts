@@ -1,4 +1,4 @@
-import { map } from 'async';
+import { detect, map } from 'async';
 import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
 import {
   Stats,
@@ -8,6 +8,7 @@ import {
   createWriteStream,
   writeFileSync,
 } from 'fs';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
 import { pipeline } from 'stream';
@@ -15,7 +16,7 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { FrameKMTelemetry } from 'types/motionModel';
+import { DetectionsByFrame, FrameKMTelemetry } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 
@@ -24,6 +25,7 @@ export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
+const asyncExec = promisify(exec);
 const retryLimit = 3;
 const retryDelay = 500; // milliseconds
 
@@ -33,7 +35,8 @@ export const concatFrames = async (
   frames: string[],
   framekmName: string,
   retryCount = 0,
-  frameRootFolder = FRAMES_ROOT_FOLDER
+  frameRootFolder = FRAMES_ROOT_FOLDER,
+  detections: DetectionsByFrame = {},
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
@@ -96,6 +99,10 @@ export const concatFrames = async (
         writeFileSync(outputFilePath, '');
         for (const file of validFrames) {
           const filePath = frameRootFolder + '/' + file.name;
+          if (detections[file.name]) {
+            // escape double quotes in comment
+            await asyncExec(`exiftool -comment="{\"detections\":${JSON.stringify(detections[file.name]).replace(/"/g, '\\"')}}" ${filePath}`);
+          }
           const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
           const readStream = createReadStream(filePath);
           await asyncPipeline(readStream, writeStream);
