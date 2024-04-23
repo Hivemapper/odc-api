@@ -70,6 +70,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       });
       return;
     }
+    const detectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
 
     const start = Date.now();
     const bytesMap = await promiseWithTimeout(
@@ -77,7 +78,8 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         frameKm.map((item: FrameKmRecord) => item.image_name || ''),
         finalBundleName,
         0,
-        framesFolder
+        framesFolder,
+        detectionsByFrame
       ),
       15000,
     );
@@ -137,15 +139,10 @@ export const packFrameKm = async (frameKm: FrameKM) => {
 
 const CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
 
-export const packMetadata = async (
-  name: string,
-  framesMetadata: FrameKM,
-  bytesMap: { [key: string]: number },
-): Promise<FramesMetadata[]> => {
-  let numBytes = 0;
-  const validatedFrames: FramesMetadata[] = [];
-  let privacyModelHash = undefined;
+
+export const getDetectionsByFrame = async (name: string, framesMetadata: FrameKM): Promise<DetectionsByFrame> => {
   const privacyDetections: DetectionsByFrame = {};
+  let privacyModelHash = undefined;
   const metrics = {
     read_time: 0,
     write_time: 0,
@@ -160,8 +157,121 @@ export const packMetadata = async (
     transpose_time: 0,
     letterbox_time: 0,
   };
-
   const grid: any = {};
+
+  for (let i = 0; i < framesMetadata.length; i++) {
+    const m: FrameKmRecord = framesMetadata[i];
+    if (m.ml_model_hash) {
+      metrics.inference_time += m.ml_inference_time || 0;
+      metrics.read_time += m.ml_read_time || 0;
+      metrics.write_time += m.ml_write_time || 0;
+      metrics.blur_time += m.ml_blur_time || 0;
+
+      metrics.downscale_time += m.ml_downscale_time || 0;
+      metrics.upscale_time += m.ml_upscale_time || 0;
+      metrics.mask_time += m.ml_mask_time || 0;
+      metrics.composite_time += m.ml_composite_time || 0;
+
+      metrics.load_time += m.ml_load_time || 0;
+      metrics.transpose_time += m.ml_transpose_time || 0;
+      metrics.letterbox_time += m.ml_letterbox_time || 0;
+      if (m.ml_grid) {
+        grid[m.ml_grid] = (grid[m.ml_grid] || 0) + 1;
+      }
+      if (m.ml_model_hash) {
+        privacyModelHash = m.ml_model_hash;
+      }
+
+      let detections = [];
+      try {
+        detections = JSON.parse(m.ml_detections || '[]');
+      } catch (e: unknown) {
+        console.log('Error parsing detections');
+      }
+
+      if (detections?.length) {
+        const sanitizedDetections = detections.filter((d: any) => d && d.length === 3 && d[0].length === 4).map((d: any) => {
+          let class_name = 'unknown';
+          try {
+            class_name = CLASS_NAMES[d[2]]
+          } catch {
+            //
+          }
+          metrics.num_detections++;
+          return [
+            class_name,
+            Math.max(0, Math.floor(d[0][0])),
+            Math.max(0, Math.floor(d[0][1])),
+            Math.ceil(d[0][2]),
+            Math.ceil(d[0][3]),
+            d[1]
+          ];
+        });
+        if (sanitizedDetections.length) {
+          privacyDetections[m.image_name] = sanitizedDetections;
+        }
+      }
+    }
+  }
+  const framesLength = Object.keys(privacyDetections).length
+  if (framesLength) {
+    const firstFrame = framesMetadata[0];
+    const lastFrame = framesMetadata[framesMetadata.length - 1];
+    const {
+      load_time,
+      inference_time,
+      write_time,
+      blur_time
+    } = metrics;
+    const total_time = (load_time + inference_time + write_time + blur_time) / 6; // 6 threads
+
+    const { PrivacyConfThreshold, PrivacyNmsThreshold } = await getConfig(['PrivacyConfThreshold', 'PrivacyNmsThreshold']);
+    const deviceId = await getAnonymousID();
+    const queue_size = await getFramesCount();
+
+    Instrumentation.add({
+      event: 'DashcamML',
+      size: framesLength,
+      message: JSON.stringify({
+        hash: privacyModelHash,
+        inference_time: Math.round(metrics.inference_time / framesLength),
+        read_time: Math.round(metrics.read_time / framesLength),
+        write_time: Math.round(metrics.write_time / framesLength),
+        blur_time: Math.round(metrics.blur_time / framesLength),
+        downscale_time: Math.round(metrics.downscale_time / framesLength),
+        upscale_time: Math.round(metrics.upscale_time / framesLength),
+        mask_time: Math.round(metrics.mask_time / framesLength),
+        composite_time: Math.round(metrics.composite_time / framesLength),
+        load_time: Math.round(metrics.load_time / framesLength),
+        transpose_time: Math.round(metrics.transpose_time / framesLength),
+        letterbox_time: Math.round(metrics.letterbox_time / framesLength),
+        per_frame_ml: Math.round(total_time / framesLength),
+        grid: JSON.stringify(grid),
+        num_detections: metrics.num_detections,
+        per_frame_col: Math.round((lastFrame.time - firstFrame.time) / framesLength),
+        processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
+        free_ram: Math.round(freemem() / 1024 / 1024),
+        cpu_usage: getCpuUsage(),
+        conf_threshold: PrivacyConfThreshold || 0.3,
+        nms_threshold: PrivacyNmsThreshold || 0.9,
+        queue_size,
+        deviceId,
+        name
+      }),
+    });
+  }
+
+  return privacyDetections;
+}
+
+export const packMetadata = async (
+  name: string,
+  framesMetadata: FrameKM,
+  bytesMap: { [key: string]: number },
+): Promise<FramesMetadata[]> => {
+  let numBytes = 0;
+  const validatedFrames: FramesMetadata[] = [];
+  let privacyModelHash = undefined;
 
   for (let i = 0; i < framesMetadata.length; i++) {
     const m: FrameKmRecord = framesMetadata[i];
@@ -191,56 +301,10 @@ export const packMetadata = async (
         gyro_y: m.gyro_y,
         gyro_z: m.gyro_z
       };
-      validatedFrames.push(frame);
-
       if (m.ml_model_hash) {
-        metrics.inference_time += m.ml_inference_time || 0;
-        metrics.read_time += m.ml_read_time || 0;
-        metrics.write_time += m.ml_write_time || 0;
-        metrics.blur_time += m.ml_blur_time || 0;
-
-        metrics.downscale_time += m.ml_downscale_time || 0;
-        metrics.upscale_time += m.ml_upscale_time || 0;
-        metrics.mask_time += m.ml_mask_time || 0;
-        metrics.composite_time += m.ml_composite_time || 0;
-
-        metrics.load_time += m.ml_load_time || 0;
-        metrics.transpose_time += m.ml_transpose_time || 0;
-        metrics.letterbox_time += m.ml_letterbox_time || 0;
-        if (m.ml_grid) {
-          grid[m.ml_grid] = (grid[m.ml_grid] || 0) + 1;
-        }
-
-        let detections = [];
-        try {
-          detections = JSON.parse(m.ml_detections || '[]');
-        } catch (e: unknown) {
-          console.log('Error parsing detections');
-        }
         privacyModelHash = m.ml_model_hash;
-        if (detections?.length) {
-          const sanitizedDetections = detections.filter((d: any) => d && d.length === 3 && d[0].length === 4).map((d: any) => {
-            let class_name = 'unknown';
-            try {
-              class_name = CLASS_NAMES[d[2]]
-            } catch {
-              //
-            }
-            metrics.num_detections++;
-            return [
-              class_name,
-              Math.max(0, Math.floor(d[0][0])),
-              Math.max(0, Math.floor(d[0][1])),
-              Math.ceil(d[0][2]),
-              Math.ceil(d[0][3]),
-              d[1]
-            ];
-          });
-          if (sanitizedDetections.length) {
-            privacyDetections[validatedFrames.length] = sanitizedDetections;
-          }
-        }
       }
+      validatedFrames.push(frame);
       numBytes += bytes;
     }
   }
@@ -282,52 +346,6 @@ export const packMetadata = async (
       },
       frames: validatedFrames,
     };
-    if (privacyModelHash) {
-      const firstFrame = framesMetadata[0];
-      const lastFrame = framesMetadata[framesMetadata.length - 1];
-      const {
-        load_time,
-        inference_time,
-        write_time,
-        blur_time
-      } = metrics;
-      const total_time = (load_time + inference_time + write_time + blur_time) / 6; // 6 threads
-
-      const { PrivacyConfThreshold, PrivacyNmsThreshold } = await getConfig(['PrivacyConfThreshold', 'PrivacyNmsThreshold']);
-
-      const queue_size = await getFramesCount();
-
-      Instrumentation.add({
-        event: 'DashcamML',
-        size: validatedFrames.length,
-        message: JSON.stringify({
-          hash: privacyModelHash,
-          inference_time: Math.round(metrics.inference_time / validatedFrames.length),
-          read_time: Math.round(metrics.read_time / validatedFrames.length),
-          write_time: Math.round(metrics.write_time / validatedFrames.length),
-          blur_time: Math.round(metrics.blur_time / validatedFrames.length),
-          downscale_time: Math.round(metrics.downscale_time / validatedFrames.length),
-          upscale_time: Math.round(metrics.upscale_time / validatedFrames.length),
-          mask_time: Math.round(metrics.mask_time / validatedFrames.length),
-          composite_time: Math.round(metrics.composite_time / validatedFrames.length),
-          load_time: Math.round(metrics.load_time / validatedFrames.length),
-          transpose_time: Math.round(metrics.transpose_time / validatedFrames.length),
-          letterbox_time: Math.round(metrics.letterbox_time / validatedFrames.length),
-          per_frame_ml: Math.round(total_time / validatedFrames.length),
-          grid: JSON.stringify(grid),
-          num_detections: metrics.num_detections,
-          per_frame_col: Math.round((lastFrame.time - firstFrame.time) / validatedFrames.length),
-          processing_delay: Math.round((lastFrame.ml_processed_at || 0) - (lastFrame.created_at || 0)),
-          free_ram: Math.round(freemem() / 1024 / 1024),
-          cpu_usage: getCpuUsage(),
-          conf_threshold: PrivacyConfThreshold || 0.3,
-          nms_threshold: PrivacyNmsThreshold || 0.9,
-          queue_size,
-          deviceId,
-          name
-        }),
-      });
-    }
     try {
       if (!existsSync(METADATA_ROOT_FOLDER)) {
         mkdirSync(METADATA_ROOT_FOLDER);

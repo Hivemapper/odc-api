@@ -102,7 +102,11 @@ export const concatFrames = async (
           const filePath = frameRootFolder + '/' + file.name;
           if (detections[file.name]) {
             // escape double quotes in comment
-            await asyncExec(`exiftool -comment="{\"detections\":${JSON.stringify(detections[file.name]).replace(/"/g, '\\"')}}" ${filePath}`);
+            try {
+              await asyncExec(`exiftool -comment="{\"detections\":${JSON.stringify(detections[file.name]).replace(/"/g, '\\"')}}" ${filePath}`);
+            } catch (e: unknown) {
+              console.log('Error updating exif', e);
+            }
           }
           const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
           const readStream = createReadStream(filePath);
