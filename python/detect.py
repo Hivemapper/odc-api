@@ -140,7 +140,7 @@ def main(model_path, tensor_type, device, conf_threshold, nms_threshold, num_thr
   currently_processing = set()
   retry_counters = {}
   q = queue.Queue()
-  sqlite = SQLite()
+  sqlite = SQLite('/data/recording/data-logger.v1.4.5.db')
 
   def worker():
     ie = IECore()
