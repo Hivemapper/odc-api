@@ -115,6 +115,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           temperature,
           duration: Date.now() - start,
           usbInserted: getUsbState(),
+          metrics: getAverageMetrics(frameKm),
           ...framekmTelemetry,
         }),
       });
@@ -134,6 +135,38 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     console.log(error);
   }
 };
+
+export const getAverageMetrics = (framesMetadata: FrameKM) => {
+  let metrics = {
+    pdop: 0,
+    hdop: 0,
+    vdop: 0,
+    tdop: 0,
+    gdop: 0,
+    eph: 0,
+    speed: 0,
+  };
+  for (let i = 0; i < framesMetadata.length; i++) {
+    const m: FrameKmRecord = framesMetadata[i];
+    metrics.pdop += m.pdop;
+    metrics.hdop += m.hdop;
+    metrics.vdop += m.vdop;
+    metrics.tdop += m.tdop;
+    metrics.gdop += m.gdop;
+    metrics.eph += m.eph;
+    metrics.speed += m.speed;
+  }
+  const numFrames = framesMetadata.length || 1;
+  return {
+    pdop: metrics.pdop / numFrames,
+    hdop: metrics.hdop / numFrames,
+    vdop: metrics.vdop / numFrames,
+    tdop: metrics.tdop / numFrames,
+    gdop: metrics.gdop / numFrames,
+    eph: metrics.eph / numFrames,
+    speed: metrics.speed / numFrames,
+  };
+}
 
 const CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
 
