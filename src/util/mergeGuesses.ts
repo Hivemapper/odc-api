@@ -9,7 +9,7 @@ const TOTAL_POSSIBLE_DETECTION_FRAMES = 5;
 export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGuess[]> {
   const groupsFound = findDetectionGroups(detectionData);
   const aveLocations: any[] = [];
-  let idCounter = 0;
+  let landmarkID = 0;
 
   for (const label in groupsFound) {
     for (const detections of groupsFound[label]) {
@@ -18,7 +18,7 @@ export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGu
         lat: 0,
         lon: 0, 
         label: "None", 
-        detection_id: idCounter,
+        detection_id: landmarkID,
         frame_mapping: {} 
       };
       if (detections.length === 0) {
@@ -54,7 +54,7 @@ export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGu
         }
       }
       // Increment the detection ID counter to ensure unique IDs
-      idCounter++;
+      landmarkID++;
     }
   }
   return aveLocations;
