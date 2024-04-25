@@ -13,4 +13,6 @@ export interface MergedGuess {
     lat: number;
     lon: number;
     label: string;
+    detection_id: number;
+    frame_mapping: { [key: number]: number };
 }

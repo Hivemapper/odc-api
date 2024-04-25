@@ -4,26 +4,39 @@ import { Detection, MergedGuess } from 'types/detections';
 
 const wgs84 = "WGS84";
 const geocent = "+proj=geocent +datum=WGS84 +units=m +no_defs";
+const TOTAL_POSSIBLE_DETECTION_FRAMES = 5;
 
 export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGuess[]> {
   const groupsFound = findDetectionGroups(detectionData);
   const aveLocations: any[] = [];
+  let idCounter = 0;
 
   for (const label in groupsFound) {
     for (const detections of groupsFound[label]) {
-      let aveDetection: any = {};
+      // Create a new merged guess object
+      let aveDetection: MergedGuess = {
+        lat: 0,
+        lon: 0, 
+        label: "None", 
+        detection_id: idCounter,
+        frame_mapping: {} 
+      };
       if (detections.length === 0) {
         continue;
       } else if (detections.length === 1) {
         aveDetection.lat = detections[0].sign_lat;
         aveDetection.lon = detections[0].sign_lon;
         aveDetection.label = detections[0].label;
+        aveDetection.frame_mapping = { [detections[0].frame_id]: detections[0].detection_id };
         aveLocations.push(aveDetection);
       } else if (detections.length === 2) {
         const [lat, lon, _] = averageCoordinates(detections);
         aveDetection.lat = lat;
         aveDetection.lon = lon;
         aveDetection.label = detections[0].label;
+        for (const detection of detections) {
+          aveDetection.frame_mapping[detection.frame_id] = detection.detection_id;
+        }
         aveLocations.push(aveDetection);
       } else {
         const coordinates = detections.map((d: any) => [d.sign_lat, d.sign_lon]);
@@ -34,12 +47,16 @@ export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGu
           aveDetection.lat = centroid[0];
           aveDetection.lon = centroid[1];
           aveDetection.label = detections[0].label;
+          for (const detection of detections) {
+            aveDetection.frame_mapping[detection.frame_id] = detection.detection_id;
+          }
           aveLocations.push(aveDetection);
         }
       }
+      // Increment the detection ID counter to ensure unique IDs
+      idCounter++;
     }
   }
-
   return aveLocations;
 }
 
@@ -51,7 +68,7 @@ function findDetectionGroups(detections: Detection[], printGroups: boolean = fal
       groupsFound[label] = [[detection]];
     } else {
       const latestGroup = groupsFound[label][groupsFound[label].length - 1];
-      if (detection.frame_id - latestGroup[latestGroup.length - 1].frame_id < 5 - latestGroup.length) {
+      if (detection.frame_id - latestGroup[latestGroup.length - 1].frame_id < TOTAL_POSSIBLE_DETECTION_FRAMES - latestGroup.length) {
         latestGroup.push(detection);
       } else {
         groupsFound[label].push([detection]);
