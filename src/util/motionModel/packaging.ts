@@ -281,8 +281,8 @@ export const packMetadata = async (
     const deviceInfo = getDeviceInfo();
     const DX = getDX();
     const deviceId = await getAnonymousID();
-    const startTime = validatedFrames.at(0)?.t || Date.now();
-    const endTime = validatedFrames.at(-1)?.t || Date.now();
+    const startTime = validatedFrames[0]?.t || Date.now();
+    const endTime = validatedFrames[validatedFrames.length - 1]?.t || Date.now();
 
     let gnssAuth : GnssAuthRecord | undefined;
     let publicKey = undefined;
