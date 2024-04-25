@@ -51,6 +51,7 @@
     "image-size": "^1.0.2",
     "jsonrepair": "^3.0.3",
     "kdbush": "^4.0.2",
+    "kmeans-js": "^0.1.2",
     "node-fetch": "^3.3.1",
     "proj4": "^2.9.0",
     "proper-lockfile": "^4.1.2",
