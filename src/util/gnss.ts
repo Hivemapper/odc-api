@@ -6,7 +6,7 @@ import { getConfig } from 'sqlite/config';
 export const isGoodQualityGnssRecord = (gnss: GnssRecord, gnssFilter: GnssFilter): boolean => {
   let isValid = true;
 
-  if (!gnss.latitude) {
+  if ((!gnss.latitude && !gnss.longitude) || gnss.fix !== '3D') {
     return false;
   }
 

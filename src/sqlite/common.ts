@@ -118,6 +118,17 @@ export const resetDB = async () => {
   }
 };
 
+export const resetFrameKmwithCutoff = async (cutoff: number) => {
+  try {
+    console.log('RESETTING FRAMEKMS WITH CUTOFF');
+    await runAsync('DELETE FROM framekms WHERE system_time < ?;', [cutoff]);
+    // perform VACUUM to free up the space
+    await runAsync('VACUUM;');
+  } catch (error) {
+    console.error('Error clearing tables:', error);
+  }
+};
+
 export const resetSensorData = async () => {
   try {
     console.log('RESETTING SENSOR DATA');
