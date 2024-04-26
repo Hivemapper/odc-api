@@ -27,6 +27,8 @@ import { getAnonymousID } from 'sqlite/deviceInfo';
 
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
+import { SignGuess } from 'types/detections';
+import { mergeGuesses } from 'util/mergeGuesses';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -74,13 +76,18 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
     const signDetectionsByFrame: DetectionsByFrame = {}; 
+    const signGuesses: SignGuess[] = [];
     frameKm.map((item: FrameKmRecord) => {
       let signDetections = sanitizeDetections(item.ml_sign_detections);
       if (signDetections?.length) {
         signDetectionsByFrame[item.image_name || ''] = signDetections;
       }
+      if (item.ml_guesses) {
+        const signGuesses: SignGuess[] = JSON.parse(item.ml_guesses || '[]');
+        signGuesses.concat(signGuesses);
+      }
     });
-    const landmarksByFrame = {}; // const landmarksByFrame = mergeGuessesByFrame(frameKm);
+    const landmarksByFrame = mergeGuesses(signGuesses);
 
     const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, signDetectionsByFrame, landmarksByFrame)
 

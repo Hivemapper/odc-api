@@ -1,4 +1,4 @@
-export interface Detection {
+export interface SignGuess {
     sign_lat: number;
     sign_lon: number;
     label: string;

@@ -16,9 +16,10 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { DetectionsByFrame, DetectionsData, FrameKMTelemetry } from 'types/motionModel';
+import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, LandmarksByFrame } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
+import { Landmark } from 'types/detections';
 
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -33,13 +34,13 @@ type BytesMap = { [key: string]: number };
 type ExifPerFrame = { [key: string]: { 
   privacyDetections: DetectionsData[], 
   signDetections: DetectionsData[], 
-  landmarks: DetectionsData[]}
+  landmarks: Landmark[]}
 }
 
 export const prepareExifPerFrame = (
   privacyDetections: DetectionsByFrame = {},
   signDetections: DetectionsByFrame = {},
-  landmarks: DetectionsByFrame = {},
+  landmarks: LandmarksByFrame = {},
 ): ExifPerFrame => {
   const exif: ExifPerFrame = {};
 

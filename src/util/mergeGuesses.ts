@@ -1,13 +1,14 @@
 import proj4 from 'proj4';
+// @ts-ignore
 import KMeans from 'kmeans-js';
-import { Detection, Landmark } from 'types/detections';
+import { SignGuess, Landmark } from 'types/detections';
 import { LandmarksByFrame } from 'types/motionModel';
 
 const wgs84 = "WGS84";
 const geocent = "+proj=geocent +datum=WGS84 +units=m +no_defs";
 const TOTAL_POSSIBLE_DETECTION_FRAMES = 5;
 
-export async function mergeGuesses(detectionData: Detection[]): Promise<LandmarksByFrame> {
+export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
   const groupsFound = findDetectionGroups(detectionData);
   const landmarksByFrame: LandmarksByFrame = {};
   let landmarkID = 0;
@@ -60,9 +61,9 @@ export async function mergeGuesses(detectionData: Detection[]): Promise<Landmark
   return landmarksByFrame;
 }
 
-function findDetectionGroups(detections: Detection[], printGroups: boolean = false): Record<string, Detection[][]> {
+function findDetectionGroups(detections: SignGuess[], printGroups: boolean = false): Record<string, SignGuess[][]> {
   const groupsFound: Record<string, any[][]> = {};
-  detections.forEach((detection: Detection) => {
+  detections.forEach((detection: SignGuess) => {
     const label = detection.label;
     if (!(label in groupsFound)) {
       groupsFound[label] = [[detection]];
@@ -83,7 +84,7 @@ function findDetectionGroups(detections: Detection[], printGroups: boolean = fal
   return groupsFound;
 }
 
-function averageCoordinates(detections: Detection[]): [number, number, number] {
+function averageCoordinates(detections: SignGuess[]): [number, number, number] {
   const coords = detections.map(d => {
     const [x, y, z] = transformer.transformToGeocentric(d.sign_lon, d.sign_lat);
     return { x, y, z };
