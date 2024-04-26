@@ -1,4 +1,5 @@
 import { ICameraFile } from 'types';
+import { Landmark } from './detections';
 
 export type Dilution = {
   xdop: number;
