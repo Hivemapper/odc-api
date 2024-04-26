@@ -1,5 +1,4 @@
 import { ICameraFile } from 'types';
-import { Landmark } from './detections';
 
 export type Dilution = {
   xdop: number;
@@ -145,10 +144,11 @@ export type FramesMetadata = GnssMetadata & {
   gyro_z: number;
 };
 
-export type DetectionsData = [string, number, number, number, number, number];
+export type DetectionsData = [string, number, number, number, number, number]; // class, box (4 numbers), confidence
+export type SignDetectionsData = [number, string, number, number, number, number, number]; // detectionId, class, box (4 numbers), distance
 
 export type DetectionsByFrame = Record<string, DetectionsData[]>;
-export type LandmarksByFrame = Record<string, Landmark[]>;
+export type SignDetectionsByFrame = Record<string, SignDetectionsData[]>;
 
 export type MotionModelCursor = {
   gnssFilePath: string;
