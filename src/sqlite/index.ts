@@ -147,6 +147,10 @@ export const performSoftMigrations = async (): Promise<void> => {
   const migrationCommands = [
     `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN ml_sign_detections TEXT;`,
+    `ALTER TABLE packed_framekms ADD COLUMN ml_sign_detections TEXT;`,
+    `ALTER TABLE framekms ADD COLUMN ml_guesses TEXT;`,
+    `ALTER TABLE packed_framekms ADD COLUMN ml_guesses TEXT;`,
     // Add more ALTER TABLE commands here as needed
   ];
 

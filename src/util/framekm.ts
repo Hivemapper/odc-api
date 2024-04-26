@@ -8,6 +8,7 @@ import {
   createWriteStream,
   writeFileSync,
 } from 'fs';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
 import { pipeline } from 'stream';
@@ -15,7 +16,7 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { FrameKMTelemetry } from 'types/motionModel';
+import { DetectionsByFrame, DetectionsData, FrameKMTelemetry } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 
@@ -24,16 +25,48 @@ export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
+const asyncExec = promisify(exec);
 const retryLimit = 3;
 const retryDelay = 500; // milliseconds
 
 type BytesMap = { [key: string]: number };
+type ExifPerFrame = { [key: string]: { 
+  privacyDetections: DetectionsData[], 
+  signDetections: DetectionsData[], 
+  landmarks: DetectionsData[]}
+}
+
+export const prepareExifPerFrame = (
+  privacyDetections: DetectionsByFrame = {},
+  signDetections: DetectionsByFrame = {},
+  landmarks: DetectionsByFrame = {},
+): ExifPerFrame => {
+  const exif: ExifPerFrame = {};
+
+  for (const frame in privacyDetections) {
+    let frameExif = exif[frame] || {};
+    frameExif['privacyDetections'] = privacyDetections[frame];
+    exif[frame] = frameExif;
+  }
+  for (const frame in signDetections) {
+    let frameExif = exif[frame] || {};
+    frameExif['signDetections'] = signDetections[frame];
+    exif[frame] = frameExif;
+  }
+  for (const frame in landmarks) {
+    let frameExif = exif[frame] || {};
+    frameExif['landmarks'] = landmarks[frame];
+    exif[frame] = frameExif;
+  }
+  return exif;
+}
 
 export const concatFrames = async (
   frames: string[],
   framekmName: string,
   retryCount = 0,
-  frameRootFolder = FRAMES_ROOT_FOLDER
+  frameRootFolder = FRAMES_ROOT_FOLDER,
+  exifPerFrame: ExifPerFrame = {},
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
@@ -96,14 +129,17 @@ export const concatFrames = async (
         writeFileSync(outputFilePath, '');
         for (const file of validFrames) {
           const filePath = frameRootFolder + '/' + file.name;
+          if (exifPerFrame[file.name]) {
+            try {
+              await asyncExec(`exiftool -comment="${JSON.stringify(exifPerFrame[file.name]).replace(/"/g, '\\"')}" ${filePath}`);
+            } catch (e: unknown) {
+              console.log('Error updating exif', e);
+            }
+          }
           const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
           const readStream = createReadStream(filePath);
           await asyncPipeline(readStream, writeStream);
-          let fileName = file.name;
-          if (file.name.indexOf('ww') > -1) {
-            fileName = file.name.split('ww')[1];
-          }
-          bytesMap[fileName] = file.size;
+          bytesMap[file.name] = file.size;
           totalBytes += file.size;
           await sleep(10);
         }
