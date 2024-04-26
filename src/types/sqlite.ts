@@ -97,6 +97,8 @@ export type FrameKmRecord = {
     created_at?: number;
     ml_model_hash?: string;
     ml_detections?: string;
+    ml_sign_detections?: string;
+    ml_guesses?: string;
     ml_read_time?: number;
     ml_write_time?: number;
     ml_blur_time?: number;

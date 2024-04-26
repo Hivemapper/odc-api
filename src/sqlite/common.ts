@@ -34,7 +34,7 @@ export const querySensorData = async (
         const imuSince = gnss[0].system_time;
         const imuUntil = gnss[gnss.length - 1].system_time;
         const imu = await fetchImuLogsByTime(imuSince, imuUntil);
-        await sleep(2000); // let frame buffer to fill up if needed
+        await sleep(1000); // let frame buffer to fill up if needed
         const images = await getFramesFromFS(imuSince, imuUntil);
         const magnetometer = await fetchMagnetometerLogsByTime(imuSince, imuUntil);
         const duration = (imuUntil - imuSince) / 1000;
@@ -49,7 +49,7 @@ export const querySensorData = async (
         accumImuFreq += ImuFreq;
         accumImageFreq += ImageFreq;
   
-        if (accumulated >= 10) {
+        if (accumulated >= 30) {
           Instrumentation.add({
             event: 'DashcamSensorDataFreq',
             size: Math.round(accumDuration),
