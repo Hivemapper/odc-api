@@ -27,4 +27,6 @@ export interface Landmark {
     detections: number[];
 }
 
+export type TransformedLandmark = [number, number, number, string, number[]];
+
 export type LandmarksByFrame = Record<string, Landmark[]>;

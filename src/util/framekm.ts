@@ -19,7 +19,7 @@ import { Instrumentation } from './instrumentation';
 import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, SignDetectionsByFrame, SignDetectionsData } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
-import { Landmark, LandmarksByFrame } from 'types/detections';
+import { Landmark, LandmarksByFrame, TransformedLandmark } from 'types/detections';
 
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -34,7 +34,7 @@ type BytesMap = { [key: string]: number };
 type ExifPerFrame = { [key: string]: { 
   privacyDetections: DetectionsData[], 
   signDetections: SignDetectionsData[], 
-  landmarks: Landmark[]}
+  landmarks: TransformedLandmark[]}
 }
 
 export const prepareExifPerFrame = (
@@ -56,7 +56,8 @@ export const prepareExifPerFrame = (
   }
   for (const frame in landmarks) {
     let frameExif = exif[frame] || {};
-    frameExif['landmarks'] = landmarks[frame];
+    let landmark: Landmark[] = landmarks[frame];
+    frameExif['landmarks'] = landmark.map(l => [l.lat, l.lon, l.landmark_id, l.label, l.detections]);
     exif[frame] = frameExif;
   }
   return exif;
