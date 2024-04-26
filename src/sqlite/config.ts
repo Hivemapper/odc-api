@@ -222,13 +222,6 @@ let lastTimeChanged = 0;
 export const setFastSpeedCollectionMode = (value: boolean) => {
   if (value !== FAST_SPEED_COLLECTION_MODE) {
     const period = lastTimeChanged ? Date.now() - lastTimeChanged : 0;
-    Instrumentation.add({
-      event: 'DashcamFastSpeedCollection',
-      message: JSON.stringify({
-        mode: value,
-        period
-      })
-    });
     lastTimeChanged = Date.now();
   }
   FAST_SPEED_COLLECTION_MODE = value;

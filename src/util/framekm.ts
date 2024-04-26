@@ -16,9 +16,10 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { DetectionsByFrame, DetectionsData, FrameKMTelemetry } from 'types/motionModel';
+import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, SignDetectionsByFrame, SignDetectionsData } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
+import { Landmark, LandmarksByFrame, TransformedLandmark } from 'types/detections';
 
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -32,14 +33,14 @@ const retryDelay = 500; // milliseconds
 type BytesMap = { [key: string]: number };
 type ExifPerFrame = { [key: string]: { 
   privacyDetections: DetectionsData[], 
-  signDetections: DetectionsData[], 
-  landmarks: DetectionsData[]}
+  signDetections: SignDetectionsData[], 
+  landmarks: TransformedLandmark[]}
 }
 
 export const prepareExifPerFrame = (
   privacyDetections: DetectionsByFrame = {},
-  signDetections: DetectionsByFrame = {},
-  landmarks: DetectionsByFrame = {},
+  signDetections: SignDetectionsByFrame = {},
+  landmarks: LandmarksByFrame = {},
 ): ExifPerFrame => {
   const exif: ExifPerFrame = {};
 
@@ -55,7 +56,8 @@ export const prepareExifPerFrame = (
   }
   for (const frame in landmarks) {
     let frameExif = exif[frame] || {};
-    frameExif['landmarks'] = landmarks[frame];
+    let landmark: Landmark[] = landmarks[frame];
+    frameExif['landmarks'] = landmark.map(l => [l.lat, l.lon, l.landmark_id, l.label, l.detections]);
     exif[frame] = frameExif;
   }
   return exif;

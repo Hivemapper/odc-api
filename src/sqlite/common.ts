@@ -49,7 +49,7 @@ export const querySensorData = async (
         accumImuFreq += ImuFreq;
         accumImageFreq += ImageFreq;
   
-        if (accumulated >= 30) {
+        if (accumulated >= 40) {
           Instrumentation.add({
             event: 'DashcamSensorDataFreq',
             size: Math.round(accumDuration),
