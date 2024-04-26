@@ -9,10 +9,10 @@ export interface Detection {
 }
 
 // Type definitions for the averaged location data
-export interface MergedGuess {
+export interface Landmark {
     lat: number;
     lon: number;
     label: string;
-    detection_id: number;
-    frame_mapping: { [key: number]: number };
+    landmark_id: number;
+    detections: number[];
 }

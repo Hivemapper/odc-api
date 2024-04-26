@@ -1,25 +1,32 @@
 import proj4 from 'proj4';
 import KMeans from 'kmeans-js';
-import { Detection, MergedGuess } from 'types/detections';
+import { Detection, Landmark } from 'types/detections';
+import { LandmarksByFrame } from 'types/motionModel';
 
 const wgs84 = "WGS84";
 const geocent = "+proj=geocent +datum=WGS84 +units=m +no_defs";
 const TOTAL_POSSIBLE_DETECTION_FRAMES = 5;
 
-export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGuess[]> {
+export async function mergeGuesses(detectionData: Detection[]): Promise<LandmarksByFrame> {
   const groupsFound = findDetectionGroups(detectionData);
-  const aveLocations: any[] = [];
+  const landmarksByFrame: LandmarksByFrame = {};
   let landmarkID = 0;
+
+  for (const detection of detectionData) {
+    if (!(detection.frame_id in landmarksByFrame)) {
+      landmarksByFrame[detection.frame_id] = [];
+    }
+  }
 
   for (const label in groupsFound) {
     for (const detections of groupsFound[label]) {
       // Create a new merged guess object
-      let aveDetection: MergedGuess = {
+      let aveDetection: Landmark = {
         lat: 0,
         lon: 0, 
         label: "None", 
-        detection_id: landmarkID,
-        frame_mapping: {} 
+        landmark_id: landmarkID,
+        detections: detections.map(d => d.detection_id)
       };
       if (detections.length === 0) {
         continue;
@@ -27,17 +34,11 @@ export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGu
         aveDetection.lat = detections[0].sign_lat;
         aveDetection.lon = detections[0].sign_lon;
         aveDetection.label = detections[0].label;
-        aveDetection.frame_mapping = { [detections[0].frame_id]: detections[0].detection_id };
-        aveLocations.push(aveDetection);
       } else if (detections.length === 2) {
         const [lat, lon, _] = averageCoordinates(detections);
         aveDetection.lat = lat;
         aveDetection.lon = lon;
         aveDetection.label = detections[0].label;
-        for (const detection of detections) {
-          aveDetection.frame_mapping[detection.frame_id] = detection.detection_id;
-        }
-        aveLocations.push(aveDetection);
       } else {
         const coordinates = detections.map((d: any) => [d.sign_lat, d.sign_lon]);
         const kmeans = new KMeans();
@@ -47,17 +48,16 @@ export async function mergeGuesses(detectionData: Detection[]): Promise<MergedGu
           aveDetection.lat = centroid[0];
           aveDetection.lon = centroid[1];
           aveDetection.label = detections[0].label;
-          for (const detection of detections) {
-            aveDetection.frame_mapping[detection.frame_id] = detection.detection_id;
-          }
-          aveLocations.push(aveDetection);
         }
       }
+      detections.map(d => {
+        landmarksByFrame[d.frame_id].push(aveDetection);
+      });
       // Increment the detection ID counter to ensure unique IDs
       landmarkID++;
     }
   }
-  return aveLocations;
+  return landmarksByFrame;
 }
 
 function findDetectionGroups(detections: Detection[], printGroups: boolean = false): Record<string, Detection[][]> {
