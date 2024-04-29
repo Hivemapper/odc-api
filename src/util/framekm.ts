@@ -12,6 +12,7 @@ import {
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
+import { parse } from 'json2csv';
 import { pipeline } from 'stream';
 import sizeOf from 'image-size';
 
@@ -74,18 +75,10 @@ export const concatFrames = async (
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
-    await new Promise(resolve => {
-      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
-    });
+    await promises.mkdir(FRAMEKM_ROOT_FOLDER, { recursive: true });
+    await promises.mkdir(LANDMARK_THUMBNAIL_FOLDER, { recursive: true });
   } catch (e: unknown) {
-    console.log(e);
-  }
-  try {
-    await new Promise(resolve => {
-      mkdir(LANDMARK_THUMBNAIL_FOLDER, resolve);
-    });
-  } catch (e: unknown) {
-    console.log(e);
+    console.error(e);
   }
 
   const framesPath = frames.map(
@@ -104,14 +97,20 @@ export const concatFrames = async (
     return bytesMap;
   }
 
+  try {
+    const csvPath = `${frameRootFolder}/exif_data.csv`;
+    await writeCSV(exifPerFrame, csvPath);
+    await asyncExec(`exiftool -csv="${csvPath}" ${frameRootFolder}/*.jpg`);
+  } catch (e: unknown) {
+    console.log('Error writing exif data to csv', e);
+  }
+
   // first update exif, then count bytes
   for (const file of frames) {
     const fPath = frameRootFolder + '/' + file;
     const addedIds: number[] = [];
     if (exifPerFrame[file]) {
       try {
-        // await asyncExec(`exiftool -comment="${JSON.stringify(exifPerFrame[file]).replace(/"/g, '\\"')}" ${fPath}`);
-        // console.log('Updated exif!!!!!')
         // TODO: FOR DEBUGGING PURPOSES ONLY
         if (exifPerFrame[file].landmarks) {
           for (const landmark of exifPerFrame[file].landmarks) {
@@ -215,6 +214,16 @@ export const concatFrames = async (
     });
     return bytesMap;
   }
+};
+
+const writeCSV = async (exifData: ExifPerFrame, filePath: string) => {
+  const fields = ['SourceFile', 'Comment'];
+  const data = Object.keys(exifData).map(frame => ({
+    SourceFile: frame,
+    Comment: JSON.stringify(exifData[frame]).replace(/"/g, '\\"')
+  }));
+  const csv = parse(data, { fields });
+  await promises.writeFile(filePath, csv);
 };
 
 export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {
