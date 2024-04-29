@@ -136,6 +136,7 @@ export const initialise = async (): Promise<void> => {
   await createFrameTable();
   await createConfigurationTable();
   await createDeviceInfoTable();
+  await createLandmarksTable();
   console.log('LOG: Tables created');
   const anonymousId = generate();
   await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
@@ -149,8 +150,12 @@ export const performSoftMigrations = async (): Promise<void> => {
     `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE framekms ADD COLUMN ml_sign_detections TEXT;`,
     `ALTER TABLE packed_framekms ADD COLUMN ml_sign_detections TEXT;`,
+    `ALTER TABLE framekms ADD COLUMN orientation TEXT;`,
+    `ALTER TABLE packed_framekms ADD COLUMN orientation TEXT;`,
     `ALTER TABLE framekms ADD COLUMN heading INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN heading INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN retry INTEGER DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN retry INTEGER DEFAULT 0;`,
     // Add more ALTER TABLE commands here as needed
   ];
 
@@ -234,6 +239,24 @@ export const createFrameTable = async (): Promise<void> => {
     throw error;
   }
 };
+
+// create landmarks table: landmark id, latitute, longitude, label, num detections, thumbnail
+export const createLandmarksTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS landmarks (
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    class TEXT NOT NULL,
+    detections INTEGER NOT NULL,
+    thumbnail TEXT
+    );`;
+  try {
+    await runSchemaAsync(createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the landmarks table:', error);
+    throw error;
+  }
+}
 
 export const createConfigurationTable = async (): Promise<void> => {
   const createTableSQL = `

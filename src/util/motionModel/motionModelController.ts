@@ -4,7 +4,7 @@ import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from 'sqlite/config';
 
-const QUERY_WINDOW_SIZE = 4 * 1000;
+const QUERY_WINDOW_SIZE = 2 * 1000;
 
 let session = new DriveSession();
 
@@ -26,10 +26,10 @@ export async function MotionModelController() {
       session.start();
     }
 
-    if (await getConfig('isDashcamMLEnabled')) {
-      // Repair ML job if needed
-      await session.checkObjectDetectionService();
-    }
+    // if (await getConfig('isDashcamMLEnabled')) {
+    //   // Repair ML job if needed
+    //   await session.checkObjectDetectionService();
+    // }
 
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(),
@@ -37,7 +37,7 @@ export async function MotionModelController() {
 
     await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
-    await session.doHealthCheck();
+    // await session.doHealthCheck();
   } catch (e: unknown) {
     console.log('Critical motion model controller error, investigate: ', e);
     Instrumentation.add({

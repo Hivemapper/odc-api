@@ -20,11 +20,11 @@ export type SignDetectionMetadata = {
 
 // Type definitions for the averaged location data
 export interface Landmark {
-    lat: number;
-    lon: number;
-    label: string;
-    landmark_id: number;
-    detections: number[];
+  landmark_id: number;
+  lat: number;
+  lon: number;
+  label: string;
+  detections: number[];
 }
 
 export type TransformedLandmark = [number, number, number, string, number[]];

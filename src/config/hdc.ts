@@ -20,6 +20,7 @@ export const ML_METADATA_ROOT_FOLDER = '/mnt/data/ml_metadata';
 export const UNPROCESSED_METADATA_ROOT_FOLDER = '/mnt/data/unprocessed_metadata';
 export const ML_SCRIPT_PATH = '/opt/dashcam/bin/ml/privacy.py';
 export const DEFAULT_MODEL_PATH = '/opt/dashcam/bin/ml';
+export const LANDMARK_THUMBNAIL_FOLDER = '/mnt/data/landmarks';
 export const GPS_LATEST_SAMPLE =
   '/mnt/data/gps/latest.log';
 export const IMU_ROOT_FOLDER = '/mnt/data/imu';
