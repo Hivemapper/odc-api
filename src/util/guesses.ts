@@ -103,7 +103,6 @@ export function calculatePositionsForDetections(frame: FrameKmRecord, detections
       const adjusted_heading = heading + yaw + hor_angle;
 
       const [ sign_lat, sign_lon ] = moveWithDistanceAndHeading(latitude, longitude, distance, adjusted_heading);
-      console.log([ sign_lat, sign_lon ]);
 
       const guess: SignGuess = {
         sign_lat: sign_lat,

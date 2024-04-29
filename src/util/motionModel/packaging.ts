@@ -90,6 +90,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           detection.distance,
         ]);
       }
+
       if (signDetections.length && item.orientation) {
         const orientation = JSON.parse(item.orientation || '[]');
         if (orientation.length === 4) {
