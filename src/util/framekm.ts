@@ -1,5 +1,5 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, LANDMARK_THUMBNAIL_FOLDER } from 'config';
 import {
   Stats,
   mkdir,
@@ -7,6 +7,7 @@ import {
   createReadStream,
   createWriteStream,
   writeFileSync,
+  promises,
 } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -20,6 +21,7 @@ import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, SignDetectionsByFr
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 import { Landmark, LandmarksByFrame, TransformedLandmark } from 'types/detections';
+import { insertLandmark } from 'sqlite/landmarks';
 
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -78,6 +80,13 @@ export const concatFrames = async (
   } catch (e: unknown) {
     console.log(e);
   }
+  try {
+    await new Promise(resolve => {
+      mkdir(LANDMARK_THUMBNAIL_FOLDER, resolve);
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
 
   const framesPath = frames.map(
     (frame: string) => frameRootFolder + '/' + frame,
@@ -93,6 +102,37 @@ export const concatFrames = async (
       message: JSON.stringify({ name: framekmName, reason: 'Max retries' }),
     });
     return bytesMap;
+  }
+
+  // first update exif, then count bytes
+  for (const file of frames) {
+    const fPath = frameRootFolder + '/' + file;
+    const addedIds: number[] = [];
+    if (exifPerFrame[file]) {
+      try {
+        // await asyncExec(`exiftool -comment="${JSON.stringify(exifPerFrame[file]).replace(/"/g, '\\"')}" ${fPath}`);
+        // console.log('Updated exif!!!!!')
+        // TODO: FOR DEBUGGING PURPOSES ONLY
+        if (exifPerFrame[file].landmarks) {
+          for (const landmark of exifPerFrame[file].landmarks) {
+            const [lat, lon, landmark_id, label, detections] = landmark;
+            const landmarkPath = LANDMARK_THUMBNAIL_FOLDER + '/' + file;
+            const landmarkPublicPath = '/public/landmarks/' + file;
+            if (!addedIds.includes(landmark_id)) {
+              addedIds.push(landmark_id);
+              await insertLandmark({ lat, lon, landmark_id, label, detections }, landmarkPublicPath);
+              console.log('====== ADDED LANDMARK!!!! ==== ');
+              await promises.copyFile(
+                fPath,
+                landmarkPath,
+              );
+            }
+          }
+        }
+      } catch (e: unknown) {
+        console.log('Error updating exif', e);
+      }
+    }
   }
 
   // USING NON-BLOCKING IO,

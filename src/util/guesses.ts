@@ -30,13 +30,13 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         landmark_id: landmarkID,
         detections: detections.map(d => d.detection_id)
       };
-      if (detections.length === 0) {
+      if (!detections || detections.length === 0) {
         continue;
       } else if (detections.length === 1) {
         aveDetection.lat = detections[0].sign_lat;
         aveDetection.lon = detections[0].sign_lon;
         aveDetection.label = detections[0].label;
-      } else if (detections.length === 2) {
+      } else if (detections.length < 5) {
         const [lat, lon, _] = averageCoordinates(detections);
         aveDetection.lat = lat;
         aveDetection.lon = lon;
@@ -46,9 +46,15 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         const kmeans = new KMeans();
         kmeans.cluster(coordinates, 1);
         if (kmeans.centroids.length > 0) {
-          const centroid = kmeans.centroids[0].centroid;
-          aveDetection.lat = centroid[0];
-          aveDetection.lon = centroid[1];
+          // Investigate the error
+          const centroid = kmeans.centroids[0];
+          console.log(kmeans.centroids[0]);
+          if (centroid.length > 1) {
+            aveDetection.lat = centroid[0];
+            aveDetection.lon = centroid[1];
+          } else {
+            console.log('Empty centroid?', centroid);
+          }
           aveDetection.label = detections[0].label;
         }
       }

@@ -1,7 +1,7 @@
 import { CAMERA_TYPE, DB_PATH } from 'config';
 import { Router } from 'express';
 import { readdirSync } from 'fs';
-import { runAsync } from 'sqlite';
+import { getAsync, runAsync } from 'sqlite';
 import { resetDB, resetSensorData } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getEstimatedProcessingTime, getFramesCount } from 'sqlite/framekm';
@@ -10,6 +10,7 @@ import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
 import { CameraType } from 'types';
 import { fetchLastNMagnetometerRecords } from 'sqlite/magnetometer';
+import { getDateFromUnicodeTimestamp } from 'util/index';
 
 const router = Router();
 
@@ -186,6 +187,35 @@ router.get('/resetconfig', async (req, res) => {
     res.send({
       done: true,
     });
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/landmarks', async (req, res) => {
+  try {
+    let rows: any = await getAsync('SELECT rowid, * FROM landmarks WHERE lat IS NOT NULL AND lon IS NOT NULL ORDER BY rowid DESC;');
+    res.send(rows);
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
+
+router.get('/landmarks/pics', async (req, res) => {
+  try {
+    let rows: any = await getAsync('SELECT rowid, * FROM landmarks ORDER BY rowid DESC;');
+    let html = `<h1>Number of landmarks: ${rows.length}</h1>`;
+    html += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">';
+    for (const row of rows) {
+      let name = row.thumbnail.split('/').pop() || '';
+      let time = getDateFromUnicodeTimestamp(name);
+
+      html += `<div style="display: flex; flex-direction: column; align-items: center;">`;
+      html += `<img src="${row.thumbnail}" alt="${time.toISOString()}" style="width: 300px; height: 200px; object-fit: cover;" />`;
+      // html += `<p>${time.toDateString()}</p>`
+      html += `</div>`;
+    }
+    res.send(html);
   } catch (error) {
     res.status(500).send({ error });
   }

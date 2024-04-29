@@ -76,7 +76,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
     const signDetectionsByFrame: SignDetectionsByFrame = {}; 
-    const signGuesses: SignGuess[] = [];
+    let signGuesses: SignGuess[] = [];
     frameKm.map((item: FrameKmRecord) => {
       let signDetections: SignDetectionMetadata[] = JSON.parse(item.ml_sign_detections || '[]');
       if (signDetections?.length) {
@@ -90,12 +90,13 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           detection.distance,
         ]);
       }
-      if (item.orientation) {
+
+      if (signDetections.length && item.orientation) {
         const orientation = JSON.parse(item.orientation || '[]');
         if (orientation.length === 4) {
           const guesses = calculatePositionsForDetections(item, signDetections, orientation);
           if (guesses.length) {
-            signGuesses.concat(guesses);
+            signGuesses = signGuesses.concat(guesses);
           }
         }
       }
