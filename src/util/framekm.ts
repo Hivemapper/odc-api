@@ -1,5 +1,5 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, LANDMARK_THUMBNAIL_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, LANDMARK_THUMBNAIL_FOLDER, PUBLIC_FOLDER } from 'config';
 import {
   Stats,
   mkdir,
@@ -16,7 +16,7 @@ import { parse } from 'json2csv';
 import { pipeline } from 'stream';
 import sizeOf from 'image-size';
 
-import { getStats, sleep } from 'util/index';
+import { getStats, promiseWithTimeout, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
 import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, SignDetectionsByFrame, SignDetectionsData } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
@@ -99,7 +99,7 @@ export const concatFrames = async (
 
   try {
     const csvPath = `${frameRootFolder}/exif_data.csv`;
-    await writeCSV(exifPerFrame, csvPath);
+    await writeCSV(exifPerFrame, frameRootFolder, framekmName);
     await asyncExec(`exiftool -csv="${csvPath}" ${frameRootFolder}/*.jpg`);
   } catch (e: unknown) {
     console.log('Error writing exif data to csv', e);
@@ -121,10 +121,14 @@ export const concatFrames = async (
               addedIds.push(landmark_id);
               await insertLandmark({ lat, lon, landmark_id, label, detections }, landmarkPublicPath);
               console.log('====== ADDED LANDMARK!!!! ==== ');
-              await promises.copyFile(
-                fPath,
-                landmarkPath,
-              );
+              try {
+                await promises.copyFile(
+                  fPath,
+                  landmarkPath,
+                );
+              } catch {
+                console.log('Failed copying the landmark file');
+              }
             }
           }
         }
@@ -170,15 +174,9 @@ export const concatFrames = async (
         writeFileSync(outputFilePath, '');
         for (const file of validFrames) {
           const filePath = frameRootFolder + '/' + file.name;
-          if (exifPerFrame[file.name]) {
-            try {
-              await asyncExec(`exiftool -comment="${JSON.stringify(exifPerFrame[file.name]).replace(/"/g, '\\"')}" ${filePath}`);
-            } catch (e: unknown) {
-              console.log('Error updating exif', e);
-            }
-          }
           const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
           const readStream = createReadStream(filePath);
+          console.log('File added to FrameKM');
           await asyncPipeline(readStream, writeStream);
           bytesMap[file.name] = file.size;
           totalBytes += file.size;
@@ -216,14 +214,16 @@ export const concatFrames = async (
   }
 };
 
-const writeCSV = async (exifData: ExifPerFrame, filePath: string) => {
+const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName: string) => {
   const fields = ['SourceFile', 'Comment'];
   const data = Object.keys(exifData).map(frame => ({
-    SourceFile: frame,
+    SourceFile: `${frameFolder}/${frame}`,
     Comment: JSON.stringify(exifData[frame]).replace(/"/g, '\\"')
   }));
   const csv = parse(data, { fields });
-  await promises.writeFile(filePath, csv);
+  await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
+  console.log('Debug copy of csv file:');
+  await promises.writeFile(`${PUBLIC_FOLDER}/${framekmName}.csv`, csv);
 };
 
 export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {

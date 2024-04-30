@@ -85,7 +85,7 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(LogDbFileSize);
 
     // Execute motion model
-    // MotionModelController(); for debugging purposes
+    MotionModelController(); // for debugging purposes
 
     serviceRunner.run();
   } catch (e: unknown) {

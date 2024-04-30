@@ -114,7 +114,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         framesFolder,
         exifByFrame
       ),
-      15000,
+      30000,
     );
     let totalBytes = 0;
     if (bytesMap && Object.keys(bytesMap).length) {

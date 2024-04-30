@@ -4,6 +4,7 @@ import KMeans from 'kmeans-js';
 import { SignGuess, Landmark, SignDetectionMetadata, LandmarksByFrame } from 'types/detections';
 import { FrameKmRecord } from 'types/sqlite';
 import { moveWithDistanceAndHeading } from './geomath';
+import { sign } from 'crypto';
 
 const wgs84 = "WGS84";
 const geocent = "+proj=geocent +datum=WGS84 +units=m +no_defs";
@@ -37,10 +38,12 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         aveDetection.lon = detections[0].sign_lon;
         aveDetection.label = detections[0].label;
       } else if (detections.length < 5) {
-        const [lat, lon, _] = averageCoordinates(detections);
-        aveDetection.lat = lat;
-        aveDetection.lon = lon;
-        aveDetection.label = detections[0].label;
+        const [lat, lon] = averageCoordinates(detections);
+        if (lat && lat !== Infinity && lat !== -Infinity) {
+          aveDetection.lat = lat;
+          aveDetection.lon = lon;
+          aveDetection.label = detections[0].label;
+        }
       } else {
         const coordinates = detections.map((d: any) => [d.sign_lat, d.sign_lon]);
         const kmeans = new KMeans();
@@ -50,8 +53,12 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
           const centroid = kmeans.centroids[0];
           console.log(kmeans.centroids[0]);
           if (centroid.length > 1) {
-            aveDetection.lat = centroid[0];
-            aveDetection.lon = centroid[1];
+            if (centroid[0] && centroid[0] !== Infinity && centroid[0] !== -Infinity) {
+              aveDetection.lat = centroid[0];
+              aveDetection.lon = centroid[1];
+            } else {
+              console.log('Something goes wrong with centroid calc', centroid);
+            }
           } else {
             console.log('Empty centroid?', centroid);
           }
@@ -59,7 +66,9 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         }
       }
       detections.map(d => {
-        landmarksByFrame[d.frame_name].push(aveDetection);
+        if (aveDetection.lat || aveDetection.lon) {
+          landmarksByFrame[d.frame_name].push(aveDetection);
+        }
       });
       // Increment the detection ID counter to ensure unique IDs
       landmarkID++;
@@ -114,6 +123,9 @@ export function calculatePositionsForDetections(frame: FrameKmRecord, detections
         distance,
         timestamp: frame.system_time,
       };
+      if (sign_lat === 0 || sign_lat === Infinity || sign_lat === -Infinity) {
+        console.log('calculate position went wrong', latitude, longitude, heading, image_name, hor_angle, ver_angle, box);
+      }
       guesses.push(guess);
     }
   }
@@ -143,26 +155,20 @@ function findDetectionGroups(detections: SignGuess[], printGroups: boolean = fal
   return groupsFound;
 }
 
-function averageCoordinates(detections: SignGuess[]): [number, number, number] {
-  const coords = detections.map(d => {
-    const [x, y, z] = transformer.transformToGeocentric(d.sign_lon, d.sign_lat);
-    return { x, y, z };
-  });
-
-  const sumCoords = coords.reduce((acc, curr) => {
-    acc.x += curr.x;
-    acc.y += curr.y;
-    acc.z += curr.z;
+function averageCoordinates(detections: SignGuess[]): [number, number] {
+  if (!detections.length) {
+    return [0, 0];
+  }
+  const sumCoords = detections.reduce((acc, curr) => {
+    acc.lat += curr.sign_lat;
+    acc.lon += curr.sign_lon;
     return acc;
-  }, { x: 0, y: 0, z: 0 });
+  }, { lat: 0, lon: 0 });
 
   const numDetections = detections.length;
-  const averageX = sumCoords.x / numDetections;
-  const averageY = sumCoords.y / numDetections;
-  const averageZ = sumCoords.z / numDetections;
-
-  const [averageLon, averageLat, _] = transformer.transformToGeographic(averageX, averageY, averageZ);
-  return [averageLat, averageLon, 0];
+  const averageLat = sumCoords.lat / numDetections;
+  const averageLon = sumCoords.lon / numDetections;
+  return [averageLat, averageLon];
 }
 
 class CoordinateTransformer {
