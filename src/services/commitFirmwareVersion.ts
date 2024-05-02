@@ -65,7 +65,7 @@ async function runHealthChecks() {
     ];
     for (const service of servicesToCheck) {
       // Check if service is active
-      await execAsync(`sudo systemctl is-active --quiet ${service}`);
+      await execAsync(`systemctl is-active --quiet ${service}`);
     }
 
     return true; // All checks passed
