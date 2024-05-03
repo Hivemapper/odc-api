@@ -396,6 +396,7 @@ export const packMetadata = async (
         version: FRAMEKM_VERSION,
         privacyModelHash,
         deviceId: deviceId,
+        edgeDetection: true,
         gnssAuthBuffer: gnssAuth?.buffer,
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
         gnssAuthBufferHash: gnssAuth?.buffer_hash,

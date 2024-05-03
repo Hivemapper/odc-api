@@ -246,9 +246,12 @@ export const createLandmarksTable = async (): Promise<void> => {
     CREATE TABLE IF NOT EXISTS landmarks (
     lat REAL NOT NULL,
     lon REAL NOT NULL,
+    alt REAL NOT NULL,
     class TEXT NOT NULL,
+    vehicle_heading REAL NOT NULL,
     detections INTEGER NOT NULL,
-    thumbnail TEXT
+    thumbnail TEXT,
+    Unique (lat, lon, class)
     );`;
   try {
     await runSchemaAsync(createTableSQL);

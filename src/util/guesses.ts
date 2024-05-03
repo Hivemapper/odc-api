@@ -27,8 +27,10 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
       let aveDetection: Landmark = {
         lat: 0,
         lon: 0, 
+        alt: 0,
         label: "None", 
         landmark_id: landmarkID,
+        vehicle_heading: 0,
         detections: detections.map(d => d.detection_id)
       };
       if (!detections || detections.length === 0) {
@@ -67,6 +69,7 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
       }
       detections.map(d => {
         if (aveDetection.lat || aveDetection.lon) {
+          aveDetection.vehicle_heading = d.heading;
           landmarksByFrame[d.frame_name].push(aveDetection);
         }
       });
@@ -120,6 +123,7 @@ export function calculatePositionsForDetections(frame: FrameKmRecord, detections
         frame_id: frame.frame_idx || 0,
         frame_name: frame.image_name,
         detection_id: detection.detectionId,
+        heading: frame.heading,
         distance,
         timestamp: frame.system_time,
       };

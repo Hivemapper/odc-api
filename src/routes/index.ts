@@ -80,11 +80,13 @@ router.get('/info', async (req: Request, res: Response) => {
     console.log('Build Info file is missing');
   }
   const deviceInfo = getDeviceInfo();
+  const deviceId = await getAnonymousID();
   res.json({
     ...versionInfo,
     ...deviceInfo,
     dashcam: CAMERA_TYPE,
     api_version: API_VERSION,
+    deviceId,
     build_date:
       versionInfo && versionInfo.build_date
         ? new Date(versionInfo.build_date).toISOString()

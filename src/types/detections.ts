@@ -6,6 +6,7 @@ export interface SignGuess {
     frame_name: string;
     detection_id: number;
     distance: number;
+    heading: number;
     timestamp: number;
 }
 
@@ -23,10 +24,12 @@ export interface Landmark {
   landmark_id: number;
   lat: number;
   lon: number;
+  alt: number;
   label: string;
+  vehicle_heading: number;
   detections: number[];
 }
 
-export type TransformedLandmark = [number, number, number, string, number[]];
+export type TransformedLandmark = [number, number, number, number, string, number, number[]];
 
 export type LandmarksByFrame = Record<string, Landmark[]>;

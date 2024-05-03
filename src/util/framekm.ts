@@ -60,7 +60,7 @@ export const prepareExifPerFrame = (
   for (const frame in landmarks) {
     let frameExif = exif[frame] || {};
     let landmark: Landmark[] = landmarks[frame];
-    frameExif['landmarks'] = landmark.map(l => [l.lat, l.lon, l.landmark_id, l.label, l.detections]);
+    frameExif['landmarks'] = landmark.map(l => [l.lat, l.lon, l.alt, l.landmark_id, l.label, l.vehicle_heading, l.detections]);
     exif[frame] = frameExif;
   }
   return exif;
@@ -114,12 +114,12 @@ export const concatFrames = async (
         // TODO: FOR DEBUGGING PURPOSES ONLY
         if (exifPerFrame[file].landmarks) {
           for (const landmark of exifPerFrame[file].landmarks) {
-            const [lat, lon, landmark_id, label, detections] = landmark;
+            const [lat, lon, alt, landmark_id, label, vehicle_heading, detections] = landmark;
             const landmarkPath = LANDMARK_THUMBNAIL_FOLDER + '/' + file;
             const landmarkPublicPath = '/public/landmarks/' + file;
             if (!addedIds.includes(landmark_id)) {
               addedIds.push(landmark_id);
-              await insertLandmark({ lat, lon, landmark_id, label, detections }, landmarkPublicPath);
+              await insertLandmark({ lat, lon, alt, landmark_id, label, vehicle_heading, detections }, landmarkPublicPath);
               console.log('====== ADDED LANDMARK!!!! ==== ');
               try {
                 await promises.copyFile(
