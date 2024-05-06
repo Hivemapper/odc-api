@@ -36,7 +36,7 @@ export const CommitFirmwareVersion: IService = {
       console.error(error);
     }
   },
-  delay: 60000,
+  delay: 20000,
 };
 
 async function checkFirmwareUpgrade() {
