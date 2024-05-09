@@ -3,9 +3,23 @@ import { exec, ExecException } from 'child_process';
 export const DEFAULT_TIME = 1715027100000; // 2024-05-06, dashcam default time is less than this date. So once the date is bigger, we know that system time is set
 let lockTime = 0;
 
+let timeSet = false;
 export const isTimeSet = () => {
-  return Date.now() > DEFAULT_TIME;
+  return timeSet;
 };
+
+export const setTime = () => {
+  timeSet = true;
+}
+
+let gnssTime = 0;
+export const setGnssTime = (_gnssTime: number) => {
+  gnssTime = _gnssTime;
+}
+
+export const getLatestGnssTime = () => {
+  return gnssTime;
+}
 
 export const setLockTime = (ttff: number) => {
   lockTime = ttff;
@@ -17,41 +31,3 @@ export const getLockTime = () => {
   };
 };
 
-export const setSystemTime = (
-  timeToSetMs: number,
-  successCallback: () => void,
-  errorCallback: () => void,
-  retries = 0
-) => {
-  console.log('Setting time...');
-  if (retries > 3) {
-    console.log('Failed setting time');
-    return;
-  }
-
-  exec('timedatectl set-ntp 0', () => {
-    setTimeout(() => {
-      const timeToSet = new Date(timeToSetMs)
-        .toISOString()
-        .replace(/T/, ' ')
-        .replace(/\..+/, '')
-        .split(' ');
-
-      exec(
-        `timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`,
-        (error: ExecException | null) => {
-          console.log(`timedatectl set-time '${timeToSet[0]} ${timeToSet[1]}'`);
-          // 60000ms is a sanity check, of course the diff should be much smaller
-          // but if now the diff with time is smaller than a minute, meaning we're for sure switched from Jan 18
-          if (!error && Math.abs(Date.now() - timeToSetMs) < 60000) {
-            console.log('Successfully set');
-            successCallback();
-          } else {
-            console.log('Not set... Retrying.');
-            setSystemTime(timeToSetMs, successCallback, errorCallback, retries++);
-          }
-        },
-      );
-    }, 2000);
-  });
-};

@@ -25,6 +25,7 @@ import { getAnonymousID } from 'sqlite/deviceInfo';
 
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
+import { getLatestGnssTime } from 'util/lock';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -71,7 +72,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
 
-    const start = Date.now();
+    const start = getLatestGnssTime();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
         frameKm.map((item: FrameKmRecord) => item.image_name || ''),
@@ -93,7 +94,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       );
 
       let framekmTelemetry: FrameKMTelemetry = {
-        systemtime: Date.now(),
+        systemtime: getLatestGnssTime(),
       };
       try {
         framekmTelemetry = await promiseWithTimeout(
@@ -113,7 +114,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           dx: frameKm[0].dx,
           deviceId,
           temperature,
-          duration: Date.now() - start,
+          duration: getLatestGnssTime() - start,
           usbInserted: getUsbState(),
           metrics: getAverageMetrics(frameKm),
           ...framekmTelemetry,
@@ -281,8 +282,8 @@ export const packMetadata = async (
     const deviceInfo = getDeviceInfo();
     const DX = getDX();
     const deviceId = await getAnonymousID();
-    const startTime = validatedFrames[0]?.t || Date.now();
-    const endTime = validatedFrames[validatedFrames.length - 1]?.t || Date.now();
+    const startTime = validatedFrames[0]?.t || getLatestGnssTime();
+    const endTime = validatedFrames[validatedFrames.length - 1]?.t || getLatestGnssTime();
 
     let gnssAuth : GnssAuthRecord | undefined;
     let publicKey = undefined;

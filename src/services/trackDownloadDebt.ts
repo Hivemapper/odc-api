@@ -2,7 +2,7 @@ import { exec, spawn } from 'child_process';
 import { FRAMEKM_CLEANUP_SCRIPT, FRAMEKM_ROOT_FOLDER, METADATA_ROOT_FOLDER, PUBLIC_FOLDER } from 'config';
 import { getOldestFileDateInDirectory } from 'util/index';
 import { Instrumentation } from 'util/instrumentation';
-import { DEFAULT_TIME, isTimeSet } from 'util/lock';
+import { DEFAULT_TIME, getLatestGnssTime, isTimeSet } from 'util/lock';
 import { IService } from '../types';
 import { isIntegrityCheckDone } from './integrityCheck';
 import { getConfig } from 'sqlite/config';
@@ -119,7 +119,7 @@ export const TrackDownloadDebt: IService = {
             const oldestFileTs = await getOldestFileDateInDirectory(
               FRAMEKM_ROOT_FOLDER,
             );
-            const now = Date.now();
+            const now = getLatestGnssTime();
             const diff = now - oldestFileTs;
             console.log(
               'The oldest file date: ' + new Date(oldestFileTs),

@@ -4,11 +4,11 @@ import { convertTimestampToDbFormat } from 'util/index';
 import { DEFAULT_TIME } from 'util/lock';
 
 export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<GnssRecord[]> => {
-    let query = `SELECT * FROM gnss WHERE system_time > ?`;
+    let query = `SELECT * FROM gnss WHERE time > ?`;
     const args = [convertTimestampToDbFormat(from)];
 
     if (to) {
-        query += ` AND system_time < ?`;
+        query += ` AND time < ?`;
         args.push(convertTimestampToDbFormat(to));
     }
     const db = await getDb();
@@ -22,7 +22,7 @@ export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<G
                     r.system_time = new Date(r.system_time + 'Z').getTime();
                     r.dilution = r.hdop;
                     return r;
-                }).filter(r => r.system_time > DEFAULT_TIME));
+                }).filter(r => r.time > DEFAULT_TIME));
             }
         });
     });

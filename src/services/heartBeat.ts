@@ -11,7 +11,7 @@ import { jsonrepair } from 'jsonrepair';
 import { IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { isTimeSet, setLockTime } from 'util/lock';
+import { getLatestGnssTime, isTimeSet, setGnssTime, setLockTime, setTime } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/gnss';
 import { COLORS, updateLED } from '../util/led';
 import {
@@ -30,7 +30,8 @@ let isFirmwareUpdate = false;
 let isPreviewInProgress = false;
 let wasCameraActive = false;
 let isLock = false;
-let hasBeenLockOnce = false;
+let inARow = 0;
+let hasBeenLocked = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
 let lastTimeCheckWasPrivate = false;
@@ -126,8 +127,8 @@ const isGpsLock = (gpsSample: any) => {
     gpsSample.fix === '3D' &&
     gpsSample.dop &&
     Number(gpsSample.dop.hdop) &&
-    gpsSample.dop.hdop < 6 &&
-    (Number(gpsSample.eph) && gpsSample.eph < 25);
+    gpsSample.dop.hdop < 5 &&
+    (Number(gpsSample.eph) && gpsSample.eph < 15);
   return lock;
 };
 
@@ -148,7 +149,7 @@ export const HeartBeatService: IService = {
 
       const isCameraActive = await isCameraBridgeServiceActive();
 
-      if (!isCameraActive && isTimeSet() && hasBeenLockOnce) {
+      if (!isCameraActive && isTimeSet() && hasBeenLocked) {
         console.log('Starting the camera', new Date());
         restartCamera();
       }
@@ -157,12 +158,7 @@ export const HeartBeatService: IService = {
       try {
         const gpsSample = await fetchGNSSLatestSample();
         if (isGpsLock(gpsSample)) {
-          if (!hasBeenLockOnce ) {
-            Instrumentation.add({
-              event: 'GpsLock',
-              size: Number(gpsSample.ttff),
-            });
-          } else if (!isLock) {
+          if (!isLock) {
             Instrumentation.add({
               event: 'DashcamGot3dLock',
             });
@@ -174,7 +170,18 @@ export const HeartBeatService: IService = {
           lastGpsPoint = { ...gpsSample };
           lastSuccessfulLock = Date.now();
           isLock = true;
-          hasBeenLockOnce = true;
+          inARow++;
+          if (inARow >= 3 && !hasBeenLocked) {
+            hasBeenLocked = true;
+            Instrumentation.add({
+              event: 'GpsLock',
+              size: Number(gpsSample.ttff),
+            });
+            setTime();
+          }
+          if (hasBeenLocked && gpsSample.timestamp) {
+            setGnssTime((new Date(gpsSample.timestamp)).getTime());
+          }
 
           gpsLED = COLORS.GREEN;
 
@@ -186,6 +193,7 @@ export const HeartBeatService: IService = {
             gpsLED = COLORS.DIM;
           }
 
+          inARow = 0;
           if (isLock) {
             Instrumentation.add({
               event: 'DashcamLost3dLock',
@@ -194,7 +202,7 @@ export const HeartBeatService: IService = {
           }
           isLock = false;
 
-          if (isCameraActive && (!hasBeenLockOnce || !isTimeSet())) {
+          if (isCameraActive && (!hasBeenLocked || !isTimeSet())) {
             exec(CMD.STOP_CAMERA);
             console.log(
               'Camera intentionally stopped cause Lock is not there yet or Time is not set', Date.now()
