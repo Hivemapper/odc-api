@@ -64,7 +64,7 @@ export const querySensorData = async (
           return delta > maxDelta ? delta : maxDelta;
         }, 0);
         const gnssSystemTimeFixDelta = gnss.reduce((maxDelta, current, index, array) => {
-          const delta = Math.abs(current.system_time - current.actual_systemtime);
+          const delta = Math.abs(current.system_time - current.actual_system_time);
           return delta > maxDelta ? delta : maxDelta;
         }, 0);
         // console.log('==========GNSS DELTA ===============');
