@@ -221,6 +221,8 @@ export class DraftFrameKm {
     }
   }
 
+  biggestTimeDiff = 0;
+
   getEvenlyDistancedFramesFromSensorData(
     prevKeyFrames: FrameKmRecord[],
   ): FrameKmRecord[] {
@@ -228,6 +230,7 @@ export class DraftFrameKm {
     let nextGNSS: GnssRecord | null = null;
     let lastIMU: ImuRecord | null = null;
     let closestFrame: IImage | null = null;
+    this.biggestTimeDiff = 0;
 
     const res: FrameKmRecord[] = [];
 
@@ -332,6 +335,11 @@ export class DraftFrameKm {
               nextGNSS,
               indx,
             );
+            let timeDiff = Math.abs(interpolatedGnssMetadata.time - prevGNSS.time);
+            if (timeDiff > this.biggestTimeDiff) {
+              this.biggestTimeDiff = timeDiff;
+              console.log('BIGGEST TIME DIFF IS:', this.biggestTimeDiff)
+            }
   
             res.push({
               ...lastIMU, // imu

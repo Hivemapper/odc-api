@@ -15,7 +15,7 @@ export interface ImuRecord {
 export interface GnssRecord {
     time: number;
     system_time: number;
-    actual_systemtime: number;
+    actual_system_time: number;
     fix: string;
     ttff: number;
     latitude: number;
