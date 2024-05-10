@@ -32,6 +32,7 @@ let wasCameraActive = false;
 let isLock = false;
 let inARow = 0;
 let hasBeenLocked = false;
+let lostLockOnce = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
 let lastTimeCheckWasPrivate = false;
@@ -198,6 +199,14 @@ export const HeartBeatService: IService = {
             : 70000;
           if (gpsLostPeriod > DIM_GPS_LIGHT_DELAY) {
             gpsLED = COLORS.DIM;
+            if (isLock && isCameraActive && !lostLockOnce) {
+              lostLockOnce = true;
+              hasBeenLocked = false;
+              exec(CMD.STOP_CAMERA);
+              console.log(
+                'Camera intentionally stopped cause Lock was lost once. Lets repair', Date.now()
+              );
+            }
           }
 
           inARow = 0;
