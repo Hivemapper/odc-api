@@ -9,13 +9,16 @@ import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
 import { GnssDopKpi } from 'types/instrumentation';
 import { sleep } from 'util/index';
 import { fetchMagnetometerLogsByTime } from './magnetometer';
+import { writeFile } from 'fs';
 
 let accumulated = 0;
 let accumDuration = 0;
 let accumGnssFreq = 0;
 let accumImuFreq = 0;
 let accumImageFreq = 0;
-let biggestGnssDelta = 0;
+let biggestGnssSystemTimeDelta = 0;
+let biggestGnssTimeDelta = 0;
+let biggestTimeFixDelta = 0;
 
 export const querySensorData = async (
   since: number, until?: number, ignoreMagnetometer?: boolean
@@ -50,13 +53,45 @@ export const querySensorData = async (
         const GnssFreq = gnss.length / duration;
         const ImuFreq = imu.length / duration;
         const ImageFreq = images.length / duration;
-        const gnssDelta = gnss.reduce((maxDelta, current, index, array) => {
+        const gnssSystemTimeDelta = gnss.reduce((maxDelta, current, index, array) => {
           if (index === 0) return maxDelta; // Skip the first element to avoid out of bounds
           const delta = current.system_time - array[index - 1].system_time;
           return delta > maxDelta ? delta : maxDelta;
         }, 0);
-        if (gnssDelta > biggestGnssDelta) {
-          biggestGnssDelta = gnssDelta;
+        const gnssTimeDelta = gnss.reduce((maxDelta, current, index, array) => {
+          if (index === 0) return maxDelta; // Skip the first element to avoid out of bounds
+          const delta = current.time - array[index - 1].time;
+          return delta > maxDelta ? delta : maxDelta;
+        }, 0);
+        const gnssSystemTimeFixDelta = gnss.reduce((maxDelta, current, index, array) => {
+          const delta = Math.abs(current.system_time - current.actual_systemtime);
+          return delta > maxDelta ? delta : maxDelta;
+        }, 0);
+        // console.log('==========GNSS DELTA ===============');
+        // console.log(gnssSystemTimeDelta);
+        // console.log(gnssTimeDelta);
+        // console.log('=====================================');
+        // if (gnssSystemTimeDelta > 1000 || gnssTimeDelta > 1000) {
+        //   // store json for investigation
+        //   const filename = `/mnt/data/gnssDelta_${Date.now()}_${gnssSystemTimeDelta}_${gnssTimeDelta}.json`; // Create a filename with a timestamp
+        //   const dataToSave = JSON.stringify(gnss, null, 2); // Convert the GNSS data array to a formatted JSON string
+
+        //   writeFile(filename, dataToSave, 'utf8', (err) => {
+        //       if (err) {
+        //           console.log('Error writing file:', err);
+        //       } else {
+        //           console.log(`Data saved to ${filename} for investigation.`);
+        //       }
+        //   });
+        // }
+        if (gnssSystemTimeDelta > biggestGnssSystemTimeDelta) {
+          biggestGnssSystemTimeDelta = gnssSystemTimeDelta;
+        }
+        if (gnssTimeDelta > biggestGnssTimeDelta) {
+          biggestGnssTimeDelta = gnssTimeDelta;
+        }
+        if (gnssSystemTimeFixDelta > biggestTimeFixDelta) {
+          biggestTimeFixDelta = gnssSystemTimeFixDelta;
         }
   
         accumulated++;
@@ -74,7 +109,9 @@ export const querySensorData = async (
               imu: Math.round(accumImuFreq / accumulated),
               gnss: Math.round(accumGnssFreq / accumulated),
               took: Date.now() - start,
-              biggestGnssDelta,
+              biggestGnssSystemTimeDelta,
+              biggestGnssTimeDelta,
+              biggestTimeFixDelta,
             }),
           });
           accumulated = 0;
@@ -82,7 +119,9 @@ export const querySensorData = async (
           accumImuFreq = 0;
           accumImageFreq = 0;
           accumDuration = 0;
-          biggestGnssDelta = 0;
+          biggestGnssSystemTimeDelta = 0;
+          biggestGnssTimeDelta = 0;
+          biggestTimeFixDelta = 0;
           try {
             const dopKpi: GnssDopKpi = getGnssDopKpi(gnss);
             Instrumentation.add({

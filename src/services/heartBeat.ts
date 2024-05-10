@@ -35,6 +35,7 @@ let hasBeenLocked = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
 let lastTimeCheckWasPrivate = false;
+let wasTimeResolved = false;
 
 const DIM_GPS_LIGHT_DELAY = 20000;
 
@@ -171,7 +172,7 @@ export const HeartBeatService: IService = {
           lastSuccessfulLock = Date.now();
           isLock = true;
           inARow++;
-          if (inARow >= 3 && !hasBeenLocked) {
+          if (inARow >= 10 && !hasBeenLocked) {
             hasBeenLocked = true;
             Instrumentation.add({
               event: 'GpsLock',
@@ -181,6 +182,12 @@ export const HeartBeatService: IService = {
           }
           if (hasBeenLocked && gpsSample.timestamp) {
             setGnssTime((new Date(gpsSample.timestamp)).getTime());
+          }
+          if (!wasTimeResolved && gpsSample.time_resolved === 1) {
+            wasTimeResolved = true;
+            Instrumentation.add({
+              event: 'DashcamTimeResolved',
+            });
           }
 
           gpsLED = COLORS.GREEN;

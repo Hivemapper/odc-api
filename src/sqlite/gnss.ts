@@ -20,6 +20,7 @@ export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<G
                 resolve(rows.filter(r => r).map(r => { 
                     r.time = new Date(r.time + 'Z').getTime();
                     r.system_time = new Date(r.system_time + 'Z').getTime();
+                    r.actual_systemtime = new Date(r.actual_systemtime + 'Z').getTime();
                     r.dilution = r.hdop;
                     return r;
                 }).filter(r => r.time > DEFAULT_TIME));
