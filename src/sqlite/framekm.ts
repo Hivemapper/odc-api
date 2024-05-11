@@ -253,8 +253,7 @@ export const deleteFrameKm = async (
       UNPROCESSED_FRAMEKM_ROOT_FOLDER,
       String(fkmId),
     );
-    // TODO: UNCOMMENT ONCE DONE DEBUGGING! 
-    // await promises.rmdir(framesFolder, { recursive: true });
+    await promises.rmdir(framesFolder, { recursive: true });
     return true;
   } catch (e: unknown) {
     console.error('Error deleting framekm folder:', e);
