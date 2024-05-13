@@ -174,6 +174,7 @@ export const HeartBeatService: IService = {
           lastSuccessfulLock = Date.now();
           isLock = true;
           inARow++;
+
           if (inARow >= GOOD_GNSS_RECORDS_TO_START_CAMERA && !hasBeenLocked) {
             hasBeenLocked = true;
             Instrumentation.add({
