@@ -9,11 +9,13 @@ export interface ImuRecord {
     gyro_y: number;
     gyro_z: number;
     temperature: number;
+    session: string;
 }
 
 export interface GnssRecord {
     time: number;
     system_time: number;
+    actual_system_time: number;
     fix: string;
     ttff: number;
     latitude: number;
@@ -48,6 +50,7 @@ export interface GnssRecord {
     rf_ofs_q: number;
     gga: string;
     rxm_measx: string;
+    session: string;
 }
 
 export interface GnssAuthRecord {

@@ -23,6 +23,7 @@ export class DraftFrameKm {
   data: SensorData[];
   lastGnss: GnssRecord | null;
   lastImageTimestamp = 0;
+  lastImuTimestamp = 0;
   totalDistance = 0;
   highSpeedRecordsInARow = 0;
   lowSpeedRecordsInARow = 0;
@@ -125,13 +126,15 @@ export class DraftFrameKm {
       if (distance > getDX() * 2) {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
-        console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====');
+        console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====', this.lastGnss.time, gnss.time);
         Instrumentation.add({
           event: 'DashcamCutReason',
           message: JSON.stringify({
             reason: 'TravelledTooFar',
             distance,
             deltaTime,
+            prevTime: this.lastGnss.time,
+            time: gnss.time
           }),
         });
         return false;
@@ -150,6 +153,11 @@ export class DraftFrameKm {
         const deltaTime = data.system_time - this.lastImageTimestamp;
         this.lastImageTimestamp = data.system_time;
 
+        if (deltaTime < 0) {
+          console.log('already inserted');
+          return true;
+        }
+
         if (deltaTime > MAX_ALLOWED_IMG_TIME_DROP) {
           console.log(
             '===== FRAMERATE DROPPED, FOR ' + deltaTime + ', IGNORE FOR NOW =====',
@@ -166,7 +174,18 @@ export class DraftFrameKm {
         return true;
       }
     } else if (isImu(data)) {
-      this.data.push(data);
+      if (!this.lastImuTimestamp) {
+        this.data.push(data);
+      } else {
+        const deltaTime = data.system_time - this.lastImuTimestamp;
+
+        if (deltaTime < 0) {
+          console.log('already inserted');
+        } else {
+          this.data.push(data);
+        }
+      }
+      this.lastImuTimestamp = data.system_time;
       return true;
     }
 
@@ -193,14 +212,16 @@ export class DraftFrameKm {
     if (this.data.length) {
       const lastGps = this.getGpsData()?.pop();
       if (lastGps) {
-        return lastGps.system_time;
+        return lastGps.time;
       } else {
-        return this.data[this.data.length - 1].system_time;
+        return 0;
       }
     } else {
       return 0;
     }
   }
+
+  biggestTimeDiff = 0;
 
   getEvenlyDistancedFramesFromSensorData(
     prevKeyFrames: FrameKmRecord[],
@@ -209,6 +230,7 @@ export class DraftFrameKm {
     let nextGNSS: GnssRecord | null = null;
     let lastIMU: ImuRecord | null = null;
     let closestFrame: IImage | null = null;
+    this.biggestTimeDiff = 0;
 
     const res: FrameKmRecord[] = [];
 
@@ -313,6 +335,11 @@ export class DraftFrameKm {
               nextGNSS,
               indx,
             );
+            let timeDiff = Math.abs(interpolatedGnssMetadata.time - prevGNSS.time);
+            if (timeDiff > this.biggestTimeDiff) {
+              this.biggestTimeDiff = timeDiff;
+              console.log('BIGGEST TIME DIFF IS:', this.biggestTimeDiff)
+            }
   
             res.push({
               ...lastIMU, // imu

@@ -1,15 +1,11 @@
 import { getDb } from './index';
-import { ImuRecord, MagnetometerRecord } from 'types/sqlite';
+import { MagnetometerRecord } from 'types/sqlite';
 import { convertTimestampToDbFormat } from 'util/index';
 
-export const fetchMagnetometerLogsByTime  = async (from: number, to?: number): Promise<MagnetometerRecord[]> => {
-    let query = `SELECT * FROM magnetometer WHERE system_time > ?`;
-    const args = [convertTimestampToDbFormat(from)];
+export const fetchMagnetometerLogsByTime  = async (from: number, to: number, session: string): Promise<MagnetometerRecord[]> => {
+    let query = `SELECT * FROM magnetometer WHERE system_time > ? AND system_time < ? AND session = ?`;
+    const args = [convertTimestampToDbFormat(from), convertTimestampToDbFormat(to), session];
 
-    if (to) {
-        query += ` AND system_time < ?`;
-        args.push(convertTimestampToDbFormat(to));
-    }
     const db = await getDb();
     return new Promise((resolve) => {
         db.all(query, args, (err: unknown, rows: MagnetometerRecord[]) => {

@@ -24,7 +24,7 @@ import {
   postponeEndTrim,
   restoreEndTrim,
 } from 'sqlite/framekm';
-import { isTimeSet } from 'util/lock';
+import { getLatestGnssTime, isTimeSet } from 'util/lock';
 import { isIntegrityCheckDone } from 'services/integrityCheck';
 import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
@@ -92,12 +92,13 @@ export class DriveSession {
 
   async start() {
     const lastTimeIterated = await getConfig('lastTimeIterated');
-    if (lastTimeIterated && Math.abs(Date.now() - lastTimeIterated) < 1000 * 60 * 4) {
+    const now = getLatestGnssTime();
+    if (lastTimeIterated && Math.abs(now - lastTimeIterated) < 1000 * 60 * 4) {
       await restoreEndTrim();
       ignoreTrimStart();
       Instrumentation.add({
         event: 'DashcamReboot',
-        size: Math.abs(Date.now() - lastTimeIterated)
+        size: Math.abs(now - lastTimeIterated)
       })
     } else {
       // trim last framekm (end trip trimming)
@@ -160,16 +161,18 @@ export class DriveSession {
   dataIsGoodEnough(data: SensorData, gnssFilter: GnssFilter, maxPendingTime: number) {
     if (isGnss(data)) {
       const gnss: GnssRecord = data as GnssRecord;
-
-      return (
-        isGoodQualityGnssRecord(gnss, gnssFilter) &&
+      const isGoodEnough = isGoodQualityGnssRecord(gnss, gnssFilter) &&
         timeIsMostLikelyLight(
           new Date(gnss.time),
           gnss.longitude,
           gnss.latitude,
-        ) &&
-        gnss.time > Date.now() - maxPendingTime
-      );
+        );
+      const now = getLatestGnssTime();
+      if (now) {
+        return isGoodEnough && gnss.time > now - maxPendingTime
+      } else {
+        return isGoodEnough;
+      }
     } else if (isImu(data)) {
       return isImuValid(data as ImuRecord);
     } else if (isImage(data)) {
@@ -184,11 +187,12 @@ export class DriveSession {
   }
 
   async getLastTime() {
+    const now = getLatestGnssTime();
     if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
-      return Math.max(this.draftFrameKm.getLastTime(), Date.now() - 60 * 1000);
+      return Math.max(this.draftFrameKm.getLastTime(), now - 60 * 1000);
     }
-    const date = (await getLastTimestamp()) ?? this.startedAt;
-    return Math.max(date, Date.now() - 60 * 1000);
+    const date = await getLastTimestamp();
+    return Math.max(date, now - 60 * 1000);
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
@@ -296,7 +300,10 @@ export class DriveSession {
           this.lastCheckedKmId = firstKmId;
         }
       }
-      await setConfig('lastTimeIterated', Date.now()); 
+      const now = getLatestGnssTime();
+      if (now) {
+        await setConfig('lastTimeIterated', now); 
+      }
     } catch (e: unknown) {
       console.log('Error during health check:', e);
     }
