@@ -32,12 +32,14 @@ let wasCameraActive = false;
 let isLock = false;
 let inARow = 0;
 let hasBeenLocked = false;
+let lostLockOnce = false;
 let isLedControlledByDashcam = true;
 let lastGpsPoint: GNSS | null = null;
 let lastTimeCheckWasPrivate = false;
 let wasTimeResolved = false;
 
 const DIM_GPS_LIGHT_DELAY = 20000;
+const GOOD_GNSS_RECORDS_TO_START_CAMERA = 10;
 
 export const setMostRecentPing = (_mostRecentPing: number) => {
   mostRecentPing = _mostRecentPing;
@@ -172,7 +174,8 @@ export const HeartBeatService: IService = {
           lastSuccessfulLock = Date.now();
           isLock = true;
           inARow++;
-          if (inARow >= 10 && !hasBeenLocked) {
+
+          if (inARow >= GOOD_GNSS_RECORDS_TO_START_CAMERA && !hasBeenLocked) {
             hasBeenLocked = true;
             Instrumentation.add({
               event: 'GpsLock',
@@ -198,6 +201,14 @@ export const HeartBeatService: IService = {
             : 70000;
           if (gpsLostPeriod > DIM_GPS_LIGHT_DELAY) {
             gpsLED = COLORS.DIM;
+            if (isCameraActive && !lostLockOnce) {
+              lostLockOnce = true;
+              hasBeenLocked = false;
+              exec(CMD.STOP_CAMERA);
+              console.log(
+                'Camera intentionally stopped cause Lock was lost once. Lets repair', Date.now()
+              );
+            }
           }
 
           inARow = 0;
