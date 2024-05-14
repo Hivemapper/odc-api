@@ -25,6 +25,7 @@ import { getAnonymousID } from 'sqlite/deviceInfo';
 
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
+import { getLatestGnssTime } from 'util/lock';
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -71,7 +72,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
 
-    const start = Date.now();
+    const start = getLatestGnssTime();
     const bytesMap = await promiseWithTimeout(
       concatFrames(
         frameKm.map((item: FrameKmRecord) => item.image_name || ''),
@@ -93,7 +94,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       );
 
       let framekmTelemetry: FrameKMTelemetry = {
-        systemtime: Date.now(),
+        systemtime: getLatestGnssTime(),
       };
       try {
         framekmTelemetry = await promiseWithTimeout(
@@ -113,8 +114,9 @@ export const packFrameKm = async (frameKm: FrameKM) => {
           dx: frameKm[0].dx,
           deviceId,
           temperature,
-          duration: Date.now() - start,
+          duration: getLatestGnssTime() - start,
           usbInserted: getUsbState(),
+          metrics: getAverageMetrics(frameKm),
           ...framekmTelemetry,
         }),
       });
@@ -134,6 +136,38 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     console.log(error);
   }
 };
+
+export const getAverageMetrics = (framesMetadata: FrameKM) => {
+  let metrics = {
+    pdop: 0,
+    hdop: 0,
+    vdop: 0,
+    tdop: 0,
+    gdop: 0,
+    eph: 0,
+    speed: 0,
+  };
+  for (let i = 0; i < framesMetadata.length; i++) {
+    const m: FrameKmRecord = framesMetadata[i];
+    metrics.pdop += m.pdop;
+    metrics.hdop += m.hdop;
+    metrics.vdop += m.vdop;
+    metrics.tdop += m.tdop;
+    metrics.gdop += m.gdop;
+    metrics.eph += m.eph;
+    metrics.speed += m.speed;
+  }
+  const numFrames = framesMetadata.length || 1;
+  return {
+    pdop: metrics.pdop / numFrames,
+    hdop: metrics.hdop / numFrames,
+    vdop: metrics.vdop / numFrames,
+    tdop: metrics.tdop / numFrames,
+    gdop: metrics.gdop / numFrames,
+    eph: metrics.eph / numFrames,
+    speed: metrics.speed / numFrames,
+  };
+}
 
 const CLASS_NAMES = ['face', 'person', 'license-plate', 'car', 'bus', 'truck', 'motorcycle', 'bicycle']
 
@@ -248,8 +282,8 @@ export const packMetadata = async (
     const deviceInfo = getDeviceInfo();
     const DX = getDX();
     const deviceId = await getAnonymousID();
-    const startTime = validatedFrames.at(0)?.t || Date.now();
-    const endTime = validatedFrames.at(-1)?.t || Date.now();
+    const startTime = validatedFrames[0]?.t || getLatestGnssTime();
+    const endTime = validatedFrames[validatedFrames.length - 1]?.t || getLatestGnssTime();
 
     let gnssAuth : GnssAuthRecord | undefined;
     let publicKey = undefined;

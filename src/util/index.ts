@@ -655,3 +655,16 @@ export async function readLast2MB(filePath: string) {
     return '';
   }
 }
+
+export async function execAsync(command: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.log(stderr);
+        reject(error);
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  });
+}

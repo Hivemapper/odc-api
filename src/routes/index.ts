@@ -32,7 +32,7 @@ import previewRouter from './preview';
 import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
-import { getLockTime, isTimeSet } from 'util/lock';
+import { getLatestGnssTime, getLockTime, isTimeSet } from 'util/lock';
 import { addAppConnectedLog, getSessionId, readLast2MB } from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
@@ -80,11 +80,13 @@ router.get('/info', async (req: Request, res: Response) => {
     console.log('Build Info file is missing');
   }
   const deviceInfo = getDeviceInfo();
+  const deviceId = await getAnonymousID();
   res.json({
     ...versionInfo,
     ...deviceInfo,
     dashcam: CAMERA_TYPE,
     api_version: API_VERSION,
+    deviceId,
     build_date:
       versionInfo && versionInfo.build_date
         ? new Date(versionInfo.build_date).toISOString()
@@ -105,7 +107,7 @@ router.get('/ping', (req, res) => {
   setMostRecentPing(Date.now());
   res.json({
     healthy: true,
-    cameraTime: Date.now(),
+    cameraTime: getLatestGnssTime() || Date.now(),
     leds: getCurrentLEDs(),
     dashcam: CAMERA_TYPE,
     sessionId: getSessionId(),
@@ -128,7 +130,7 @@ router.get('/locktime', (req, res) => {
 });
 
 router.get('/time', (req, res) => {
-  res.json(Date.now());
+  res.json(getLatestGnssTime() || Date.now());
 });
 
 router.post('/cron', (req, res) => {
@@ -269,7 +271,7 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
     until = parseInt(req.query.until as string);
   } catch (e) {
     console.log(e);
-    until = Date.now();
+    until = getLatestGnssTime();
   }
 
   if (!isTimeSet()) {

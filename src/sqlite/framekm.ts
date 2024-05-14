@@ -291,7 +291,7 @@ export const maintainPackedFrameKmTable = async (): Promise<void> => {
 export const getLastTimestamp = async (): Promise<number> => {
   try {
     const lastRecord = await getLastRecord();
-    return lastRecord?.system_time || 0;
+    return lastRecord?.time || 0;
   } catch (error) {
     console.error('Error fetching last timestamp:', error);
     return Date.now();
@@ -499,26 +499,6 @@ export const addFramesToFrameKm = async (
       }
       resolve();
     });
-  }
-};
-
-export const clearOutdated = async (): Promise<void> => {
-  try {
-    // Calculate the timestamp for 3 days ago
-    const threeDaysAgo = Date.now() - 3 * 1000 * 60 * 60 * 24;
-
-    // Construct the SQL query to delete records older than 3 days
-    const deleteQuery = `
-      DELETE FROM framekm 
-      WHERE time < ?;
-    `;
-
-    // Execute the query with the timestamp parameter
-    await runAsync(deleteQuery, [threeDaysAgo]);
-
-    console.log('Outdated records cleared.');
-  } catch (error) {
-    console.error('Error clearing outdated records:', error);
   }
 };
 

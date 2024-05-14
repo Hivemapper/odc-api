@@ -6,6 +6,7 @@ import { getSessionId, getCpuLoad, getTimeFromBoot, ensureFileExists } from 'uti
 import { promises } from 'fs';
 import lockfile from 'proper-lockfile';
 import { GnssRecord } from 'types/sqlite';
+import { getLatestGnssTime } from './lock';
 
 const VALID_DASHCAM_EVENTS = new Set([
   'DashcamLoaded',
@@ -87,7 +88,7 @@ export class InstrumentationClass {
     try {
       getCpuLoad((cpuLoad: number) => {
         const event = 
-          `|${Date.now()}|${API_VERSION}|${getSessionId()}|${
+          `|${getLatestGnssTime() || Date.now()}|${API_VERSION}|${getSessionId()}|${
             record.event
           }|${getTimeFromBoot()}|${record.size || 0}|${cpuLoad}|${
             record.message || ''
