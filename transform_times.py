@@ -5,6 +5,20 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import List
 
+# HDC Paths
+SOURCE_DATA_LOGGER_PATHS = [
+    './compiled/data-logger.v1.4.5.db', 
+    './compiled/data-logger.v1.4.5.db-shm', 
+    './compiled/data-logger.v1.4.5.db-wal'
+]
+DATA_PATH = './compiled/mnt/data'
+METADATA_PATH = './compiled/mnt/data/metadata'
+UNPROCESSED_FRAMEKM_PATH = './compiled/mnt/data/unprocessed_framekm'
+FRAMEKM_PATH = './compiled/mnt/data/framekm'
+DATA_LOGGER_PATH = './compiled/mnt/data/data-logger.v1.4.5.db'
+RECORDING_PATH = './compiled/tmp/recording/pic'
+FAKE_IMAGE_PATH = './compiled/72.jpg'
+
 def transform_dates(base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
     if not date_objects:
         return []
@@ -26,7 +40,7 @@ def fix_dates(base_date: datetime, old_date: datetime, cursor: sqlite3.Cursor, t
     # Convert fetched rows to a list of (id, datetime) tuples
     original_dates = [(row[0], transform_to_datetime(row[1])) for row in rows]
 
-    # Extract just the datetime objects for transformation
+    # Separate the ids and the datetime objects
     ids: List[str] = [date[0] for date in original_dates]
     date_objects: List[datetime] = [date[1] for date in original_dates]
 
@@ -40,10 +54,6 @@ def fix_dates(base_date: datetime, old_date: datetime, cursor: sqlite3.Cursor, t
 
 # Generate images from the new dates
 def generate_images_from_date(base_date: datetime) -> None:
-    # Remove the old images
-    shutil.rmtree('./compiled/tmp/recording/pic')
-    os.makedirs('./compiled/tmp/recording/pic')
-
     # create 10 frames per second starting from the base date
     for i in range(0, 10000):
         new_date = base_date + timedelta(seconds=i/10)
@@ -51,8 +61,8 @@ def generate_images_from_date(base_date: datetime) -> None:
         new_date_micros = int(new_date.timestamp() * 1_000_000)
         new_date_name = f'{str(new_date_micros)[:10]}_{
             str(new_date_micros)[10:]}.jpg'
-        shutil.copy('./compiled/72.jpg',
-                    f'./compiled/tmp/recording/pic/{new_date_name}')
+        shutil.copy(FAKE_IMAGE_PATH,
+                    os.path.join(RECORDING_PATH, new_date_name))
 
 def transform_to_datetime(date: str) -> datetime:
     try:
@@ -61,9 +71,32 @@ def transform_to_datetime(date: str) -> datetime:
         dateobj = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
     return dateobj
 
+# Create the necessary directories
+def setup_dirs():
+    shutil.rmtree(RECORDING_PATH, ignore_errors=True)
+    shutil.rmtree(DATA_PATH, ignore_errors=True)
+
+    os.makedirs(RECORDING_PATH, exist_ok=True)
+    os.makedirs(METADATA_PATH, exist_ok=True)
+    os.makedirs(UNPROCESSED_FRAMEKM_PATH, exist_ok=True)
+    os.makedirs(FRAMEKM_PATH, exist_ok=True)
+
+    for path in SOURCE_DATA_LOGGER_PATHS:
+        shutil.copy2(path, DATA_PATH)
+
+# Remove the old database entries
+def cleanup_db(cursor: sqlite3.Cursor) -> None:
+    cursor.execute("DELETE FROM frames")
+    cursor.execute("DELETE FROM framekms")
+
+
 def main() -> None:
-    conn = sqlite3.connect('./compiled/mnt/data/data-logger.v1.4.5.db')
+    setup_dirs()
+
+    conn = sqlite3.connect(DATA_LOGGER_PATH)
     cursor = conn.cursor()
+
+    cleanup_db(cursor)
 
     new_base_date = datetime.now(tz=timezone.utc)
 
