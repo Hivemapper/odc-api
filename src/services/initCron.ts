@@ -26,49 +26,6 @@ export const InitCronService: IService = {
             }
             const cronJobs = JSON.parse(fileContents);
             if (Array.isArray(cronJobs)) {
-              if (CAMERA_TYPE === CameraType.Hdc) {
-                let isAdded = cronJobs.some(
-                  (job: any) => job?.id === 'cleanup_old_img_cache_once',
-                );
-                if (!isAdded) {
-                  cronJobs.push({
-                    cmd: 'rm -r /mnt/data/pic',
-                    frequency: {
-                      oncePerDevice: true,
-                      delay: 300000,
-                    },
-                    id: 'cleanup_old_img_cache_once',
-                    log: true,
-                  });
-                }
-                isAdded = cronJobs.some(
-                  (job: any) => job?.id === 'cleanup_unprocessed_framekm',
-                );
-                if (!isAdded) {
-                  cronJobs.push({
-                    cmd: `rm -r ${UNPROCESSED_FRAMEKM_ROOT_FOLDER}/*`,
-                    frequency: {
-                      oncePerDevice: true,
-                      delay: 1000,
-                    },
-                    id: 'cleanup_unprocessed_framekm',
-                    log: true,
-                  });
-                }
-                isAdded = cronJobs.some(
-                  (job: any) => job?.id === 'cleanup_unprocessed_framekm_garbage',
-                );
-                if (!isAdded) {
-                  cronJobs.push({
-                    cmd: `rm -r ${UNPROCESSED_FRAMEKM_ROOT_FOLDER}/_*`,
-                    frequency: {
-                      delay: 5000,
-                    },
-                    id: 'cleanup_unprocessed_framekm_garbage',
-                    log: true,
-                  });
-                }
-              }
               scheduleCronJobs(cronJobs);
             }
           } catch (e: unknown) {
