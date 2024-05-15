@@ -5,6 +5,7 @@ import {
   GPS_LATEST_SAMPLE,
   HEALTH_MARKER_PATH,
   isDev,
+  TEST_MODE,
 } from 'config';
 import { existsSync, readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
@@ -62,6 +63,10 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 };
 
 export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
+  if (TEST_MODE) {
+    return true;
+  }
+
   try {
     const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
       encoding: 'utf-8',

@@ -35,6 +35,7 @@ import {
   DATA_LOGGER_SERVICE,
   FOLDER_PURGER_SERVICE,
   FRAMES_ROOT_FOLDER,
+  TEST_MODE,
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
@@ -311,6 +312,10 @@ export class DriveSession {
 
   repairDataLogger() {
     console.log('Repairing Data Logger');
+    if (TEST_MODE) {
+      console.log('Repair skipped');
+      return;
+    }
     exec(`journalctl -eu ${DATA_LOGGER_SERVICE}`, (error, stdout, stderr) => {
       console.log(stdout || stderr);
       console.log('Restarting data-logger');
@@ -323,6 +328,10 @@ export class DriveSession {
   }
 
   async checkObjectDetectionService() {
+    if (TEST_MODE) {
+      return;
+    }
+
     try {
       // service should be active
       const result = spawnSync('systemctl', ['is-active', 'object-detection'], {
@@ -363,6 +372,10 @@ export class DriveSession {
 
   repairCameraBridge() {
     console.log('Repairing Camera Bridge');
+    if (TEST_MODE) {
+      console.log('Repair skipped');
+      return;
+    }
     exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
       console.log(stdout || stderr);
       console.log('Restarting Camera-Bridge');
