@@ -31,11 +31,11 @@ jobs:
     - run: npm install
     - run: npm run build
     - run: npm run compile-gh --camera=hdc 
-    - name : Upload
-      uses: actions/upload-artifact@master
-      with:
-         name: odc-api
-         path: compiled/dashcam-api.js
+    # - name : Upload
+    #   uses: actions/upload-artifact@master
+    #   with:
+    #      name: odc-api
+    #      path: compiled/dashcam-api.js
     - name: Setup AWS CLI
       uses: aws-actions/configure-aws-credentials@v1
       with:
