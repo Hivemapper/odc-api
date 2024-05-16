@@ -51,5 +51,6 @@ jobs:
     - run: ls -l ./compiled
     - run: python transform_times.py
     - run: ls -l ./compiled/mnt/data
+    - run: ls -l ./compiled/tmp/recording/pics | wc -l
     - run: bash test.sh
 
