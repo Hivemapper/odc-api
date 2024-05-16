@@ -53,4 +53,9 @@ jobs:
     - run: ls -l ./compiled/mnt/data
     - run: ls -l ./compiled/tmp/recording/pics | wc -l
     - run: bash test.sh
+    - name: Upload odc-api log as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: odc-api-log
+        path: ./compiled/dashcam-logs.log
 
