@@ -23,7 +23,7 @@ export const fetchGnssLogsByTime  = async (from: number, to?: number): Promise<G
                     r.actual_system_time = new Date(r.actual_system_time + 'Z').getTime();
                     r.dilution = r.hdop;
                     return r;
-                }).filter(r => r.time > DEFAULT_TIME));
+                }));
             }
         });
     });
