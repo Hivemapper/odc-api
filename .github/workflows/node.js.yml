@@ -50,4 +50,6 @@ jobs:
         python-version: '3.12'
     - run: ls -l ./compiled
     - run: python transform_times.py
+    - run: ls -l ./compiled/mnt/data
+    - run: bash test.sh
 
