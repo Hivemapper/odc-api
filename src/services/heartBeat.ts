@@ -5,7 +5,6 @@ import {
   GPS_LATEST_SAMPLE,
   HEALTH_MARKER_PATH,
   isDev,
-  TEST_MODE,
 } from 'config';
 import { existsSync, readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
@@ -23,6 +22,7 @@ import * as console from 'console';
 import { isPrivateLocation } from 'util/privacy';
 import { fileExists } from 'util/index';
 import { insertErrorLog } from 'sqlite/error';
+import { getConfig } from 'sqlite/config';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -63,7 +63,7 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 };
 
 export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
-  if (TEST_MODE) {
+  if (await getConfig('isEndToEndTestingEnabled')) {
     return true;
   }
 

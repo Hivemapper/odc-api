@@ -35,7 +35,6 @@ import {
   DATA_LOGGER_SERVICE,
   FOLDER_PURGER_SERVICE,
   FRAMES_ROOT_FOLDER,
-  TEST_MODE,
 } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
@@ -245,7 +244,7 @@ export class DriveSession {
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
       if (this.possibleGnssImuProblemCounter === 3) {
-        this.repairDataLogger();
+        await this.repairDataLogger();
         this.possibleGnssImuProblemCounter = 0;
       }
     } else {
@@ -255,7 +254,7 @@ export class DriveSession {
     if (!images.length) {
       this.possibleImagerProblemCounter++;
       if (this.possibleImagerProblemCounter === 3) {
-        this.repairCameraBridge();
+        await this.repairCameraBridge();
         this.possibleImagerProblemCounter = 0;
       }
     } else {
@@ -310,9 +309,9 @@ export class DriveSession {
     }
   }
 
-  repairDataLogger() {
+  async repairDataLogger() {
     console.log('Repairing Data Logger');
-    if (TEST_MODE) {
+    if (await getConfig('isEndToEndTestingEnabled')) {
       console.log('Repair skipped');
       return;
     }
@@ -328,7 +327,7 @@ export class DriveSession {
   }
 
   async checkObjectDetectionService() {
-    if (TEST_MODE) {
+    if (await getConfig('isEndToEndTestingEnabled')) {
       return;
     }
 
@@ -370,9 +369,9 @@ export class DriveSession {
     }
   }
 
-  repairCameraBridge() {
+  async repairCameraBridge() {
     console.log('Repairing Camera Bridge');
-    if (TEST_MODE) {
+    if (await getConfig('isEndToEndTestingEnabled')) {
       console.log('Repair skipped');
       return;
     }
