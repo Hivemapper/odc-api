@@ -30,30 +30,24 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm run build
-    # - run: npm run compile-gh --camera=hdc 
-    # - name : Upload
-    #   uses: actions/upload-artifact@master
-    #   with:
-    #      name: odc-api
-    #      path: compiled/dashcam-api.js
-    # - name: Setup AWS CLI
-    #   uses: aws-actions/configure-aws-credentials@v1
-    #   with:
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: us-west-2
-    # - name: Download file from S3
-    #   run: |
-    #     aws s3 cp s3://hdc-firmware/cicd-test/dbs/data-logger.v1.4.5.db ./compiled
-    #     aws s3 cp s3://hdc-firmware/cicd-test/dbs/data-logger.v1.4.5.db-shm ./compiled
-    #     aws s3 cp s3://hdc-firmware/cicd-test/dbs/data-logger.v1.4.5.db-wal ./compiled
-    #     ls -l ./compiled
+    - run: npm run compile-gh --camera=hdc 
+    - name : Upload
+      uses: actions/upload-artifact@master
+      with:
+         name: odc-api
+         path: compiled/dashcam-api.js
     - uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
-        source: s3://hdc-firmware/cicd-test/dbs/data-logger.v1.4.5.db
+        source: s3://hdc-firmware/cicd-test/dbs
         destination: ./compiled
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-west-2
+        flags: --recursive
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: ls -l ./compiled
+    - run: python transform_times.py
 
