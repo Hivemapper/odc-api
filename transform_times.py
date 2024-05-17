@@ -33,7 +33,7 @@ def transform_dates(base_date: datetime, old_base_date: datetime, date_objects: 
 
 
 def fix_dates(base_date: datetime, old_date: datetime, cursor: sqlite3.Cursor, table: str) -> None:
-    time_field = 'system_time' if table == 'gnss' else 'time'
+    time_field = 'time' #'system_time' if table == 'gnss' else 'time'
     cursor.execute(f"SELECT id, {time_field} FROM {table} ORDER BY id ASC")
     rows = cursor.fetchall()
 
@@ -81,8 +81,9 @@ def setup_dirs():
     os.makedirs(UNPROCESSED_FRAMEKM_PATH, exist_ok=True)
     os.makedirs(FRAMEKM_PATH, exist_ok=True)
 
-    for path in SOURCE_DATA_LOGGER_PATHS:
-        shutil.copy2(path, DATA_PATH)
+    for datalogger in SOURCE_DATA_LOGGER_PATHS:
+        print('Copying', datalogger, 'to', DATA_PATH)
+        shutil.copy2(datalogger, DATA_PATH)
 
 # Remove the old database entries
 def cleanup_db(cursor: sqlite3.Cursor) -> None:
@@ -106,8 +107,11 @@ def main() -> None:
         "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
     old_base_date = transform_to_datetime(old_base_date_str)
     fix_dates(new_base_date, old_base_date, cursor, 'gnss')
+    print('Updated gnss base dates')
     fix_dates(new_base_date, old_base_date, cursor, 'imu')
+    print('Updated imu base dates')
     generate_images_from_date(new_base_date)
+    print('Generated images')
 
     # Commit changes and close the connection
     conn.commit()
