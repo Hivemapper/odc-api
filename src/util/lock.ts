@@ -5,7 +5,8 @@ let lockTime = 0;
 
 let timeSet = false;
 export const isTimeSet = () => {
-  return timeSet;
+  return true;
+  // return timeSet;
 };
 
 export const setTime = () => {

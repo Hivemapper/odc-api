@@ -58,6 +58,7 @@ export class DraftFrameKm {
 
       const gnss = data as GnssRecord;
       const deltaTime = gnss.time - this.lastGnss.time;
+      // console.log('latitude ', gnss.latitude, 'longitude ', gnss.longitude, 'speed ', gnss.speed, 'deltaTime ', deltaTime, 'lastGnss ', this.lastGnss.latitude, this.lastGnss.longitude, 'speed ', this.lastGnss.speed)
       const distance = latLonDistance(
         this.lastGnss.latitude,
         gnss.latitude,

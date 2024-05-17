@@ -24,16 +24,19 @@ export const querySensorData = async (
   since: number, until?: number, ignoreMagnetometer?: boolean
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[]; magnetometer: MagnetometerRecord[] }> => {
   try {
+    console.log('here1111111111111')
     if (!since) {
       return { gnss: [], imu: [], images: [], magnetometer: [] };
     }
+    console.log('here2222222222222')
     const start = Date.now();
     console.log('Getting sensor data for: ', new Date(since));
 
     // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
     // Note: if `until` argument is explicitly provided, we do not restrict it.
     if (until === undefined) {
-      until = since + 120 * 1000;
+      // until = since + 120 * 1000;
+      until = Date.now();
     }
 
     const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);

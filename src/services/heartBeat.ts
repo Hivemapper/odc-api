@@ -87,6 +87,10 @@ export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
 const fetchGNSSLatestSample = async () => {
   let gpsSample: any = null;
 
+  if (await getConfig('isEndToEndTestingEnabled')) {
+    return {ttff: 1000, timestamp: 1000, resolved_time: 1}
+  }
+
   try {
     const exists = await fileExists(GPS_LATEST_SAMPLE);
     if (exists) {
@@ -190,8 +194,7 @@ export const HeartBeatService: IService = {
             setTime();
           }
           if (hasBeenLocked && gpsSample.timestamp) {
-            console.log('$$$ Setting GNSS time $$$');
-            // setGnssTime((new Date(gpsSample.timestamp)).getTime());
+            setGnssTime(Date.now());
           }
           if (!wasTimeResolved && gpsSample.time_resolved === 1) {
             wasTimeResolved = true;

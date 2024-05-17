@@ -18,10 +18,10 @@ export async function MotionModelController() {
     }
 
     // Do not query sensor data if dashcam session is not ready
-    if (!session.ready()) {
-      setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
-      return;
-    }
+    // if (!session.ready()) {
+    //   setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
+    //   return;
+    // }
     if (!session.started) {
       session.start();
     }

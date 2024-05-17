@@ -142,6 +142,7 @@ export class DriveSession {
       this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
         isContinuous ? prevKeyFrames : [],
       ) || [];
+    console.log(`newFrames ${newFrames.length}`);
     if (newFrames.length > 1) {
       // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);

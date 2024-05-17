@@ -51,7 +51,7 @@ jobs:
     - run: ls -l ./compiled
     - run: python transform_times.py
     - run: ls -l ./compiled/mnt/data
-    - run: ls -l ./compiled/tmp/recording/pics | wc -l
+    - run: ls -l ./compiled/tmp/recording/pic | wc -l
     - run: bash test.sh
     - name: Upload odc-api log as an artifact
       uses: actions/upload-artifact@v4

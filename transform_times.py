@@ -19,38 +19,64 @@ DATA_LOGGER_PATH = './compiled/mnt/data/data-logger.v1.4.5.db'
 RECORDING_PATH = './compiled/tmp/recording/pic'
 FAKE_IMAGE_PATH = './compiled/72.jpg'
 
-def transform_dates(base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
+def transform_dates(new_base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
     if not date_objects:
         return []
 
     new_dates: List[datetime] = []
     for i in range(len(date_objects)):
         time_diff = date_objects[i] - old_base_date
-        new_date = base_date + time_diff
+        new_date = new_base_date + time_diff
         new_dates.append(new_date)
 
     return new_dates
 
 
-def fix_dates(base_date: datetime, old_date: datetime, cursor: sqlite3.Cursor, table: str) -> None:
-    time_field = 'time' #'system_time' if table == 'gnss' else 'time'
+def fix_system_dates(new_base_date: datetime, old_date: datetime, cursor: sqlite3.Cursor, table: str) -> None:
+    time_field = 'system_time' if table == 'gnss' else 'time'
     cursor.execute(f"SELECT id, {time_field} FROM {table} ORDER BY id ASC")
     rows = cursor.fetchall()
 
     # Convert fetched rows to a list of (id, datetime) tuples
     original_dates = [(row[0], transform_to_datetime(row[1])) for row in rows]
-
     # Separate the ids and the datetime objects
     ids: List[str] = [date[0] for date in original_dates]
     date_objects: List[datetime] = [date[1] for date in original_dates]
+    print(new_base_date)
+    print(old_date)
+    print(date_objects[:10])
 
     # Transform the dates
-    new_dates = transform_dates(base_date, old_date, date_objects)
+    new_dates = transform_dates(new_base_date, old_date, date_objects)
 
     # Update the original database entries with the new dates
     for date_id, new_date in zip(ids, new_dates):
         cursor.execute(f"UPDATE {table} SET {time_field} = ? WHERE id = ?",
                        (new_date.strftime('%Y-%m-%d %H:%M:%S.%f'), date_id))
+
+def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
+    # find the first gnss entry with time_resolved = 1
+    # gnss_time = cursor.execute(
+    #         "SELECT id, time FROM gnss WHERE time_resolved = 1 ORDER BY id ASC LIMIT 1").fetchone()[1]
+    # find the gnss entry with the smallest id
+    gnss_time = cursor.execute(
+            "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
+    gnss_time = transform_to_datetime(gnss_time)
+    print('old gnss time:', gnss_time)
+
+    # get all gnss times 
+    rows = cursor.execute("SELECT id, time FROM gnss ORDER BY id ASC").fetchall()
+    ids = [row[0] for row in rows]
+    dates = [transform_to_datetime(row[1]) for row in rows]
+    print(dates[:10])
+
+    new_dates = transform_dates(new_base_date, gnss_time, dates)
+
+    for date_id, new_date in zip(ids, new_dates):
+        cursor.execute("UPDATE gnss SET time = ? WHERE id = ?",
+                       (new_date.strftime('%Y-%m-%d %H:%M:%S.%f'), date_id))
+
+
 
 # Generate images from the new dates
 def generate_images_from_date(base_date: datetime) -> None:
@@ -83,7 +109,8 @@ def setup_dirs():
 
     for datalogger in SOURCE_DATA_LOGGER_PATHS:
         print('Copying', datalogger, 'to', DATA_PATH)
-        shutil.copy2(datalogger, DATA_PATH)
+        if os.path.exists(datalogger):
+            shutil.copy2(datalogger, DATA_PATH)
 
 # Remove the old database entries
 def cleanup_db(cursor: sqlite3.Cursor) -> None:
@@ -106,9 +133,10 @@ def main() -> None:
     old_base_date_str = cursor.execute(
         "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
     old_base_date = transform_to_datetime(old_base_date_str)
-    fix_dates(new_base_date, old_base_date, cursor, 'gnss')
+    fix_system_dates(new_base_date, old_base_date, cursor, 'gnss')
+    fix_gnss_dates(new_base_date, cursor)
     print('Updated gnss base dates')
-    fix_dates(new_base_date, old_base_date, cursor, 'imu')
+    fix_system_dates(new_base_date, old_base_date, cursor, 'imu')
     print('Updated imu base dates')
     generate_images_from_date(new_base_date)
     print('Generated images')

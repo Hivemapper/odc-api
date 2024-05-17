@@ -94,7 +94,7 @@ export class InstrumentationClass {
             record.message || ''
           }|${this.isHotLoad ? 1 : 0}`;
         console.info(event);
-        appendEventLog(event);
+        // appendEventLog(event);
       });
     } catch {
       //
