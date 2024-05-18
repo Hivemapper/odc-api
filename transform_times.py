@@ -113,6 +113,8 @@ def setup_dirs() -> None:
             shutil.copy2(datalogger, DATA_PATH)
         else:
             print('Skipping copy of', datalogger, 'as it does not exist')
+    
+    os.system('ls -l ./compiled/mnt/data')
 
 
 # Remove the old database entries
