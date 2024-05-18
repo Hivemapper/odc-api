@@ -120,6 +120,9 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
     cursor.execute("DELETE FROM frames")
     cursor.execute("DELETE FROM framekms")
 
+    # insert or update key 'isEndToEndTestingEnabled' to 'true' in the config table
+    cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isEndToEndTestingEnabled', 'true')")
+
 
 def main() -> None:
     setup_dirs()
