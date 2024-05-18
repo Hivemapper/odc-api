@@ -98,7 +98,7 @@ def transform_to_datetime(date: str) -> datetime:
     return dateobj
 
 # Create the necessary directories
-def setup_dirs():
+def setup_dirs() -> None:
     shutil.rmtree(RECORDING_PATH, ignore_errors=True)
     shutil.rmtree(DATA_PATH, ignore_errors=True)
 
@@ -108,9 +108,12 @@ def setup_dirs():
     os.makedirs(FRAMEKM_PATH, exist_ok=True)
 
     for datalogger in SOURCE_DATA_LOGGER_PATHS:
-        print('Copying', datalogger, 'to', DATA_PATH)
         if os.path.exists(datalogger):
+            print('Copying', datalogger, 'to', DATA_PATH)
             shutil.copy2(datalogger, DATA_PATH)
+        else:
+            print('Skipping copy of', datalogger, 'as it does not exist')
+
 
 # Remove the old database entries
 def cleanup_db(cursor: sqlite3.Cursor) -> None:
