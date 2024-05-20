@@ -4,9 +4,9 @@ import {
   METADATA_ROOT_FOLDER,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
 } from 'config';
-import { existsSync, mkdirSync, promises, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { deleteFrameKm, getFrameKmName, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
+import { clearAll, deleteFrameKm, getFrameKmName, getFrameKmsCount, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
 import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality, getCpuUsage, getSystemTemp } from 'util/index';
@@ -26,6 +26,11 @@ import { getAnonymousID } from 'sqlite/deviceInfo';
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
 import { getLatestGnssTime } from 'util/lock';
+import { repairCameraBridge } from 'util/index';
+import { CameraType } from 'types';
+import { exec } from 'child_process';
+
+const AVG_MIN_FRAME_SIZE = 45 * 1024;
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -54,7 +59,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
 
-    const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
+    const { isDashcamMLEnabled, isBrokenImageFixForHdcsEnabled } = await getConfig(['isDashcamMLEnabled', 'isBrokenImageFixForHdcsEnabled']);
     const frameWithError = frameKm.find((f) => f.error);
     const framesWithMissedML = frameKm.find((f) => !f.ml_model_hash);
     const errorFrame = frameWithError || framesWithMissedML;
@@ -84,42 +89,65 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     );
     let totalBytes = 0;
     if (bytesMap && Object.keys(bytesMap).length) {
+      const numFrames = Object.keys(bytesMap).length;
       totalBytes = (Object.values(bytesMap) as number[]).reduce(
         (acc: number, curr: number | undefined) => acc + (Number(curr) || 0),
         0,
       );
-      await promiseWithTimeout(
-        packMetadata(finalBundleName, frameKm, bytesMap),
-        5000,
-      );
-
-      let framekmTelemetry: FrameKMTelemetry = {
-        systemtime: getLatestGnssTime(),
-      };
-      try {
-        framekmTelemetry = await promiseWithTimeout(
-          getFrameKmTelemetry(framesFolder, frameKm),
+      if (totalBytes < AVG_MIN_FRAME_SIZE * numFrames && isBrokenImageFixForHdcsEnabled) {
+        Instrumentation.add({
+          event: 'DashcamFailedPackingFrameKm',
+          message: JSON.stringify({
+            name: finalBundleName || frameKmName,
+            reason: 'Frames too small',
+            numFrames,
+            totalBytes,
+            deviceId,
+          }),
+        });
+        if (numFrames > 10 && CAMERA_TYPE === CameraType.HdcS) {
+          const frameKmCount = await getFrameKmsCount();
+          // clear the image cache
+          await clearAll();
+          // restart camera-bridge
+          exec('systemctl stop camera-bridge');
+          repairCameraBridge({ reason: 'broken images', numFrames, totalBytes, frameKmCount });
+        }
+      } else {
+        await promiseWithTimeout(
+          packMetadata(finalBundleName, frameKm, bytesMap),
           5000,
         );
-      } catch (error: unknown) {
-        console.log('Error getting telemetry', error);
+  
+        let framekmTelemetry: FrameKMTelemetry = {
+          systemtime: getLatestGnssTime(),
+        };
+        try {
+          framekmTelemetry = await promiseWithTimeout(
+            getFrameKmTelemetry(framesFolder, frameKm),
+            5000,
+          );
+        } catch (error: unknown) {
+          console.log('Error getting telemetry', error);
+        }
+        const temperature = await getSystemTemp();
+        Instrumentation.add({
+          event: 'DashcamPackedFrameKm',
+          size: totalBytes,
+          message: JSON.stringify({
+            name: finalBundleName,
+            numFrames,
+            dx: frameKm[0].dx,
+            deviceId,
+            temperature,
+            avgFrameSize: totalBytes / numFrames,
+            duration: getLatestGnssTime() - start,
+            usbInserted: getUsbState(),
+            metrics: getAverageMetrics(frameKm),
+            ...framekmTelemetry,
+          }),
+        });
       }
-      const temperature = await getSystemTemp();
-      Instrumentation.add({
-        event: 'DashcamPackedFrameKm',
-        size: totalBytes,
-        message: JSON.stringify({
-          name: finalBundleName,
-          numFrames: frameKm?.length,
-          dx: frameKm[0].dx,
-          deviceId,
-          temperature,
-          duration: getLatestGnssTime() - start,
-          usbInserted: getUsbState(),
-          metrics: getAverageMetrics(frameKm),
-          ...framekmTelemetry,
-        }),
-      });
     }
     await deleteFrameKm(frameKm[0].fkm_id);
     

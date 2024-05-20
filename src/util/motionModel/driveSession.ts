@@ -30,16 +30,12 @@ import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
 import { GnssFilter } from 'types/motionModel';
 import { exec, spawnSync } from 'child_process';
-import {
-  CAMERA_TYPE,
-  DATA_LOGGER_SERVICE,
-  FOLDER_PURGER_SERVICE,
-  FRAMES_ROOT_FOLDER,
-} from 'config';
+import { DATA_LOGGER_SERVICE } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
+import { repairCameraBridge } from 'util/index';
 
 let sessionTrimmed = false;
 
@@ -254,7 +250,7 @@ export class DriveSession {
     if (!images.length) {
       this.possibleImagerProblemCounter++;
       if (this.possibleImagerProblemCounter === 3) {
-        this.repairCameraBridge();
+        repairCameraBridge({ reason: 'no images' });
         this.possibleImagerProblemCounter = 0;
       }
     } else {
@@ -359,37 +355,5 @@ export class DriveSession {
     } catch {
       //
     }
-  }
-
-  repairCameraBridge() {
-    console.log('Repairing Camera Bridge');
-    exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
-      console.log(stdout || stderr);
-      console.log('Restarting Camera-Bridge');
-      try {
-        await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
-        console.log('Successfully cleaned folder');
-      } catch (e: unknown) {
-        console.log(e);
-      }
-      try {
-        await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
-        console.log('Successfully re-created folder');
-      } catch (e: unknown) {
-        console.log(e);
-      }
-      let restartCmd = `systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`;
-      if (CAMERA_TYPE === CameraType.HdcS) {
-        restartCmd = 'systemctl restart jpeg-recorder && ' + restartCmd;
-      }
-      exec(restartCmd, (err, stout, sterr) => {
-        console.log(stout || sterr);
-        console.log('Successfully restarted Folder Purger & Camera Bridge');
-        Instrumentation.add({
-          event: 'DashcamApiRepaired',
-          message: JSON.stringify({ serviceRepaired: 'camera-bridge' }),
-        });
-      });
-    });
   }
 }
