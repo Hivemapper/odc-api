@@ -125,15 +125,14 @@ const isFirmwareUpdateInProcess = () => {
 };
 
 const isGpsLock = (gpsSample: any) => {
-  // const lock =
-  //   gpsSample &&
-  //   gpsSample.fix === '3D' &&
-  //   gpsSample.dop &&
-  //   Number(gpsSample.dop.hdop) &&
-  //   gpsSample.dop.hdop < 5 &&
-  //   (Number(gpsSample.eph) && gpsSample.eph < 15);
-  // return lock;
-  return true;
+  const lock =
+    gpsSample &&
+    gpsSample.fix === '3D' &&
+    gpsSample.dop &&
+    Number(gpsSample.dop.hdop) &&
+    gpsSample.dop.hdop < 5 &&
+    (Number(gpsSample.eph) && gpsSample.eph < 15);
+  return lock;
 };
 
 let blinking = false;
@@ -185,8 +184,7 @@ export const HeartBeatService: IService = {
             setTime();
           }
           if (hasBeenLocked && gpsSample.timestamp) {
-            console.log('$$$$$ Setting GNSS Time $$$$$');
-            // setGnssTime((new Date(gpsSample.timestamp)).getTime());
+            setGnssTime((new Date(gpsSample.timestamp)).getTime());
           }
           if (!wasTimeResolved && gpsSample.time_resolved === 1) {
             wasTimeResolved = true;
