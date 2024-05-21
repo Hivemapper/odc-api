@@ -42,9 +42,9 @@ def fix_system_dates(new_base_date: datetime, old_date: datetime, cursor: sqlite
     # Separate the ids and the datetime objects
     ids: List[str] = [date[0] for date in original_dates]
     date_objects: List[datetime] = [date[1] for date in original_dates]
-    print(new_base_date)
-    print(old_date)
-    print(date_objects[:10])
+    # print(new_base_date)
+    # print(old_date)
+    # print(date_objects[:10])
 
     # Transform the dates
     new_dates = transform_dates(new_base_date, old_date, date_objects)
@@ -60,8 +60,9 @@ def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
     #         "SELECT id, time FROM gnss WHERE time_resolved = 1 ORDER BY id ASC LIMIT 1").fetchone()[1]
     # find the gnss entry with the smallest id
     default_time = datetime(2020, 1, 1, 0, 0, 0, 0).strftime('%Y-%m-%d %H:%M:%S.%f')
+    # print('default time:', default_time)
     gnss_time = cursor.execute(
-            f"SELECT time FROM gnss WHERE time > {default_time} ORDER BY id ASC LIMIT 1").fetchone()[0]
+            f"SELECT time FROM gnss WHERE time > '{default_time}' ORDER BY id ASC LIMIT 1").fetchone()[0]
     gnss_time = transform_to_datetime(gnss_time)
     print('old gnss time:', gnss_time)
 
@@ -69,7 +70,7 @@ def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
     rows = cursor.execute("SELECT id, time FROM gnss ORDER BY id ASC").fetchall()
     ids = [row[0] for row in rows]
     dates = [transform_to_datetime(row[1]) for row in rows]
-    print(dates[:10])
+    # print(dates[:10])
 
     new_dates = transform_dates(new_base_date, gnss_time, dates)
 
