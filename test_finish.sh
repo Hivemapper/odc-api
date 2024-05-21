@@ -44,4 +44,8 @@ echo "Files only in $METADATA_PATH:"
 comm -23 files_in_metadata.txt files_in_reference.txt
 echo
 
-exit $FAILURE
+if [[ $FAILURE -ne 0 ]]
+then
+    echo "Test failed"
+    exit $FAILURE
+fi

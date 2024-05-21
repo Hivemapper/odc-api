@@ -24,11 +24,9 @@ export const querySensorData = async (
   since: number, until?: number, ignoreMagnetometer?: boolean
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[]; magnetometer: MagnetometerRecord[] }> => {
   try {
-    console.log('here1111111111111')
     if (!since) {
       return { gnss: [], imu: [], images: [], magnetometer: [] };
     }
-    console.log('here2222222222222')
     const start = Date.now();
     console.log('Getting sensor data for: ', new Date(since));
 

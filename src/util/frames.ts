@@ -11,7 +11,6 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
         FRAMES_ROOT_FOLDER,
         (err: NodeJS.ErrnoException | null, files: string[]) => {
           try {
-            console.log(`file length: ${files?.length}`);
             if (files?.length) {
               const jpgFiles: IImage[] = files
                 .filter(
@@ -27,13 +26,10 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
                   };
                 });
 
-              console.log(`jpgFiles length: ${jpgFiles.length}`);
-
               const filteredFiles = jpgFiles.filter((file: IImage) => {
                 return !(file.system_time < from || file.system_time > to);
               });
 
-              console.log(`filteredFiles length: ${filteredFiles.length}`);
               resolve(filteredFiles);
             } else {
               resolve([]);

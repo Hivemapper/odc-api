@@ -410,7 +410,6 @@ export const addFramesToFrameKm = async (
             const forceFrameKmSwitch = force && i === 0;
             fkm_id = forceFrameKmSwitch ? lastFkmId + 1 : lastFkmId;
             // sanity check for accidental insert of the wrong sample into framekm
-            // console.log('Last dx:', JSON.stringify(last), 'Current dx:', JSON.stringify(row));
             const distanceBetweenFrames = distance(last, row);
             if (row.dx !== last.dx) {
               Instrumentation.add({
