@@ -7,7 +7,7 @@ cd compiled
 # cp build/Release/node_sqlite3.node lib/binding/napi-v6-darwin-unknown-arm64/
 node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
 odc_api_pid=$!
-sleep 600
+sleep 40
 
 echo "done"
 kill $odc_api_pid
