@@ -45,6 +45,16 @@ jobs:
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-west-2
         flags: --recursive
+    - name: Download reference data from s3
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: s3://hdc-firmware/reference/
+        destination: ./reference
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-west-2
+        flags: --recursive
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
@@ -65,3 +75,5 @@ jobs:
       with:
         name: framekm-metadata
         path: ./framekm-metadata.tar.gz
+    - name: Evaluate the end state of the test
+      run: bash test_finish.sh
