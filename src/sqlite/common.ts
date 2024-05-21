@@ -36,7 +36,7 @@ export const querySensorData = async (
     // Note: if `until` argument is explicitly provided, we do not restrict it.
     if (until === undefined) {
       // until = since + 120 * 1000;
-      until = Date.now();
+      until = Math.min(since + 120 * 1000,  Date.now());
     }
 
     const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);
