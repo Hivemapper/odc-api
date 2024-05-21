@@ -11,3 +11,4 @@ sleep 1
 
 echo "done"
 kill $odc_api_pid
+sleep 5
