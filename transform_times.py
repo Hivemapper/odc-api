@@ -18,6 +18,7 @@ FRAMEKM_PATH = './compiled/mnt/data/framekm'
 DATA_LOGGER_PATH = './compiled/mnt/data/data-logger.v1.4.5.db'
 RECORDING_PATH = './compiled/tmp/recording/pic'
 FAKE_IMAGE_PATH = './compiled/72.jpg'
+GPS_LATEST_PATH = './compiled/mnt/data/gps/'
 
 def transform_dates(new_base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
     if not date_objects:
@@ -108,6 +109,7 @@ def setup_dirs() -> None:
     os.makedirs(METADATA_PATH, exist_ok=True)
     os.makedirs(UNPROCESSED_FRAMEKM_PATH, exist_ok=True)
     os.makedirs(FRAMEKM_PATH, exist_ok=True)
+    os.makedirs(GPS_LATEST_PATH, exist_ok=True)
 
     for datalogger in SOURCE_DATA_LOGGER_PATHS:
         if os.path.exists(datalogger):
@@ -127,6 +129,23 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
     # insert or update key 'isEndToEndTestingEnabled' to 'true' in the config table
     cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isEndToEndTestingEnabled', 'true')")
 
+# create latest.log file
+def generate_latest_log(base_date: datetime) -> None:
+    with open(os.path.join(GPS_LATEST_PATH, 'latest.log'), 'w') as f:
+        import json
+        result = {
+            'ttff': 4000,
+            'timestamp': base_date.strftime('%Y-%m-%d %H:%M:%S.%fZ'),
+            'time_resolved': 1,
+            'latitude': 37.7749,
+            'longitude': -122.4194,
+            'fix': '3D',
+            'dop': {
+                'hdop': 1.0,
+            },
+            'eph': 5.0,
+        }
+        json.dump(result, f, indent=4)
 
 def main() -> None:
     setup_dirs()
@@ -149,6 +168,7 @@ def main() -> None:
     fix_system_dates(new_base_date, old_base_date, cursor, 'imu')
     print('Updated imu base dates')
     generate_images_from_date(new_base_date)
+    generate_latest_log(new_base_date)
     print('Generated images')
 
     # Commit changes and close the connection

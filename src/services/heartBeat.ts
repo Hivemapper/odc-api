@@ -87,10 +87,6 @@ export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
 const fetchGNSSLatestSample = async () => {
   let gpsSample: any = null;
 
-  if (await getConfig('isEndToEndTestingEnabled')) {
-    return {ttff: 1000, timestamp: 1000, resolved_time: 1}
-  }
-
   try {
     const exists = await fileExists(GPS_LATEST_SAMPLE);
     if (exists) {
@@ -134,15 +130,14 @@ const isFirmwareUpdateInProcess = () => {
 };
 
 const isGpsLock = (gpsSample: any) => {
-  // const lock =
-  //   gpsSample &&
-  //   gpsSample.fix === '3D' &&
-  //   gpsSample.dop &&
-  //   Number(gpsSample.dop.hdop) &&
-  //   gpsSample.dop.hdop < 5 &&
-  //   (Number(gpsSample.eph) && gpsSample.eph < 15);
-  // return lock;
-  return true;
+  const lock =
+    gpsSample &&
+    gpsSample.fix === '3D' &&
+    gpsSample.dop &&
+    Number(gpsSample.dop.hdop) &&
+    gpsSample.dop.hdop < 5 &&
+    (Number(gpsSample.eph) && gpsSample.eph < 15);
+  return lock;
 };
 
 let blinking = false;
