@@ -120,6 +120,10 @@ def setup_dirs() -> None:
     
     os.system('ls -l ./compiled/mnt/data')
 
+# delete the first 3415 entries in the gnss table
+def delete_first_gnss_entries(cursor: sqlite3.Cursor) -> None:
+    cursor.execute("DELETE FROM gnss ORDER BY id ASC LIMIT 3415")
+
 
 # Remove the old database entries
 def cleanup_db(cursor: sqlite3.Cursor) -> None:
@@ -128,6 +132,8 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
 
     # insert or update key 'isEndToEndTestingEnabled' to 'true' in the config table
     cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isEndToEndTestingEnabled', 'true')")
+
+    delete_first_gnss_entries(cursor)
 
 # create latest.log file
 def generate_latest_log(base_date: datetime) -> None:
