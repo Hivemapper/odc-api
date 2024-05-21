@@ -55,7 +55,7 @@ jobs:
       with:
         python-version: '3.12'
     - run: ls -l ./end-to-end-test
-    - run: python transform_times.py
+    - run: python ./end-to-end-test/transform_times.py
     - run: ls -l ./end-to-end-test/mnt/data
     - run: ls -l ./end-to-end-test/tmp/recording/pic | wc -l
     - run: bash test.sh
