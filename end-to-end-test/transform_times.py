@@ -7,18 +7,18 @@ from typing import List
 
 # HDC Paths
 SOURCE_DATA_LOGGER_PATHS = [
-    './compiled/data-logger.v1.4.5.db', 
-    './compiled/data-logger.v1.4.5.db-shm', 
-    './compiled/data-logger.v1.4.5.db-wal'
+    './data-logger.v1.4.5.db', 
+    './data-logger.v1.4.5.db-shm', 
+    './data-logger.v1.4.5.db-wal'
 ]
-DATA_PATH = './compiled/mnt/data'
-METADATA_PATH = './compiled/mnt/data/metadata'
-UNPROCESSED_FRAMEKM_PATH = './compiled/mnt/data/unprocessed_framekm'
-FRAMEKM_PATH = './compiled/mnt/data/framekm'
-DATA_LOGGER_PATH = './compiled/mnt/data/data-logger.v1.4.5.db'
-RECORDING_PATH = './compiled/tmp/recording/pic'
-FAKE_IMAGE_PATH = './compiled/72.jpg'
-GPS_LATEST_PATH = './compiled/mnt/data/gps/'
+DATA_PATH = './mnt/data'
+METADATA_PATH = './mnt/data/metadata'
+UNPROCESSED_FRAMEKM_PATH = './mnt/data/unprocessed_framekm'
+FRAMEKM_PATH = './mnt/data/framekm'
+DATA_LOGGER_PATH = './mnt/data/data-logger.v1.4.5.db'
+RECORDING_PATH = './tmp/recording/pic'
+FAKE_IMAGE_PATH = './72.jpg'
+GPS_LATEST_PATH = './mnt/data/gps/'
 
 def transform_dates(new_base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
     if not date_objects:
@@ -118,7 +118,6 @@ def setup_dirs() -> None:
         else:
             print('Skipping copy of', datalogger, 'as it does not exist')
     
-    os.system('ls -l ./compiled/mnt/data')
 
 # delete the first 3415 entries in the gnss table
 def delete_first_gnss_entries(cursor: sqlite3.Cursor) -> None:

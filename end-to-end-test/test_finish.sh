@@ -1,5 +1,5 @@
-METADATA_PATH=./compiled/mnt/data/metadata
-FRAMEKM_PATH=./compiled/mnt/data/framekm
+METADATA_PATH=./mnt/data/metadata
+FRAMEKM_PATH=./mnt/data/framekm
 REFERENCE_PATH=./reference
 
 FAILURE=0

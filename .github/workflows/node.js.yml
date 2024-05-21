@@ -31,16 +31,11 @@ jobs:
     - run: npm install
     - run: npm run build
     - run: npm run compile-gh --camera=github-linux-environment 
-    - name : Upload
-      uses: actions/upload-artifact@master
-      with:
-         name: odc-api
-         path: compiled/dashcam-api.js
     - uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
         source: s3://hdc-firmware/cicd-test/dbs
-        destination: ./compiled
+        destination: ./end-to-end-test
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-west-2
@@ -50,22 +45,22 @@ jobs:
       with:
         command: cp
         source: s3://hdc-firmware/cicd-test/reference/
-        destination: ./reference
+        destination: ./end-to-end-test/reference
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-west-2
         flags: --recursive
-    - run: ls -l ./reference
+    - run: ls -l ./end-to-end-test/reference
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-    - run: ls -l ./compiled
+    - run: ls -l ./end-to-end-test
     - run: python transform_times.py
-    - run: ls -l ./compiled/mnt/data
-    - run: ls -l ./compiled/tmp/recording/pic | wc -l
+    - run: ls -l ./end-to-end-test/mnt/data
+    - run: ls -l ./end-to-end-test/tmp/recording/pic | wc -l
     - run: bash test.sh
     # For some reason upload-artifact is not grabbing subdirectories
-    - run: tar cvfz framekm-metadata.tar.gz ./compiled/mnt/data
+    - run: tar cvfz framekm-metadata.tar.gz ./end-to-end-test/mnt/data
     - name: Upload framekm metadata files
       uses: actions/upload-artifact@v4
       with:
