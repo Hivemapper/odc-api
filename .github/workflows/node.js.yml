@@ -58,4 +58,8 @@ jobs:
       with:
         name: odc-api-log
         path: ./compiled/dashcam-logs.log
-
+    - name: Upload framekm metadata files
+      uses: actions/upload-artifact@v4
+      with:
+        name: framekm-metadata
+        path: ./compiled/mnt/data

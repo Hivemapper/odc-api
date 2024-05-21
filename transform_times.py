@@ -59,8 +59,9 @@ def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
     # gnss_time = cursor.execute(
     #         "SELECT id, time FROM gnss WHERE time_resolved = 1 ORDER BY id ASC LIMIT 1").fetchone()[1]
     # find the gnss entry with the smallest id
+    default_time = datetime(2020, 1, 1, 0, 0, 0, 0).strftime('%Y-%m-%d %H:%M:%S.%f')
     gnss_time = cursor.execute(
-            "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
+            f"SELECT time FROM gnss WHERE time > {default_time} ORDER BY id ASC LIMIT 1").fetchone()[0]
     gnss_time = transform_to_datetime(gnss_time)
     print('old gnss time:', gnss_time)
 
