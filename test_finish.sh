@@ -21,16 +21,17 @@ for file in $reference_files
 do
   diff -q $file $REFERENCE_PATH/metadata/$(basename $file) 2> /dev/null
   result=$?
-  if [[ $result -eq 1 ]]
+  if [[ $result -eq 0 ]]
   then
+    echo "Metadata file $(basename $file) matches reference"
+  elif [[ $result -eq 1 ]]
+  then
+    # TODO: Make the diff visible and clear
     echo "Metadata file $(basename $file) does not match reference"
+    FAILURE=1
   elif [[ $result -eq 2 ]]
   then
     echo "Metadata file $(basename $file) does not exist"
-    FAILURE=1
-  elif [[ $result -eq 0 ]]
-  then
-    echo "Metadata file $(basename $file) matches reference"
     FAILURE=1
   fi
 done

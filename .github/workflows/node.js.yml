@@ -64,11 +64,6 @@ jobs:
     - run: ls -l ./compiled/mnt/data
     - run: ls -l ./compiled/tmp/recording/pic | wc -l
     - run: bash test.sh
-    - name: Upload odc-api log as an artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: odc-api-log
-        path: ./compiled/dashcam-logs.log
     # For some reason upload-artifact is not grabbing subdirectories
     - run: tar cvfz framekm-metadata.tar.gz ./compiled/mnt/data
     - name: Upload framekm metadata files
