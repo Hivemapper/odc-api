@@ -49,12 +49,13 @@ jobs:
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
-        source: s3://hdc-firmware/reference/
+        source: s3://hdc-firmware/cicd-test/reference/
         destination: ./reference
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-west-2
         flags: --recursive
+    - run: ls -l ./reference
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
