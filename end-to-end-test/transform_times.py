@@ -17,7 +17,7 @@ UNPROCESSED_FRAMEKM_PATH = './mnt/data/unprocessed_framekm'
 FRAMEKM_PATH = './mnt/data/framekm'
 DATA_LOGGER_PATH = './mnt/data/data-logger.v1.4.5.db'
 RECORDING_PATH = './tmp/recording/pic'
-FAKE_IMAGE_PATH = './72.jpg'
+FAKE_IMAGE_PATH = './reference/image/72.jpg'
 GPS_LATEST_PATH = './mnt/data/gps/'
 
 def transform_dates(new_base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
