@@ -296,7 +296,7 @@ def main(model_path):
   def worker():
     ie = IECore()
     session = ie.import_network(model_file=model_path, device_name='VPUX')
-    model_hash = 'e9dd3dc1e963110f25d1622b8d94c771c3c389aea7d3f7d1f501ae5cd01d4f16'
+    model_hash = 'd9c004658dcdce348ffdeaa76ac98565cec1bd93c3a94ac38e37eccef7d382bd'
     input_blob = next(iter(session.input_info))
     model_shape = session.input_info[input_blob].input_data.shape[2]
 
