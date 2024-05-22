@@ -122,12 +122,12 @@ export function stationaryDetection(gnssData: GnssRecord[], imuData: ImuRecord[]
     // Pass through a butterworth low pass filter again
 
     // Identify stationary points for each axis of each sensor based on the threshold
-    const acc_x_stationary = thresholdBasedWindowAveraging(acc_x_diff_abs, imuTime, WINDOW_SIZE_MS, ACC_THRESHOLD);
-    const acc_y_stationary = thresholdBasedWindowAveraging(acc_y_diff_abs, imuTime, WINDOW_SIZE_MS, ACC_THRESHOLD);
-    const acc_z_stationary = thresholdBasedWindowAveraging(acc_z_diff_abs, imuTime, WINDOW_SIZE_MS, ACC_THRESHOLD);
-    const gyro_x_stationary = thresholdBasedWindowAveraging(gyro_x_diff_abs, imuTime, WINDOW_SIZE_MS, GYRO_THRESHOLD);
-    const gyro_y_stationary = thresholdBasedWindowAveraging(gyro_y_diff_abs, imuTime, WINDOW_SIZE_MS, GYRO_THRESHOLD);
-    const gyro_z_stationary = thresholdBasedWindowAveraging(gyro_z_diff_abs, imuTime, WINDOW_SIZE_MS, GYRO_THRESHOLD);
+    const acc_x_stationary = thresholdBasedWindowAveraging(acc_x_diff_abs, gnssTime, WINDOW_SIZE_MS, ACC_THRESHOLD);
+    const acc_y_stationary = thresholdBasedWindowAveraging(acc_y_diff_abs, gnssTime, WINDOW_SIZE_MS, ACC_THRESHOLD);
+    const acc_z_stationary = thresholdBasedWindowAveraging(acc_z_diff_abs, gnssTime, WINDOW_SIZE_MS, ACC_THRESHOLD);
+    const gyro_x_stationary = thresholdBasedWindowAveraging(gyro_x_diff_abs, gnssTime, WINDOW_SIZE_MS, GYRO_THRESHOLD);
+    const gyro_y_stationary = thresholdBasedWindowAveraging(gyro_y_diff_abs, gnssTime, WINDOW_SIZE_MS, GYRO_THRESHOLD);
+    const gyro_z_stationary = thresholdBasedWindowAveraging(gyro_z_diff_abs, gnssTime, WINDOW_SIZE_MS, GYRO_THRESHOLD);
 
     // For gyro and accel ensure 2 out of the three axes are stationary
     // OR the gyro and accel together to try to capture everything
@@ -153,6 +153,24 @@ export function stationaryDetection(gnssData: GnssRecord[], imuData: ImuRecord[]
             combined_gyro_accel[i] = false;
         }
     }
+
+    // Check all arrays are the same length
+    console.log('stationary length: ', combined_gyro_accel.length);
+    console.log('gnssTime length: ', gnssTime.length);
+    console.log('gnssSpeed length: ', gnssSpeed.length);
+    console.log('acc_x length: ', acc_x.length);
+    console.log('acc_y length: ', acc_y.length);
+    console.log('acc_z length: ', acc_z.length);
+    console.log('gyro_x length: ', gyro_x.length);
+    console.log('gyro_y length: ', gyro_y.length);
+    console.log('gyro_z length: ', gyro_z.length);
+    console.log('acc_x_diff_abs length: ', acc_x_diff_abs.length);
+    console.log('acc_y_diff_abs length: ', acc_y_diff_abs.length);
+    console.log('acc_z_diff_abs length: ', acc_z_diff_abs.length);
+    console.log('gyro_x_diff_abs length: ', gyro_x_diff_abs.length);
+    console.log('gyro_y_diff_abs length: ', gyro_y_diff_abs.length);
+    console.log('gyro_z_diff_abs length: ', gyro_z_diff.length);
+
     const resultDict = {
         stationary: combined_gyro_accel,
         gnssTime: gnssTime,
@@ -404,13 +422,9 @@ for (const session in allData)  {
 console.log('GNSS data length: ', gnssData.length);
 console.log('IMU data length: ', imuData.length);
 
+let OverallResult = {};
+
+
 const result = stationaryDetection(gnssData, imuData);
-// Create dictionary with result, gnssTime, and gnss speed
-const resultDict = {
-    stationary: result,
-    gnssTime: gnssData.map(gnssRecord => gnssRecord.system_time),
-    gnssSpeed: gnssData.map(gnssRecord => gnssRecord.speed)
-};
-console.log(resultDict.gnssSpeed.length);
-console.log(resultDict.gnssTime.length);
-console.log('Result length: ', result.length);
+// Output result to json
+writeToJSONFile(result, '/Users/rogerberman/hivemapper/sensor-fusion/testingScripts/stationary_detection_result.json');
