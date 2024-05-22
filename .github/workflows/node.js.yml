@@ -55,12 +55,13 @@ jobs:
       with:
         python-version: '3.12'
     - run: ls -l ./end-to-end-test
-    - run: python ./end-to-end-test/transform_times.py
-    - run: ls -l ./end-to-end-test/mnt/data
-    - run: ls -l ./end-to-end-test/tmp/recording/pic | wc -l
+    - run: cd ./end-to-end-test
+    - run: python ./transform_times.py
+    - run: ls -l ./mnt/data
+    - run: ls -l ./tmp/recording/pic | wc -l
     - run: bash test.sh
     # For some reason upload-artifact is not grabbing subdirectories
-    - run: tar cvfz framekm-metadata.tar.gz ./end-to-end-test/mnt/data
+    - run: tar cvfz framekm-metadata.tar.gz ./mnt/data
     - name: Upload framekm metadata files
       uses: actions/upload-artifact@v4
       with:
