@@ -3,8 +3,8 @@
 echo "Testing odc-api"
 
 cd ../compiled
-#node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
-node dashcam-api.js 2>&1 | tee dashcam-logs.log &
+node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
+#node dashcam-api.js 2>&1 | tee dashcam-logs.log &
 odc_api_pid=$!
 sleep 40
 
