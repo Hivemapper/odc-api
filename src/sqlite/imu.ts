@@ -3,7 +3,6 @@ import { ImuRecord } from 'types/sqlite';
 import { convertTimestampToDbFormat } from 'util/index';
 
 export const fetchImuLogsByTime  = async (from: number, to: number, session: string): Promise<ImuRecord[]> => {
-    console.log(from, to, session);
     const query = `SELECT * FROM imu WHERE time > ? AND time < ? AND session = ?`;
     const args = [convertTimestampToDbFormat(from), convertTimestampToDbFormat(to), session];
 
