@@ -3,8 +3,9 @@ import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from 'sqlite/config';
+import { imuBasedStationaryDetection } from 'util/stationaryDetection';
 
-const QUERY_WINDOW_SIZE = 10 * 1000;
+const QUERY_WINDOW_SIZE = 20 * 1000;
 
 let session = new DriveSession();
 
@@ -34,6 +35,7 @@ export async function MotionModelController() {
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(), undefined, true
     );
+    const stationary = imuBasedStationaryDetection(gnss, imu);
 
     await session.ingestData(gnss, imu, images);
     await session.getSamplesAndSyncWithDb();
