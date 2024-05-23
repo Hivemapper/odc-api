@@ -57,3 +57,37 @@ export class KalmanFilter {
     this.R = noise;
   }
 }
+
+export class LowPassFilter {
+  private coefficients: number[];
+
+  constructor(cutoffFrequency: number, sampleRate: number, resonance: number = 1) {
+      const thetaC = (2 * Math.PI * cutoffFrequency) / sampleRate;
+      const d = Math.sin(thetaC) / (2 * resonance);
+
+      this.coefficients = [
+          Math.cos(thetaC) / (1 + d),
+          2 * Math.cos(thetaC) / (1 + d),
+          Math.cos(thetaC) / (1 + d),
+          -(1 - d) / (1 + d),
+          0
+      ];
+  }
+
+  filter(input: number[]): number[] {
+      const output: number[] = [];
+      let y1 = 0, y2 = 0, x1 = 0, x2 = 0;
+
+      for (let i = 0; i < input.length; i++) {
+          const x0 = input[i];
+          const y0 = this.coefficients[0] * x0 + this.coefficients[1] * x1 + this.coefficients[2] * x2 - this.coefficients[3] * y1 - this.coefficients[4] * y2;
+          output.push(y0);
+          x2 = x1;
+          x1 = x0;
+          y2 = y1;
+          y1 = y0;
+      }
+
+      return output;
+  }
+}
