@@ -21,8 +21,7 @@ const GYRO_THRESHOLD = 0.25;
  * @param imuData The IMU data to use for stationary detection.
  * @returns An array of booleans indicating whether each data point is stationary.
  * Value meaning -> True: stationary, False: not stationary
- * Array length is the same as the input GNSS array if IMU data starts before GNSS data.
- * Array length is one less than the input GNSS array if IMU data starts after GNSS data.
+ * Array length is the same as the input GNSS array
  */
 export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: ImuRecord[])  {
     // Check that imu time starts before gnss time (needed for interpolation)
@@ -147,6 +146,12 @@ export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: Imu
     //     gyro_y_diff_abs: gyro_y_diff_abs,
     //     gyro_z_diff_abs: gyro_z_diff_abs,
     // }
+
+    // realign the combined_gyro_accel array to match the gnssTime array if needed
+    if (combined_gyro_accel.length !== gnssTime.length) {
+        combined_gyro_accel.unshift(combined_gyro_accel[0]);
+    }
+
     return combined_gyro_accel;
 }
 
