@@ -23,6 +23,7 @@ import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 import { Landmark, LandmarksByFrame, TransformedLandmark } from 'types/detections';
 import { insertLandmark } from 'sqlite/landmarks';
+import { getLatestGnssTime } from './lock';
 
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
@@ -228,7 +229,7 @@ const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName
 
 export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {
   const telemetry: FrameKMTelemetry = {
-    systemtime: Date.now(),
+    systemtime: getLatestGnssTime(),
   };
   if (meta.length && meta[0].image_name) {
     try {

@@ -212,7 +212,7 @@ export const getCachedValue = (key: string) => {
 let FAST_SPEED_COLLECTION_MODE = false;
 export const getDX = () => {
   let dx = getCachedValue('DX');
-  if (FAST_SPEED_COLLECTION_MODE && CAMERA_TYPE === CameraType.Hdc) {
+  if (FAST_SPEED_COLLECTION_MODE) {
     dx *= 1.5;
   }
   return Math.round(dx);

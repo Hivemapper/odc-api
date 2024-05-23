@@ -4,6 +4,7 @@ import { promises as Fs } from 'fs';
 import { LORA_RESPONSE_FOLDER } from 'config';
 import { initDirectory } from 'util/files';
 import { createLoraFile } from 'util/lora';
+import { getLatestGnssTime } from 'util/lock';
 
 const router = Router();
 
@@ -32,7 +33,7 @@ router.post('/ping', async (req: Request, res: Response) => {
     const { payload = '' } = req.body;
     const buffer = Buffer.from(payload);
     const encoded = buffer.toString('base64');
-    const timestamp = Date.now();
+    const timestamp = getLatestGnssTime();
     const content = {
       timestamp,
       message_id: 1,
