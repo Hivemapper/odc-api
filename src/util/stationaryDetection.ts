@@ -1,5 +1,5 @@
 import { GnssRecord, ImuRecord } from 'types/sqlite';
-import { LowPassFilter } from 'util/filter';
+import { LowPassFilter } from 'util/filters';
 
 // Filter constants
 const RAW_SIGNAL_CUTOFF_FREQUENCY = 0.9; // 0.25
