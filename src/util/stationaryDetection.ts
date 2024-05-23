@@ -25,8 +25,9 @@ const GYRO_THRESHOLD = 0.25;
  */
 export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: ImuRecord[])  {
     // Check that imu time starts before gnss time (needed for interpolation)
+    let localGnssDataCopy = gnssData.slice();
     if (imuData[0].system_time > gnssData[0].system_time) {
-        gnssData.shift();
+        localGnssDataCopy.shift();
     }
     // extract out all sensor data into individual arrays
     let acc_x: number[] = [];
@@ -48,7 +49,7 @@ export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: Imu
     let gnssTime: number[] = [];
     let hdop: number[] = [];
     let gnssSpeed: number[] = [];
-    for (const gnssRecord of gnssData) {
+    for (const gnssRecord of localGnssDataCopy) {
         gnssTime.push(gnssRecord.system_time);
         hdop.push(gnssRecord.hdop);
         gnssSpeed.push(gnssRecord.speed);
@@ -147,8 +148,8 @@ export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: Imu
     //     gyro_z_diff_abs: gyro_z_diff_abs,
     // }
 
-    // realign the combined_gyro_accel array to match the gnssTime array if needed
-    if (combined_gyro_accel.length !== gnssTime.length) {
+    // realign the combined_gyro_accel array to match the gnssData array if needed
+    if (combined_gyro_accel.length !== gnssData.length) {
         combined_gyro_accel.unshift(combined_gyro_accel[0]);
     }
 
