@@ -30,6 +30,7 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm run build
+    - run: npm run compile-gh --camera=github-linux-environment
     - name: Download the end-to-end test data
       run: bash download_test_data.sh
       working-directory: ./end-to-end-test
