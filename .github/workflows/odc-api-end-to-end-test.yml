@@ -32,6 +32,7 @@ jobs:
     - run: npm run build
     - name: Download the end-to-end test data
       run: bash download_test_data.sh
+      working-directory: ./end-to-end-test
     - run: ls -l ./end-to-end-test/reference
     - uses: actions/setup-python@v5
       with:
