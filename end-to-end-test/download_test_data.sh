@@ -4,9 +4,9 @@ mkdir -p ./reference/metadata
 mkdir -p ./reference/image
 
 echo "Downloading database"
-wget -O ./reference/data-logger.v1.4.5.db https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/dbs/data-logger.v1.4.5.db
-wget -O ./reference/data-logger.v1.4.5.db-shm https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/dbs/data-logger.v1.4.5.db-shm
-wget -O ./reference/data-logger.v1.4.5.db-wal https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/dbs/data-logger.v1.4.5.db-wal
+wget -O ./data-logger.v1.4.5.db https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/dbs/data-logger.v1.4.5.db
+wget -O ./data-logger.v1.4.5.db-shm https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/dbs/data-logger.v1.4.5.db-shm
+wget -O ./data-logger.v1.4.5.db-wal https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/dbs/data-logger.v1.4.5.db-wal
 
 echo "Downloading metadata"
 wget -O ./reference/metadata/km_20240521_202027_3_0.json https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/reference/metadata/km_20240521_202027_3_0.json
