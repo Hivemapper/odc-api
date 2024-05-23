@@ -10,6 +10,7 @@ import { GnssDopKpi } from 'types/instrumentation';
 import { sleep } from 'util/index';
 import { fetchMagnetometerLogsByTime } from './magnetometer';
 import { writeFile } from 'fs';
+import { getLatestGnssTime } from 'util/lock';
 
 let accumulated = 0;
 let accumDuration = 0;
@@ -33,8 +34,7 @@ export const querySensorData = async (
     // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
     // Note: if `until` argument is explicitly provided, we do not restrict it.
     if (until === undefined) {
-      // until = since + 120 * 1000;
-      until = Math.min(since + 120 * 1000,  Date.now());
+      until = Math.min(since + 120 * 1000, getLatestGnssTime());
     }
 
     const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);

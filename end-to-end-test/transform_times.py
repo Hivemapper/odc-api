@@ -132,6 +132,11 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
     # insert or update key 'isEndToEndTestingEnabled' to 'true' in the config table
     cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isEndToEndTestingEnabled', 'true')")
 
+    # replace all session ids with '111111'
+    # TODO: use a test DB that doesn't need this
+    cursor.execute("UPDATE gnss set session = '111111'")
+    cursor.execute("UPDATE imu set session = '111111'")
+
     delete_first_gnss_entries(cursor)
 
 # create latest.log file
