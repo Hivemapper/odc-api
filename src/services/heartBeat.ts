@@ -22,6 +22,7 @@ import * as console from 'console';
 import { isPrivateLocation } from 'util/privacy';
 import { fileExists } from 'util/index';
 import { insertErrorLog } from 'sqlite/error';
+import { getConfig } from 'sqlite/config';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -62,6 +63,10 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 };
 
 export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
+  if (await getConfig('isEndToEndTestingEnabled')) {
+    return true;
+  }
+
   try {
     const result = spawnSync('systemctl', ['is-active', 'camera-bridge'], {
       encoding: 'utf-8',
@@ -184,7 +189,12 @@ export const HeartBeatService: IService = {
             setTime();
           }
           if (hasBeenLocked && gpsSample.timestamp) {
-            setGnssTime((new Date(gpsSample.timestamp)).getTime());
+            let gnssTime = new Date(gpsSample.timestamp).getTime();
+            if (await getConfig('isEndToEndTestingEnabled')) {
+              gnssTime = Date.now(); // override gnssTime for end to end testing
+            }
+            setGnssTime(gnssTime);
+
           }
           if (!wasTimeResolved && gpsSample.time_resolved === 1) {
             wasTimeResolved = true;
