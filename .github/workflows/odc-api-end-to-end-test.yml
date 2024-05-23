@@ -30,26 +30,8 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm run build
-    - run: npm run compile-gh --camera=github-linux-environment 
-    - uses: keithweaver/aws-s3-github-action@v1.0.0
-      with:
-        command: cp
-        source: s3://hdc-firmware/cicd-test/dbs
-        destination: ./end-to-end-test
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-west-2
-        flags: --recursive
-    - name: Download reference data from s3
-      uses: keithweaver/aws-s3-github-action@v1.0.0
-      with:
-        command: cp
-        source: s3://hdc-firmware/cicd-test/reference/
-        destination: ./end-to-end-test/reference
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-west-2
-        flags: --recursive
+    - name: Download the end-to-end test data
+      run: bash download_test_data.sh
     - run: ls -l ./end-to-end-test/reference
     - uses: actions/setup-python@v5
       with:
