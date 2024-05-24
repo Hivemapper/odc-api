@@ -73,23 +73,13 @@ def move_db(source_path: str, destination_path: str) -> None:
         else:
             print('Skipping copy of', datalogger, 'as it does not exist')
 
-# Remove the old database entries and manipulate the data for this particular db to work
-# TODO: remove the need to manipulate the data
+# Remove the old database entries and enable end-to-end testing
 def cleanup_db(cursor: sqlite3.Cursor) -> None:
     cursor.execute("DELETE FROM frames")
     cursor.execute("DELETE FROM framekms")
 
     # insert or update key 'isEndToEndTestingEnabled' to 'true' in the config table
     cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isEndToEndTestingEnabled', 'true')")
-
-    # replace all session ids with '111111'
-    # TODO: use a test DB that doesn't need this
-    cursor.execute("UPDATE gnss set session = '111111'")
-    cursor.execute("UPDATE imu set session = '111111'")
-
-    # delete the first 3415 entries in the gnss table
-    # TODO: remove this when we have a test DB that doesn't need this
-    cursor.execute("DELETE FROM gnss ORDER BY id ASC LIMIT 3415")
 
 # create latest.log file so the odc-api knows where to start in the db
 def generate_latest_log(gnss_date: datetime, testname: str) -> None:
