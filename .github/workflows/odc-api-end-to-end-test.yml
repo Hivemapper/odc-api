@@ -43,8 +43,8 @@ jobs:
       working-directory: ./end-to-end-test
     - run: bash test.sh
       working-directory: ./end-to-end-test
-    # For some reason upload-artifact is not grabbing subdirectories
-    - run: tar cvfz test-results.tar.gz `find ./end-to-end-test -type d -name "results"`
+    - name: Create tarball of test results
+      run: tar cvfz test-results.tar.gz `find ./end-to-end-test -type d -name "results"`
     - name: Upload logs and framekm metadata files
       uses: actions/upload-artifact@v4
       with:
