@@ -38,46 +38,6 @@ def transform_dates(new_base_date: datetime, old_base_date: datetime, date_objec
 
     return new_dates
 
-
-def fix_system_dates(new_base_date: datetime, old_date: datetime, cursor: sqlite3.Cursor, table: str) -> None:
-    time_field = 'system_time' if table == 'gnss' else 'time'
-    cursor.execute(f"SELECT id, {time_field} FROM {table} ORDER BY id ASC")
-    rows = cursor.fetchall()
-
-    # Convert fetched rows to a list of (id, datetime) tuples
-    original_dates = [(row[0], transform_to_datetime(row[1])) for row in rows]
-    # Separate the ids and the datetime objects
-    ids: List[str] = [date[0] for date in original_dates]
-    date_objects: List[datetime] = [date[1] for date in original_dates]
-
-    # Transform the dates
-    new_dates = transform_dates(new_base_date, old_date, date_objects)
-
-    # Update the original database entries with the new dates
-    for date_id, new_date in zip(ids, new_dates):
-        cursor.execute(f"UPDATE {table} SET {time_field} = ? WHERE id = ?",
-                       (new_date.strftime('%Y-%m-%d %H:%M:%S.%f'), date_id))
-
-def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
-    default_time = datetime(2020, 1, 1, 0, 0, 0, 0).strftime('%Y-%m-%d %H:%M:%S.%f')
-    gnss_time = cursor.execute(
-            f"SELECT time FROM gnss WHERE time > '{default_time}' ORDER BY id ASC LIMIT 1").fetchone()[0]
-    gnss_time = transform_to_datetime(gnss_time)
-    print('old gnss time:', gnss_time)
-
-    # get all gnss times 
-    rows = cursor.execute("SELECT id, time FROM gnss ORDER BY id ASC").fetchall()
-    ids = [row[0] for row in rows]
-    dates = [transform_to_datetime(row[1]) for row in rows]
-
-    new_dates = transform_dates(new_base_date, gnss_time, dates)
-
-    for date_id, new_date in zip(ids, new_dates):
-        cursor.execute("UPDATE gnss SET time = ? WHERE id = ?",
-                       (new_date.strftime('%Y-%m-%d %H:%M:%S.%f'), date_id))
-
-
-
 # Generate images from the new dates
 def generate_images_from_date(base_date: datetime, testname: str) -> None:
     # create 10 frames per second starting from the base date

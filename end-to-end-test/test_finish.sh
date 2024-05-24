@@ -23,11 +23,11 @@ check_results () {
   reference_files=$reference_path/metadata/*
   result_files=$metadata_path/*
 
+  # TODO: More robust way to match up metadata files. We're assuming that the files are in the same order
   for ((i=0; i<${#result_files[@]}; i++)); do
     result_file=${result_files[$i]}
     reference_file=${reference_files[$i]}
 
-    # del(.bundle.name, .frames.[].t)
     # sorts the keys in the json files and removes the time based fields
     jq --sort-keys . $result_file > result.json
     jq --sort-keys . $reference_file > reference.json
