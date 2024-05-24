@@ -37,8 +37,6 @@ export const querySensorData = async (
       until = since + 120 * 1000;
     }
 
-    console.log(`until ${until}`);
-
     const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {
         const imuSince = gnss[0].system_time;

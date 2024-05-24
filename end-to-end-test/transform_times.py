@@ -129,22 +129,25 @@ def transform_db(testname: str) -> None:
     cleanup_db(cursor)
 
     # Get the original date from the first entry in the gnss table
-    old_base_date_str = cursor.execute(
+    old_gnss_date_str = cursor.execute(
         "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
-    old_base_date = transform_to_datetime(old_base_date_str)
+    old_gnss_date = transform_to_datetime(old_gnss_date_str)
 
     old_system_date_str = cursor.execute(
         "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
     old_system_date = transform_to_datetime(old_system_date_str)
-    print(old_system_date_str, old_system_date)
 
+    print('Creating fake images starting at date:', old_system_date)
     generate_images_from_date(old_system_date, testname)
-    generate_latest_log(old_base_date, testname)
-    print('Generated images')
+
+    print('Generating latest.log file based on the gnss date: ', old_gnss_date)
+    generate_latest_log(old_gnss_date, testname)
 
     # Commit changes and close the connection
     conn.commit()
     conn.close()
+
+    print('Done transforming the db for test:', testname)
 
 def main() -> None:
     with open('tests.txt') as f:

@@ -189,13 +189,7 @@ export const HeartBeatService: IService = {
             setTime();
           }
           if (hasBeenLocked && gpsSample.timestamp) {
-            const gnssTime = new Date(gpsSample.timestamp).getTime();
-            // if (await getConfig('isEndToEndTestingEnabled')) {
-            //   gnssTime = Date.now(); // override gnssTime for end to end testing
-            // }
-            console.log('setting gnsstime to ', gnssTime, 'from', gpsSample.timestamp);
-            setGnssTime(gnssTime);
-
+            setGnssTime(new Date(gpsSample.timestamp).getTime());
           }
           if (!wasTimeResolved && gpsSample.time_resolved === 1) {
             wasTimeResolved = true;
