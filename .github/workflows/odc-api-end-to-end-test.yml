@@ -49,7 +49,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: framekm-metadata
-        path: ./framekm-metadata.tar.gz
+        path: ./test-results.tar.gz
     - name: Evaluate the end state of the test
       run: bash test_finish.sh
       working-directory: ./end-to-end-test
