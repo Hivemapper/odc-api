@@ -101,6 +101,7 @@ def transform_to_datetime(date: str) -> datetime:
         dateobj = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
         dateobj = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    dateobj = dateobj.replace(tzinfo=timezone.utc)
     return dateobj
 
 # Copy the db to DEST_DATA_LOGGER_PATH before making changes
@@ -179,15 +180,25 @@ def transform_db(testname: str) -> None:
     print('Setting base date to:', new_base_date)
     # Get the original date from the first entry in the gnss table
     old_base_date_str = cursor.execute(
-        "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
+        "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
     old_base_date = transform_to_datetime(old_base_date_str)
-    fix_system_dates(new_base_date, old_base_date, cursor, 'gnss')
-    fix_gnss_dates(new_base_date, cursor)
+
+    old_system_date_str = cursor.execute(
+        "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
+    old_system_date = transform_to_datetime(old_system_date_str)
+    print(old_system_date_str, old_system_date)
+
+    # os.system(f'gdate +%s')
+    # os.system(f'sudo gdate -s @{int(old_base_date.timestamp() * 1_000_000)}')
+    # fix_system_dates(new_base_date, old_system_date, cursor, 'gnss')
+    # fix_gnss_dates(new_base_date, cursor)
     print('Updated gnss base dates')
-    fix_system_dates(new_base_date, old_base_date, cursor, 'imu')
+    # fix_system_dates(new_base_date, old_system_date, cursor, 'imu')
     print('Updated imu base dates')
-    generate_images_from_date(new_base_date,  testname)
-    generate_latest_log(new_base_date, testname)
+    # generate_images_from_date(new_base_date,  testname)
+    # generate_latest_log(new_base_date, testname)
+    generate_images_from_date(old_system_date, testname)
+    generate_latest_log(old_base_date, testname)
     print('Generated images')
 
     # Commit changes and close the connection

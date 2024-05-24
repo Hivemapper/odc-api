@@ -27,11 +27,14 @@ check_results () {
     result_file=${result_files[$i]}
     reference_file=${reference_files[$i]}
 
+    # del(.bundle.name, .frames.[].t)
     # sorts the keys in the json files and removes the time based fields
-    result_contents=`jq --sort-keys 'del(.bundle.name, .frames.[].t)' $result_file`
-    reference_contents=`jq --sort-keys 'del(.bundle.name, .frames.[].t)' $reference_file`
+    jq --sort-keys . $result_file > result.json
+    jq --sort-keys . $reference_file > reference.json
 
-    diff -q <(echo $result_contents) <(echo $reference_contents) 2> /dev/null
+    echo $result_contents
+
+    diff result.json reference.json
     result=$?
     if [[ $result -eq 0 ]]
     then

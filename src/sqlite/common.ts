@@ -34,8 +34,10 @@ export const querySensorData = async (
     // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
     // Note: if `until` argument is explicitly provided, we do not restrict it.
     if (until === undefined) {
-      until = Math.min(since + 120 * 1000, getLatestGnssTime());
+      until = since + 120 * 1000;
     }
+
+    console.log(`until ${until}`);
 
     const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {

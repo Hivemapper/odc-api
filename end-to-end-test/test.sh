@@ -38,7 +38,7 @@ run_test () {
     # node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs/${testname}.log &
     node dashcam-api.js 2>&1 & #| tee dashcam-logs.log & #  &
     odc_api_pid=$!
-    sleep 40
+    sleep 30
 
     echo "done"
     kill $odc_api_pid
