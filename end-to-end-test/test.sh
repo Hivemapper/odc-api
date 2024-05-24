@@ -35,8 +35,8 @@ move_contents_to_results() {
 run_test () {
     testname=$1
 
-    # node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs/${testname}.log &
-    node dashcam-api.js 2>&1 & #| tee dashcam-logs.log & #  &
+    node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs/${testname}.log &
+    # node dashcam-api.js 2>&1 & #| tee dashcam-logs.log & #  &
     odc_api_pid=$!
     sleep 30
 
