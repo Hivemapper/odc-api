@@ -6,19 +6,28 @@ from datetime import datetime, timezone, timedelta
 from typing import List
 
 # HDC Paths
-SOURCE_DATA_LOGGER_PATHS = [
-    './data-logger.v1.4.5.db', 
-    './data-logger.v1.4.5.db-shm', 
-    './data-logger.v1.4.5.db-wal'
-]
-DATA_PATH = './mnt/data'
-METADATA_PATH = './mnt/data/metadata'
-UNPROCESSED_FRAMEKM_PATH = './mnt/data/unprocessed_framekm'
-FRAMEKM_PATH = './mnt/data/framekm'
-DATA_LOGGER_PATH = './mnt/data/data-logger.v1.4.5.db'
-RECORDING_PATH = './tmp/recording/pic'
-FAKE_IMAGE_PATH = './reference/image/72.jpg'
-GPS_LATEST_PATH = './mnt/data/gps/'
+
+# problem: hard to delete the transformed files
+DATA_LOGGER_NAME = 'data-logger.v1.4.5.db'
+DATA_LOGGER_NAMES = [DATA_LOGGER_NAME, 'data-logger.v1.4.5.db-shm', 'data-logger.v1.4.5.db-wal']
+
+def source_data_logger_path(testname: str, datalogger: str) -> str:
+    return os.path.join('./tests', testname, 'reference/db/', datalogger)
+
+def dest_data_logger_path(testname: str, datalogger: str) -> str:
+    return os.path.join(transformed_file_directory(testname), 'db', datalogger)
+
+def fake_image_path(testname: str) -> str:
+    return os.path.join('./tests', testname, 'reference/image/72.jpg')
+
+def recording_path(testname: str, imgname: str) -> str:
+    return os.path.join(transformed_file_directory(testname), 'image', imgname)
+
+def gps_latest_path(testname: str) -> str:
+    return os.path.join(transformed_file_directory(testname), 'gps/latest.log')
+
+def transformed_file_directory(testname: str) -> str:
+    return os.path.join('./tests', testname, 'reference/transformed')
 
 def transform_dates(new_base_date: datetime, old_base_date: datetime, date_objects: List[datetime]) -> List[datetime]:
     if not date_objects:
@@ -43,9 +52,6 @@ def fix_system_dates(new_base_date: datetime, old_date: datetime, cursor: sqlite
     # Separate the ids and the datetime objects
     ids: List[str] = [date[0] for date in original_dates]
     date_objects: List[datetime] = [date[1] for date in original_dates]
-    # print(new_base_date)
-    # print(old_date)
-    # print(date_objects[:10])
 
     # Transform the dates
     new_dates = transform_dates(new_base_date, old_date, date_objects)
@@ -56,12 +62,7 @@ def fix_system_dates(new_base_date: datetime, old_date: datetime, cursor: sqlite
                        (new_date.strftime('%Y-%m-%d %H:%M:%S.%f'), date_id))
 
 def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
-    # find the first gnss entry with time_resolved = 1
-    # gnss_time = cursor.execute(
-    #         "SELECT id, time FROM gnss WHERE time_resolved = 1 ORDER BY id ASC LIMIT 1").fetchone()[1]
-    # find the gnss entry with the smallest id
     default_time = datetime(2020, 1, 1, 0, 0, 0, 0).strftime('%Y-%m-%d %H:%M:%S.%f')
-    # print('default time:', default_time)
     gnss_time = cursor.execute(
             f"SELECT time FROM gnss WHERE time > '{default_time}' ORDER BY id ASC LIMIT 1").fetchone()[0]
     gnss_time = transform_to_datetime(gnss_time)
@@ -71,7 +72,6 @@ def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
     rows = cursor.execute("SELECT id, time FROM gnss ORDER BY id ASC").fetchall()
     ids = [row[0] for row in rows]
     dates = [transform_to_datetime(row[1]) for row in rows]
-    # print(dates[:10])
 
     new_dates = transform_dates(new_base_date, gnss_time, dates)
 
@@ -82,7 +82,7 @@ def fix_gnss_dates(new_base_date: datetime, cursor: sqlite3.Cursor) -> None:
 
 
 # Generate images from the new dates
-def generate_images_from_date(base_date: datetime) -> None:
+def generate_images_from_date(base_date: datetime, testname: str) -> None:
     # create 10 frames per second starting from the base date
     for i in range(0, 10000):
         new_date = base_date + timedelta(seconds=i/10)
@@ -90,8 +90,11 @@ def generate_images_from_date(base_date: datetime) -> None:
         new_date_micros = int(new_date.timestamp() * 1_000_000)
         new_date_name = f'{str(new_date_micros)[:10]}_{
             str(new_date_micros)[10:]}.jpg'
-        shutil.copy(FAKE_IMAGE_PATH,
-                    os.path.join(RECORDING_PATH, new_date_name))
+        
+        recording_path_str = recording_path(testname, new_date_name)
+        os.makedirs(os.path.dirname(recording_path_str), exist_ok=True)
+        shutil.copy(fake_image_path(testname),
+                    recording_path_str)
 
 def transform_to_datetime(date: str) -> datetime:
     try:
@@ -100,26 +103,22 @@ def transform_to_datetime(date: str) -> datetime:
         dateobj = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
     return dateobj
 
-# Create the necessary directories
-def setup_dirs() -> None:
-    shutil.rmtree(RECORDING_PATH, ignore_errors=True)
-    shutil.rmtree(DATA_PATH, ignore_errors=True)
-
-    os.makedirs(RECORDING_PATH, exist_ok=True)
-    os.makedirs(METADATA_PATH, exist_ok=True)
-    os.makedirs(UNPROCESSED_FRAMEKM_PATH, exist_ok=True)
-    os.makedirs(FRAMEKM_PATH, exist_ok=True)
-    os.makedirs(GPS_LATEST_PATH, exist_ok=True)
-
-    for datalogger in SOURCE_DATA_LOGGER_PATHS:
-        if os.path.exists(datalogger):
-            print('Copying', datalogger, 'to', DATA_PATH)
-            shutil.copy2(datalogger, DATA_PATH)
+# Copy the db to DEST_DATA_LOGGER_PATH before making changes
+def move_db_to_destination_directory(testname: str) -> None:
+    for datalogger in DATA_LOGGER_NAMES:
+        source_path = source_data_logger_path(testname, datalogger)
+        destination_path = dest_data_logger_path(testname, datalogger)
+        
+        if os.path.exists(source_path):
+            print('Copying', datalogger, 'to', destination_path)
+            os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+            shutil.copy2(source_path, destination_path)
         else:
             print('Skipping copy of', datalogger, 'as it does not exist')
     
 
 # delete the first 3415 entries in the gnss table
+# TODO: remove this when we have a test DB that doesn't need this
 def delete_first_gnss_entries(cursor: sqlite3.Cursor) -> None:
     cursor.execute("DELETE FROM gnss ORDER BY id ASC LIMIT 3415")
 
@@ -140,8 +139,11 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
     delete_first_gnss_entries(cursor)
 
 # create latest.log file
-def generate_latest_log(base_date: datetime) -> None:
-    with open(os.path.join(GPS_LATEST_PATH, 'latest.log'), 'w') as f:
+def generate_latest_log(base_date: datetime, testname: str) -> None:
+    gps_latest_path_str = gps_latest_path(testname)
+    os.makedirs(os.path.dirname(gps_latest_path_str), exist_ok=True)
+
+    with open(gps_latest_path_str, 'w') as f:
         import json
         result = {
             'ttff': 4000,
@@ -157,10 +159,17 @@ def generate_latest_log(base_date: datetime) -> None:
         }
         json.dump(result, f, indent=4)
 
-def main() -> None:
-    setup_dirs()
+def transform_db(testname: str) -> None:
+    print('Transforming the db for test:', testname)
 
-    conn = sqlite3.connect(DATA_LOGGER_PATH)
+    # remove the old transformed files
+    shutil.rmtree(transformed_file_directory(testname), ignore_errors=True)
+
+    move_db_to_destination_directory(testname)
+
+    database_path = dest_data_logger_path(testname, DATA_LOGGER_NAME)
+    print(database_path)
+    conn = sqlite3.connect(database_path)
     cursor = conn.cursor()
 
     cleanup_db(cursor)
@@ -177,13 +186,19 @@ def main() -> None:
     print('Updated gnss base dates')
     fix_system_dates(new_base_date, old_base_date, cursor, 'imu')
     print('Updated imu base dates')
-    generate_images_from_date(new_base_date)
-    generate_latest_log(new_base_date)
+    generate_images_from_date(new_base_date,  testname)
+    generate_latest_log(new_base_date, testname)
     print('Generated images')
 
     # Commit changes and close the connection
     conn.commit()
     conn.close()
+
+def main() -> None:
+    with open('tests.txt') as f:
+        for testname in f:
+            transform_db(testname.strip())
+    
 
 
 if __name__ == '__main__':
