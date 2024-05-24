@@ -433,8 +433,8 @@ export const addFramesToFrameKm = async (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop,
-          time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, clock, satellites_used, dilution, eph, frame_idx, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -525,6 +525,11 @@ export const addFramesToFrameKm = async (
             fkm_id,
             frame_idx,
           );
+          let clock = 0;
+          const parts = row.image_name.split('_');
+          if (parts.length === 3) {
+            clock = Number(parts[2].replace('.jpg', ''));
+          }
 
           await runAsync(insertSQL, [
             fkm_id,
@@ -550,6 +555,7 @@ export const addFramesToFrameKm = async (
             row.ydop,
             Math.round(Number(row.time)),
             Math.round(Number(row.system_time)),
+            Math.round(Number(clock)),
             row.satellites_used,
             row.dilution,
             row.eph,

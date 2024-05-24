@@ -40,12 +40,13 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         aveDetection.lon = detections[0].sign_lon;
         aveDetection.label = detections[0].label;
       } else if (detections.length < 5) {
-        const [lat, lon] = averageCoordinates(detections);
-        if (lat && lat !== Infinity && lat !== -Infinity) {
-          aveDetection.lat = lat;
-          aveDetection.lon = lon;
-          aveDetection.label = detections[0].label;
-        }
+        // pick the closest one by detection.distance
+        const closest = detections.reduce((prev, curr) => {
+          return prev.distance < curr.distance ? prev : curr;
+        });
+        aveDetection.lat = closest.sign_lat;
+        aveDetection.lon = closest.sign_lon;
+        aveDetection.label = closest.label;
       } else {
         const coordinates = detections.map((d: any) => [d.sign_lat, d.sign_lon]);
         const kmeans = new KMeans();
@@ -101,8 +102,10 @@ export function calculatePositionsForDetections(frame: FrameKmRecord, detections
       const rawCenterY = (box[1] + box[3]) / 2;
 
       // Adjust for roll
-      const centerX = cosRoll * (rawCenterX - imageCenterX) - sinRoll * (rawCenterY - imageCenterY) + imageCenterX;
-      const centerY = sinRoll * (rawCenterX - imageCenterX) + cosRoll * (rawCenterY - imageCenterY) + imageCenterY;
+      // const centerX = cosRoll * (rawCenterX - imageCenterX) - sinRoll * (rawCenterY - imageCenterY) + imageCenterX;
+      // const centerY = sinRoll * (rawCenterX - imageCenterX) + cosRoll * (rawCenterY - imageCenterY) + imageCenterY;
+      const centerX = rawCenterX;
+      const centerY = rawCenterY;
 
       // Calculate horizontal and vertical angles
       const hor_angle = (centerX - imageCenterX) * hfov / stereo_width;

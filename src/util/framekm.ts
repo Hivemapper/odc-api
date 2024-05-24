@@ -8,6 +8,7 @@ import {
   createWriteStream,
   writeFileSync,
   promises,
+  existsSync,
 } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -123,10 +124,18 @@ export const concatFrames = async (
               await insertLandmark({ lat, lon, alt, landmark_id, label, vehicle_heading, detections }, landmarkPublicPath);
               console.log('====== ADDED LANDMARK!!!! ==== ');
               try {
-                await promises.copyFile(
-                  fPath,
-                  landmarkPath,
-                );
+                const detectionPath = `/data/recording/detections/${file}_detections.jpeg`;
+                if (existsSync(detectionPath)) {
+                  await promises.copyFile(
+                    detectionPath,
+                    landmarkPath,
+                  );
+                } else {
+                  await promises.copyFile(
+                    fPath,
+                    landmarkPath,
+                  );
+                }
               } catch {
                 console.log('Failed copying the landmark file');
               }
