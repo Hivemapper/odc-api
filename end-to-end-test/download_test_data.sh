@@ -14,7 +14,7 @@ download_test_data () {
     wget -O ./tests/${testname}/reference/db/data-logger.v1.4.5.db-wal https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/tests/test1/db/data-logger.v1.4.5.db-wal
 
     echo "Downloading metadata"
-    wget -O ./tests/${testname}/reference/metadata/km_20240521_202027_3_0.json https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/tests/test1/metadata/km_20240521_202027_3_0.json
+    wget -O ./tests/${testname}/reference/metadata/km_20240510_021044_3_0.json https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/tests/test1/metadata/km_20240510_021044_3_0.json
 
     echo "Downloading image"
     wget -O ./tests/${testname}/reference/image/72.jpg https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/reference/image/72.jpg
