@@ -34,7 +34,7 @@ jobs:
     - name: Download the end-to-end test data
       run: bash download_test_data.sh
       working-directory: ./end-to-end-test
-    - run: ls -l ./end-to-end-test/reference
+    - run: ls -lR ./end-to-end-test/tests
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
