@@ -5,17 +5,14 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import List
 
-# HDC Paths
-
-# problem: hard to delete the transformed files
 DATA_LOGGER_NAME = 'data-logger.v1.4.5.db'
 DATA_LOGGER_NAMES = [DATA_LOGGER_NAME, 'data-logger.v1.4.5.db-shm', 'data-logger.v1.4.5.db-wal']
 
-def source_data_logger_path(testname: str, datalogger: str) -> str:
-    return os.path.join('./tests', testname, 'reference/db/', datalogger)
+def source_data_logger_path(testname: str) -> str:
+    return os.path.join('./tests', testname, 'reference/db/')
 
-def dest_data_logger_path(testname: str, datalogger: str) -> str:
-    return os.path.join(transformed_file_directory(testname), 'db', datalogger)
+def dest_data_logger_path(testname: str) -> str:
+    return os.path.join(transformed_file_directory(testname), 'db')
 
 def fake_image_path(testname: str) -> str:
     return os.path.join('./tests', testname, 'reference/image/72.jpg')
@@ -104,27 +101,20 @@ def transform_to_datetime(date: str) -> datetime:
     dateobj = dateobj.replace(tzinfo=timezone.utc)
     return dateobj
 
-# Copy the db to DEST_DATA_LOGGER_PATH before making changes
-def move_db_to_destination_directory(testname: str) -> None:
-    for datalogger in DATA_LOGGER_NAMES:
-        source_path = source_data_logger_path(testname, datalogger)
-        destination_path = dest_data_logger_path(testname, datalogger)
-        
+# Copy the db to from source to dest
+def move_db(source_path: str, destination_path: str) -> None:
+    os.makedirs(destination_path, exist_ok=True)
+
+    for datalogger in DATA_LOGGER_NAMES:    
         if os.path.exists(source_path):
             print('Copying', datalogger, 'to', destination_path)
-            os.makedirs(os.path.dirname(destination_path), exist_ok=True)
-            shutil.copy2(source_path, destination_path)
+            shutil.copy2(os.path.join(source_path, datalogger), 
+                         os.path.join(destination_path, datalogger))
         else:
             print('Skipping copy of', datalogger, 'as it does not exist')
-    
 
-# delete the first 3415 entries in the gnss table
-# TODO: remove this when we have a test DB that doesn't need this
-def delete_first_gnss_entries(cursor: sqlite3.Cursor) -> None:
-    cursor.execute("DELETE FROM gnss ORDER BY id ASC LIMIT 3415")
-
-
-# Remove the old database entries
+# Remove the old database entries and manipulate the data for this particular db to work
+# TODO: remove the need to manipulate the data
 def cleanup_db(cursor: sqlite3.Cursor) -> None:
     cursor.execute("DELETE FROM frames")
     cursor.execute("DELETE FROM framekms")
@@ -137,18 +127,21 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
     cursor.execute("UPDATE gnss set session = '111111'")
     cursor.execute("UPDATE imu set session = '111111'")
 
-    delete_first_gnss_entries(cursor)
+    # delete the first 3415 entries in the gnss table
+    # TODO: remove this when we have a test DB that doesn't need this
+    cursor.execute("DELETE FROM gnss ORDER BY id ASC LIMIT 3415")
 
-# create latest.log file
-def generate_latest_log(base_date: datetime, testname: str) -> None:
+# create latest.log file so the odc-api knows where to start in the db
+def generate_latest_log(gnss_date: datetime, testname: str) -> None:
     gps_latest_path_str = gps_latest_path(testname)
     os.makedirs(os.path.dirname(gps_latest_path_str), exist_ok=True)
 
+    # contents of the latest.log file are not important except for the timestamp
     with open(gps_latest_path_str, 'w') as f:
         import json
         result = {
             'ttff': 4000,
-            'timestamp': base_date.strftime('%Y-%m-%d %H:%M:%S.%fZ'),
+            'timestamp': gnss_date.strftime('%Y-%m-%d %H:%M:%S.%fZ'),
             'time_resolved': 1,
             'latitude': 37.7749,
             'longitude': -122.4194,
@@ -166,18 +159,15 @@ def transform_db(testname: str) -> None:
     # remove the old transformed files
     shutil.rmtree(transformed_file_directory(testname), ignore_errors=True)
 
-    move_db_to_destination_directory(testname)
+    source_path = source_data_logger_path(testname)
+    dest_path = dest_data_logger_path(testname)
+    move_db(source_path, dest_path)
 
-    database_path = dest_data_logger_path(testname, DATA_LOGGER_NAME)
-    print(database_path)
-    conn = sqlite3.connect(database_path)
+    conn = sqlite3.connect(os.path.join(dest_path, DATA_LOGGER_NAME))
     cursor = conn.cursor()
 
     cleanup_db(cursor)
 
-    new_base_date = datetime.now(tz=timezone.utc)
-
-    print('Setting base date to:', new_base_date)
     # Get the original date from the first entry in the gnss table
     old_base_date_str = cursor.execute(
         "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
@@ -188,15 +178,6 @@ def transform_db(testname: str) -> None:
     old_system_date = transform_to_datetime(old_system_date_str)
     print(old_system_date_str, old_system_date)
 
-    # os.system(f'gdate +%s')
-    # os.system(f'sudo gdate -s @{int(old_base_date.timestamp() * 1_000_000)}')
-    # fix_system_dates(new_base_date, old_system_date, cursor, 'gnss')
-    # fix_gnss_dates(new_base_date, cursor)
-    print('Updated gnss base dates')
-    # fix_system_dates(new_base_date, old_system_date, cursor, 'imu')
-    print('Updated imu base dates')
-    # generate_images_from_date(new_base_date,  testname)
-    # generate_latest_log(new_base_date, testname)
     generate_images_from_date(old_system_date, testname)
     generate_latest_log(old_base_date, testname)
     print('Generated images')
