@@ -43,14 +43,9 @@ jobs:
       working-directory: ./end-to-end-test
     - run: bash test.sh
       working-directory: ./end-to-end-test
-    - name: Upload odc-api log as an artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: odc-api-log
-        path: ./compiled/dashcam-logs.log
     # For some reason upload-artifact is not grabbing subdirectories
-    - run: tar cvfz framekm-metadata.tar.gz ./end-to-end-test/mnt/data
-    - name: Upload framekm metadata files
+    - run: tar cvfz test-results.tar.gz `find ./end-to-end-test -type d -name "results"`
+    - name: Upload logs and framekm metadata files
       uses: actions/upload-artifact@v4
       with:
         name: framekm-metadata

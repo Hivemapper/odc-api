@@ -29,13 +29,13 @@ move_contents_to_results() {
     rm -rf ../end-to-end-test/tests/${testname}/results
     mkdir -p ../end-to-end-test/tests/${testname}/results
     cp -r ../end-to-end-test/mnt/data* ../end-to-end-test/tests/${testname}/results/
-    cp -r ./dashcam-logs ../end-to-end-test/tests/${testname}/results/
+    cp ./dashcam-logs.log ../end-to-end-test/tests/${testname}/results/
 }
 
 run_test () {
     testname=$1
 
-    node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs/${testname}.log &
+    node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
     # node dashcam-api.js 2>&1 & #| tee dashcam-logs.log & #  &
     odc_api_pid=$!
     sleep 30

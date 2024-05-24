@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO: Use an IAM role to download these files via AWS CLI
+#       The main reason to do this is that it would allow us to
+#       download the tests/ directory directly, whereas HTTP doesn't support this.
 download_test_data () {
     testname=$1
     echo testname: ${testname}
