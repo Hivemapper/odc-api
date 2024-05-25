@@ -23,6 +23,5 @@ download_test_data () {
     wget -O ./tests/${testname}/reference/image/72.jpg https://hdc-firmware.s3.us-west-2.amazonaws.com/cicd-test/reference/image/72.jpg
 }
 
-while IFS=' ' read -r -a testname; do
-    download_test_data ${testname}
-done < tests.txt
+
+download_test_data test1

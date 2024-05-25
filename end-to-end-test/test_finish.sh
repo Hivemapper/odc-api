@@ -61,10 +61,10 @@ check_results () {
   fi
 }
 
-while IFS=' ' read -r -a testname; do
-    echo "Checking results for $testname"
-    check_results $testname
-done < tests.txt
+for testname in $(ls tests); do
+  echo "Checking results for $testname"
+  check_results $testname
+done
 
 if [[ $any_failed -ne 0 ]]; then
   echo "Test suite ended with failures"

@@ -47,8 +47,8 @@ run_test () {
 
 echo "Testing odc-api"
 
-while IFS=' ' read -r -a testname; do
+for testname in $(ls tests); do
     setup_dirs ${testname}
     run_test ${testname}
     move_contents_to_results ${testname}
-done < tests.txt
+done

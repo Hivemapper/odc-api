@@ -140,11 +140,8 @@ def transform_db(testname: str) -> None:
     print('Done transforming the db for test:', testname)
 
 def main() -> None:
-    with open('tests.txt') as f:
-        for testname in f:
-            transform_db(testname.strip())
-    
-
+    for testname in os.listdir('./tests'):
+        transform_db(testname)
 
 if __name__ == '__main__':
     main()
