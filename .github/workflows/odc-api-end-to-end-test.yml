@@ -42,14 +42,17 @@ jobs:
         aws_region: us-west-2
         flags: --recursive
     - run: ls -lR ./end-to-end-test/tests
-    - run: sudo chown -R runner:docker ./end-to-end-test/tests
+    - name: Fix folder permissions
+      run: sudo chown -R runner:docker ./end-to-end-test/tests
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
     - run: ls -l ./end-to-end-test
-    - run: python ./transform_times.py
+    - name: Prepare database for end-to-end test
+      run: python ./transform_times.py
       working-directory: ./end-to-end-test
-    - run: bash test.sh
+    - name: Run end-to-end test
+      run: bash test.sh
       working-directory: ./end-to-end-test
     - name: Create tarball of test results
       run: tar cvfz test-results.tar.gz `find ./end-to-end-test -type d -name "results"`
