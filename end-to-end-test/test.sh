@@ -1,8 +1,18 @@
 #!/bin/bash
 
+setup_configs() {
+    local testname=$1
+
+    # Default values:
+
+    # How long in seconds odc-api should run before the test terminates.
+    TEST_TIMEOUT=30
+
+    source ../end-to-end-test/tests/${testname}/config.sh
+}
 
 setup_dirs() {
-    testname=$1
+    local testname=$1
 
     cd ../compiled
     rm -rf ./dashcam-logs
@@ -21,8 +31,24 @@ setup_dirs() {
     cp ../end-to-end-test/tests/${testname}/reference/transformed/gps/latest.log ../end-to-end-test/mnt/data/gps/
 }
 
+run_test () {
+    local testname=$1
+
+    if [ `uname` == "Darwin" ]; then
+        node dashcam-api.js 2>&1 & 
+    else
+        node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
+    fi
+    local odc_api_pid=$!
+    sleep $TEST_TIMEOUT
+
+    echo "done"
+    kill $odc_api_pid
+    sleep 5
+}
+
 move_contents_to_results() {
-    testname=$1
+    local testname=$1
 
     echo "Moving contents to results"
 
@@ -32,27 +58,10 @@ move_contents_to_results() {
     cp ./dashcam-logs.log ../end-to-end-test/tests/${testname}/results/
 }
 
-run_test () {
-    testname=$1
-
-    # Setup test config
-    source ../end-to-end-test/tests/${testname}/config.sh
-    TEST_TIMEOUT=${TEST_TIMEOUT:-30} # default is 30 seconds
-    echo $TEST_TIMEOUT
-
-    node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
-    # node dashcam-api.js 2>&1 & #| tee dashcam-logs.log & #  &
-    odc_api_pid=$!
-    sleep $TEST_TIMEOUT
-
-    echo "done"
-    kill $odc_api_pid
-    sleep 5
-}
-
 echo "Testing odc-api"
 
 for testname in $(ls tests); do
+    setup_configs ${testname}
     setup_dirs ${testname}
     run_test ${testname}
     move_contents_to_results ${testname}
