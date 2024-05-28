@@ -35,10 +35,15 @@ move_contents_to_results() {
 run_test () {
     testname=$1
 
+    # Setup test config
+    source ../end-to-end-test/tests/${testname}/config.sh
+    ${TEST_TIMEOUT:=30}
+    echo $TEST_TIMEOUT
+
     node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
     # node dashcam-api.js 2>&1 & #| tee dashcam-logs.log & #  &
     odc_api_pid=$!
-    sleep 30
+    sleep $TEST_TIMEOUT
 
     echo "done"
     kill $odc_api_pid
