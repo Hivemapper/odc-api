@@ -37,7 +37,7 @@ run_test () {
 
     # Setup test config
     source ../end-to-end-test/tests/${testname}/config.sh
-    ${TEST_TIMEOUT:=30}
+    TEST_TIMEOUT=${TEST_TIMEOUT:-30} # default is 30 seconds
     echo $TEST_TIMEOUT
 
     node odc-api-github-linux-environment.js 2>&1 | tee dashcam-logs.log &
