@@ -42,7 +42,7 @@ jobs:
         aws_region: us-west-2
         flags: --recursive
     - run: ls -lR ./end-to-end-test/tests
-    - run: chown -R runner:docker ./end-to-end-test/tests
+    - run: sudo chown -R runner:docker ./end-to-end-test/tests
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
