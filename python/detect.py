@@ -45,7 +45,7 @@ def combine_images(images, grid_size, model_size, tensor_type='float16'):
 
         if i < len(images):
             # If there's an image to put in the cell
-            img_path = image.get_path(images[i][0], images[i][1], "/tmp/recording/pic")
+            img_path = image.get_path(images[i][0], images[i][1], "/tmp/recording/pics")
 
             # Read and resize image to fit in the grid cell
             img = None
