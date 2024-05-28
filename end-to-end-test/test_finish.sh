@@ -8,11 +8,10 @@ check_results () {
   echo "Testing odc-api"
   echo "Checking for files in framekm folder"
 
-  framekm_path="./tests/${testname}/results/data/framekm"
-  metadata_path="./tests/${testname}/results/data/metadata"
+  result_path="./tests/${testname}/results/data"
   reference_path="./tests/${testname}/reference"
 
-  if [[ `ls $framekm_path | wc -l` -eq 0 ]]
+  if [[ `ls $result_path/framekm | wc -l` -eq 0 ]]
   then
       echo "No files found in framekm folder"
       exit 1
@@ -20,39 +19,44 @@ check_results () {
 
   echo "Checking contents of metadata folder"
 
-  reference_files=$reference_path/metadata/*
-  result_files=$metadata_path/*
+  for reference_metadata_file in $reference_path/metadata/*; do
+    result_metadata_file=$result_path/metadata/$(basename $reference_metadata_file)
 
-  # TODO: More robust way to match up metadata files. We're assuming that the files are in the same order
-  for ((i=0; i<${#result_files[@]}; i++)); do
-    result_file=${result_files[$i]}
-    reference_file=${reference_files[$i]}
+    # sorts the keys in the json files and pretty prints them
+    jq --sort-keys . $result_metadata_file > result.json
+    if [[ $? -ne 0 ]]
+    then
+      failure=1
+      continue
+    fi
 
-    # sorts the keys in the json files and removes the time based fields
-    jq --sort-keys . $result_file > result.json
-    jq --sort-keys . $reference_file > reference.json
-
-    echo $result_contents
+    jq --sort-keys . $reference_metadata_file > reference.json
+    if [[ $? -ne 0 ]]
+    then
+      failure=1
+      continue
+    fi
 
     diff result.json reference.json
     result=$?
     if [[ $result -eq 0 ]]
     then
-      echo "Metadata file $(basename $result_file) matches reference $(basename $reference_file)"
-    elif [[ $result -eq 1 ]]
-    then
+      echo "Metadata file $(basename $result_metadata_file) matches reference"
+    else
       # TODO: Make the diff visible and clear
-      echo "Metadata file $(basename $result_file) does not match reference $(basename $reference_file)"
-      failure=1
-    elif [[ $result -eq 2 ]]
-    then
-      echo "Metadata file $(basename $result_file) does not exist"
+      echo "Metadata file $(basename $result_metadata_file) does not match reference"
       failure=1
     fi
   done
 
-  find "$metadata_path" -type f -exec basename {} \; | sort > files_in_metadata.txt
-  find "$reference_path/metadata" -type f -exec basename {} \; | sort > files_in_reference.txt
+  # report any unexpected files in the results folder
+  result_files=$(find $result_path/metadata -type f -exec basename {} \; | sort)
+  for result_file in $result_files; do
+    if [[ ! -f $reference_path/metadata/$result_file ]]
+    then
+      echo "Warning: unexpected file $result_file in results folder"
+    fi
+  done
 
   if [[ $failure -ne 0 ]]
   then
