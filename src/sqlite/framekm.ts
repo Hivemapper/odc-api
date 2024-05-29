@@ -9,6 +9,7 @@ import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
+import { writeExif } from 'util/index';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -380,6 +381,17 @@ export const addFramesToFrameKm = async (
           time, system_time, satellites_used, dilution, eph, frame_idx, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
+
+      try {
+        // write necessary exif tags to frames
+        const data = rows.map((row: FrameKmRecord) => ({
+          SourceFile: join(FRAMES_ROOT_FOLDER, row.image_name),
+          Orientation: row.orientation,
+        }));
+        await writeExif(data, FRAMES_ROOT_FOLDER);
+      } catch (error) {
+        console.error('Error writing exif tags:', error);
+      }
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
