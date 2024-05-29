@@ -10,3 +10,6 @@ python/model.blob
 python-test
 python copy
 __pycache__
+end-to-end-test/tests/*
+end-to-end-test/tmp/*
+end-to-end-test/mnt/*
