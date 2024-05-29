@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { CameraResolution, ICameraConfig, ICameraFile, IMU } from 'types';
+import { CameraResolution, CameraType, ICameraConfig, ICameraFile, IMU } from 'types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
@@ -21,6 +21,9 @@ import {
 import {
   CACHED_CAMERA_CONFIG,
   CACHED_RES_CONFIG,
+  CAMERA_TYPE,
+  FOLDER_PURGER_SERVICE,
+  FRAMES_ROOT_FOLDER,
   NEW_IMAGER_CONFIG_PATH,
   USB_WRITE_PATH,
   WEBSERVER_LOG_PATH,
@@ -274,6 +277,39 @@ export const addAppConnectedLog = () => {
       event: 'DashcamAppConnected',
     });
   }
+}
+
+export const repairCameraBridge = (metadata: any) => {
+  console.log('Repairing Camera Bridge');
+  exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
+    console.log(stdout || stderr);
+    console.log('Restarting Camera-Bridge');
+
+    try {
+      await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
+      console.log('Successfully cleaned folder');
+    } catch (e: unknown) {
+      console.log(e);
+    }
+    try {
+      await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
+      console.log('Successfully re-created folder');
+    } catch (e: unknown) {
+      console.log(e);
+    }
+    let restartCmd = `systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`;
+    if (CAMERA_TYPE === CameraType.HdcS) {
+      restartCmd = 'systemctl restart jpeg-recorder && ' + restartCmd;
+    }
+    exec(restartCmd, (err, stout, sterr) => {
+      console.log(stout || sterr);
+      console.log('Successfully restarted Folder Purger & Camera Bridge');
+      Instrumentation.add({
+        event: 'DashcamApiRepaired',
+        message: JSON.stringify({ serviceRepaired: 'camera-bridge', ...metadata }),
+      });
+    });
+  });
 }
 
 export const getCpuUsage = () => { 

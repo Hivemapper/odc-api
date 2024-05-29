@@ -56,6 +56,7 @@ export type SystemConfig = {
   HdcSwappiness?: number;
   HdcsSwappiness?: number;
   isProcessingEnabled?: boolean;
+  isBrokenImageFixForHdcsEnabled?: boolean;
   isEndToEndTestingEnabled?: boolean;
 };
 

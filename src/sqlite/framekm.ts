@@ -276,7 +276,7 @@ export const maintainPackedFrameKmTable = async (): Promise<void> => {
   
         const deleteOldestSQL = `
           DELETE FROM packed_framekms WHERE image_name IN (
-            SELECT image_name FROM packed_framekms ORDER BY created_at ASC LIMIT ?
+            SELECT image_name FROM packed_framekms ORDER BY time ASC LIMIT ?
           );
         `;
         await runAsync(deleteOldestSQL, [rowsToDelete]);

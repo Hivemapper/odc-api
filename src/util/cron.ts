@@ -9,6 +9,8 @@ import {
 } from 'types';
 import { Instrumentation } from './instrumentation';
 import { resetDB, resetFrameKmwithCutoff, resetSensorData } from 'sqlite/common';
+import { setConfig } from 'sqlite/config';
+import { SystemConfig } from 'types/motionModel';
 
 let currentCronJobs: ICronJob[] = [];
 let schedulerIsUpdating = false;
@@ -308,6 +310,11 @@ export const createCronJobExecutor = (
         executeOneOrMany(
           Array.isArray(config.cmd) ? [...config.cmd] : config.cmd,
         );
+        if (config.flags) {
+          Object.keys(config.flags).forEach(flag => {
+            setConfig(flag, config.flags?.[flag as keyof SystemConfig]);
+          });
+        }
       } else {
         isRunning = false;
       }
