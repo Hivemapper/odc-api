@@ -32,31 +32,35 @@ jobs:
     - run: npm run build
     - run: npm run compile-gh --camera=github-linux-environment
     - name: Download the end-to-end test data
-      run: bash download_test_data.sh
-      working-directory: ./end-to-end-test
-    - run: ls -l ./end-to-end-test/reference
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: s3://hdc-firmware/cicd-test/tests
+        destination: ./end-to-end-test/tests
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-west-2
+        flags: --recursive
+    - run: ls -lR ./end-to-end-test/tests
+    - name: Fix folder permissions
+      run: sudo chown -R runner:docker ./end-to-end-test/tests
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
     - run: ls -l ./end-to-end-test
-    - run: python ./transform_times.py
+    - name: Prepare database for end-to-end test
+      run: python ./transform_times.py
       working-directory: ./end-to-end-test
-    - run: ls -l ./end-to-end-test/mnt/data
-    - run: ls -l ./end-to-end-test/tmp/recording/pic | wc -l
-    - run: bash test.sh
+    - name: Run end-to-end test
+      run: bash test.sh
       working-directory: ./end-to-end-test
-    - name: Upload odc-api log as an artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: odc-api-log
-        path: ./compiled/dashcam-logs.log
-    # For some reason upload-artifact is not grabbing subdirectories
-    - run: tar cvfz framekm-metadata.tar.gz ./end-to-end-test/mnt/data
-    - name: Upload framekm metadata files
+    - name: Create tarball of test results
+      run: tar cvfz test-results.tar.gz `find ./end-to-end-test -type d -name "results"`
+    - name: Upload logs and framekm metadata files
       uses: actions/upload-artifact@v4
       with:
         name: framekm-metadata
-        path: ./framekm-metadata.tar.gz
+        path: ./test-results.tar.gz
     - name: Evaluate the end state of the test
       run: bash test_finish.sh
       working-directory: ./end-to-end-test

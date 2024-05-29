@@ -1,51 +1,76 @@
-METADATA_PATH=./mnt/data/metadata
-FRAMEKM_PATH=./mnt/data/framekm
-REFERENCE_PATH=./reference
 
-FAILURE=0
+any_failed=0
 
-echo "Testing odc-api"
-echo "Checking for files in framekm folder"
+check_results () {
+  testname=$1
+  failure=0
 
-if [[ `ls $FRAMEKM_PATH | wc -l` -eq 0 ]]
-then
-    echo "No files found in framekm folder"
-    exit 1
-fi
+  echo "Testing odc-api"
+  echo "Checking for files in framekm folder"
 
-echo "Checking contents of metadata folder"
+  result_path="./tests/${testname}/results/data"
+  reference_path="./tests/${testname}/reference"
 
-reference_files=$REFERENCE_PATH/metadata/*
-
-for file in $reference_files
-do
-  diff -q $file $REFERENCE_PATH/metadata/$(basename $file) 2> /dev/null
-  result=$?
-  if [[ $result -eq 0 ]]
+  if [[ `ls $result_path/framekm | wc -l` -eq 0 ]]
   then
-    echo "Metadata file $(basename $file) matches reference"
-  elif [[ $result -eq 1 ]]
-  then
-    # TODO: Make the diff visible and clear
-    echo "Metadata file $(basename $file) does not match reference"
-    FAILURE=1
-  elif [[ $result -eq 2 ]]
-  then
-    echo "Metadata file $(basename $file) does not exist"
-    FAILURE=1
+      echo "No files found in framekm folder"
+      exit 1
   fi
+
+  echo "Checking contents of metadata folder"
+
+  for reference_metadata_file in $reference_path/metadata/*; do
+    result_metadata_file=$result_path/metadata/$(basename $reference_metadata_file)
+
+    # sorts the keys in the json files and pretty prints them
+    jq --sort-keys . $result_metadata_file > result.json
+    if [[ $? -ne 0 ]]
+    then
+      failure=1
+      continue
+    fi
+
+    jq --sort-keys . $reference_metadata_file > reference.json
+    if [[ $? -ne 0 ]]
+    then
+      failure=1
+      continue
+    fi
+
+    diff result.json reference.json
+    result=$?
+    if [[ $result -eq 0 ]]
+    then
+      echo "Metadata file $(basename $result_metadata_file) matches reference"
+    else
+      # TODO: Make the diff visible and clear
+      echo "Metadata file $(basename $result_metadata_file) does not match reference"
+      failure=1
+    fi
+  done
+
+  # report any unexpected files in the results folder
+  result_files=$(find $result_path/metadata -type f -exec basename {} \; | sort)
+  for result_file in $result_files; do
+    if [[ ! -f $reference_path/metadata/$result_file ]]
+    then
+      echo "Warning: unexpected file $result_file in results folder"
+    fi
+  done
+
+  if [[ $failure -ne 0 ]]
+  then
+      echo "Test $testname failed"
+      any_failed=1
+  fi
+}
+
+for testname in $(ls tests); do
+  echo "Checking results for $testname"
+  check_results $testname
 done
 
-find "$METADATA_PATH" -type f -exec basename {} \; | sort > files_in_metadata.txt
-find "$REFERENCE_PATH/metadata" -type f -exec basename {} \; | sort > files_in_reference.txt
-
-# Files only in dir1
-echo "Files only in $METADATA_PATH:"
-comm -23 files_in_metadata.txt files_in_reference.txt
-echo
-
-if [[ $FAILURE -ne 0 ]]
-then
-    echo "Test failed"
-    exit $FAILURE
+if [[ $any_failed -ne 0 ]]; then
+  echo "Test suite ended with failures"
+  exit 1
 fi
