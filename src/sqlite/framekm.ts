@@ -386,9 +386,9 @@ export const addFramesToFrameKm = async (
         // write necessary exif tags to frames
         const data = rows.map((row: FrameKmRecord) => ({
           SourceFile: join(FRAMES_ROOT_FOLDER, row.image_name),
-          Orientation: row.orientation,
+          Orientation: row.orientation === 1 ? 'Horizontal (normal)' : 'Rotate 180',
         }));
-        await writeExif(data, FRAMES_ROOT_FOLDER);
+        await writeExif(data);
       } catch (error) {
         console.error('Error writing exif tags:', error);
       }

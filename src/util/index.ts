@@ -132,14 +132,15 @@ export const deleteLogsIfTooBig = () => {
   }
 };
 
-export const writeExif = async (data: any[], framesFolder: string) => {
+export const writeExif = async (data: any[]) => {
   if (!data.length) {
     return;
   }
   const csv = parse(data, { fields: Object.keys(data[0]) });
+  const imagePaths = data.map((d) => d.SourceFile);
   const csvPath = `${PUBLIC_FOLDER}/temp_exif.csv`;
   await promises.writeFile(csvPath, csv);
-  await asyncExec(`exiftool -csv="${csvPath}" ${framesFolder}/*.jpg`);
+  await asyncExec(`exiftool -csv="${csvPath}" -overwrite_original ${imagePaths.join(' ')}`);
 };
 
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
