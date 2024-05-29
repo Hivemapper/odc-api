@@ -45,8 +45,7 @@ def generate_images_from_date(base_date: datetime, testname: str) -> None:
         new_date = base_date + timedelta(seconds=i/10)
 
         new_date_micros = int(new_date.timestamp() * 1_000_000)
-        new_date_name = f'{str(new_date_micros)[:10]}_{
-            str(new_date_micros)[10:]}.jpg'
+        new_date_name = f'{str(new_date_micros)[:10]}_{str(new_date_micros)[10:]}.jpg'
         
         recording_path_str = recording_path(testname, new_date_name)
         os.makedirs(os.path.dirname(recording_path_str), exist_ok=True)
@@ -113,6 +112,7 @@ def transform_db(testname: str) -> None:
     dest_path = dest_data_logger_path(testname)
     move_db(source_path, dest_path)
 
+
     conn = sqlite3.connect(os.path.join(dest_path, DATA_LOGGER_NAME))
     cursor = conn.cursor()
 
@@ -122,6 +122,7 @@ def transform_db(testname: str) -> None:
     old_gnss_date_str = cursor.execute(
         "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
     old_gnss_date = transform_to_datetime(old_gnss_date_str)
+
 
     old_system_date_str = cursor.execute(
         "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]

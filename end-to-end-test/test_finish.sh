@@ -22,17 +22,15 @@ check_results () {
   for reference_metadata_file in $reference_path/metadata/*; do
     result_metadata_file=$result_path/metadata/$(basename $reference_metadata_file)
 
-    # sorts the keys in the json files and pretty prints them
-    jq --sort-keys . $result_metadata_file > result.json
-    if [[ $? -ne 0 ]]
-    then
+    # Remove firmwareVersion and sort the keys in the JSON files and pretty print them
+    jq 'del(.bundle.firmwareVersion) | . as $in | $in' $result_metadata_file | jq --sort-keys . > result.json
+    if [[ $? -ne 0 ]]; then
       failure=1
       continue
     fi
 
-    jq --sort-keys . $reference_metadata_file > reference.json
-    if [[ $? -ne 0 ]]
-    then
+    jq 'del(.bundle.firmwareVersion) | . as $in | $in' $reference_metadata_file | jq --sort-keys . > reference.json
+    if [[ $? -ne 0 ]]; then
       failure=1
       continue
     fi
