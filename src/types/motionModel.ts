@@ -57,6 +57,7 @@ export type SystemConfig = {
   HdcsSwappiness?: number;
   isProcessingEnabled?: boolean;
   isBrokenImageFixForHdcsEnabled?: boolean;
+  isEndToEndTestingEnabled?: boolean;
 };
 
 export type GNSS = {

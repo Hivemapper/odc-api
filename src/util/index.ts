@@ -32,6 +32,7 @@ import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 import { Instrumentation } from './instrumentation';
 import { cpus } from 'os';
+import { getConfig } from 'sqlite/config';
 
 let sessionId: string;
 
@@ -335,6 +336,8 @@ export const getCpuUsage = () => {
 }
 
 export const getSystemTemp = async () => {
+  if (await getConfig('isEndToEndTestingEnabled')) return 0;
+
   try {
       const data = await promises.readFile('/sys/class/thermal/thermal_zone0/temp', 'utf8');
       return parseInt(data, 10) / 1000;
