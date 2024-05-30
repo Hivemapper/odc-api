@@ -145,6 +145,8 @@ export const initialise = async (): Promise<void> => {
 
 export const performSoftMigrations = async (): Promise<void> => {
   const migrationCommands = [
+    `ALTER TABLE framekms ADD COLUMN is_stationary INTEGER DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN is_stationary INTEGER DEFAULT 0;`,
     `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     // Add more ALTER TABLE commands here as needed

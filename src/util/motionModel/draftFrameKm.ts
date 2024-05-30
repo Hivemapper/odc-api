@@ -339,6 +339,7 @@ export class DraftFrameKm {
               ...closestFrame, // frame name and system time
               ...frameCoordinates, // lat and lon from curve
               dx: DX,
+              is_stationary: prevGNSS.is_stationary ? 1 : 0,
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];

@@ -35,9 +35,9 @@ export async function MotionModelController() {
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(), undefined, true
     );
-    const stationary = imuBasedStationaryDetection(gnss, imu);
+    const fusedGnss = imuBasedStationaryDetection(gnss, imu);
 
-    await session.ingestData(gnss, imu, images);
+    await session.ingestData(fusedGnss, imu, images);
     await session.getSamplesAndSyncWithDb();
     await session.doHealthCheck();
   } catch (e: unknown) {

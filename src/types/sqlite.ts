@@ -51,6 +51,7 @@ export interface GnssRecord {
     gga: string;
     rxm_measx: string;
     session: string;
+    is_stationary?: boolean;
 }
 
 export interface GnssAuthRecord {
@@ -115,6 +116,7 @@ export type FrameKmRecord = {
     ml_grid?: number;
     frame_idx?: number;
     postponed?: number;
+    is_stationary?: number;
     error?: string;
   };
 

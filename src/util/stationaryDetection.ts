@@ -23,7 +23,7 @@ const GYRO_THRESHOLD = 0.25;
  * Value meaning -> True: stationary, False: not stationary
  * Array length is the same as the input GNSS array
  */
-export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: ImuRecord[])  {
+export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: ImuRecord[]): GnssRecord[]  {
     // Check that imu time starts before gnss time (needed for interpolation)
     let localGnssDataCopy = gnssData.slice();
     if (imuData[0].system_time > gnssData[0].system_time) {
@@ -152,8 +152,11 @@ export function imuBasedStationaryDetection(gnssData: GnssRecord[], imuData: Imu
     if (combined_gyro_accel.length !== gnssData.length) {
         combined_gyro_accel.unshift(combined_gyro_accel[0]);
     }
+    for (let i = 0; i < gnssData.length; i++) {
+        gnssData[i].is_stationary = combined_gyro_accel[i];
+    }
 
-    return combined_gyro_accel;
+    return gnssData;
 }
 
 function thresholdBasedWindowAveraging(data: number[], times: number[], windowSizeMs: number, threshold: number): boolean[] {
