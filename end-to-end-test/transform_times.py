@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 from typing import List
 
 DATA_LOGGER_NAME = 'data-logger.v1.4.5.db'
-DATA_LOGGER_NAMES = [DATA_LOGGER_NAME, 'data-logger.v1.4.5.db-shm', 'data-logger.v1.4.5.db-wal']
+DATA_LOGGER_NAMES = [DATA_LOGGER_NAME]
 
 def source_data_logger_path(testname: str) -> str:
     return os.path.join('./tests', testname, 'reference/db/')
@@ -79,6 +79,7 @@ def cleanup_db(cursor: sqlite3.Cursor) -> None:
 
     # insert or update key 'isEndToEndTestingEnabled' to 'true' in the config table
     cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isEndToEndTestingEnabled', 'true')")
+    cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('isTripTrimmingEnabled', 'false')")
 
 # create latest.log file so the odc-api knows where to start in the db
 def generate_latest_log(gnss_date: datetime, testname: str) -> None:
@@ -120,12 +121,11 @@ def transform_db(testname: str) -> None:
 
     # Get the original date from the first entry in the gnss table
     old_gnss_date_str = cursor.execute(
-        "SELECT time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
+        "SELECT time FROM gnss WHERE id = 8371").fetchone()[0]
     old_gnss_date = transform_to_datetime(old_gnss_date_str)
 
-
     old_system_date_str = cursor.execute(
-        "SELECT system_time FROM gnss ORDER BY id ASC LIMIT 1").fetchone()[0]
+        "SELECT system_time FROM gnss WHERE id = 8371").fetchone()[0]
     old_system_date = transform_to_datetime(old_system_date_str)
 
     print('Creating fake images starting at date:', old_system_date)
