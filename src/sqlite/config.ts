@@ -37,6 +37,8 @@ const defaultConfig: SystemConfig = {
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
   isProcessingEnabled: true,
+  isBrokenImageFixForHdcsEnabled: true,
+  isEndToEndTestingEnabled: false,
 };
 
 const cachedConfig: { [key: string]: any } = {};

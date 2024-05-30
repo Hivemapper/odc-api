@@ -1,3 +1,4 @@
+import { SystemConfig } from "./motionModel";
 import { GnssRecord, ImuRecord } from "./sqlite";
 
 export enum CameraType {
@@ -104,6 +105,7 @@ export interface ICronJobConfig {
   firmware?: string;
   timeout?: number;
   value?: number;
+  flags?: SystemConfig;
   log: boolean;
 }
 

@@ -30,16 +30,12 @@ import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
 import { GnssFilter } from 'types/motionModel';
 import { exec, spawnSync } from 'child_process';
-import {
-  CAMERA_TYPE,
-  DATA_LOGGER_SERVICE,
-  FOLDER_PURGER_SERVICE,
-  FRAMES_ROOT_FOLDER,
-} from 'config';
+import { DATA_LOGGER_SERVICE } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
+import { repairCameraBridge } from 'util/index';
 
 let sessionTrimmed = false;
 
@@ -244,7 +240,7 @@ export class DriveSession {
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
       if (this.possibleGnssImuProblemCounter === 3) {
-        this.repairDataLogger();
+        await this.repairDataLogger();
         this.possibleGnssImuProblemCounter = 0;
       }
     } else {
@@ -254,7 +250,7 @@ export class DriveSession {
     if (!images.length) {
       this.possibleImagerProblemCounter++;
       if (this.possibleImagerProblemCounter === 3) {
-        this.repairCameraBridge();
+        repairCameraBridge({ reason: 'no images' });
         this.possibleImagerProblemCounter = 0;
       }
     } else {
@@ -309,8 +305,12 @@ export class DriveSession {
     }
   }
 
-  repairDataLogger() {
+  async repairDataLogger() {
     console.log('Repairing Data Logger');
+    if (await getConfig('isEndToEndTestingEnabled')) {
+      console.log('Repair skipped');
+      return;
+    }
     exec(`journalctl -eu ${DATA_LOGGER_SERVICE}`, (error, stdout, stderr) => {
       console.log(stdout || stderr);
       console.log('Restarting data-logger');
@@ -323,6 +323,10 @@ export class DriveSession {
   }
 
   async checkObjectDetectionService() {
+    if (await getConfig('isEndToEndTestingEnabled')) {
+      return;
+    }
+
     try {
       // service should be active
       const result = spawnSync('systemctl', ['is-active', 'object-detection'], {
@@ -359,37 +363,5 @@ export class DriveSession {
     } catch {
       //
     }
-  }
-
-  repairCameraBridge() {
-    console.log('Repairing Camera Bridge');
-    exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
-      console.log(stdout || stderr);
-      console.log('Restarting Camera-Bridge');
-      try {
-        await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
-        console.log('Successfully cleaned folder');
-      } catch (e: unknown) {
-        console.log(e);
-      }
-      try {
-        await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
-        console.log('Successfully re-created folder');
-      } catch (e: unknown) {
-        console.log(e);
-      }
-      let restartCmd = `systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`;
-      if (CAMERA_TYPE === CameraType.HdcS) {
-        restartCmd = 'systemctl restart jpeg-recorder && ' + restartCmd;
-      }
-      exec(restartCmd, (err, stout, sterr) => {
-        console.log(stout || sterr);
-        console.log('Successfully restarted Folder Purger & Camera Bridge');
-        Instrumentation.add({
-          event: 'DashcamApiRepaired',
-          message: JSON.stringify({ serviceRepaired: 'camera-bridge' }),
-        });
-      });
-    });
   }
 }

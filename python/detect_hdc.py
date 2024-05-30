@@ -342,8 +342,8 @@ def main():
                   errors_counter += 1
                   sqlite.set_error(image_name, str(error))
                   retry_counters.pop(image_name, None)
-          else:
-            retry_counters.pop(image_name, None)
+            else:
+              retry_counters.pop(image_name, None)
 
       except Exception as e:
         print(f"Error processing frames. Error: {e}")
@@ -409,7 +409,6 @@ def main():
           print("pushing to 2x2")
           q.put(group)
           time.sleep(0.1)
-
 
       q.join()
 

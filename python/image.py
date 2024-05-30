@@ -60,6 +60,7 @@ def letterbox(img: np.ndarray, new_shape:Tuple[int, int], color:Tuple[int, int, 
 def get_path(image_name, path, ram_path):
     # if image is less then minute old, we can read it from RAM
     timestamp_str = image_name.split('_')[0]
+    ommc_image_path = os.path.join(path, image_name)
 
     try:
         timestamp = int(timestamp_str)
@@ -68,8 +69,13 @@ def get_path(image_name, path, ram_path):
 
         # Check if the image is younger than 1 minute
         if diff >= 0 and diff < 60:
-            return os.path.join(ram_path, image_name)
+            ram_image_path = os.path.join(ram_path, image_name)
+            if os.path.exists(ram_image_path):
+                return ram_image_path
+            else:
+                return ommc_image_path
         else:
-            return os.path.join(path, image_name)
+            return ommc_image_path
     except ValueError:
-        return os.path.join(path, image_name)
+        return ommc_image_path
+    
