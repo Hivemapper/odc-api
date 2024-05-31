@@ -377,21 +377,10 @@ export const addFramesToFrameKm = async (
         INSERT INTO framekms (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
-          hdop, gdop, pdop, tdop, vdop, xdop, ydop,
+          hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
           time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
-
-      try {
-        // write necessary exif tags to frames
-        const data = rows.map((row: FrameKmRecord) => ({
-          SourceFile: join(FRAMES_ROOT_FOLDER, row.image_name),
-          Orientation: row.orientation === 1 ? 'Horizontal (normal)' : 'Rotate 180',
-        }));
-        await writeExif(data);
-      } catch (error) {
-        console.error('Error writing exif tags:', error);
-      }
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -497,6 +486,7 @@ export const addFramesToFrameKm = async (
             row.vdop,
             row.xdop,
             row.ydop,
+            row.orientation,
             Math.round(Number(row.time)),
             Math.round(Number(row.system_time)),
             row.satellites_used,
