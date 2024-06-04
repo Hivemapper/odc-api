@@ -47,6 +47,8 @@ const VALID_DASHCAM_EVENTS = new Set([
   'DashcamInvalidFrameKm',
   'DashcamCleanedUpSensorData',
   'DashcamEmptyFrameKm',
+  'DashcamCommitSuccess',
+  'DashcamCommitFailed',
   'DashcamReboot',
   'DashcamScheduledFrameKmToReprocess',
   'DashcamFirmwareUploaded',
