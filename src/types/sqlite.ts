@@ -115,6 +115,7 @@ export type FrameKmRecord = {
     ml_grid?: number;
     frame_idx?: number;
     postponed?: number;
+    orientation?: number;
     error?: string;
   };
 

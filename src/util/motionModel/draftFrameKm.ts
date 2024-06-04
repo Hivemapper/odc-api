@@ -13,6 +13,7 @@ import { CAMERA_TYPE } from 'config';
 import { insertErrorLog } from 'sqlite/error';
 import { Instrumentation } from 'util/instrumentation';
 import { getCachedValue, getDX, setFastSpeedCollectionMode } from 'sqlite/config';
+import { isCollectionUpsideDown } from 'util/index';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
@@ -221,6 +222,8 @@ export class DraftFrameKm {
     }
   }
 
+  lastUpsideDownCheck = false;
+
   getEvenlyDistancedFramesFromSensorData(
     prevKeyFrames: FrameKmRecord[],
   ): FrameKmRecord[] {
@@ -228,6 +231,7 @@ export class DraftFrameKm {
     let nextGNSS: GnssRecord | null = null;
     let lastIMU: ImuRecord | null = null;
     let closestFrame: IImage | null = null;
+    let imu = [];
 
     const res: FrameKmRecord[] = [];
 
@@ -259,6 +263,7 @@ export class DraftFrameKm {
       try {
         if (isImu(sensorData)) {
           lastIMU = { ...sensorData } as ImuRecord;
+          imu.push(lastIMU);
           continue;
         } else if (isImage(sensorData) && nextGNSS && spaceCurve) {
           closestFrame = { ...sensorData } as IImage;
@@ -322,6 +327,9 @@ export class DraftFrameKm {
   
           // Making sure it's not too close to previous frame
           const allowed_gap = CAMERA_TYPE === CameraType.Hdc ? 1 : 0.5;
+          const isUpsideDown = imu.length > 10 ? isCollectionUpsideDown(imu.slice(-100)) : this.lastUpsideDownCheck;
+          this.lastUpsideDownCheck = isUpsideDown;
+
           if (
             !prevSelected ||
             distance(prevSelected, frameCoordinates) > DX - allowed_gap
@@ -339,6 +347,7 @@ export class DraftFrameKm {
               ...closestFrame, // frame name and system time
               ...frameCoordinates, // lat and lon from curve
               dx: DX,
+              orientation: isUpsideDown ? 3 : 1,
             });
             closestFrame = null;
             prevSelected = res[res.length - 1];

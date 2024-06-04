@@ -43,7 +43,7 @@ class SQLite:
                 return [], 0
 
             cursor.execute('''
-                SELECT image_name, image_path, speed, fkm_id 
+                SELECT image_name, image_path, speed, fkm_id, orientation 
                 FROM framekms 
                 WHERE ml_model_hash is NULL AND (error is NULL OR error = "") AND fkm_id = ? 
                 ORDER BY time 

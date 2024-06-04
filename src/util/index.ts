@@ -25,6 +25,7 @@ import {
   FOLDER_PURGER_SERVICE,
   FRAMES_ROOT_FOLDER,
   NEW_IMAGER_CONFIG_PATH,
+  PUBLIC_FOLDER,
   USB_WRITE_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
@@ -32,7 +33,11 @@ import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 import { Instrumentation } from './instrumentation';
 import { cpus } from 'os';
+import { parse } from 'json2csv';
+import { promisify } from 'util';
 import { getConfig } from 'sqlite/config';
+import { ImuRecord } from 'types/sqlite';
+const asyncExec = promisify(exec);
 
 let sessionId: string;
 
@@ -127,6 +132,17 @@ export const deleteLogsIfTooBig = () => {
   }
 };
 
+export const writeExif = async (data: any[]) => {
+  if (!data.length) {
+    return;
+  }
+  const csv = parse(data, { fields: Object.keys(data[0]) });
+  const imagePaths = data.map((d) => d.SourceFile);
+  const csvPath = `${PUBLIC_FOLDER}/temp_exif.csv`;
+  await promises.writeFile(csvPath, csv);
+  await asyncExec(`exiftool -csv="${csvPath}" -overwrite_original ${imagePaths.join(' ')}`);
+};
+
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   if (req.query.since || req.query.until) {
     const since = Number(req.query.since);
@@ -137,6 +153,17 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   } else {
     return files;
   }
+};
+
+export const isCollectionUpsideDown = (
+  imuRecords: ImuRecord[],
+) => {
+  if (imuRecords.length === 0) {
+    return false;
+  }
+
+  let vals: number[] = imuRecords.map(m => m.acc_z ?? 0);
+  return vals.reduce((acc, curr) => (acc += curr >= 0 ? 1 : -1), 0) < 0;
 };
 
 export const stopScriptIfRunning = (scriptPath: string) => {

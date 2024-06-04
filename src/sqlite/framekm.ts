@@ -9,6 +9,7 @@ import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
+import { writeExif } from 'util/index';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -376,9 +377,9 @@ export const addFramesToFrameKm = async (
         INSERT INTO framekms (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
-          hdop, gdop, pdop, tdop, vdop, xdop, ydop,
+          hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
           time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -485,6 +486,7 @@ export const addFramesToFrameKm = async (
             row.vdop,
             row.xdop,
             row.ydop,
+            row.orientation,
             Math.round(Number(row.time)),
             Math.round(Number(row.system_time)),
             row.satellites_used,
