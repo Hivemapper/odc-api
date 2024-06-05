@@ -126,5 +126,14 @@ export type FrameKmRecord = {
   }
 
   export type FrameKM = FrameKmRecord[];
-  
-  export type SensorRecord = (GnssRecord | ImuRecord | MagnetometerRecord) & {sensor: string, device_id: string};
+
+  export type SensorRecord = (GnssRecord | ImuRecord | MagnetometerRecord) & {sensor: string};
+
+  export interface SensorQueryResponse {
+    metadata : {
+      device_id: string;
+      dashcam: string;
+    },
+    sensordata: SensorRecord[];
+  }
+

@@ -38,7 +38,7 @@ import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
 import { querySensorData } from 'sqlite/common';
-import { SensorRecord } from 'types/sqlite';
+import { SensorRecord, SensorQueryResponse } from 'types/sqlite';
 import { getAnonymousID } from 'sqlite/deviceInfo';
 
 const router = Router();
@@ -281,19 +281,26 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
   }
 
   const { gnss, imu, magnetometer } = await querySensorData(since, until);
-  const device_id = await getAnonymousID();
   const sensordata: SensorRecord[] = [];
   gnss.forEach(value => {
-    sensordata.push({ sensor: 'gnss', device_id: device_id, ...value });
+    sensordata.push({ sensor: 'gnss', ...value });
   });
   imu.forEach(value => {
-    sensordata.push({ sensor: 'imu', device_id: device_id, ...value });
+    sensordata.push({ sensor: 'imu', ...value });
   });
   magnetometer.forEach(value => {
-    sensordata.push({ sensor: 'magnetometer', device_id: device_id, ...value });
+    sensordata.push({ sensor: 'magnetometer', ...value });
   });
 
-  res.json(sensordata);
+  const device_id = await getAnonymousID();
+  const payload : SensorQueryResponse = {
+    metadata: {
+      device_id,
+      dashcam: CAMERA_TYPE,
+    },
+    sensordata,
+  }
+  res.json(payload);
 });
 
 export default router;
