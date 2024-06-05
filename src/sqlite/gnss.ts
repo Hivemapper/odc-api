@@ -92,3 +92,19 @@ export const fetchGnssWithCleanHeading = async (from: number, to?: number): Prom
         time: record.system_time
     }));
 }
+
+export const fetchLastGnssRecord = async (): Promise<GnssRecord | null> => {
+    try {
+        const lastRecords = await fetchLastNGnssRecords(1);
+        if (lastRecords.length) {
+            const last = lastRecords[0];
+            last.time = new Date(last.time + 'Z').getTime();
+            return last;
+        } else {
+            return null;
+        }
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
+}
