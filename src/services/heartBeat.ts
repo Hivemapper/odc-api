@@ -2,16 +2,13 @@ import { exec, ExecException, spawnSync } from 'child_process';
 import {
   CMD,
   FIRMWARE_UPDATE_MARKER,
-  GPS_LATEST_SAMPLE,
   HEALTH_MARKER_PATH,
   isDev,
 } from 'config';
-import { existsSync, readFileSync } from 'fs';
-import { jsonrepair } from 'jsonrepair';
+import { existsSync } from 'fs';
 import { IService } from 'types';
-import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
-import { getLatestGnssTime, isTimeSet, setGnssTime, setLockTime, setTime } from 'util/lock';
+import { isTimeSet, setGnssTime, setLockTime, setTime } from 'util/lock';
 import { isEnoughLightForGnss } from 'util/gnss';
 import { COLORS, updateLED } from '../util/led';
 import {
@@ -20,9 +17,10 @@ import {
 } from './trackDownloadDebt';
 import * as console from 'console';
 import { isPrivateLocation } from 'util/privacy';
-import { fileExists } from 'util/index';
 import { insertErrorLog } from 'sqlite/error';
 import { getConfig } from 'sqlite/config';
+import { fetchLastGnssRecord } from 'sqlite/gnss';
+import { GnssRecord } from 'types/sqlite';
 
 // let previousCameraResponse = '';
 let mostRecentPing = 0;
@@ -35,7 +33,7 @@ let inARow = 0;
 let hasBeenLocked = false;
 let lostLockOnce = false;
 let isLedControlledByDashcam = true;
-let lastGpsPoint: GNSS | null = null;
+let lastGpsPoint: GnssRecord | null = null;
 let lastTimeCheckWasPrivate = false;
 let wasTimeResolved = false;
 
@@ -84,27 +82,6 @@ export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
   return false;
 };
 
-const fetchGNSSLatestSample = async () => {
-  let gpsSample: any = null;
-
-  try {
-    const exists = await fileExists(GPS_LATEST_SAMPLE);
-    if (exists) {
-      const data = readFileSync(GPS_LATEST_SAMPLE, {
-        encoding: 'utf-8',
-      });
-      try {
-        gpsSample = JSON.parse(jsonrepair(data));
-      } catch (e) {
-        // console.log('Latest.log Parse Error:', e);
-      }
-    }
-  } catch (e) {
-    console.log('failed to read ', GPS_LATEST_SAMPLE);
-  }
-  return gpsSample;
-};
-
 export const startCamera = () => {
   exec(CMD.START_CAMERA, (error: ExecException | null) => {
     if (!error) {
@@ -129,13 +106,12 @@ const isFirmwareUpdateInProcess = () => {
   return existsSync(FIRMWARE_UPDATE_MARKER);
 };
 
-const isGpsLock = (gpsSample: any) => {
+const isGpsLock = (gpsSample: GnssRecord) => {
   const lock =
     gpsSample &&
     gpsSample.fix === '3D' &&
-    gpsSample.dop &&
-    Number(gpsSample.dop.hdop) &&
-    gpsSample.dop.hdop < 5 &&
+    Number(gpsSample.hdop) &&
+    gpsSample.hdop < 5 &&
     (Number(gpsSample.eph) && gpsSample.eph < 15);
   return lock;
 };
@@ -164,8 +140,8 @@ export const HeartBeatService: IService = {
 
       let gpsLED: any = null;
       try {
-        const gpsSample = await fetchGNSSLatestSample();
-        if (isGpsLock(gpsSample)) {
+        const gpsSample = await fetchLastGnssRecord();
+        if (gpsSample && isGpsLock(gpsSample)) {
           if (!isLock) {
             Instrumentation.add({
               event: 'DashcamGot3dLock',
@@ -188,8 +164,8 @@ export const HeartBeatService: IService = {
             });
             setTime();
           }
-          if (hasBeenLocked && gpsSample.timestamp) {
-            setGnssTime(new Date(gpsSample.timestamp).getTime());
+          if (hasBeenLocked && gpsSample.time) {
+            setGnssTime(gpsSample.time);
           }
           if (!wasTimeResolved && gpsSample.time_resolved === 1) {
             wasTimeResolved = true;
@@ -257,7 +233,7 @@ export const HeartBeatService: IService = {
                 cameraLED = COLORS.PINK;
               } else {
                 lastTimeCheckWasPrivate = false;
-                if (isTimeSet() && lastGpsPoint?.timestamp) {
+                if (isTimeSet() && lastGpsPoint?.time_resolved) {
                   if (await isEnoughLightForGnss(lastGpsPoint)) {
                     cameraLED = COLORS.GREEN;
                   } else {

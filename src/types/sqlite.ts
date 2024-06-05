@@ -51,6 +51,7 @@ export interface GnssRecord {
     gga: string;
     rxm_measx: string;
     session: string;
+    time_resolved: number;
 }
 
 export interface GnssAuthRecord {
