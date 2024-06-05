@@ -184,33 +184,33 @@ export const getFrameKm = async (
 export const cleanHeadingsForFrameKm = async (fkmId: number): Promise<void> => {
   const frameKm: FrameKmRecord[] = await getFrameKm(fkmId);
   if (frameKm.length < 2) {
-      console.log('No FrameKM data found for the given ID');
-      return;
+    console.log('No FrameKM data found for the given ID');
+    return;
   }
 
-  const startTime = frameKm[0].system_time;
-  const endTime = frameKm[frameKm.length - 1].system_time;
+  const startTime = frameKm[0].time;
+  const endTime = frameKm[frameKm.length - 1].time;
 
   const gnssRecords: { heading: number | null, time: number }[] = await fetchGnssWithCleanHeading(startTime - 10 * 1000, endTime + 10 * 1000);
   if (gnssRecords.length === 0) {
-      console.log('No GNSS data available within the time window.');
-      return;
+    console.log('No GNSS data available within the time window.');
+    return;
   }
 
   for (const frame of frameKm) {
-      const interpolatedHeading = interpolateHeading(frame.system_time, gnssRecords);
-      if (interpolatedHeading == null) {
-          console.log('Unable to interpolate heading for system_time', frame.system_time);
-          continue;
-      }
+    const interpolatedHeading = interpolateHeading(frame.system_time, gnssRecords);
+    if (interpolatedHeading == null) {
+      console.log('Unable to interpolate heading for system_time', frame.system_time);
+      continue;
+    }
 
-      try {
+    try {
           const updateSQL = 'UPDATE framekms SET heading = ? WHERE image_name = ?';
-          await runAsync(updateSQL, [interpolatedHeading, frame.image_name]);
-          console.log('FrameKM heading updated successfully for image_name', frame.image_name);
-      } catch (error) {
-          console.error('Error updating FrameKM record:', error);
-      }
+      await runAsync(updateSQL, [interpolatedHeading, frame.image_name]);
+      console.log('FrameKM heading updated successfully for image_name', frame.image_name);
+    } catch (error) {
+      console.error('Error updating FrameKM record:', error);
+    }
   }
 };
 
