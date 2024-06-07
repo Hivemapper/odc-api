@@ -31,21 +31,9 @@ jobs:
     - run: npm install
     - run: npm run build
     - run: npm run compile-gh --camera=github-linux-environment
-    - name: Download the end-to-end test data
-      uses: keithweaver/aws-s3-github-action@v1.0.0
-      with:
-        command: cp
-        source: s3://hdc-firmware/cicd-test/tests
-        destination: ./end-to-end-test/tests
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-west-2
-        flags: --recursive
     - run: ls -lR ./end-to-end-test/tests
     - name: Install Exiftool
       run: sudo apt install exiftool
-    - name: Fix folder permissions
-      run: sudo chown -R runner:docker ./end-to-end-test/tests
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
