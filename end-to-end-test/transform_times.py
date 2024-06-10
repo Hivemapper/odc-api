@@ -65,7 +65,7 @@ def move_db(source_path: str, destination_path: str) -> None:
     os.makedirs(destination_path, exist_ok=True)
 
     for datalogger in DATA_LOGGER_NAMES:    
-        if os.path.exists(source_path):
+        if os.path.exists(os.path.join(source_path, datalogger)):
             print('Copying', datalogger, 'to', destination_path)
             shutil.copy2(os.path.join(source_path, datalogger), 
                          os.path.join(destination_path, datalogger))
