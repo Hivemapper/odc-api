@@ -31,13 +31,16 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         label: "None", 
         landmark_id: landmarkID,
         vehicle_heading: 0,
-        detections: detections.map(d => d.detection_id)
+        detections: detections.map(d => d.detection_id),
+        dashcam_lat: 0, // TODO: debug data for reference, will remove later
+        dashcam_lon: 0,
       };
       if (!detections || detections.length === 0) {
         continue;
       } else if (detections.length === 1) {
         aveDetection.lat = detections[0].sign_lat;
         aveDetection.lon = detections[0].sign_lon;
+
         aveDetection.label = detections[0].label;
       } else if (detections.length < 5) {
         // pick the closest one by detection.distance

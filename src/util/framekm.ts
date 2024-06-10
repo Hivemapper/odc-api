@@ -71,6 +71,7 @@ export const prepareExifPerFrame = (
 export const concatFrames = async (
   frames: string[],
   framekmName: string,
+  frameKm: FrameKM,
   retryCount = 0,
   frameRootFolder = FRAMES_ROOT_FOLDER,
   exifPerFrame: ExifPerFrame = {},
@@ -116,12 +117,20 @@ export const concatFrames = async (
         // TODO: FOR DEBUGGING PURPOSES ONLY
         if (exifPerFrame[file].landmarks) {
           for (const landmark of exifPerFrame[file].landmarks) {
-            const [lat, lon, alt, landmark_id, label, vehicle_heading, detections] = landmark;
+            let [lat, lon, alt, landmark_id, label, vehicle_heading, detections] = landmark;
+            let dashcam_lat = 0;
+            let dashcam_lon = 0;
             const landmarkPath = LANDMARK_THUMBNAIL_FOLDER + '/' + file;
             const landmarkPublicPath = '/public/landmarks/' + file;
+            const metadata = frameKm.find((meta) => meta.image_name === file);
+            if (metadata) {
+              dashcam_lat = metadata.latitude;
+              dashcam_lon = metadata.longitude;
+              vehicle_heading = metadata.heading;
+            }
             if (!addedIds.includes(landmark_id)) {
               addedIds.push(landmark_id);
-              await insertLandmark({ lat, lon, alt, landmark_id, label, vehicle_heading, detections }, landmarkPublicPath);
+              await insertLandmark({ lat, lon, dashcam_lat, dashcam_lon, alt, landmark_id, label, vehicle_heading, detections }, landmarkPublicPath);
               console.log('====== ADDED LANDMARK!!!! ==== ');
               try {
                 const detectionPath = `/data/recording/detections/${file}_detections.jpeg`;
@@ -204,13 +213,13 @@ export const concatFrames = async (
             totalBytes,
           );
           await sleep(retryDelay);
-          return concatFrames(frames, framekmName, retryCount + 1);
+          return concatFrames(frames, framekmName, frameKm, retryCount + 1, frameRootFolder, exifPerFrame);
         }
     } catch (error) {
       console.log(`Error during concatenation:`, error);
       console.log('Waiting a bit before retrying concatenation...');
       await sleep(retryDelay);
-      return concatFrames(frames, framekmName, retryCount + 1);
+      return concatFrames(frames, framekmName, frameKm, retryCount + 1, frameRootFolder, exifPerFrame);
     }
 
     return bytesMap;

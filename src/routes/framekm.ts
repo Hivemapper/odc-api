@@ -9,7 +9,7 @@ import {
   rmSync,
   statSync,
 } from 'fs';
-import { concatFrames, getNumFramesFromChunkName } from 'util/framekm';
+import { getNumFramesFromChunkName } from 'util/framekm';
 import { exec } from 'child_process';
 
 const router = Router();
@@ -20,18 +20,6 @@ router.get('/', async (req: Request, res: Response) => {
     res.json(files);
   } catch (error) {
     res.json([]);
-  }
-});
-
-router.post('/:name', async (req: Request, res: Response) => {
-  try {
-    const frames = req.body && req.body.frames ? req.body.frames : [];
-    const bytesPacked = await concatFrames(frames, req.params.name);
-    res.json({
-      frames: bytesPacked,
-    });
-  } catch (error) {
-    res.json({ error });
   }
 });
 

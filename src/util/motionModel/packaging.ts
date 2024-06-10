@@ -111,6 +111,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       concatFrames(
         frameKm.map((item: FrameKmRecord) => item.image_name || ''),
         finalBundleName,
+        frameKm,
         0,
         framesFolder,
         exifByFrame

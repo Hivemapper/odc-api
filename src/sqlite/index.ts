@@ -146,6 +146,8 @@ export const initialise = async (): Promise<void> => {
 
 export const performSoftMigrations = async (): Promise<void> => {
   const migrationCommands = [
+    `ALTER TABLE landmarks ADD COLUMN dashcam_lat REAL;`,
+    `ALTER TABLE landmarks ADD COLUMN dashcam_lon REAL;`,
     `ALTER TABLE framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
     `ALTER TABLE framekms ADD COLUMN triplets INTEGER DEFAULT -1;`,

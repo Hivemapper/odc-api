@@ -27,6 +27,8 @@ export interface Landmark {
   alt: number;
   label: string;
   vehicle_heading: number;
+  dashcam_lat: number;
+  dashcam_lon: number;
   detections: number[];
 }
 
