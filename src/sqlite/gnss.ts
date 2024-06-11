@@ -58,3 +58,19 @@ export const fetchLastNGnssRecords = async (n: number): Promise<GnssRecord[]> =>
           });
     });
 }
+
+export const fetchLastGnssRecord = async (): Promise<GnssRecord | null> => {
+    try {
+        const lastRecords = await fetchLastNGnssRecords(1);
+        if (lastRecords.length) {
+            const last = lastRecords[0];
+            last.time = new Date(last.time + 'Z').getTime();
+            return last;
+        } else {
+            return null;
+        }
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
+}
