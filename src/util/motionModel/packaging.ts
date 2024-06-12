@@ -98,7 +98,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       }
 
       if (signDetections.length && item.orientation) {
-        const orientation = JSON.parse(item.orientation || '[]');
+        const orientation = JSON.parse(item.angles || '[]');
         if (orientation.length === 4) {
           const guesses = calculatePositionsForDetections(item, signDetections, orientation);
           if (guesses.length) {

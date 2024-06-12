@@ -102,7 +102,7 @@ export type FrameKmRecord = {
     ml_model_hash?: string;
     ml_detections?: string;
     ml_sign_detections?: string;
-    orientation?: string;
+    angles?: string;
     ml_read_time?: number;
     ml_write_time?: number;
     ml_blur_time?: number;
