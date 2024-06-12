@@ -152,6 +152,8 @@ export const performSoftMigrations = async (): Promise<void> => {
     `ALTER TABLE packed_framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
     `ALTER TABLE framekms ADD COLUMN triplets INTEGER DEFAULT -1;`,
     `ALTER TABLE packed_framekms ADD COLUMN triplets INTEGER DEFAULT -1;`,
+    `ALTER TABLE framekms ADD COLUMN orientation INTEGER DEFAULT 1;`,
+    `ALTER TABLE packed_framekms ADD COLUMN orientation INTEGER DEFAULT 1;`,
     `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE framekms ADD COLUMN ml_sign_detections TEXT;`,
@@ -224,6 +226,7 @@ export const createFrameKMTable = async (tableName: string): Promise<void> => {
     triplets INTEGER,
     clock INTEGER,
     postponed INTEGER DEFAULT 0,
+    orientation INTEGER DEFAULT 1,
     error TEXT
   );`;
   try {

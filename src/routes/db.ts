@@ -122,20 +122,22 @@ router.get('/framekm/add/:name/:speed', async (req, res) => {
   try {
     const dummyPath = CAMERA_TYPE === CameraType.Hdc ? '/mnt/data/python/frames/' : '/data/python/frames/';
     const files = readdirSync(dummyPath + req.params.name);
+    const speed = Number(req.params.speed);
     fkm_id++;
     for (const file of files) {
       const insertSQL = `
         INSERT INTO framekms (
-          image_name, image_path, speed, created_at, fkm_id
-        ) VALUES (?, ?, ?, ?, ?);
+          image_name, image_path, speed, created_at, fkm_id, orientation
+        ) VALUES (?, ?, ?, ?, ?, ?);
       `;
 
       await runAsync(insertSQL, [
         file,
         dummyPath + req.params.name,
-        Number(req.params.speed),
+        speed,
         Date.now(),
-        fkm_id
+        fkm_id,
+        speed === 3 ? 3 : 1,
       ]);
     }
     

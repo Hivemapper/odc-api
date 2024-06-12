@@ -1,5 +1,6 @@
 compiled
 dist
+compiled
 node_modules
 .DS_Store
 .idea
@@ -9,3 +10,8 @@ python/model.blob
 python-test
 python copy
 __pycache__
+end-to-end-test/tests/*
+end-to-end-test/tmp/*
+end-to-end-test/mnt/*
+end-to-end-test/reference.json
+end-to-end-test/result.json

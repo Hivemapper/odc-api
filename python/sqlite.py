@@ -34,13 +34,16 @@ class SQLite:
                 return [], 0
             
             cursor.execute('SELECT fkm_id FROM framekms WHERE ml_model_hash is NULL AND (error is NULL OR error = "")  AND postponed != 1 ORDER BY time LIMIT 1')
-            min_framekm_id = cursor.fetchone()[0]
+            min_framekm_id_result = cursor.fetchone()
+            if min_framekm_id_result is None:
+                return [], 0
             
+            min_framekm_id = min_framekm_id_result[0]
             if min_framekm_id is None:
                 return [], 0
 
             cursor.execute('''
-                SELECT image_name, image_path, speed, fkm_id 
+                SELECT image_name, image_path, speed, fkm_id, orientation 
                 FROM framekms 
                 WHERE ml_model_hash is NULL AND (error is NULL OR error = "") AND fkm_id = ? 
                 ORDER BY time 
@@ -66,7 +69,7 @@ class SQLite:
             'PrivacyModelGridHash': 'e2f5488db4aa6bb0b1dba82476a238ca899c804cbee580f398051d62b7874702',
             'LowSpeedThreshold': 17,
             'PrivacyConfThreshold': 0.2,
-            'PrivacyNmsThreshold': 0.8,
+            'PrivacyNmsThreshold': 0.9,
             'PrivacyNumThreads': 4
         }
         config = default_values.copy()

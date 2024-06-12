@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { CameraResolution, ICameraConfig, ICameraFile, IMU } from 'types';
+import { CameraResolution, CameraType, ICameraConfig, ICameraFile, IMU } from 'types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
@@ -21,7 +21,11 @@ import {
 import {
   CACHED_CAMERA_CONFIG,
   CACHED_RES_CONFIG,
+  CAMERA_TYPE,
+  FOLDER_PURGER_SERVICE,
+  FRAMES_ROOT_FOLDER,
   NEW_IMAGER_CONFIG_PATH,
+  PUBLIC_FOLDER,
   USB_WRITE_PATH,
   WEBSERVER_LOG_PATH,
 } from 'config';
@@ -29,6 +33,11 @@ import { exec, spawn } from 'child_process';
 import { jsonrepair } from 'jsonrepair';
 import { Instrumentation } from './instrumentation';
 import { cpus } from 'os';
+import { parse } from 'json2csv';
+import { promisify } from 'util';
+import { getConfig } from 'sqlite/config';
+import { ImuRecord } from 'types/sqlite';
+const asyncExec = promisify(exec);
 
 let sessionId: string;
 
@@ -123,6 +132,17 @@ export const deleteLogsIfTooBig = () => {
   }
 };
 
+export const writeExif = async (data: any[]) => {
+  if (!data.length) {
+    return;
+  }
+  const csv = parse(data, { fields: Object.keys(data[0]) });
+  const imagePaths = data.map((d) => d.SourceFile);
+  const csvPath = `${PUBLIC_FOLDER}/temp_exif.csv`;
+  await promises.writeFile(csvPath, csv);
+  await asyncExec(`exiftool -csv="${csvPath}" -overwrite_original ${imagePaths.join(' ')}`);
+};
+
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   if (req.query.since || req.query.until) {
     const since = Number(req.query.since);
@@ -133,6 +153,17 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   } else {
     return files;
   }
+};
+
+export const isCollectionUpsideDown = (
+  imuRecords: ImuRecord[],
+) => {
+  if (imuRecords.length === 0) {
+    return false;
+  }
+
+  let vals: number[] = imuRecords.map(m => m.acc_z ?? 0);
+  return vals.reduce((acc, curr) => (acc += curr >= 0 ? 1 : -1), 0) < 0;
 };
 
 export const stopScriptIfRunning = (scriptPath: string) => {
@@ -275,6 +306,39 @@ export const addAppConnectedLog = () => {
   }
 }
 
+export const repairCameraBridge = (metadata: any) => {
+  console.log('Repairing Camera Bridge');
+  exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
+    console.log(stdout || stderr);
+    console.log('Restarting Camera-Bridge');
+
+    try {
+      await promises.rm(FRAMES_ROOT_FOLDER, { recursive: true, force: true });
+      console.log('Successfully cleaned folder');
+    } catch (e: unknown) {
+      console.log(e);
+    }
+    try {
+      await promises.mkdir(FRAMES_ROOT_FOLDER, { recursive: true });
+      console.log('Successfully re-created folder');
+    } catch (e: unknown) {
+      console.log(e);
+    }
+    let restartCmd = `systemctl restart ${FOLDER_PURGER_SERVICE} && systemctl restart camera-bridge`;
+    if (CAMERA_TYPE === CameraType.HdcS) {
+      restartCmd = 'systemctl restart jpeg-recorder && ' + restartCmd;
+    }
+    exec(restartCmd, (err, stout, sterr) => {
+      console.log(stout || sterr);
+      console.log('Successfully restarted Folder Purger & Camera Bridge');
+      Instrumentation.add({
+        event: 'DashcamApiRepaired',
+        message: JSON.stringify({ serviceRepaired: 'camera-bridge', ...metadata }),
+      });
+    });
+  });
+}
+
 export const getCpuUsage = () => { 
   const cpusInfo: any = cpus()
 
@@ -299,6 +363,8 @@ export const getCpuUsage = () => {
 }
 
 export const getSystemTemp = async () => {
+  if (await getConfig('isEndToEndTestingEnabled')) return 0;
+
   try {
       const data = await promises.readFile('/sys/class/thermal/thermal_zone0/temp', 'utf8');
       return parseInt(data, 10) / 1000;

@@ -1,5 +1,5 @@
-import { getAsync, getDb, runAsync } from './index';
-import { FrameKM, FrameKmRecord, GnssRecord } from 'types/sqlite';
+import { getAsync, runAsync } from './index';
+import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { distance } from 'util/geomath';
 import { join } from 'path';
 import { FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
@@ -7,7 +7,7 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
+import { getConfig, getCutoffIndex, getDX } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
 import { fetchGnssWithCleanHeading } from './gnss';
 
@@ -332,7 +332,7 @@ export const maintainPackedFrameKmTable = async (): Promise<void> => {
   
         const deleteOldestSQL = `
           DELETE FROM packed_framekms WHERE image_name IN (
-            SELECT image_name FROM packed_framekms ORDER BY created_at ASC LIMIT ?
+            SELECT image_name FROM packed_framekms ORDER BY time ASC LIMIT ?
           );
         `;
         await runAsync(deleteOldestSQL, [rowsToDelete]);
@@ -432,7 +432,7 @@ export const addFramesToFrameKm = async (
         INSERT INTO framekms (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
-          hdop, gdop, pdop, tdop, vdop, xdop, ydop,
+          hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
           time, system_time, clock, satellites_used, dilution, eph, frame_idx, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
@@ -553,6 +553,7 @@ export const addFramesToFrameKm = async (
             row.vdop,
             row.xdop,
             row.ydop,
+            row.orientation,
             Math.round(Number(row.time)),
             Math.round(Number(row.system_time)),
             Math.round(Number(clock)),

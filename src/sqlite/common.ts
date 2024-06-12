@@ -10,6 +10,7 @@ import { GnssDopKpi } from 'types/instrumentation';
 import { sleep } from 'util/index';
 import { fetchMagnetometerLogsByTime } from './magnetometer';
 import { writeFile } from 'fs';
+import { getLatestGnssTime } from 'util/lock';
 
 let accumulated = 0;
 let accumDuration = 0;

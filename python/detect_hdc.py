@@ -63,6 +63,9 @@ def combine_images(images, grid_size, model_size):
               resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
             else:
                 resized_img = cv2.resize(img, (cell_width, cell_height), interpolation=cv2.INTER_NEAREST)
+                # Rotate the image if orientation is 3 (upside-down)
+                if images[i][4] == 3:
+                    resized_img = cv2.rotate(resized_img, cv2.ROTATE_180)
         else:
             # Use an empty (black) image for spots without images
             resized_img = np.zeros((cell_height, cell_width, 3), dtype=np.int8)
@@ -125,6 +128,12 @@ def determine_image_index(box, model_size, grid_size):
     # For a 2x2 grid, calculate the index based on both x and y indices
     else:
         return y_index * 2 + x_index  # Assuming grid_size is 2 for a 2x2 grid
+
+def rotate_boxes(boxes):
+    rotated_boxes = []
+    for box in boxes:
+        rotated_boxes.append(np.array([width - box[2], height - box[3], width - box[0], height - box[1]]))
+    return rotated_boxes
 
 def detect(images, model, input_details, output_details, conf_threshold, nms_threshold, sqlite, model_hash):
     metrics = {}
@@ -208,7 +217,8 @@ def detect(images, model, input_details, output_details, conf_threshold, nms_thr
         if len(grouped_boxes[i]) > 0:
           start = time.perf_counter()
           orig = orig_images[i]
-          result, metrics = blur(orig, grouped_boxes[i], metrics)
+          boxes_to_blur = rotate_boxes(grouped_boxes[i]) if images[i][4] == 3 else grouped_boxes[i]
+          result, metrics = blur(orig, boxes_to_blur, metrics)
           metrics['blur_time'] = (time.perf_counter() - start) * 1000
           start = time.perf_counter()
           result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
@@ -342,8 +352,8 @@ def main():
                   errors_counter += 1
                   sqlite.set_error(image_name, str(error))
                   retry_counters.pop(image_name, None)
-          else:
-            retry_counters.pop(image_name, None)
+            else:
+              retry_counters.pop(image_name, None)
 
       except Exception as e:
         print(f"Error processing frames. Error: {e}")
@@ -409,7 +419,6 @@ def main():
           print("pushing to 2x2")
           q.put(group)
           time.sleep(0.1)
-
 
       q.join()
 

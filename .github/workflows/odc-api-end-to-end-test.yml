@@ -1,0 +1,68 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: ODC API End to End Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm install
+    - run: npm run build
+    - run: npm run compile-gh --camera=github-linux-environment
+    - name: Download the end-to-end test data
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: s3://hdc-firmware/cicd-test/tests
+        destination: ./end-to-end-test/tests
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-west-2
+        flags: --recursive
+    - run: ls -lR ./end-to-end-test/tests
+    - name: Install Exiftool
+      run: sudo apt install exiftool
+    - name: Fix folder permissions
+      run: sudo chown -R runner:docker ./end-to-end-test/tests
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - run: ls -l ./end-to-end-test
+    - name: Prepare database for end-to-end test
+      run: python ./transform_times.py
+      working-directory: ./end-to-end-test
+    - name: Run end-to-end test
+      run: bash test.sh
+      working-directory: ./end-to-end-test
+    - name: Create tarball of test results
+      run: tar cvfz test-results.tar.gz `find ./end-to-end-test -type d -name "results"`
+    - name: Upload logs and framekm metadata files
+      uses: actions/upload-artifact@v4
+      with:
+        name: framekm-metadata
+        path: ./test-results.tar.gz
+    - name: Evaluate the end state of the test
+      run: bash test_finish.sh
+      working-directory: ./end-to-end-test
