@@ -237,7 +237,7 @@ const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName
   const fields = ['SourceFile', 'Comment'];
   const data = Object.keys(exifData).map(frame => ({
     SourceFile: `${frameFolder}/${frame}`,
-    Comment: JSON.stringify(exifData[frame]).replace(/"/g, '\\"')
+    Comment: JSON.stringify(exifData[frame])
   }));
   const csv = parse(data, { fields });
   await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);

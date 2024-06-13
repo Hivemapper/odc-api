@@ -124,11 +124,13 @@ router.get('/framekm/add/:name/:speed', async (req, res) => {
     const files = readdirSync(dummyPath + req.params.name);
     const speed = Number(req.params.speed);
     fkm_id++;
+    let time = Date.now();
+
     for (const file of files) {
       const insertSQL = `
         INSERT INTO framekms (
-          image_name, image_path, speed, created_at, fkm_id, orientation
-        ) VALUES (?, ?, ?, ?, ?, ?);
+          image_name, image_path, speed, created_at, fkm_id, orientation, time
+        ) VALUES (?, ?, ?, ?, ?, ?, ?);
       `;
 
       await runAsync(insertSQL, [
@@ -138,7 +140,9 @@ router.get('/framekm/add/:name/:speed', async (req, res) => {
         Date.now(),
         fkm_id,
         speed === 3 ? 3 : 1,
+        time
       ]);
+      time += 30;
     }
     
     res.send({

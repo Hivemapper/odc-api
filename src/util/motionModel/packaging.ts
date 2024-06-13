@@ -27,7 +27,7 @@ import { getAnonymousID } from 'sqlite/deviceInfo';
 
 import { fetchGnssAuthLogsByTime } from 'sqlite/gnss_auth';
 import { getPublicKeyFromEeprom } from 'services/getPublicKeyFromEeprom';
-import { SignDetectionMetadata, SignGuess } from 'types/detections';
+import { LandmarksByFrame, SignDetectionMetadata, SignGuess } from 'types/detections';
 import { calculatePositionsForDetections, mergeGuesses } from 'util/guesses';
 import { getLatestGnssTime } from 'util/lock';
 import { repairCameraBridge } from 'util/index';
@@ -107,7 +107,10 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         }
       }
     });
-    const landmarksByFrame = mergeGuesses(signGuesses);
+    let landmarksByFrame: LandmarksByFrame = {};
+    if (signGuesses.length) {
+      landmarksByFrame = mergeGuesses(signGuesses);
+    }
 
     const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, signDetectionsByFrame, landmarksByFrame)
 
@@ -390,9 +393,7 @@ export const packMetadata = async (
       };
       validatedFrames.push(frame);
 
-      if (m.ml_model_hash) {
-        privacyModelHash = m.ml_model_hash;
-      }
+      privacyModelHash = m.ml_model_hash || undefined;
       numBytes += bytes;
     }
   }

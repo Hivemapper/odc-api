@@ -82,12 +82,11 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(UsbStateCheckService);
     serviceRunner.add(SetSwappinessService);
-    // serviceRunner.add(StartObjectDetection);
     serviceRunner.add(LogDbFileSize);
     serviceRunner.add(CommitFirmwareVersion);
 
     // Execute motion model
-    MotionModelController(); // for debugging purposes
+    MotionModelController(); 
 
     serviceRunner.run();
   } catch (e: unknown) {
