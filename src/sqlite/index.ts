@@ -114,18 +114,29 @@ export const getAsync = async (sql: string, params: any[] = []) => {
   }
 };
 
-
 export const runSchemaAsync = async (sql: string) => {
   const db = await getDb();
-  return new Promise((resolve, reject) => {
-    db.run(sql, function (err) {
-      if (err) {
-        reject(err);
+
+  for (let attempt = 0; attempt < MAX_RETRIES_QUERY; attempt++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        db.run(sql, function (err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(this);
+          }
+        });
+      });
+    } catch (err: any) {
+      if (err.code === 'SQLITE_BUSY' && attempt < MAX_RETRIES_QUERY - 1) {
+        console.log(`[SQLITE] Retry ${attempt + 1}: Retrying operation in ${RETRY_INTERVAL_QUERY / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_QUERY * (attempt + 1)));
       } else {
-        resolve(this);
+        throw err;
       }
-    });
-  });
+    }
+  }
 };
 
 export const initialise = async (): Promise<void> => {
@@ -223,10 +234,7 @@ export const createFrameKMTable = async (tableName: string): Promise<void> => {
     ml_letterbox_time INTEGER,
     ml_processed_at INTEGER,
     ml_grid INTEGER,
-    triplets INTEGER,
-    clock INTEGER,
     postponed INTEGER DEFAULT 0,
-    orientation INTEGER DEFAULT 1,
     error TEXT
   );`;
   try {

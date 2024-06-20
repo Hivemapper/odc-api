@@ -195,7 +195,6 @@ export const concatFrames = async (
           const filePath = frameRootFolder + '/' + file.name;
           const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
           const readStream = createReadStream(filePath);
-          console.log('File added to FrameKM');
           await asyncPipeline(readStream, writeStream);
           bytesMap[file.name] = file.size;
           totalBytes += file.size;

@@ -207,7 +207,6 @@ export const cleanHeadingsForFrameKm = async (fkmId: number): Promise<void> => {
     try {
           const updateSQL = 'UPDATE framekms SET heading = ? WHERE image_name = ?';
       await runAsync(updateSQL, [interpolatedHeading, frame.image_name]);
-      console.log('FrameKM heading updated successfully for image_name', frame.image_name);
     } catch (error) {
       console.error('Error updating FrameKM record:', error);
     }

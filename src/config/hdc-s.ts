@@ -6,8 +6,8 @@ import { CameraType } from 'types';
 export const PORT = 5000;
 
 export const PUBLIC_FOLDER = '/data/recording';
-export const TMP_PUBLIC_FOLDER = '/tmp/recording';
-export const FRAMES_ROOT_FOLDER = '/tmp/recording/pics';
+export const TMP_PUBLIC_FOLDER = '/data/recording';
+export const FRAMES_ROOT_FOLDER = '/data/recording/pics';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
