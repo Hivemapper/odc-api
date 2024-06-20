@@ -7,9 +7,9 @@ import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
-import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
+import { getConfig, getCutoffIndex, getDX } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
-import { writeExif } from 'util/index';
+import { fetchGnssWithCleanHeading } from './gnss';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -180,6 +180,60 @@ export const getFrameKm = async (
     return [];
   }
 };
+
+export const cleanHeadingsForFrameKm = async (fkmId: number): Promise<void> => {
+  const frameKm: FrameKmRecord[] = await getFrameKm(fkmId);
+  if (frameKm.length < 2) {
+    console.log('No FrameKM data found for the given ID');
+    return;
+  }
+
+  const startTime = frameKm[0].time;
+  const endTime = frameKm[frameKm.length - 1].time;
+
+  const gnssRecords: { heading: number | null, time: number }[] = await fetchGnssWithCleanHeading(startTime - 10 * 1000, endTime + 10 * 1000);
+  if (gnssRecords.length === 0) {
+    console.log('No GNSS data available within the time window.');
+    return;
+  }
+
+  for (const frame of frameKm) {
+    const interpolatedHeading = interpolateHeading(frame.system_time, gnssRecords);
+    if (interpolatedHeading == null) {
+      console.log('Unable to interpolate heading for system_time', frame.system_time);
+      continue;
+    }
+
+    try {
+          const updateSQL = 'UPDATE framekms SET heading = ? WHERE image_name = ?';
+      await runAsync(updateSQL, [interpolatedHeading, frame.image_name]);
+    } catch (error) {
+      console.error('Error updating FrameKM record:', error);
+    }
+  }
+};
+
+function interpolateHeading(targetTime: number, gnssRecords: { heading: number | null, time: number }[]): number | null {
+  let before: { heading: number, time: number } | null = null;
+  let after: { heading: number, time: number } | null = null;
+
+  for (const record of gnssRecords) {
+      if (record.time <= targetTime && record.heading != null) {
+          before = record as { heading: number, time: number };
+      } else {
+          after = record as { heading: number, time: number };
+          break;
+      }
+  }
+
+  if (!before || !after) {
+      return before ? before.heading : after ? after.heading : null;
+  }
+
+  const timeRatio = (targetTime - before.time) / (after.time - before.time);
+  const headingDiff = after.heading - before.heading;
+  return before.heading + timeRatio * headingDiff;
+}
 
 export const getPostponedEndTrim = async (): Promise<FrameKM> => {
   try {
@@ -378,8 +432,8 @@ export const addFramesToFrameKm = async (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
-          time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, clock, satellites_used, dilution, eph, frame_idx, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -444,6 +498,13 @@ export const addFramesToFrameKm = async (
               fkm_id++;
               frame_idx = 1;
             }
+            if (fkm_id !== lastFkmId) {
+              try {
+                await cleanHeadingsForFrameKm(lastFkmId);
+              } catch (error) {
+                console.error('Error cleaning headings:', error);
+              }
+            }
           }
           // Move frame
           const destination = join(
@@ -463,6 +524,11 @@ export const addFramesToFrameKm = async (
             fkm_id,
             frame_idx,
           );
+          let clock = 0;
+          const parts = row.image_name.split('_');
+          if (parts.length === 3) {
+            clock = Number(parts[2].replace('.jpg', ''));
+          }
 
           await runAsync(insertSQL, [
             fkm_id,
@@ -489,6 +555,7 @@ export const addFramesToFrameKm = async (
             row.orientation,
             Math.round(Number(row.time)),
             Math.round(Number(row.system_time)),
+            Math.round(Number(clock)),
             row.satellites_used,
             row.dilution,
             row.eph,

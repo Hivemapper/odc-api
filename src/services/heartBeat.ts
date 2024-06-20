@@ -77,7 +77,9 @@ export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
       return false;
     }
     const res = result.stdout.trim();
-    return res === 'active';
+    // It takes some time to activate camera-bridge service,
+    // when is-active will be returning "activating" status
+    return res !== 'inactive';
   } catch (e) {
     console.log('failed to check if camera running:', e);
   }

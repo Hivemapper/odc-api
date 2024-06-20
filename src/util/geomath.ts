@@ -192,5 +192,35 @@ export function distance(
   );
 }
 
+/**
+ * Moves a given distance from a starting latitude and longitude in the specified heading direction.
+ * 
+ * @param distance - The distance to move in meters.
+ * @param lat - The starting latitude.
+ * @param lon - The starting longitude.
+ * @param heading - The heading in degrees from north.
+ * @returns [newLatitude, newLongitude] - The new geographic coordinates.
+ */
+export function moveWithDistanceAndHeading(lat: number, lon: number, distance: number, heading: number): [number, number] {
+  // Earth’s radius, sphere (in meters)
+  const R = 6378137;
+  const bearing = heading * Math.PI / 180;  // Convert heading to radians
+  const delta = distance / R;  // Angular distance covered on earth's surface
+
+  const lat1 = lat * Math.PI / 180; // Convert latitude to radians
+  const lon1 = lon * Math.PI / 180; // Convert longitude to radians
+
+  let lat2 = Math.asin(Math.sin(lat1) * Math.cos(delta) +
+                       Math.cos(lat1) * Math.sin(delta) * Math.cos(bearing));
+  let lon2 = lon1 + Math.atan2(Math.sin(bearing) * Math.sin(delta) * Math.cos(lat1),
+                               Math.cos(delta) - Math.sin(lat1) * Math.sin(lat2));
+
+  // Convert radians back to degrees
+  lat2 = lat2 * 180 / Math.PI;
+  lon2 = lon2 * 180 / Math.PI;
+
+  return [lat2, lon2];
+}
+
 export const METERS_TO_MILES = 0.000621371;
 export const KM_TO_MILEs = 0.621371;

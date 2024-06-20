@@ -92,6 +92,7 @@ export type FrameKmRecord = {
     latitude: number;
     longitude: number;
     altitude: number;
+    heading: number;
     speed: number;
     time: number;
     system_time: number;
@@ -100,6 +101,8 @@ export type FrameKmRecord = {
     created_at?: number;
     ml_model_hash?: string;
     ml_detections?: string;
+    ml_sign_detections?: string;
+    angles?: string;
     ml_read_time?: number;
     ml_write_time?: number;
     ml_blur_time?: number;
