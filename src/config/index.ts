@@ -1,5 +1,5 @@
 export * from './hdc';
-export const API_VERSION = '5.0.3';
+export const API_VERSION = '5.0.9';
 export const FRAMEKM_VERSION = '1.9';
 
 export const isDev = () => {
