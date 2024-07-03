@@ -1,5 +1,5 @@
 export * from './hdc';
-export const API_VERSION = '4.8.12';
+export const API_VERSION = process.env.ODC_VERSION || '1.0.0';
 
 export const isDev = () => {
   return false;
