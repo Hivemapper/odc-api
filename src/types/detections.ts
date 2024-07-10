@@ -17,6 +17,9 @@ export type SignDetectionMetadata = {
   box: [number, number, number, number];
   projectedBox: [number, number, number, number];
   distance: number;
+  azimuth: number;
+  width: number;
+  height: number;
 }
 
 // Type definitions for the averaged location data
