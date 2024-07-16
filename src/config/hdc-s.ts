@@ -6,12 +6,13 @@ import { CameraType } from 'types';
 export const PORT = 5000;
 
 export const PUBLIC_FOLDER = '/data/recording';
-export const TMP_PUBLIC_FOLDER = '/tmp/recording';
-export const FRAMES_ROOT_FOLDER = '/tmp/recording/pics';
+export const TMP_PUBLIC_FOLDER = '/data/recording';
+export const FRAMES_ROOT_FOLDER = '/data/recording/pics';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
 export const DB_PATH = '/data/recording/data-logger.v1.4.5.db';
+export const LANDMARK_THUMBNAIL_FOLDER = '/data/recording/landmarks';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';

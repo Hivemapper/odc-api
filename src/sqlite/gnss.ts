@@ -58,3 +58,53 @@ export const fetchLastNGnssRecords = async (n: number): Promise<GnssRecord[]> =>
           });
     });
 }
+
+const GNSS_HEADING_ACCURACY_THRESHOLD = 3.0;
+export const fetchGnssWithCleanHeading = async (from: number, to?: number): Promise<{ heading: number | null, time: number }[]> => {
+    // Fetch GNSS logs within the time range
+    const gnssRecords = await fetchGnssLogsByTime(from, to);
+
+    const dataLength = gnssRecords.length;
+    const forwardLoop: (number | null)[] = new Array(dataLength).fill(null);
+    const backwardLoop: (number | null)[] = new Array(dataLength).fill(null);
+
+    let lastForwardGood: number | null = null;
+    let lastBackwardGood: number | null = null;
+
+    // Forward direction scan
+    for (let i = 0; i < dataLength; i++) {
+        if (gnssRecords[i].heading_accuracy < GNSS_HEADING_ACCURACY_THRESHOLD) {
+            lastForwardGood = gnssRecords[i].heading;
+        }
+        forwardLoop[i] = lastForwardGood;
+    }
+
+    // Backward direction scan
+    for (let i = dataLength - 1; i >= 0; i--) {
+        if (gnssRecords[i].heading_accuracy < GNSS_HEADING_ACCURACY_THRESHOLD) {
+            lastBackwardGood = gnssRecords[i].heading;
+        }
+        backwardLoop[i] = lastBackwardGood;
+    }
+
+    return gnssRecords.map((record, index) => ({
+        heading: forwardLoop[index] !== null ? forwardLoop[index] : backwardLoop[index],
+        time: record.system_time
+    }));
+}
+
+export const fetchLastGnssRecord = async (): Promise<GnssRecord | null> => {
+    try {
+        const lastRecords = await fetchLastNGnssRecords(1);
+        if (lastRecords.length) {
+            const last = lastRecords[0];
+            last.time = new Date(last.time + 'Z').getTime();
+            return last;
+        } else {
+            return null;
+        }
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
+}

@@ -82,22 +82,15 @@ export async function initAppServer(): Promise<Application> {
     serviceRunner.add(LoadPrivacyService);
     serviceRunner.add(UsbStateCheckService);
     serviceRunner.add(SetSwappinessService);
-    serviceRunner.add(StartObjectDetection);
     serviceRunner.add(LogDbFileSize);
     serviceRunner.add(CommitFirmwareVersion);
 
     // Execute motion model
-    MotionModelController();
+    MotionModelController(); 
 
     serviceRunner.run();
   } catch (e: unknown) {
     console.log('Error running services:', e);
-  }
-
-  try {
-    initUbxSessionAndSignatures();
-  } catch (e: unknown) {
-    console.log('Error setting M9N session ID:', e);
   }
 
   process.on('unhandledRejection', (reason, promise) => {

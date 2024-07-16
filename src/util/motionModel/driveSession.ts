@@ -126,7 +126,7 @@ export class DriveSession {
       );
       if (newFrames.length) {
         // can potentially add to separate FrameKMs
-        if (i === 0 || newFrames.length > 3) {
+        if (i === 0 || newFrames.length > 0) {
           await addFramesToFrameKm(newFrames, i > 0);
         }
       }
@@ -138,7 +138,7 @@ export class DriveSession {
       this.draftFrameKm?.getEvenlyDistancedFramesFromSensorData(
         isContinuous ? prevKeyFrames : [],
       ) || [];
-    if (newFrames.length > 1) {
+    if (newFrames.length > 0) {
       // can potentially add to separate FrameKMs
       await addFramesToFrameKm(newFrames, !isContinuous);
       const lastGpsElem = this.draftFrameKm?.getGpsData()?.pop();
@@ -289,7 +289,7 @@ export class DriveSession {
                 firstId: firstKmId,
                }),
             });
-            exec('systemctl restart object-detection');
+            exec('systemctl restart camera-bridge');
           }
         } else {
           this.countFaultyIterations = 0;
@@ -323,45 +323,43 @@ export class DriveSession {
   }
 
   async checkObjectDetectionService() {
+    // try {
+    //   // service should be active
+    //   const result = spawnSync('systemctl', ['is-active', 'object-detection'], {
+    //     encoding: 'utf-8',
+    //   });
     if (await getConfig('isEndToEndTestingEnabled')) {
       return;
     }
+    //   if (result.error) {
+    //     console.log('failed to check if camera running:', result.error);
+    //     return false;
+    //   }
+    //   const res = result.stdout.trim();
+    //   if (res !== 'active') {
+    //     exec('systemctl restart object-detection');
+    //     Instrumentation.add({
+    //       event: 'DashcamApiRepaired',
+    //       message: JSON.stringify({ serviceRepaired: 'object-detection' }),
+    //     });
+    //     return;
+    //   }
+    // } catch (e) {
+    //   console.log('failed to check if camera running:', e);
+    // }
 
-    try {
-      // service should be active
-      const result = spawnSync('systemctl', ['is-active', 'object-detection'], {
-        encoding: 'utf-8',
-      });
-  
-      if (result.error) {
-        console.log('failed to check if camera running:', result.error);
-        return false;
-      }
-      const res = result.stdout.trim();
-      if (res !== 'active') {
-        exec('systemctl restart object-detection');
-        Instrumentation.add({
-          event: 'DashcamApiRepaired',
-          message: JSON.stringify({ serviceRepaired: 'object-detection' }),
-        });
-        return;
-      }
-    } catch (e) {
-      console.log('failed to check if camera running:', e);
-    }
-
-    try {
-      const status = await getServiceStatus('object-detection');
-      if (status === 'failed') {
-        await setServiceStatus('object-detection', 'restarting');
-        exec('systemctl restart object-detection');
-        Instrumentation.add({
-          event: 'DashcamApiRepaired',
-          message: JSON.stringify({ serviceRepaired: 'object-detection' }),
-        });
-      }
-    } catch {
-      //
-    }
+    // try {
+    //   const status = await getServiceStatus('object-detection');
+    //   if (status === 'failed') {
+    //     await setServiceStatus('object-detection', 'restarting');
+    //     exec('systemctl restart object-detection');
+    //     Instrumentation.add({
+    //       event: 'DashcamApiRepaired',
+    //       message: JSON.stringify({ serviceRepaired: 'object-detection' }),
+    //     });
+    //   }
+    // } catch {
+    //   //
+    // }
   }
 }

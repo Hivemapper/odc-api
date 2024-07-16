@@ -43,7 +43,7 @@ export const querySensorData = async (
         const imuUntil = gnss[gnss.length - 1].system_time;
         const session = gnss[0].session;
         const imu = await fetchImuLogsByTime(imuSince, imuUntil, session);
-        await sleep(2000); // let frame buffer to fill up if needed
+        await sleep(1000); // let frame buffer to fill up if needed
         const images = await getFramesFromFS(imuSince, imuUntil);
         let magnetometer: MagnetometerRecord[] = [];
         if (!ignoreMagnetometer) {
@@ -101,7 +101,7 @@ export const querySensorData = async (
         accumImuFreq += ImuFreq;
         accumImageFreq += ImageFreq;
   
-        if (accumulated >= 10) {
+        if (accumulated >= 40) {
           Instrumentation.add({
             event: 'DashcamSensorDataFreq',
             size: Math.round(accumDuration),
@@ -169,6 +169,8 @@ export const resetDB = async () => {
     await runAsync('DELETE FROM frames;');
     await runAsync('DELETE FROM error_logs;');
     await runAsync('DELETE FROM gnss_auth;');
+    await runAsync('DELETE FROM landmarks;');
+    await runAsync('DELETE from metrics');
     // perform VACUUM to free up the space
     await runAsync('VACUUM;');
   } catch (error) {

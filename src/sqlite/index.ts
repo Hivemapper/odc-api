@@ -114,18 +114,29 @@ export const getAsync = async (sql: string, params: any[] = []) => {
   }
 };
 
-
 export const runSchemaAsync = async (sql: string) => {
   const db = await getDb();
-  return new Promise((resolve, reject) => {
-    db.run(sql, function (err) {
-      if (err) {
-        reject(err);
+
+  for (let attempt = 0; attempt < MAX_RETRIES_QUERY; attempt++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        db.run(sql, function (err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(this);
+          }
+        });
+      });
+    } catch (err: any) {
+      if (err.code === 'SQLITE_BUSY' && attempt < MAX_RETRIES_QUERY - 1) {
+        console.log(`[SQLITE] Retry ${attempt + 1}: Retrying operation in ${RETRY_INTERVAL_QUERY / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_QUERY * (attempt + 1)));
       } else {
-        resolve(this);
+        throw err;
       }
-    });
-  });
+    }
+  }
 };
 
 export const initialise = async (): Promise<void> => {
@@ -136,6 +147,8 @@ export const initialise = async (): Promise<void> => {
   await createFrameTable();
   await createConfigurationTable();
   await createDeviceInfoTable();
+  await createLandmarksTable();
+  await createMetricsTable();
   console.log('LOG: Tables created');
   const anonymousId = generate();
   await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
@@ -145,10 +158,24 @@ export const initialise = async (): Promise<void> => {
 
 export const performSoftMigrations = async (): Promise<void> => {
   const migrationCommands = [
+    `ALTER TABLE landmarks ADD COLUMN dashcam_lat REAL;`,
+    `ALTER TABLE landmarks ADD COLUMN dashcam_lon REAL;`,
+    `ALTER TABLE framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN triplets INTEGER DEFAULT -1;`,
+    `ALTER TABLE packed_framekms ADD COLUMN triplets INTEGER DEFAULT -1;`,
     `ALTER TABLE framekms ADD COLUMN orientation INTEGER DEFAULT 1;`,
     `ALTER TABLE packed_framekms ADD COLUMN orientation INTEGER DEFAULT 1;`,
     `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN ml_sign_detections TEXT;`,
+    `ALTER TABLE packed_framekms ADD COLUMN ml_sign_detections TEXT;`,
+    `ALTER TABLE framekms ADD COLUMN angles TEXT;`,
+    `ALTER TABLE packed_framekms ADD COLUMN angles TEXT;`,
+    `ALTER TABLE framekms ADD COLUMN heading INTEGER DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN heading INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN retry INTEGER DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN retry INTEGER DEFAULT 0;`,
     // Add more ALTER TABLE commands here as needed
   ];
 
@@ -209,7 +236,6 @@ export const createFrameKMTable = async (tableName: string): Promise<void> => {
     ml_processed_at INTEGER,
     ml_grid INTEGER,
     postponed INTEGER DEFAULT 0,
-    orientation INTEGER DEFAULT 1,
     error TEXT
   );`;
   try {
@@ -233,6 +259,43 @@ export const createFrameTable = async (): Promise<void> => {
     throw error;
   }
 };
+
+// create landmarks table: landmark id, latitute, longitude, label, num detections, thumbnail
+export const createLandmarksTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS landmarks (
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    alt REAL NOT NULL,
+    class TEXT NOT NULL,
+    vehicle_heading REAL NOT NULL,
+    detections INTEGER NOT NULL,
+    thumbnail TEXT,
+    Unique (lat, lon, class)
+    );`;
+  try {
+    await runSchemaAsync(createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the landmarks table:', error);
+    throw error;
+  }
+}
+
+export const createMetricsTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS metrics (
+    operation TEXT NOT NULL,
+    key TEXT,
+    started INTEGER NOT NULL,
+    duration INTEGER NOT NULL
+    );`;
+  try {
+    await runSchemaAsync(createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the metrics table:', error);
+    throw error;
+  }
+}
 
 export const createConfigurationTable = async (): Promise<void> => {
   const createTableSQL = `
