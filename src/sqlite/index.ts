@@ -148,6 +148,7 @@ export const initialise = async (): Promise<void> => {
   await createConfigurationTable();
   await createDeviceInfoTable();
   await createLandmarksTable();
+  await createMetricsTable();
   console.log('LOG: Tables created');
   const anonymousId = generate();
   await insertIntoDeviceInfo(ANONYMOUS_ID_FIELD, anonymousId);
@@ -276,6 +277,22 @@ export const createLandmarksTable = async (): Promise<void> => {
     await runSchemaAsync(createTableSQL);
   } catch (error) {
     console.error('Error during initialization of the landmarks table:', error);
+    throw error;
+  }
+}
+
+export const createMetricsTable = async (): Promise<void> => {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS metrics (
+    operation TEXT NOT NULL,
+    key TEXT,
+    started INTEGER NOT NULL,
+    duration INTEGER NOT NULL
+    );`;
+  try {
+    await runSchemaAsync(createTableSQL);
+  } catch (error) {
+    console.error('Error during initialization of the metrics table:', error);
     throw error;
   }
 }

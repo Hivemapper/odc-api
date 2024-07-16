@@ -170,6 +170,7 @@ export const resetDB = async () => {
     await runAsync('DELETE FROM error_logs;');
     await runAsync('DELETE FROM gnss_auth;');
     await runAsync('DELETE FROM landmarks;');
+    await runAsync('DELETE from metrics');
     // perform VACUUM to free up the space
     await runAsync('VACUUM;');
   } catch (error) {

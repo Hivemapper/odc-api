@@ -26,6 +26,7 @@ import { GnssRecord } from 'types/sqlite';
 let mostRecentPing = 0;
 let lastSuccessfulLock = 0;
 let isFirmwareUpdate = false;
+let isTestInProgress = false;
 let isPreviewInProgress = false;
 let wasCameraActive = false;
 let isLock = false;
