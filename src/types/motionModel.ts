@@ -55,7 +55,9 @@ export type SystemConfig = {
   SpeedToIncreaseDx?: number;
   HdcSwappiness?: number;
   HdcsSwappiness?: number;
+  BackupFramesPerFolder?: number;
   isProcessingEnabled?: boolean;
+  isFrameBackupEnabled?: boolean;
   isBrokenImageFixForHdcsEnabled?: boolean;
   isEndToEndTestingEnabled?: boolean;
 };
