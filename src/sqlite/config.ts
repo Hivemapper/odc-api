@@ -36,7 +36,9 @@ const defaultConfig: SystemConfig = {
   SpeedToIncreaseDx: 24, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
+  BackupFramesPerFolder: 10,
   isProcessingEnabled: true,
+  isFrameBackupEnabled: false,
   isBrokenImageFixForHdcsEnabled: true,
   isEndToEndTestingEnabled: false,
 };
