@@ -10,6 +10,51 @@ const wgs84 = "WGS84";
 const geocent = "+proj=geocent +datum=WGS84 +units=m +no_defs";
 const TOTAL_POSSIBLE_DETECTION_FRAMES = 5;
 
+/** Make the merging of multiple guesses together based on weights of multiple parameters: 
+ * distance (closer - better), // detections[i].distance
+ * box size (bigger box = more confidence) // detections[i].box: [x1, y1, x2, y2], (box[2] - box[0]) * (box[3] - box[1])
+ * frame_id (more recent - better) // detections[i].frame_id
+ * box location: center of the box (closer to the center - better) // detections[i].projectedBox: [x1, y1, x2, y2], (x1 + x2) / 2, (y1 + y2) / 2
+ */
+function getAverageCoordinatesBasedOnWeights(detections: SignGuess[]): { lat: number, lon: number } {
+  let totalWeight = 0;
+  let weightedXSum = 0;
+  let weightedYSum = 0;
+  let weightedZSum = 0;
+
+  const transformer = new CoordinateTransformer();
+
+  detections.forEach(d => {
+    const distanceWeight = 1 / d.distance; // Closer distance gives higher weight
+    const boxSize = (d.box[2] - d.box[0]) * (d.box[3] - d.box[1]);
+    const boxSizeWeight = boxSize; // Bigger box gives higher weight
+    const frameIDWeight = d.frame_id; // More recent gives higher weight
+    const boxCenterX = (d.projectedBox[0] + d.projectedBox[2]) / 2;
+    const boxCenterY = (d.projectedBox[1] + d.projectedBox[3]) / 2;
+    const centerProximityWeight = 1 / Math.sqrt((boxCenterX - 0.5) ** 2 + (boxCenterY - 0.5) ** 2); // Closer to center gives higher weight
+
+    const weight = distanceWeight + boxSizeWeight + frameIDWeight + centerProximityWeight;
+    totalWeight += weight;
+
+    const [x, y, z] = transformer.transformToGeocentric(d.sign_lon, d.sign_lat, 0);
+
+    weightedXSum += x * weight;
+    weightedYSum += y * weight;
+    weightedZSum += z * weight;
+  });
+
+  const averageX = weightedXSum / totalWeight;
+  const averageY = weightedYSum / totalWeight;
+  const averageZ = weightedZSum / totalWeight;
+
+  const [lon, lat] = transformer.transformToGeographic(averageX, averageY, averageZ);
+
+  return {
+    lat: lat,
+    lon: lon
+  };
+}
+
 export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
   const groupsFound = findDetectionGroups(detectionData);
   const landmarksByFrame: LandmarksByFrame = {};
@@ -42,34 +87,11 @@ export function mergeGuesses(detectionData: SignGuess[]): LandmarksByFrame {
         aveDetection.lon = detections[0].sign_lon;
 
         aveDetection.label = detections[0].label;
-      } else if (detections.length < 5) {
-        // pick the closest one by detection.distance
-        const closest = detections.reduce((prev, curr) => {
-          return prev.distance < curr.distance ? prev : curr;
-        });
-        aveDetection.lat = closest.sign_lat;
-        aveDetection.lon = closest.sign_lon;
-        aveDetection.label = closest.label;
       } else {
-        const coordinates = detections.map((d: any) => [d.sign_lat, d.sign_lon]);
-        const kmeans = new KMeans();
-        kmeans.cluster(coordinates, 1);
-        if (kmeans.centroids.length > 0) {
-          // Investigate the error
-          const centroid = kmeans.centroids[0];
-          console.log(kmeans.centroids[0]);
-          if (centroid.length > 1) {
-            if (centroid[0] && centroid[0] !== Infinity && centroid[0] !== -Infinity) {
-              aveDetection.lat = centroid[0];
-              aveDetection.lon = centroid[1];
-            } else {
-              console.log('Something goes wrong with centroid calc', centroid);
-            }
-          } else {
-            console.log('Empty centroid?', centroid);
-          }
-          aveDetection.label = detections[0].label;
-        }
+        const { lat, lon } = getAverageCoordinatesBasedOnWeights(detections);
+        aveDetection.lat = lat;
+        aveDetection.lon = lon;
+        aveDetection.label = detections[0].label;
       }
       detections.map(d => {
         if (aveDetection.lat || aveDetection.lon) {
@@ -132,6 +154,8 @@ export function calculatePositionsForDetections(frame: FrameKmRecord, detections
         heading: frame.heading,
         distance,
         timestamp: frame.system_time,
+        box: detection.box,
+        projectedBox: detection.projectedBox
       };
       if (sign_lat === 0 || sign_lat === Infinity || sign_lat === -Infinity) {
         console.log('calculate position went wrong', latitude, longitude, heading, image_name, hor_angle, ver_angle, box);
@@ -163,22 +187,6 @@ function findDetectionGroups(detections: SignGuess[], printGroups: boolean = fal
   }
 
   return groupsFound;
-}
-
-function averageCoordinates(detections: SignGuess[]): [number, number] {
-  if (!detections.length) {
-    return [0, 0];
-  }
-  const sumCoords = detections.reduce((acc, curr) => {
-    acc.lat += curr.sign_lat;
-    acc.lon += curr.sign_lon;
-    return acc;
-  }, { lat: 0, lon: 0 });
-
-  const numDetections = detections.length;
-  const averageLat = sumCoords.lat / numDetections;
-  const averageLon = sumCoords.lon / numDetections;
-  return [averageLat, averageLon];
 }
 
 class CoordinateTransformer {

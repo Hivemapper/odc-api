@@ -8,6 +8,8 @@ export interface SignGuess {
     distance: number;
     heading: number;
     timestamp: number;
+    box: [number, number, number, number];
+    projectedBox: [number, number, number, number];
 }
 
 export type SignDetectionMetadata = {
