@@ -5,7 +5,7 @@ import { getAsync, runAsync } from 'sqlite';
 import { resetDB, resetSensorData } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
 import { clearAll, getAllFrameKms, getEstimatedProcessingTime, getFramesCount } from 'sqlite/framekm';
-import { fetchLastNGnssRecords } from 'sqlite/gnss';
+import { fetchNGnssRecords } from 'sqlite/gnss';
 import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
 import { CameraType } from 'types';
@@ -17,7 +17,7 @@ const router = Router();
 router.get('/gnss/:n', async (req, res) => {
   const { n } = req.params;
   try {
-    const rows = await fetchLastNGnssRecords(Number(n));
+    const rows = await fetchNGnssRecords(Number(n));
     res.send(rows);
   } catch (error) {
     res.status(500).send({ error });
