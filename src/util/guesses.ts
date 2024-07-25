@@ -11,11 +11,11 @@ const geocent = "+proj=geocent +datum=WGS84 +units=m +no_defs";
 const TOTAL_POSSIBLE_DETECTION_FRAMES = 5;
 
 const weightConfig = {
-  distanceCoeff: 1, // TBD
-  confidenceCoeff: 1,
+  distanceCoeff: 1,
+  confidenceCoeff: 0.5,
   boxSizeCoeff: 1,
-  frameIdCoeff: 1,
-  centerProximityCoeff: 1,
+  frameIdCoeff: 0.5,
+  centerProximityCoeff: 0.5,
 };
 
 /** Make the merging of multiple guesses together based on weights of multiple parameters: 
