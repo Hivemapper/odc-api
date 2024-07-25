@@ -21,10 +21,8 @@ export const setGnssTime = (_gnssTime: number) => {
   // Workaround for usb circular write issue on HDC
   // See https://linear.app/hivemapper/issue/IMCO-166/investigate-hdc-recording-issue
   if (CAMERA_TYPE === CameraType.Hdc) {
-    console.log('Writing gnss time to /tmp/gnss_time.txt');
     fs.writeFile('/tmp/gnss_time.txt', gnssTime.toString(), () => {
       // Do nothing, best effort and we don't want to block.
-      console.log('gnss time written');
     });
   }
 }
