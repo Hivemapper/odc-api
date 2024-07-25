@@ -17,13 +17,15 @@ const weightConfig = {
   frameIdCoeff: 1,
   centerProximityCoeff: 1,
 };
+
 /** Make the merging of multiple guesses together based on weights of multiple parameters: 
  * distance (closer - better), // detections[i].distance
  * box size (bigger box = more confidence) // detections[i].box: [x1, y1, x2, y2], (box[2] - box[0]) * (box[3] - box[1])
  * frame_id (more recent - better) // detections[i].frame_id
  * box location: center of the box (closer to the center - better) // detections[i].projectedBox: [x1, y1, x2, y2], (x1 + x2) / 2, (y1 + y2) / 2
  */
-function getAverageCoordinatesBasedOnWeights(detections: SignGuess[]) {
+
+function getAverageCoordinatesBasedOnWeights(detections: SignGuess[]): { lat: number, lon: number } {
   const {
     distanceCoeff,
     boxSizeCoeff,
@@ -46,7 +48,8 @@ function getAverageCoordinatesBasedOnWeights(detections: SignGuess[]) {
     const frameIDWeight = d.frame_id * frameIdCoeff; // More recent gives higher weight
     const boxCenterX = (d.projectedBox[0] + d.projectedBox[2]) / 2;
     const boxCenterY = (d.projectedBox[1] + d.projectedBox[3]) / 2;
-    const centerProximityWeight = (1 / Math.sqrt((boxCenterX - 0.5) ** 2 + (boxCenterY - 0.5) ** 2)) * centerProximityCoeff; // Closer to center gives higher weight
+    const centerProximityDistance = Math.sqrt((boxCenterX - 0.5) ** 2 + (boxCenterY - 0.5) ** 2);
+    const centerProximityWeight = (1 / (centerProximityDistance + 1e-3)) * centerProximityCoeff; // Avoid division by very small numbers
     const confidenceWeight = d.confidence * confidenceCoeff; // Higher confidence gives higher weight
 
     const weight = distanceWeight + boxSizeWeight + frameIDWeight + centerProximityWeight + confidenceWeight;
@@ -54,16 +57,32 @@ function getAverageCoordinatesBasedOnWeights(detections: SignGuess[]) {
 
     const [x, y, z] = transformer.transformToGeocentric(d.sign_lon, d.sign_lat, 0);
 
+    // Ensure transformations are correct
+    if (!isFinite(x) || !isFinite(y) || !isFinite(z)) {
+      console.error("Invalid geocentric coordinates:", { lon: d.sign_lon, lat: d.sign_lat, x, y, z });
+      throw new Error("Invalid geocentric coordinates.");
+    }
+
     weightedXSum += x * weight;
     weightedYSum += y * weight;
     weightedZSum += z * weight;
   });
+
+  if (totalWeight === 0) {
+    throw new Error("Total weight is zero, cannot compute average coordinates.");
+  }
 
   const averageX = weightedXSum / totalWeight;
   const averageY = weightedYSum / totalWeight;
   const averageZ = weightedZSum / totalWeight;
 
   const [lon, lat] = transformer.transformToGeographic(averageX, averageY, averageZ);
+
+  // Ensure final coordinates are finite
+  if (!isFinite(lon) || !isFinite(lat)) {
+    console.error("Invalid average coordinates:", { averageX, averageY, averageZ, lon, lat });
+    throw new Error("Invalid average coordinates.");
+  }
 
   return {
     lat: lat,
@@ -207,21 +226,21 @@ function findDetectionGroups(detections: SignGuess[], printGroups: boolean = fal
 }
 
 class CoordinateTransformer {
-    private forwardTransformer: proj4.Converter;
-    private reverseTransformer: proj4.Converter;
+  private forwardTransformer: proj4.Converter;
+  private reverseTransformer: proj4.Converter;
 
-    constructor() {
-      this.forwardTransformer = proj4(wgs84, geocent);
-      this.reverseTransformer = proj4(geocent, wgs84);
-    }
-
-    public transformToGeocentric(lon: number, lat: number, alt: number = 0): number[] {
-      return this.forwardTransformer.forward([lon, lat, alt]);
-    }
-
-    public transformToGeographic(x: number, y: number, z: number): number[] {
-      return this.reverseTransformer.inverse([x, y, z]);
-    }
+  constructor() {
+    this.forwardTransformer = proj4(wgs84, geocent);
+    this.reverseTransformer = proj4(geocent, wgs84);
   }
 
-  const transformer = new CoordinateTransformer();
+  public transformToGeocentric(lon: number, lat: number, alt: number = 0): number[] {
+    return this.forwardTransformer.forward([lon, lat, alt]);
+  }
+
+  public transformToGeographic(x: number, y: number, z: number): number[] {
+    return this.reverseTransformer.forward([x, y, z]);
+  }
+}
+
+const transformer = new CoordinateTransformer();
