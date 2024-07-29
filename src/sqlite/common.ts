@@ -42,7 +42,7 @@ export const querySensorData = async (
         const imuSince = gnss[0].system_time;
         const imuUntil = gnss[gnss.length - 1].system_time;
         const session = gnss[0].session;
-        const imu = await fetchProcessedImuLogsByTime(imuSince, imuUntil, session); // What happens if the data is partially missing? ex. imu data is present for half the queried time period.
+        const imu = await fetchProcessedImuLogsByTime(imuSince, imuUntil, session); 
         await sleep(2000); // let frame buffer to fill up if needed
         const images = await getFramesFromFS(imuSince, imuUntil);
         let magnetometer: MagnetometerRecord[] = [];
