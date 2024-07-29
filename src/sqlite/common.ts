@@ -1,7 +1,7 @@
 import { IImage } from 'types';
 import { GnssRecord, ImuRecord, MagnetometerRecord } from 'types/sqlite';
-import { fetchGnssLogsByTime } from './gnss';
-import { fetchImuLogsByTime } from './imu';
+import { fetchProcessedGnssLogsByTime } from './gnss';
+import { fetchProcessedImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
 import { insertFrames } from './frames';
 import { runAsync } from 'sqlite';
@@ -31,18 +31,18 @@ export const querySensorData = async (
     const start = Date.now();
     console.log('Getting sensor data for: ', new Date(since));
 
-    // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
+    // Restricting the GNSS query to 2 min max, to prevent accidental overloads. // What is meant by accidental overloads? Important given IMU data is now running at 100 Hz.
     // Note: if `until` argument is explicitly provided, we do not restrict it.
     if (until === undefined) {
       until = since + 120 * 1000;
     }
 
-    const gnss = (await fetchGnssLogsByTime(since, until)).filter(g => g);
+    const gnss = (await fetchProcessedGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {
         const imuSince = gnss[0].system_time;
         const imuUntil = gnss[gnss.length - 1].system_time;
         const session = gnss[0].session;
-        const imu = await fetchImuLogsByTime(imuSince, imuUntil, session);
+        const imu = await fetchProcessedImuLogsByTime(imuSince, imuUntil, session); // What happens if the data is partially missing? ex. imu data is present for half the queried time period.
         await sleep(2000); // let frame buffer to fill up if needed
         const images = await getFramesFromFS(imuSince, imuUntil);
         let magnetometer: MagnetometerRecord[] = [];

@@ -61,6 +61,19 @@ export const connectDB = async (initialiseDB: () => Promise<void>): Promise<Data
   throw new Error('[SQLITE] Unable to connect to the database after maximum retries');
 };
 
+export const queryDB = async <T>(query: string, args: any[]): Promise<T[]> => {
+  const db = await getDb();
+  return new Promise((resolve, reject) => {
+      db.all(query, args, (err: unknown, rows: T[]) => {
+          if (err) {
+              reject([]);
+          } else {
+              resolve(rows);
+          }
+      });
+  });
+}
+
 export const runAsync = async (sql: string, params: any[] = []) => {
   const db = await getDb();
 
