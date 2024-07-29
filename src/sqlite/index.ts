@@ -162,6 +162,8 @@ export const performSoftMigrations = async (): Promise<void> => {
     `ALTER TABLE packed_framekms ADD COLUMN orientation INTEGER DEFAULT 1;`,
     `ALTER TABLE framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN dx INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN stationary REAL DEFAULT -1.0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN stationary REAL DEFAULT -1.0;`,
     // Add more ALTER TABLE commands here as needed
   ];
 
