@@ -190,9 +190,9 @@ export class DriveSession {
     const now = getLatestGnssTime();
     const date = await fetchLastProcessedGnssRecord();
     if (date) {
-      return  date.time;
+      return  date.time - (60 * 1000); // 1 minute ago
     }
-    return now - 60 * 1000; // 1 minute ago
+    return now - (60 * 1000); // 1 minute ago
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
