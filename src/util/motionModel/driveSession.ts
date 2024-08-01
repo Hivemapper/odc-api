@@ -36,6 +36,7 @@ import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 import { repairCameraBridge } from 'util/index';
+import { fetchLastProcessedGnssRecord } from 'sqlite/gnss';
 
 const NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS = 120;
 const NUMBER_OF_ALLOWED_IMAGER_PROBLEMS = 120;
@@ -187,11 +188,11 @@ export class DriveSession {
 
   async getLastTime() {
     const now = getLatestGnssTime();
-    if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
-      return Math.max(this.draftFrameKm.getLastTime(), now - 60 * 1000);
+    const date = await fetchLastProcessedGnssRecord();
+    if (date) {
+      return  Math.max(date.time, now - 70 * 1000) // 70 seconds to be sure as sensor-fusion has a min 60s delay
     }
-    const date = await getLastTimestamp();
-    return Math.max(date, now - 60 * 1000);
+    return now - 60 * 1000;
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
