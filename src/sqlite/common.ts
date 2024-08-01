@@ -22,14 +22,14 @@ let biggestGnssTimeDelta = 0;
 let biggestTimeFixDelta = 0;
 
 export const querySensorData = async (
-  since: number, until?: number, ignoreMagnetometer?: boolean
+  since: number, until?: number, ignoreMagnetometer?: boolean, requester?: string,
 ): Promise<{ gnss: GnssRecord[]; imu: ImuRecord[]; images: IImage[]; magnetometer: MagnetometerRecord[] }> => {
   try {
     if (!since) {
       return { gnss: [], imu: [], images: [], magnetometer: [] };
     }
     const start = Date.now();
-    console.log('Getting sensor data for: ', new Date(since));
+    console.log(requester,'-> Getting sensor data for: ', new Date(since));
 
     // Restricting the GNSS query to 2 min max, to prevent accidental overloads.
     // Note: if `until` argument is explicitly provided, we do not restrict it.
