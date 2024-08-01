@@ -217,9 +217,9 @@ export class DraftFrameKm {
 
   getLastTime() {
     if (this.data.length) {
-      const lastGps = this.getGpsData()?.pop();
-      if (lastGps) {
-        return lastGps.time;
+      const gps = this.getGpsData();
+      if (gps.length > 0) {
+        return gps[gps.length - 1].time;
       } else {
         return 0;
       }

@@ -37,6 +37,9 @@ import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 import { repairCameraBridge } from 'util/index';
 
+const NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS = 120;
+const NUMBER_OF_ALLOWED_IMAGER_PROBLEMS = 120;
+
 let sessionTrimmed = false;
 
 export class DriveSession {
@@ -239,7 +242,7 @@ export class DriveSession {
   ) {
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
-      if (this.possibleGnssImuProblemCounter === 3) {
+      if (this.possibleGnssImuProblemCounter === NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS) {
         await this.repairDataLogger();
         this.possibleGnssImuProblemCounter = 0;
       }
@@ -249,7 +252,7 @@ export class DriveSession {
 
     if (!images.length) {
       this.possibleImagerProblemCounter++;
-      if (this.possibleImagerProblemCounter === 3) {
+      if (this.possibleImagerProblemCounter === NUMBER_OF_ALLOWED_IMAGER_PROBLEMS) {
         repairCameraBridge({ reason: 'no images' });
         this.possibleImagerProblemCounter = 0;
       }
