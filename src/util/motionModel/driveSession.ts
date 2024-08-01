@@ -190,9 +190,9 @@ export class DriveSession {
     const now = getLatestGnssTime();
     const date = await fetchLastProcessedGnssRecord();
     if (date) {
-      return  Math.max(date.time, now - 70 * 1000) // 70 seconds to be sure as sensor-fusion has a min 60s delay
+      return  date.time;
     }
-    return now - 60 * 1000;
+    return now - 60 * 1000; // 1 minute ago
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
