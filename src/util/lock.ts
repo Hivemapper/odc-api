@@ -23,8 +23,12 @@ export const setGnssTime = (_gnssTime: number) => {
   // See https://linear.app/hivemapper/issue/IMCO-166/investigate-hdc-recording-issue
   if (CAMERA_TYPE === CameraType.Hdc && !gnssOffsetWritten) {
     const gnssOffset = gnssTime - Date.now();
-    fs.writeFile('/tmp/gnss_time.txt', gnssOffset.toString(), () => {
-      gnssOffsetWritten = true;
+    fs.writeFile('/tmp/gnss_time.txt', gnssOffset.toString(), (err) => {
+      if (!err) {
+        gnssOffsetWritten = true;
+      } else {
+        console.log('Failed to write gnss offset', err);
+      }
     });
   }
 }
