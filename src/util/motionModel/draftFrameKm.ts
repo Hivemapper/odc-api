@@ -67,8 +67,9 @@ export class DraftFrameKm {
         gnss.longitude,
       );
 
+      // current record is either before or at the same time as the previous one
+      // skip it and return
       if (deltaTime <= 0) {
-        console.log('Potential error: GPS records with no time difference');
         return true;
       }
       // // If stationary ignore gnss data
