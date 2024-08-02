@@ -28,6 +28,7 @@ export class DraftFrameKm {
   totalDistance = 0;
   highSpeedRecordsInARow = 0;
   lowSpeedRecordsInARow = 0;
+  isStationary = false;
 
   constructor(data?: SensorData) {
     this.data = [];
@@ -66,11 +67,15 @@ export class DraftFrameKm {
         gnss.longitude,
       );
 
+      // current record is either before or at the same time as the previous one
+      // skip it and return
       if (deltaTime <= 0) {
-        console.log('Potential error: GPS records with no time difference');
         return true;
       }
-
+      // // If stationary ignore gnss data
+      // if (this.isStationary){
+      //   return true;
+      // }
       // Let's take minimum of speed from GPS and speed calculated from distance and time
       gnss.speed = Math.min(gnss.speed, distance / ( deltaTime / 1000));
 
@@ -176,6 +181,7 @@ export class DraftFrameKm {
       }
     } else if (isImu(data)) {
       if (!this.lastImuTimestamp) {
+        this.isStationary == ((data as ImuRecord).stationary == 1.0);
         this.data.push(data);
       } else {
         const deltaTime = data.system_time - this.lastImuTimestamp;
@@ -183,6 +189,7 @@ export class DraftFrameKm {
         if (deltaTime < 0) {
           console.log('already inserted');
         } else {
+          this.isStationary == ((data as ImuRecord).stationary == 1.0);
           this.data.push(data);
         }
       }
@@ -211,9 +218,9 @@ export class DraftFrameKm {
 
   getLastTime() {
     if (this.data.length) {
-      const lastGps = this.getGpsData()?.pop();
-      if (lastGps) {
-        return lastGps.time;
+      const gps = this.getGpsData();
+      if (gps.length > 0) {
+        return gps[gps.length - 1].time;
       } else {
         return 0;
       }

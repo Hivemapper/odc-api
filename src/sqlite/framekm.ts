@@ -262,7 +262,7 @@ export const deleteFrameKm = async (
 };
 
 export const maintainPackedFrameKmTable = async (): Promise<void> => {
-  const maxRows = 5000;
+  const maxRows = 15000;
   const checkRowCountSQL = `
     SELECT COUNT(*) AS row_count FROM packed_framekms;
   `;
@@ -379,11 +379,11 @@ export const addFramesToFrameKm = async (
     return new Promise(async resolve => {
       const insertSQL = `
         INSERT INTO framekms (
-          fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
+          fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z, stationary,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
           time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -500,6 +500,7 @@ export const addFramesToFrameKm = async (
             row.gyro_x,
             row.gyro_y,
             row.gyro_z,
+            row.stationary,
             row.latitude,
             row.longitude,
             row.altitude,

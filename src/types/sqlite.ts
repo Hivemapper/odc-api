@@ -8,6 +8,7 @@ export interface ImuRecord {
     gyro_x: number;
     gyro_y: number;
     gyro_z: number;
+    stationary?: number; // Only present in the processed IMU data
     temperature: number;
     session: string;
 }
@@ -82,6 +83,7 @@ export type FrameKmRecord = {
     gyro_x: number;
     gyro_y: number;
     gyro_z: number;
+    stationary?: number;
     xdop: number;
     ydop: number;
     tdop: number;

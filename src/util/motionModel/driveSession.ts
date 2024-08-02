@@ -36,6 +36,10 @@ import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 import { repairCameraBridge } from 'util/index';
+import { fetchLastProcessedGnssRecord } from 'sqlite/gnss';
+
+const NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS = 120;
+const NUMBER_OF_ALLOWED_IMAGER_PROBLEMS = 120;
 
 let sessionTrimmed = false;
 
@@ -184,11 +188,11 @@ export class DriveSession {
 
   async getLastTime() {
     const now = getLatestGnssTime();
-    if (this.draftFrameKm && !this.draftFrameKm.isEmpty()) {
-      return Math.max(this.draftFrameKm.getLastTime(), now - 60 * 1000);
+    const date = await fetchLastProcessedGnssRecord();
+    if (date) {
+      return  date.time - (60 * 1000); // 1 minute ago
     }
-    const date = await getLastTimestamp();
-    return Math.max(date, now - 60 * 1000);
+    return now - (60 * 1000); // 1 minute ago
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
@@ -239,7 +243,7 @@ export class DriveSession {
   ) {
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
-      if (this.possibleGnssImuProblemCounter === 3) {
+      if (this.possibleGnssImuProblemCounter === NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS) {
         await this.repairDataLogger();
         this.possibleGnssImuProblemCounter = 0;
       }
@@ -249,7 +253,7 @@ export class DriveSession {
 
     if (!images.length) {
       this.possibleImagerProblemCounter++;
-      if (this.possibleImagerProblemCounter === 3) {
+      if (this.possibleImagerProblemCounter === NUMBER_OF_ALLOWED_IMAGER_PROBLEMS) {
         repairCameraBridge({ reason: 'no images' });
         this.possibleImagerProblemCounter = 0;
       }

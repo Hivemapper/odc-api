@@ -32,7 +32,7 @@ export async function MotionModelController() {
     }
 
     const { gnss, imu, images } = await querySensorData(
-      await session.getLastTime(), undefined, true
+      await session.getLastTime(), undefined, true, 'MotionModelController',
     );
 
     await session.ingestData(gnss, imu, images);
