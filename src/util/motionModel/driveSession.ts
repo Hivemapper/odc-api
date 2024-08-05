@@ -49,6 +49,7 @@ export class DriveSession {
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
   started = false;
+  lastIngestedTime: number = 0;
 
   constructor(trimDistance = 100) {
     this.trimDistance = trimDistance;
@@ -87,6 +88,12 @@ export class DriveSession {
         this.frameKmsToProcess.push(this.draftFrameKm);
         this.draftFrameKm = new DraftFrameKm(data);
       }
+      // regardless of added status, update lastIngestedTime
+      // to avoid processing the same data again
+      if (data.system_time > this.lastIngestedTime){
+        this.lastIngestedTime = data.system_time;
+      }
+      
     }
   }
 

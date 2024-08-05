@@ -31,8 +31,16 @@ export async function MotionModelController() {
       await session.checkObjectDetectionService();
     }
 
+    // if sessions last ingested time is 0, query last time
+    let queryTime = session.lastIngestedTime;
+    if (session.lastIngestedTime === 0){
+      queryTime = await session.getLastTime();
+    } else {
+      queryTime += 1; // Ensure query time is after last ingested time
+    }
+
     const { gnss, imu, images } = await querySensorData(
-      await session.getLastTime(), undefined, true, 'MotionModelController',
+      queryTime, undefined, true, 'MotionModelController',
     );
 
     await session.ingestData(gnss, imu, images);
