@@ -194,12 +194,19 @@ export class DriveSession {
   }
 
   async getLastTime() {
-    const now = getLatestGnssTime();
-    const date = await fetchLastProcessedGnssRecord();
-    if (date) {
-      return  date.time - (60 * 1000); // 1 minute ago
+    // if sessions last ingested time is 0 it means no time has been ingested yet
+    // so we need to query last time
+    if (this.lastIngestedTime === 0) {
+      const now = getLatestGnssTime();
+      const date = await fetchLastProcessedGnssRecord();
+      if (date) {
+        return  date.time - (60 * 1000); // 1 minute ago
+      }
+      return now - (60 * 1000); // 1 minute ago
     }
-    return now - (60 * 1000); // 1 minute ago
+    else{
+      return this.lastIngestedTime + 1; // Ensure query time is after last ingested time
+    }
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
