@@ -49,6 +49,7 @@ export class DriveSession {
   draftFrameKm: DraftFrameKm | null = null;
   trimDistance: number;
   started = false;
+  lastIngestedTime: number = 0;
 
   constructor(trimDistance = 100) {
     this.trimDistance = trimDistance;
@@ -87,6 +88,12 @@ export class DriveSession {
         this.frameKmsToProcess.push(this.draftFrameKm);
         this.draftFrameKm = new DraftFrameKm(data);
       }
+      // regardless of added status, update lastIngestedTime
+      // to avoid processing the same data again
+      if (data.system_time > this.lastIngestedTime){
+        this.lastIngestedTime = data.system_time;
+      }
+      
     }
   }
 
@@ -187,12 +194,20 @@ export class DriveSession {
   }
 
   async getLastTime() {
-    const now = getLatestGnssTime();
-    const date = await fetchLastProcessedGnssRecord();
-    if (date) {
-      return  date.time - (60 * 1000); // 1 minute ago
+    // if sessions last ingested time is 0 it means no time has been ingested yet
+    // so we need to query last time
+    if (this.lastIngestedTime === 0) {
+      const now = getLatestGnssTime();
+      const date = await fetchLastProcessedGnssRecord();
+      if (date) {
+        return  date.time - (60 * 1000); // 1 minute ago
+      }
+      return now - (60 * 1000); // 1 minute ago
     }
-    return now - (60 * 1000); // 1 minute ago
+    else{
+      this.lastIngestedTime = this.lastIngestedTime + 1; // Ensure query time is after last ingested time
+      return this.lastIngestedTime; 
+    }
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {

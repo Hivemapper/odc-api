@@ -5,6 +5,7 @@ import { fetchProcessedImuLogsByTime } from './imu';
 import { getFramesFromFS } from 'util/frames';
 import { insertFrames } from './frames';
 import { runAsync } from 'sqlite';
+import { insertSensorFusionLog  } from 'sqlite/error';
 import { Instrumentation, getGnssDopKpi } from 'util/instrumentation';
 import { GnssDopKpi } from 'types/instrumentation';
 import { sleep } from 'util/index';
@@ -37,6 +38,7 @@ export const querySensorData = async (
       until = since + 120 * 1000;
     }
 
+    await insertSensorFusionLog('querySensorData', `Querying sensor data from ${since} to ${until}`);
     const gnss = (await fetchProcessedGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {
         const imuSince = gnss[0].system_time;

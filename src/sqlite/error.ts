@@ -30,6 +30,18 @@ export const insertErrorLog = async (message: string) => {
   }
 };
 
+export const insertSensorFusionLog = async (errorType: string, errorMessage: string) => {
+  const systemTime = formatDate(new Date()); // Current system time in the specified format
+
+  const insertSQL = `INSERT OR IGNORE INTO sensor_fusion_logs (system_time, error_type, error_message) VALUES (?, ?, ?);`;
+  try {
+      await runAsync(insertSQL, [systemTime, errorType, errorMessage]);
+  } catch (err) {
+      console.error("Error inserting into sensor_fusion_logs:", err);
+      throw err;
+  }
+};
+
 const formatDate = (date: Date) => {
   const pad = (num: number, size: number) => num.toString().padStart(size, '0');
 
