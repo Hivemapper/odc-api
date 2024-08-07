@@ -205,7 +205,8 @@ export class DriveSession {
       return now - (60 * 1000); // 1 minute ago
     }
     else{
-      return this.lastIngestedTime + 1; // Ensure query time is after last ingested time
+      this.lastIngestedTime = this.lastIngestedTime + 1; // Ensure query time is after last ingested time
+      return this.lastIngestedTime; 
     }
   }
 
