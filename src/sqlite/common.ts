@@ -39,7 +39,7 @@ export const querySensorData = async (
     }
 
     try{
-      await insertSensorFusionLog('querySensorData', `Querying sensor data from ${(new Date(since)).toISOString()} to ${(new Date(until)).toISOString()}`);
+      await insertSensorFusionLog('querySensorData', `Querying sensor data from ${new Date(since)} to ${new Date(until)}`);
     }
     catch(e){
       console.log('Query Sensor Data-> Error inserting into sensor_fusion_logs:', e);
