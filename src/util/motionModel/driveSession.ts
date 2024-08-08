@@ -37,6 +37,7 @@ import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 import { repairCameraBridge } from 'util/index';
 import { fetchLastProcessedGnssRecord } from 'sqlite/gnss';
+import { insertSensorFusionLog  } from 'sqlite/error';
 
 const NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS = 120;
 const NUMBER_OF_ALLOWED_IMAGER_PROBLEMS = 120;
@@ -77,6 +78,11 @@ export class DriveSession {
       if (!this.dataIsGoodEnough(data, GnssFilter, MaxPendingTime)) {
         continue;
       }
+      // regardless of added status, update lastIngestedTime
+      // to avoid processing the same data again
+      if (data.system_time > this.lastIngestedTime){
+        this.lastIngestedTime = data.system_time;
+      }
 
       if (!this.draftFrameKm) {
         this.draftFrameKm = new DraftFrameKm(data);
@@ -88,12 +94,6 @@ export class DriveSession {
         this.frameKmsToProcess.push(this.draftFrameKm);
         this.draftFrameKm = new DraftFrameKm(data);
       }
-      // regardless of added status, update lastIngestedTime
-      // to avoid processing the same data again
-      if (data.system_time > this.lastIngestedTime){
-        this.lastIngestedTime = data.system_time;
-      }
-      
     }
   }
 
@@ -193,21 +193,35 @@ export class DriveSession {
     return isTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
   }
 
+  // async getLastTime() {
+  //   // if sessions last ingested time is 0 it means no time has been ingested yet
+  //   // so we need to query last time
+  //   if (this.lastIngestedTime === 0) {
+  //     const now = getLatestGnssTime();
+  //     const date = await fetchLastProcessedGnssRecord();
+  //     if (date) {
+  //       return  date.time - (120 * 1000); // 2 minute ago
+  //     }
+  //     return now - (60 * 1000); // 1 minute ago
+  //   }
+  //   else{
+  //     this.lastIngestedTime = this.lastIngestedTime + 1; // Ensure query time is after last ingested time
+  //     return this.lastIngestedTime; 
+  //   }
+  // }
+
   async getLastTime() {
-    // if sessions last ingested time is 0 it means no time has been ingested yet
-    // so we need to query last time
-    if (this.lastIngestedTime === 0) {
-      const now = getLatestGnssTime();
-      const date = await fetchLastProcessedGnssRecord();
-      if (date) {
-        return  date.time - (60 * 1000); // 1 minute ago
-      }
-      return now - (60 * 1000); // 1 minute ago
+    const now = getLatestGnssTime();
+    const date = await fetchLastProcessedGnssRecord();
+    await insertSensorFusionLog('getLastTime', `Last time: ${now - (60 * 1000)}`);
+    await insertSensorFusionLog('getLastIngestedTime', `Last time: ${this.lastIngestedTime}`);
+    if (date) {
+      console.log('Last time:', date.time - (120 * 1000), "lastIngestedTime:", this.lastIngestedTime);
+      await insertSensorFusionLog('getLastProcessedTime', `Last time: ${date.time - (120 * 1000)}`);
+      return  date.time - (120 * 1000); // 1 minute ago
     }
-    else{
-      this.lastIngestedTime = this.lastIngestedTime + 1; // Ensure query time is after last ingested time
-      return this.lastIngestedTime; 
-    }
+    console.log('Last time:', now - (60 * 1000), "lastIngestedTime:", this.lastIngestedTime);
+    return now - (60 * 1000); // 1 minute ago
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {

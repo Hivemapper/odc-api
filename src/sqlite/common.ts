@@ -38,7 +38,13 @@ export const querySensorData = async (
       until = since + 120 * 1000;
     }
 
-    await insertSensorFusionLog('querySensorData', `Querying sensor data from ${since} to ${until}`);
+    try{
+      await insertSensorFusionLog('querySensorData', `Querying sensor data from ${(new Date(since)).toISOString()} to ${(new Date(until)).toISOString()}`);
+    }
+    catch(e){
+      console.log('Query Sensor Data-> Error inserting into sensor_fusion_logs:', e);
+    }
+
     const gnss = (await fetchProcessedGnssLogsByTime(since, until)).filter(g => g);
     if (gnss.length) {
         const imuSince = gnss[0].system_time;
