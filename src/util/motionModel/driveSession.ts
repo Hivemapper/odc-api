@@ -234,7 +234,7 @@ export class DriveSession {
       //   await insertSensorFusionLog('getLastProcessedTime', `Last time: ${new Date(date.time - (60 * 1000))}`);
       //   return  date.time - (60 * 1000); // 1 minute ago
       // }
-      return now - (60 * 1000); // 1 minute ago
+      return now - (90 * 1000); // 1 min 30 seconds ago
     }
     else{
       console.log("lastIngestedTime:", new Date(this.lastIngestedTime));
