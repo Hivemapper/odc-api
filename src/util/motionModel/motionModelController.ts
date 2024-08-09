@@ -4,7 +4,7 @@ import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from 'sqlite/config';
 
-const QUERY_WINDOW_SIZE = 10 * 1000;
+const QUERY_WINDOW_SIZE = 20 * 1000;
 
 let session = new DriveSession();
 

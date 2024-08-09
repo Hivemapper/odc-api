@@ -80,8 +80,22 @@ export class DriveSession {
       }
       // regardless of added status, update lastIngestedTime
       // to avoid processing the same data again
-      if (data.system_time > this.lastIngestedTime){
-        this.lastIngestedTime = data.system_time;
+      try{
+        if (isGnss(data)){
+          const gnssInstance: GnssRecord = data as GnssRecord;
+          console.log("GNSS Check", )
+          if (gnssInstance.time > this.lastIngestedTime) {
+            this.lastIngestedTime = new Date(gnssInstance.time + 'Z').getTime();
+          }
+        }
+        if (isImu(data)){
+          const imuInstance: ImuRecord = data as ImuRecord;
+          if (imuInstance.time > this.lastIngestedTime) {
+            this.lastIngestedTime = new Date(imuInstance.time + 'Z').getTime();
+          }
+        }
+      } catch (e: unknown) {
+        console.log('failed to get ingested time')
       }
 
       if (!this.draftFrameKm) {
@@ -193,18 +207,40 @@ export class DriveSession {
     return isTimeSet() && isIntegrityCheckDone() && isPrivateZonesInitialised();
   }
 
+  // async getLastTime() {
+  //   const now = getLatestGnssTime();
+  //   const date = await fetchLastProcessedGnssRecord();
+  //   await insertSensorFusionLog('getLastTime', `Last time: ${new Date(now - (60 * 1000))}`);
+  //   await insertSensorFusionLog('getLastIngestedTime', `Last time: ${new Date(this.lastIngestedTime)}`);
+  //   if (date) {
+  //     console.log('Last time:', new Date(date.time - (120 * 1000)), "lastIngestedTime:", new Date(this.lastIngestedTime));
+  //     await insertSensorFusionLog('getLastProcessedTime', `Last time: ${new Date(date.time - (120 * 1000))}`);
+  //     return  date.time - (120 * 1000); // 1 minute ago
+  //   }
+  //   console.log('Last time:', new Date(now - (60 * 1000)), "lastIngestedTime:", new Date(this.lastIngestedTime));
+  //   return now - (60 * 1000); // 1 minute ago
+  // }
+
   async getLastTime() {
-    const now = getLatestGnssTime();
-    const date = await fetchLastProcessedGnssRecord();
-    await insertSensorFusionLog('getLastTime', `Last time: ${new Date(now - (60 * 1000))}`);
-    await insertSensorFusionLog('getLastIngestedTime', `Last time: ${new Date(this.lastIngestedTime)}`);
-    if (date) {
-      console.log('Last time:', new Date(date.time - (120 * 1000)), "lastIngestedTime:", new Date(this.lastIngestedTime));
-      await insertSensorFusionLog('getLastProcessedTime', `Last time: ${new Date(date.time - (120 * 1000))}`);
-      return  date.time - (120 * 1000); // 1 minute ago
+    // if sessions last ingested time is 0 it means no time has been ingested yet
+    // so we need to query last time
+    if (this.lastIngestedTime === 0) {
+      const now = getLatestGnssTime();
+      // const date = await fetchLastProcessedGnssRecord();
+      await insertSensorFusionLog('getLastTime', `Last time: ${new Date(now - (60 * 1000))}`);
+      await insertSensorFusionLog('getLastIngestedTime', `Last time: ${new Date(this.lastIngestedTime)}`);
+      // if (date) {
+      //   console.log('Last time:', new Date(date.time - (60 * 1000)), "lastIngestedTime:", new Date(this.lastIngestedTime));
+      //   await insertSensorFusionLog('getLastProcessedTime', `Last time: ${new Date(date.time - (60 * 1000))}`);
+      //   return  date.time - (60 * 1000); // 1 minute ago
+      // }
+      return now - (60 * 1000); // 1 minute ago
     }
-    console.log('Last time:', new Date(now - (60 * 1000)), "lastIngestedTime:", new Date(this.lastIngestedTime));
-    return now - (60 * 1000); // 1 minute ago
+    else{
+      console.log("lastIngestedTime:", new Date(this.lastIngestedTime));
+      await insertSensorFusionLog('getLastIngestedTime', `Last time: ${new Date(this.lastIngestedTime)}`);
+      return this.lastIngestedTime; 
+    }
   }
 
   async getNextFrameKMToProcess(ignorePostponed = false): Promise<FrameKM | null> {
