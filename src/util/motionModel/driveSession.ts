@@ -83,15 +83,14 @@ export class DriveSession {
       try{
         if (isGnss(data)){
           const gnssInstance: GnssRecord = data as GnssRecord;
-          console.log("GNSS Check", )
           if (gnssInstance.time > this.lastIngestedTime) {
-            this.lastIngestedTime = new Date(gnssInstance.time + 'Z').getTime();
+            this.lastIngestedTime = gnssInstance.time;
           }
         }
         if (isImu(data)){
           const imuInstance: ImuRecord = data as ImuRecord;
           if (imuInstance.time > this.lastIngestedTime) {
-            this.lastIngestedTime = new Date(imuInstance.time + 'Z').getTime();
+            this.lastIngestedTime = imuInstance.time;
           }
         }
       } catch (e: unknown) {
