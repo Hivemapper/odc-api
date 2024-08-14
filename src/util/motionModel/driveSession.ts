@@ -31,13 +31,11 @@ import { isImuValid } from 'util/imu';
 import { GnssFilter } from 'types/motionModel';
 import { exec, spawnSync } from 'child_process';
 import { DATA_LOGGER_SERVICE } from 'config';
-import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 import { repairCameraBridge } from 'util/index';
-import { fetchLastProcessedGnssRecord } from 'sqlite/gnss';
-import { insertSensorFusionLog  } from 'sqlite/error';
+import { insertSensorFusionLog } from 'sqlite/error';
 
 const NUMBER_OF_ALLOWED_GNSS_IMU_PROBLEMS = 120;
 const NUMBER_OF_ALLOWED_IMAGER_PROBLEMS = 120;
@@ -75,9 +73,6 @@ export class DriveSession {
     const { GnssFilter, MaxPendingTime } = await getConfig(['GnssFilter', 'MaxPendingTime']);
 
     for (const data of sensorData) {
-      if (!this.dataIsGoodEnough(data, GnssFilter, MaxPendingTime)) {
-        continue;
-      }
       // regardless of added status, update lastIngestedTime
       // to avoid processing the same data again
       try{
@@ -95,6 +90,10 @@ export class DriveSession {
         // }
       } catch (e: unknown) {
         console.log('failed to get ingested time')
+      }
+      
+      if (!this.dataIsGoodEnough(data, GnssFilter, MaxPendingTime)) {
+        continue;
       }
 
       if (!this.draftFrameKm) {
@@ -209,16 +208,16 @@ export class DriveSession {
   async getLastTime() {
     // if sessions last ingested time is 0 it means no time has been ingested yet
     // so we need to query last time
+    const now = getLatestGnssTime();
     if (this.lastIngestedTime === 0) {
-      const now = getLatestGnssTime();
-      // const date = await fetchLastProcessedGnssRecord();
-      await insertSensorFusionLog('getLastTime', `Last time: ${new Date(now - (60 * 1000))}`);
-      await insertSensorFusionLog('getLastIngestedTime', `Last time: ${new Date(this.lastIngestedTime)}`);
+      console.log("currentGNSSTime:", now - (90 * 1000));
       return now - (90 * 1000); // 1 min 30 seconds ago
     }
     else{
       console.log("lastIngestedTime:", new Date(this.lastIngestedTime));
-      await insertSensorFusionLog('getLastIngestedTime', `Last time: ${new Date(this.lastIngestedTime)}`);
+      const delay = now - this.lastIngestedTime;
+      console.log("currentDelay:", delay);
+      insertSensorFusionLog('currentDelay', delay.toString());
       return this.lastIngestedTime; 
     }
   }
