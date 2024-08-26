@@ -12,6 +12,7 @@ export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
 export const DB_PATH = '/data/recording/data-logger.v1.4.5.db';
+export const DB_BACKUP_PATH = '/data/recording/backup.db'
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const BACKUP_FRAMES_ROOT_FOLDER = '/data/recording/frames';
 export const STREAM_REQUEST_FOLDER =
@@ -36,6 +37,7 @@ export const HEALTH_MARKER_PATH = '/data/healthy.txt';
 export const USB_WRITE_PATH = '/mnt/usb/recording';
 export const MOTION_MODEL_CURSOR = '/data/mm_cursor.log';
 export const ML_SCRIPT_PATH = '/opt/odc-api/python/privacy.py';
+export const DB_BACKUPSCRIPT_PATH =  '/opt/odc-api/python/backup.py';
 export const DEFAULT_MODEL_PATH = '/opt/odc-api/python';
 export const MOTION_MODEL_CONFIG = '/data/mm_config.json';
 export const PRIVACY_ZONES_CONFIG = '/data/ppz.json';
@@ -80,6 +82,12 @@ export const CMD = {
   STOP_PREVIEW: 'systemctl stop camera-preview',
   READ_DEVICE_INFO:
     '/opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -l 30',
+  STOP_SENSOR_FUSION: 'systemctl stop sensor-fusion',
+  STOP_DATA_LOGGER: 'systemctl stop hivemapper-data-logger',
+  STOP_OBJECT_DETECTION: 'systemctl stop object-detection',
+  START_SENSOR_FUSION: 'systemctl start sensor-fusion',
+  START_DATA_LOGGER: 'systemctl start hivemapper-data-logger',
+  START_OBJECT_DETECTION: 'systemctl start object-detection',
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {

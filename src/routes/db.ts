@@ -1,4 +1,4 @@
-import { CAMERA_TYPE, DB_PATH } from 'config';
+import { CAMERA_TYPE, DB_PATH, CMD, DB_BACKUP_PATH } from 'config';
 import { Router } from 'express';
 import { readdirSync } from 'fs';
 import { runAsync } from 'sqlite';
@@ -10,7 +10,11 @@ import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
 import { CameraType } from 'types';
 import { fetchLastNMagnetometerRecords } from 'sqlite/magnetometer';
-
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import { DB_BACKUPSCRIPT_PATH } from 'config/hdc-s';
+import { runSequence } from 'util/runCommands';
+const asyncExec = promisify(exec);
 const router = Router();
 
 router.get('/gnss/:n', async (req, res) => {
@@ -193,4 +197,21 @@ router.get('/resetconfig', async (req, res) => {
   }
 });
 
+router.get('/backup', async (req, res) => {
+  try {
+    console.log("Hitting backup endpoint")
+    const stopServiceCommands = [CMD.STOP_SENSOR_FUSION, CMD.STOP_OBJECT_DETECTION, CMD.STOP_DATA_LOGGER];
+    const startServiceCommands = [CMD.START_SENSOR_FUSION, CMD.START_OBJECT_DETECTION, CMD.START_DATA_LOGGER]
+    await runSequence(stopServiceCommands);
+    const {stdout, stderr} = await asyncExec(`python3 ${DB_BACKUPSCRIPT_PATH} ${DB_PATH}`);
+    console.log("Output from backup.py file:", stdout, stderr);
+    await runSequence(startServiceCommands);
+    res.send({
+      path: DB_BACKUP_PATH,
+    });
+
+  } catch (error) {
+    res.status(500).send({ error });
+  }
+});
 export default router;

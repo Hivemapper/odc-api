@@ -12,6 +12,7 @@ export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/mnt/data/unprocessed_framekm';
 export const RAW_DATA_ROOT_FOLDER = '/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = '/mnt/data/request';
 export const DB_PATH = '/mnt/data/data-logger.v1.4.5.db';
+export const DB_BACKUP_PATH = '/mnt/data/backup.db'
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
 export const BACKUP_FRAMES_ROOT_FOLDER = '/mnt/data/frames';
 export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
@@ -75,6 +76,12 @@ export const CMD = {
   STOP_CAMERA: 'systemctl stop camera-bridge',
   READ_DEVICE_INFO:
     '/opt/dashcam/bin/eeprom_access.py -r -f /tmp/dump.bin -o 0 -ba 0 -l 30',
+  STOP_SENSOR_FUSION: 'systemctl stop sensor-fusion',
+  STOP_DATA_LOGGER: 'systemctl stop hivemapper-data-logger',
+  STOP_OBJECT_DETECTION: 'systemctl stop object-detection',
+  START_SENSOR_FUSION: 'systemctl start sensor-fusion',
+  START_DATA_LOGGER: 'systemctl start hivemapper-data-logger',
+  START_OBJECT_DETECTION: 'systemctl start object-detection',
 };
 
 export const configureOnBoot = async (req: Request, res: Response) => {
