@@ -1,25 +1,32 @@
 import sqlite3
+import argparse
 import os
-import sys
 
-if len(sys.argv) != 2:
-    print("Usage: python backup_script.py <source_db>")
-    sys.exit(1)
-source_db = sys.argv[1]
-backup_db = '/data/recording/backup.db'
+BACKUP_DB = '/data/recording/backup.db'
 
-if os.path.exists(backup_db):
-    os.remove(backup_db)
-    print(f"From backup.py file: Existing backup file {backup_db} deleted.")
+def create_backup(source_db):
+    if os.path.exists(BACKUP_DB):
+        os.remove(BACKUP_DB)
+        print(f"From backup.py file: Existing backup file {BACKUP_DB} deleted.")
 
-source_conn = sqlite3.connect(source_db)
+    source_conn = sqlite3.connect(source_db)
+    backup_conn = sqlite3.connect(BACKUP_DB)
 
-backup_conn = sqlite3.connect(backup_db)
+    with backup_conn:
+        source_conn.backup(backup_conn, pages=1, progress=None)
 
-with backup_conn:
-    source_conn.backup(backup_conn, pages=1, progress=None)
+    source_conn.close()
+    backup_conn.close()
 
-source_conn.close()
-backup_conn.close()
+    print(f"From backup.py file: Backup completed successfully. The backup is stored in {BACKUP_DB}")
 
-print(f"From backup.py file: Backup completed successfully. The backup is stored in {backup_db}")
+def main():
+    parser = argparse.ArgumentParser(description="Backup a SQLite database.")
+    parser.add_argument("source_db", help="The path to the source database file.")
+
+    args = parser.parse_args()
+    
+    create_backup(args.source_db)
+
+if __name__ == "__main__":
+    main()
