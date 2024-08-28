@@ -94,16 +94,6 @@ router.get('/framekm/estimate', async (req, res) => {
   }
 });
 
-router.get('/path', async (req, res) => {
-  try {
-    res.send({
-      path: DB_PATH,
-    });
-  } catch (error) {
-    res.status(500).send({ error });
-  }
-});
-
 // TODO: for debug purposes, remove later
 router.get('/framekm/clear', async (req, res) => {
   try {
