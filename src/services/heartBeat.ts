@@ -36,6 +36,7 @@ let isLedControlledByDashcam = true;
 let lastGpsPoint: GnssRecord | null = null;
 let lastTimeCheckWasPrivate = false;
 let wasTimeResolved = false;
+let isEndToEndTestingEnabled: boolean | undefined = undefined;
 
 const DIM_GPS_LIGHT_DELAY = 20000;
 const GOOD_GNSS_RECORDS_TO_START_CAMERA = 10;
@@ -61,7 +62,7 @@ export const setIsLedControlledByDashcam = (state: boolean) => {
 };
 
 export const isCameraBridgeServiceActive = async (): Promise<boolean> => {
-  if (await getConfig('isEndToEndTestingEnabled')) {
+  if (isEndToEndTestingEnabled) {
     return true;
   }
 
@@ -129,6 +130,9 @@ export const HeartBeatService: IService = {
           updateLED(COLORS.BLACK, COLORS.BLACK, COLORS.BLACK);
           return;
         }
+      }
+      if (isEndToEndTestingEnabled === undefined) {
+        isEndToEndTestingEnabled = await getConfig('isEndToEndTestingEnabled');
       }
 
       const isCameraActive = await isCameraBridgeServiceActive();
@@ -201,7 +205,7 @@ export const HeartBeatService: IService = {
           }
           isLock = false;
 
-          if (isCameraActive && (!hasBeenLocked || !isTimeSet())) {
+          if (isCameraActive && (!hasBeenLocked || !isTimeSet()) && !isEndToEndTestingEnabled) {
             exec(CMD.STOP_CAMERA);
             console.log(
               'Camera intentionally stopped cause Lock is not there yet or Time is not set', Date.now()
