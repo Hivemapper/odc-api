@@ -13,6 +13,7 @@ export const RAW_DATA_ROOT_FOLDER = '../end-to-end-test/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = '../end-to-end-test/mnt/data/request';
 export const DB_PATH = '../end-to-end-test/mnt/data/data-logger.v1.4.5.db';
 export const GPS_ROOT_FOLDER = '../end-to-end-test/mnt/data/gps';
+export const BACKUP_FRAMES_ROOT_FOLDER = '../end-to-end-test/mnt/data/frames';
 export const GPS_MGA_OFFLINE_FILE = '../end-to-end-test/mnt/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '../end-to-end-test/mnt/data/mgaoffline.hash';
 export const METADATA_ROOT_FOLDER = '../end-to-end-test/mnt/data/metadata';
