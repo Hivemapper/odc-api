@@ -2,14 +2,13 @@ import { getAsync, runAsync } from './index';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { distance } from 'util/geomath';
 import { join } from 'path';
-import { FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
+import { FRAMES_ROOT_FOLDER, BACKUP_FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
-import { writeExif } from 'util/index';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -344,6 +343,9 @@ export const ignoreTrimStart = () => {
   ignoreTrim = true;
 }
 
+let folder_idx = 0;
+let frames_copied_to_folder = 0;
+
 export const addFramesToFrameKm = async (
   rows: FrameKmRecord[],
   force = false,
@@ -351,11 +353,13 @@ export const addFramesToFrameKm = async (
   console.log(
     'GOING TO ADD ' + rows.length + ' FRAMES. ' + (force ? ' FORCED!!' : ''),
   );
-  const { isTripTrimmingEnabled, TrimDistance, FrameKmLengthMeters } =
+  const { isTripTrimmingEnabled, TrimDistance, FrameKmLengthMeters, isFrameBackupEnabled, BackupFramesPerFolder } =
     await getConfig([
       'isTripTrimmingEnabled',
       'TrimDistance',
-      'FrameKmLengthMeters'
+      'FrameKmLengthMeters',
+      'isFrameBackupEnabled',
+      'BackupFramesPerFolder'
     ]);
   const DX = getDX();
 
@@ -438,6 +442,9 @@ export const addFramesToFrameKm = async (
             }
             if (fkm_id === lastFkmId) {
               frame_idx = Number(last.frame_idx) + 1;
+            } else {
+              folder_idx = 0;
+              frames_copied_to_folder = 0;
             }
             if (frame_idx > Math.round(FrameKmLengthMeters / DX)) {
               console.log('FRAMEKM IS COMPLETE!! SWITCHING TO NEXT ONE.');
@@ -457,6 +464,24 @@ export const addFramesToFrameKm = async (
             framePath,
             join(destination, row.image_name),
           );
+          if (isFrameBackupEnabled) {
+            const backupFramesDestination = join(
+              BACKUP_FRAMES_ROOT_FOLDER,
+              fkm_id + '_' + String(folder_idx),
+            );
+            if (!existsSync(backupFramesDestination)) {
+              await promises.mkdir(backupFramesDestination, { recursive: true });
+            }
+            await promises.copyFile(
+              framePath,
+              join(backupFramesDestination, row.image_name),
+            );
+            frames_copied_to_folder++;
+            if (frames_copied_to_folder >= BackupFramesPerFolder) {
+              folder_idx++;
+              frames_copied_to_folder = 0;
+            }
+          }
           console.log(
             'About to add frame: ',
             row.image_name,

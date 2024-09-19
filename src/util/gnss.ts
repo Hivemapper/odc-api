@@ -44,13 +44,13 @@ export function isCarParkedBasedOnGnss(gpsData: GnssRecord[]) {
   return !gpsData.some((gps: GnssRecord) => gps.speed > 4);
 }
 
-export async function isEnoughLightForGnss(gnss: GNSS | null) {
+export async function isEnoughLightForGnss(gnss: GnssRecord | null) {
   const isLightCheckDisabled = await getConfig('isLightCheckDisabled');
-  if (!gnss || !gnss.timestamp || isLightCheckDisabled) {
+  if (!gnss || !gnss.time || isLightCheckDisabled) {
     return true;
   }
   return timeIsMostLikelyLight(
-    new Date(gnss.timestamp),
+    new Date(gnss.time),
     gnss.longitude,
     gnss.latitude,
   );
