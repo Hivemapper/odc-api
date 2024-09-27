@@ -1,21 +1,23 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER } from 'config';
+import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, PUBLIC_FOLDER } from 'config';
 import {
   Stats,
-  mkdir,
   stat,
   createReadStream,
   createWriteStream,
   writeFileSync,
+  promises,
 } from 'fs';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
+import { parse } from 'json2csv';
 import { pipeline } from 'stream';
 import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { FrameKMTelemetry } from 'types/motionModel';
+import { DetectionsByFrame, DetectionsData, FrameKMTelemetry } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 import { getLatestGnssTime } from './lock';
@@ -25,24 +27,42 @@ export const MIN_PER_FRAME_BYTES = 25 * 1000;
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
+const asyncExec = promisify(exec);
 const retryLimit = 3;
 const retryDelay = 500; // milliseconds
 
 type BytesMap = { [key: string]: number };
+type ExifPerFrame = { [key: string]: { 
+  privacyDetections: DetectionsData[]}
+}
+
+export const prepareExifPerFrame = (
+  privacyDetections: DetectionsByFrame = {},
+): ExifPerFrame => {
+  const exif: ExifPerFrame = {};
+
+  for (const frame in privacyDetections) {
+    let frameExif = exif[frame] || {};
+    frameExif['privacyDetections'] = privacyDetections[frame];
+    exif[frame] = frameExif;
+  }
+
+  return exif;
+}
 
 export const concatFrames = async (
   frames: string[],
   framekmName: string,
+  frameKm: FrameKM,
   retryCount = 0,
-  frameRootFolder = FRAMES_ROOT_FOLDER
+  frameRootFolder = FRAMES_ROOT_FOLDER,
+  exifPerFrame: ExifPerFrame = {},
 ): Promise<BytesMap> => {
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
-    await new Promise(resolve => {
-      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
-    });
+    await promises.mkdir(FRAMEKM_ROOT_FOLDER, { recursive: true });
   } catch (e: unknown) {
-    console.log(e);
+    console.error(e);
   }
 
   const framesPath = frames.map(
@@ -59,6 +79,14 @@ export const concatFrames = async (
       message: JSON.stringify({ name: framekmName, reason: 'Max retries' }),
     });
     return bytesMap;
+  }
+
+  try {
+    const csvPath = `${frameRootFolder}/exif_data.csv`;
+    await writeCSV(exifPerFrame, frameRootFolder, framekmName);
+    await asyncExec(`exiftool -csv="${csvPath}" ${frameRootFolder}/*.jpg`);
+  } catch (e: unknown) {
+    console.log('Error writing exif data to csv', e);
   }
 
   // USING NON-BLOCKING IO,
@@ -100,11 +128,7 @@ export const concatFrames = async (
           const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
           const readStream = createReadStream(filePath);
           await asyncPipeline(readStream, writeStream);
-          let fileName = file.name;
-          if (file.name.indexOf('ww') > -1) {
-            fileName = file.name.split('ww')[1];
-          }
-          bytesMap[fileName] = file.size;
+          bytesMap[file.name] = file.size;
           totalBytes += file.size;
           await sleep(10);
         }
@@ -120,13 +144,13 @@ export const concatFrames = async (
             totalBytes,
           );
           await sleep(retryDelay);
-          return concatFrames(frames, framekmName, retryCount + 1);
+          return concatFrames(frames, framekmName, frameKm, retryCount + 1, frameRootFolder, exifPerFrame);
         }
     } catch (error) {
       console.log(`Error during concatenation:`, error);
       console.log('Waiting a bit before retrying concatenation...');
       await sleep(retryDelay);
-      return concatFrames(frames, framekmName, retryCount + 1);
+      return concatFrames(frames, framekmName, frameKm, retryCount + 1, frameRootFolder, exifPerFrame);
     }
 
     return bytesMap;
@@ -138,6 +162,18 @@ export const concatFrames = async (
     });
     return bytesMap;
   }
+};
+
+const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName: string) => {
+  const fields = ['SourceFile', 'Comment'];
+  const data = Object.keys(exifData).map(frame => ({
+    SourceFile: `${frameFolder}/${frame}`,
+    Comment: JSON.stringify(exifData[frame])
+  }));
+  const csv = parse(data, { fields });
+  await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
+  // console.log('Debug copy of csv file:');
+  // await promises.writeFile(`${PUBLIC_FOLDER}/${framekmName}.csv`, csv);
 };
 
 export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {

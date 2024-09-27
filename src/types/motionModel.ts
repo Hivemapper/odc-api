@@ -146,7 +146,7 @@ export type FramesMetadata = GnssMetadata & {
   gyro_z: number;
 };
 
-export type DetectionsData = [string, number, number, number, number, number];
+export type DetectionsData = [string, number, number, number, number, number]; // class, box (4 numbers), confidence
 
 export type DetectionsByFrame = Record<string, DetectionsData[]>;
 
