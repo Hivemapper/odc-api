@@ -295,6 +295,7 @@ export const getAverageMetrics = (framesMetadata: FrameKM) => {
     tdop: 0,
     gdop: 0,
     eph: 0,
+    snr: 0,
     speed: 0,
   };
   for (let i = 0; i < framesMetadata.length; i++) {
@@ -305,6 +306,7 @@ export const getAverageMetrics = (framesMetadata: FrameKM) => {
     metrics.tdop += m.tdop;
     metrics.gdop += m.gdop;
     metrics.eph += m.eph;
+    metrics.snr += m.snr || 0;
     metrics.speed += m.speed;
   }
   const numFrames = framesMetadata.length || 1;
@@ -315,6 +317,7 @@ export const getAverageMetrics = (framesMetadata: FrameKM) => {
     tdop: metrics.tdop / numFrames,
     gdop: metrics.gdop / numFrames,
     eph: metrics.eph / numFrames,
+    snr: metrics.snr / numFrames,
     speed: metrics.speed / numFrames,
   };
 }
@@ -351,6 +354,7 @@ export const packMetadata = async (
         satellites: Math.round(m.satellites_used),
         dilution: Math.round(m.dilution),
         eph: m.eph,
+        snr: m.snr,
         acc_x: m.acc_x,
         acc_y: m.acc_y,
         acc_z: m.acc_z,
