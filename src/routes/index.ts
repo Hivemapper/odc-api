@@ -33,13 +33,19 @@ import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLatestGnssTime, getLockTime, isTimeSet } from 'util/lock';
-import { addAppConnectedLog, getSessionId, readLast2MB } from 'util/index';
+import {
+  addAppConnectedLog,
+  getDashcamInfo,
+  getSessionId,
+  readLast2MB,
+} from 'util/index';
 import { getCurrentLEDs } from 'util/led';
 import { getDeviceInfo } from 'services/deviceInfo';
 import { scheduleCronJobs } from 'util/cron';
 import { querySensorData } from 'sqlite/common';
 import { SensorRecord, SensorQueryResponse } from 'types/sqlite';
 import { getAnonymousID } from 'sqlite/deviceInfo';
+import { makeFrameKmFolder } from 'util/framekm';
 
 const router = Router();
 let isAppConnected = false;
@@ -64,42 +70,15 @@ router.use('/db', dbRouter);
 router.use('/instrumentation', instrumentationRouter);
 router.use('/network', networkRouter);
 router.use('/preview', previewRouter);
-router.use('/datalogger', dataloggerRouter)
+router.use('/datalogger', dataloggerRouter);
 
 router.get('/init', configureOnBoot);
 
 router.get('/info', async (req: Request, res: Response) => {
-  let versionInfo: any = {};
   setMostRecentPing(Date.now());
-  try {
-    const versionInfoPayload = readFileSync(BUILD_INFO_PATH, {
-      encoding: 'utf-8',
-    });
-    versionInfo = JSON.parse(versionInfoPayload);
-  } catch (error) {
-    console.log('Build Info file is missing');
-  }
-  const deviceInfo = getDeviceInfo();
-  const deviceId = await getAnonymousID();
-  res.json({
-    ...versionInfo,
-    ...deviceInfo,
-    dashcam: CAMERA_TYPE,
-    api_version: API_VERSION,
-    deviceId,
-    build_date:
-      versionInfo && versionInfo.build_date
-        ? new Date(versionInfo.build_date).toISOString()
-        : undefined,
-  });
-
-  try {
-    await new Promise(resolve => {
-      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
-    });
-  } catch (e: unknown) {
-    console.log(e);
-  }
+  const dashcamInfo = getDashcamInfo();
+  res.json(dashcamInfo);
+  await makeFrameKmFolder();
 });
 
 router.get('/ping', (req, res) => {
@@ -293,13 +272,13 @@ router.get('/sensorquery', async (req: Request, res: Response) => {
   });
 
   const device_id = await getAnonymousID();
-  const payload : SensorQueryResponse = {
+  const payload: SensorQueryResponse = {
     metadata: {
       device_id,
       dashcam: CAMERA_TYPE,
     },
     sensordata,
-  }
+  };
   res.json(payload);
 });
 

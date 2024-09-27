@@ -1,5 +1,10 @@
 import { map } from 'async';
-import { FRAMEKM_ROOT_FOLDER, FRAMES_ROOT_FOLDER, PUBLIC_FOLDER } from 'config';
+import {
+  FRAMEKM_ROOT_FOLDER,
+  FRAMES_ROOT_FOLDER,
+  METADATA_ROOT_FOLDER,
+  PUBLIC_FOLDER,
+} from 'config';
 import {
   Stats,
   stat,
@@ -7,6 +12,7 @@ import {
   createWriteStream,
   writeFileSync,
   promises,
+  mkdir,
 } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -15,15 +21,23 @@ import { parse } from 'json2csv';
 import { pipeline } from 'stream';
 import sizeOf from 'image-size';
 
-import { getStats, sleep } from 'util/index';
+import { getDateFromFramekmName, getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, LandmarksByFrame, LandmarksData } from 'types/motionModel';
+import {
+  DetectionsByFrame,
+  DetectionsData,
+  FrameKMTelemetry,
+  LandmarksByFrame,
+  LandmarksData,
+} from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 import { getLatestGnssTime } from './lock';
+import { ICameraFile } from 'types';
 
 export const MAX_PER_FRAME_BYTES = 2 * 1000 * 1000;
 export const MIN_PER_FRAME_BYTES = 25 * 1000;
+const MAX_RESPONSE_SIZE = 10000;
 
 const asyncPipeline = promisify(pipeline);
 const asyncStat = promisify(stat);
@@ -32,10 +46,12 @@ const retryLimit = 3;
 const retryDelay = 500; // milliseconds
 
 type BytesMap = { [key: string]: number };
-type ExifPerFrame = { [key: string]: { 
-  privacyDetections: DetectionsData[],
-  landmarkDetections: LandmarksData[],
-  };}
+type ExifPerFrame = {
+  [key: string]: {
+    privacyDetections: DetectionsData[];
+    landmarkDetections: LandmarksData[];
+  };
+};
 
 export const prepareExifPerFrame = (
   privacyDetections: DetectionsByFrame = {},
@@ -44,18 +60,18 @@ export const prepareExifPerFrame = (
   const exif: ExifPerFrame = {};
 
   for (const frame in privacyDetections) {
-    let frameExif = exif[frame] || {};
+    const frameExif = exif[frame] || {};
     frameExif['privacyDetections'] = privacyDetections[frame];
     exif[frame] = frameExif;
   }
   for (const frame in landmarks) {
-    let frameExif = exif[frame] || {};
+    const frameExif = exif[frame] || {};
     frameExif['landmarkDetections'] = landmarks[frame];
     exif[frame] = frameExif;
   }
 
   return exif;
-}
+};
 
 export const concatFrames = async (
   frames: string[],
@@ -131,35 +147,49 @@ export const concatFrames = async (
     const outputFilePath = FRAMEKM_ROOT_FOLDER + '/' + framekmName;
 
     try {
-        writeFileSync(outputFilePath, '');
-        for (const file of validFrames) {
-          const filePath = frameRootFolder + '/' + file.name;
-          const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
-          const readStream = createReadStream(filePath);
-          await asyncPipeline(readStream, writeStream);
-          bytesMap[file.name] = file.size;
-          totalBytes += file.size;
-          await sleep(10);
-        }
-        await sleep(500);
-  
-        // VERY IMPORTANT STEP
-        // Check file size to validate the full process
-        const { size } = await asyncStat(outputFilePath);
-        if (size !== totalBytes) {
-          console.log(
-            'Concatenated file size does not match totalBytes, retrying...',
-            size,
-            totalBytes,
-          );
-          await sleep(retryDelay);
-          return concatFrames(frames, framekmName, frameKm, retryCount + 1, frameRootFolder, exifPerFrame);
-        }
+      writeFileSync(outputFilePath, '');
+      for (const file of validFrames) {
+        const filePath = frameRootFolder + '/' + file.name;
+        const writeStream = createWriteStream(outputFilePath, { flags: 'a' });
+        const readStream = createReadStream(filePath);
+        await asyncPipeline(readStream, writeStream);
+        bytesMap[file.name] = file.size;
+        totalBytes += file.size;
+        await sleep(10);
+      }
+      await sleep(500);
+
+      // VERY IMPORTANT STEP
+      // Check file size to validate the full process
+      const { size } = await asyncStat(outputFilePath);
+      if (size !== totalBytes) {
+        console.log(
+          'Concatenated file size does not match totalBytes, retrying...',
+          size,
+          totalBytes,
+        );
+        await sleep(retryDelay);
+        return concatFrames(
+          frames,
+          framekmName,
+          frameKm,
+          retryCount + 1,
+          frameRootFolder,
+          exifPerFrame,
+        );
+      }
     } catch (error) {
       console.log(`Error during concatenation:`, error);
       console.log('Waiting a bit before retrying concatenation...');
       await sleep(retryDelay);
-      return concatFrames(frames, framekmName, frameKm, retryCount + 1, frameRootFolder, exifPerFrame);
+      return concatFrames(
+        frames,
+        framekmName,
+        frameKm,
+        retryCount + 1,
+        frameRootFolder,
+        exifPerFrame,
+      );
     }
 
     return bytesMap;
@@ -173,17 +203,24 @@ export const concatFrames = async (
   }
 };
 
-const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName: string) => {
+const writeCSV = async (
+  exifData: ExifPerFrame,
+  frameFolder: string,
+  framekmName: string,
+) => {
   const fields = ['SourceFile', 'Comment'];
   const data = Object.keys(exifData).map(frame => ({
     SourceFile: `${frameFolder}/${frame}`,
-    Comment: JSON.stringify(exifData[frame])
+    Comment: JSON.stringify(exifData[frame]),
   }));
   const csv = parse(data, { fields });
   await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
 };
 
-export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {
+export const getFrameKmTelemetry = async (
+  framesFolder: string,
+  meta: FrameKM,
+): Promise<FrameKMTelemetry> => {
   const telemetry: FrameKMTelemetry = {
     systemtime: getLatestGnssTime(),
   };
@@ -216,7 +253,7 @@ export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): 
     }
   }
   return telemetry;
-}
+};
 
 export const getNumFramesFromChunkName = (name: string) => {
   if (name) {
@@ -230,3 +267,35 @@ export const getNumFramesFromChunkName = (name: string) => {
     return 0;
   }
 };
+
+export const getMetadataFiles = async (): Promise<ICameraFile[]> => {
+  try {
+    const files = await promises.readdir(METADATA_ROOT_FOLDER);
+
+    const metadataFiles: ICameraFile[] = files
+      .filter((filename: string) => filename.indexOf('.json') !== -1)
+      .sort()
+      .slice(0, MAX_RESPONSE_SIZE)
+      .map(filename => {
+        return {
+          path: filename,
+          date: getDateFromFramekmName(filename).getTime(),
+          size: getNumFramesFromChunkName(filename),
+        };
+      });
+    return metadataFiles;
+  } catch (error) {
+    console.error('Error retrieving metadata files:', error);
+    return [];
+  }
+};
+
+export async function makeFrameKmFolder() {
+  try {
+    await new Promise(resolve => {
+      mkdir(FRAMEKM_ROOT_FOLDER, resolve);
+    });
+  } catch (e: unknown) {
+    console.log(e);
+  }
+}
