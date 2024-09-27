@@ -35,9 +35,6 @@ router.get('/', async (req: Request, res: Response) => {
 
           if (!firstFileFetched && filteredFiles.length) {
             firstFileFetched = true;
-            Instrumentation.add({
-              event: 'DashcamFetchedFirstImages',
-            });
           }
 
           res.json(filteredFiles);
