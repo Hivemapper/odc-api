@@ -2,9 +2,26 @@ import WebSocket from 'ws';
 import { Server } from 'http';
 import { handleDashcamInfo } from './handlers/dashcam';
 import { handleMetadataList } from './handlers/metadata';
+import { WebSocketMessage } from './types';
+import { handleLatestImage } from './handlers/preview';
 
-const handleMessage = (message: string) => {
-  console.log('Received message:', message);
+const handleMessage = (ws: WebSocket, message: WebSocket.Data) => {
+  if (typeof message === 'string') {
+    console.log('Received text message:', message);
+    try {
+      const parsedMessage: WebSocketMessage = JSON.parse(message);
+      switch (parsedMessage.type) {
+        case 'requestLatestImage':
+          handleLatestImage(ws);
+          break;
+        // Add other message type handlers here
+      }
+    } catch (error) {
+      console.error('Error parsing message:', error);
+    }
+  } else {
+    console.log('Received binary message');
+  }
 };
 
 const handleConnection = (ws: WebSocket) => {

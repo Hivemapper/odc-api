@@ -106,13 +106,13 @@ export const getClockFromFilename = (filename: string) => {
       return 0;
     } else {
       // separate extention
-      let clock = parts[2].split('.')[0];
+      const clock = parts[2].split('.')[0];
       return Number(clock);
     }
   } catch (e) {
     return 0;
   }
-}
+};
 
 export const setSessionId = () => {
   sessionId = generate();
@@ -338,7 +338,8 @@ export const addAppConnectedLog = () => {
 };
 
 export const repairCameraBridge = (metadata: any) => {
-  let serviceName = CAMERA_TYPE === CameraType.Bee ? 'map-ai' : 'camera-bridge';
+  const serviceName =
+    CAMERA_TYPE === CameraType.Bee ? 'map-ai' : 'camera-bridge';
   console.log('Repairing Camera Bridge');
   exec(`journalctl -eu ${serviceName}`, async (error, stdout, stderr) => {
     console.log(stdout || stderr);
