@@ -323,6 +323,7 @@ export const addAppConnectedLog = () => {
 };
 
 export const repairCameraBridge = (metadata: any) => {
+  return;
   console.log('Repairing Camera Bridge');
   exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
     console.log(stdout || stderr);
