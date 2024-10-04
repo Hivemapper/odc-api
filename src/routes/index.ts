@@ -29,6 +29,7 @@ import ledRouter from './led';
 import dbRouter from './db';
 import networkRouter from './network';
 import previewRouter from './preview';
+import firmwareRouter from './firmware';
 import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
 import { setMostRecentPing } from 'services/heartBeat';
@@ -70,7 +71,8 @@ router.use('/db', dbRouter);
 router.use('/instrumentation', instrumentationRouter);
 router.use('/network', networkRouter);
 router.use('/preview', previewRouter);
-router.use('/datalogger', dataloggerRouter);
+router.use('/datalogger', dataloggerRouter)
+router.use('/firmware', firmwareRouter);
 
 router.get('/init', configureOnBoot);
 
