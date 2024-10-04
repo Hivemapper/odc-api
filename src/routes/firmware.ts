@@ -57,7 +57,6 @@ router.get('/install', async (req, res) => {
                 execSync(`test -f ${MENDER_PATH} && rm ${MENDER_PATH}`, {
                     encoding: 'utf-8',
                 });
-                console.log("done 1");
             } catch (error: unknown) {
                 console.log("Mender file is not present")
             }
@@ -65,7 +64,6 @@ router.get('/install', async (req, res) => {
                 execSync(`test -f ${FIP_PATH}  && rm ${FIP_PATH}`, {
                     encoding: 'utf-8',
                 });
-                console.log("done 2")
             } catch (error: unknown) {
                 console.log("Fip file is not present")
             }
