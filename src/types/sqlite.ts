@@ -27,7 +27,7 @@ export interface GnssRecord {
     satellites_seen: number;
     satellites_used: number;
     eph: number;
-    snr?: number;
+    cno?: number;
     horizontal_accuracy: number;
     vertical_accuracy: number;
     heading_accuracy: number;
@@ -90,7 +90,7 @@ export type FrameKmRecord = {
     gdop: number;
     hdop: number;
     eph: number;
-    snr?: number;
+    cno?: number;
     latitude: number;
     longitude: number;
     altitude: number;

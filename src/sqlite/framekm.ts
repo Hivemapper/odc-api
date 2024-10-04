@@ -378,7 +378,7 @@ export const addFramesToFrameKm = async (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
-          time, system_time, satellites_used, dilution, eph, snr, frame_idx, created_at
+          time, system_time, satellites_used, dilution, eph, cno, frame_idx, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
@@ -470,7 +470,7 @@ export const addFramesToFrameKm = async (
             row.satellites_used,
             row.dilution,
             row.eph,
-            row.snr,
+            row.cno,
             frame_idx,
             Date.now(),
           ]);

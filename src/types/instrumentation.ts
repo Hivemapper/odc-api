@@ -17,5 +17,5 @@ export type GnssDopKpi = {
   gdop: DopKpi;
   rf_jam_ind: DopKpi;
   eph: DopKpi;
-  snr: DopKpi;
+  cno: DopKpi;
 };

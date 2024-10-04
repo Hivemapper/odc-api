@@ -24,7 +24,7 @@ export type GnssFilter = {
   '3dLock': boolean;
   minSatellites: number;
   eph?: number;
-  snr?: number;
+  cno?: number;
 }
 export type SystemConfig = {
   DX: number;
@@ -84,7 +84,7 @@ export type GNSS = {
   // flags: [number, number, number];
   dop?: Dilution;
   eph?: number;
-  snr?: number;
+  cno?: number;
 };
 
 export interface IMU {
@@ -114,7 +114,7 @@ export type GnssMetadata = Dilution & {
   satellites: number;
   dilution: number;
   eph: number;
-  snr?: number;
+  cno?: number;
 };
 
 export type ImuMetadata = {
