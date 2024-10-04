@@ -10,7 +10,7 @@ const HDCS_ROOT = '/data/'
 const MENDER_PATH = HDCS_ROOT + 'core.mender'
 const FIP_PATH = HDCS_ROOT + 'fip.bin'
 
-let message = '';
+let message = 'started';
 
 const runSpawn = (cmd: string) => {
     const child = spawn(cmd, {
