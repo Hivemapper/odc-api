@@ -23,18 +23,6 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/:name', async (req: Request, res: Response) => {
-  try {
-    const frames = req.body && req.body.frames ? req.body.frames : [];
-    const bytesPacked = await concatFrames(frames, req.params.name);
-    res.json({
-      frames: bytesPacked,
-    });
-  } catch (error) {
-    res.json({ error });
-  }
-});
-
 router.get('/unprocessed', async (req: Request, res: Response) => {
   try {
     const files = (await promises.readdir(UNPROCESSED_FRAMEKM_ROOT_FOLDER)).filter((f) => f.startsWith('km_'));

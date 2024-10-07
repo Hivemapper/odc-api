@@ -96,15 +96,6 @@ export class DraftFrameKm {
         insertErrorLog('Speed is to high ' + Math.round(gnss.speed) + ' ' + Math.round(deltaTime) + ' so cutting');
         console.log('===== SPEED IS TOO HIGH, ' + gnss.speed + ', ' + deltaTime + ', CUTTING =====');
         if (!this.prevHighSpeedEvent || (Date.now() - this.prevHighSpeedEvent > 10000)) {
-          Instrumentation.add({
-            event: 'DashcamCutReason',
-            message: JSON.stringify({
-              reason: 'HighSpeed',
-              speed: gnss.speed,
-              distance,
-              deltaTime,
-            }),
-          });
           this.prevHighSpeedEvent = Date.now();
         }
         return false;
@@ -128,16 +119,6 @@ export class DraftFrameKm {
         // travelled too far, cut
         insertErrorLog('Travelled to far ' + Math.round(distance) + ' ' + Math.round(deltaTime)  + ' so cutting');
         console.log('===== TRAVELLED TOO FAR, ' + distance + ', ' + deltaTime  + ', CUTTING =====', this.lastGnss.time, gnss.time);
-        Instrumentation.add({
-          event: 'DashcamCutReason',
-          message: JSON.stringify({
-            reason: 'TravelledTooFar',
-            distance,
-            deltaTime,
-            prevTime: this.lastGnss.time,
-            time: gnss.time
-          }),
-        });
         return false;
       }
 
@@ -163,13 +144,6 @@ export class DraftFrameKm {
           console.log(
             '===== FRAMERATE DROPPED, FOR ' + deltaTime + ', IGNORE FOR NOW =====',
           );
-          Instrumentation.add({
-            event: 'DashcamCutReason',
-            message: JSON.stringify({
-              reason: 'FpsDrop',
-              deltaTime,
-            }),
-          });
         }
         this.data.push(data);
         return true;

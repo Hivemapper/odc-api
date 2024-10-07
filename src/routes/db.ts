@@ -1,6 +1,6 @@
 import { CAMERA_TYPE, DB_PATH } from 'config';
 import { Router } from 'express';
-import { readdirSync } from 'fs';
+import { copyFileSync, mkdirSync, readdirSync } from 'fs';
 import { runAsync } from 'sqlite';
 import { resetDB, resetSensorData } from 'sqlite/common';
 import { fetchLastNErrorRecords } from 'sqlite/error';
@@ -10,6 +10,8 @@ import { getServiceStatus } from 'sqlite/health_state';
 import { fetchLastNImuRecords } from 'sqlite/imu';
 import { CameraType } from 'types';
 import { fetchLastNMagnetometerRecords } from 'sqlite/magnetometer';
+import { UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
+import { sleep } from 'util/index';
 
 const router = Router();
 
@@ -113,7 +115,11 @@ router.get('/framekm/add/:name/:speed', async (req, res) => {
     const files = readdirSync(dummyPath + req.params.name);
     const speed = Number(req.params.speed);
     fkm_id++;
+    const newDir = UNPROCESSED_FRAMEKM_ROOT_FOLDER + '/' + fkm_id;
+    mkdirSync(newDir);
     for (const file of files) {
+      copyFileSync(dummyPath + req.params.name + '/' + file, newDir + '/' + file);
+
       const insertSQL = `
         INSERT INTO framekms (
           image_name, image_path, speed, created_at, fkm_id, orientation

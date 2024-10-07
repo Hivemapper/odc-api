@@ -28,11 +28,6 @@ const defaultConfig: SystemConfig = {
   lastTimeIterated: 0,
   FrameKmLengthMeters: 1000,
   privacyRadius: 200,
-  PrivacyModelPath: ML_MODEL_PATH,
-  PrivacyModelHash: 'a56942a9ad253b2f61097785219df54326f21ba06ba41a175d9c5a84339d14a1',
-  PrivacyConfThreshold: 0.2,
-  PrivacyNmsThreshold: 0.9,
-  PrivacyNumThreads: 6,
   SpeedToIncreaseDx: 24, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
@@ -220,19 +215,7 @@ export const getDX = () => {
   return Math.round(dx);
 }
 
-let lastTimeChanged = 0;
 export const setFastSpeedCollectionMode = (value: boolean) => {
-  if (value !== FAST_SPEED_COLLECTION_MODE) {
-    const period = lastTimeChanged ? Date.now() - lastTimeChanged : 0;
-    Instrumentation.add({
-      event: 'DashcamFastSpeedCollection',
-      message: JSON.stringify({
-        mode: value,
-        period
-      })
-    });
-    lastTimeChanged = Date.now();
-  }
   FAST_SPEED_COLLECTION_MODE = value;
 }
 

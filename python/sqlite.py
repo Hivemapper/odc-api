@@ -69,28 +69,35 @@ class SQLite:
             'PrivacyModelGridHash': 'e2f5488db4aa6bb0b1dba82476a238ca899c804cbee580f398051d62b7874702',
             'LowSpeedThreshold': 17,
             'PrivacyConfThreshold': 0.2,
-            'PrivacyNmsThreshold': 0.9,
-            'PrivacyNumThreads': 4
+            'PrivacyNmsThreshold': 0.8,
+            'PrivacyNumThreads': 3,
+            'ScaleBoundingBox': {},
         }
         config = default_values.copy()
 
-        # try:
-        #     with self.get_connection() as conn:
-        #         cursor = conn.cursor()
-        #         for key, default_value in default_values.items():
-        #             cursor.execute('SELECT value FROM config WHERE key = ?', (key,))
-        #             result = cursor.fetchone()
-        #             if result:
-        #                 value = result[0]
-        #                 # Convert to appropriate type based on default value
-        #                 if isinstance(default_value, float):
-        #                     config[key] = float(value)
-        #                 elif isinstance(default_value, int):
-        #                     config[key] = int(value)
-        #                 else:
-        #                     config[key] = str(value).strip('"')
-        # except Exception as e:
-        #     print(e)
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                for key, default_value in default_values.items():
+                    cursor.execute('SELECT value FROM config WHERE key = ?', (key,))
+                    result = cursor.fetchone()
+                    try:
+                        if result:
+                            value = result[0]
+                            if value:
+                                # Convert to appropriate type based on default value
+                                if isinstance(default_value, float):
+                                    config[key] = float(value)
+                                elif isinstance(default_value, int):
+                                    config[key] = int(value)
+                                elif isinstance(default_value, (dict, list)):
+                                    config[key] = json.loads(value)
+                                else:
+                                    config[key] = str(value).strip('"')
+                    except Exception as e:
+                        print(e)
+        except Exception as e:
+            print(e)
         return config
 
     def set_error(self, image_name, error):

@@ -378,8 +378,8 @@ export const addFramesToFrameKm = async (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
-          time, system_time, satellites_used, dilution, eph, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, satellites_used, dilution, eph, cno, frame_idx, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -392,13 +392,6 @@ export const addFramesToFrameKm = async (
           const framePath = join(FRAMES_ROOT_FOLDER, row.image_name);
           const stat = await promises.stat(framePath);
           if (stat.size < MIN_PER_FRAME_BYTES || stat.size > MAX_PER_FRAME_BYTES) {
-            Instrumentation.add({
-              event: 'DashcamCutReason',
-              message: JSON.stringify({
-                reason: 'FrameSize',
-                size: stat.size,
-              }),
-            });
             continue;
           }
           const last = await getLastRecord();
@@ -413,27 +406,12 @@ export const addFramesToFrameKm = async (
             // sanity check for accidental insert of the wrong sample into framekm
             const distanceBetweenFrames = distance(last, row);
             if (row.dx !== last.dx) {
-              Instrumentation.add({
-                event: 'DashcamCutReason',
-                message: JSON.stringify({
-                  reason: 'ChangedDX',
-                  prev: last.dx,
-                  current: row.dx,
-                }),
-              });
               fkm_id++;
             } else if (distanceBetweenFrames > DX * cutoffIndex && !forceFrameKmSwitch) {
               insertErrorLog(
                 'Distance between frames is more than allowed: ' +
                   distanceBetweenFrames,
               );
-              Instrumentation.add({
-                event: 'DashcamCutReason',
-                message: JSON.stringify({
-                  reason: 'FrameKmValidation',
-                  distance: Math.round(distanceBetweenFrames),
-                }),
-              });
               fkm_id++;
             }
             if (fkm_id === lastFkmId) {
@@ -492,6 +470,7 @@ export const addFramesToFrameKm = async (
             row.satellites_used,
             row.dilution,
             row.eph,
+            row.cno,
             frame_idx,
             Date.now(),
           ]);
