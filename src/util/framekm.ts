@@ -82,6 +82,8 @@ export const concatFrames = async (
   }
 
   try {
+    // To speed up the exif execution for multiple files at the same time,
+    // we write the exif data to a csv file and then run exiftool on the csv file
     const csvPath = `${frameRootFolder}/exif_data.csv`;
     await writeCSV(exifPerFrame, frameRootFolder, framekmName);
     await asyncExec(`exiftool -csv="${csvPath}" ${frameRootFolder}/*.jpg`);
