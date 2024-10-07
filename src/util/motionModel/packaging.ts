@@ -354,7 +354,7 @@ export const packMetadata = async (
         satellites: Math.round(m.satellites_used),
         dilution: Math.round(m.dilution),
         eph: m.eph,
-        cno: m.cno,
+        cno: m.cno || 0,
         acc_x: m.acc_x,
         acc_y: m.acc_y,
         acc_z: m.acc_z,
