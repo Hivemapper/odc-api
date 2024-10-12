@@ -2,18 +2,18 @@ import WebSocket from 'ws';
 import { Server } from 'http';
 import { handleDashcamInfo } from './handlers/dashcam';
 import { handleMetadataList } from './handlers/metadata';
-import { WebSocketMessage } from './types';
-import { handleLatestImage } from './handlers/preview';
+import {
+  handleLatestImage,
+  handleLatestImageMetadata,
+} from './handlers/imageViewer';
 
 const handleMessage = (ws: WebSocket, message: WebSocket.Data) => {
   if (Buffer.isBuffer(message)) {
-    // Convert the buffer to a string
     const messageString = message.toString();
     console.log('Received message as string:', messageString);
 
     let parsedMessage;
     try {
-      // Parse the string as JSON
       parsedMessage = JSON.parse(messageString);
       console.log('Parsed message:', parsedMessage);
     } catch (error) {
@@ -21,12 +21,15 @@ const handleMessage = (ws: WebSocket, message: WebSocket.Data) => {
       return;
     }
 
-    // Handle the parsed message
-    if (parsedMessage.type === 'requestLatestImage') {
-      // Handle the request for the latest image
-      handleLatestImage(ws);
-    } else {
-      console.log('Unknown message type:', parsedMessage.type);
+    switch (parsedMessage.type) {
+      case 'getLatestImageMetadata':
+        handleLatestImageMetadata(ws);
+        break;
+      case 'getLatestImage':
+        handleLatestImage(ws);
+        break;
+      default:
+        console.log('Unknown message type:', parsedMessage.type);
     }
   } else {
     console.log('Received non-buffer message type');
@@ -41,8 +44,6 @@ const handleConnection = (ws: WebSocket) => {
   handleMetadataList(ws);
 
   ws.on('message', (message: string) => {
-    console.log('Received message root:', message);
-    // Ensure the message is treated as a string before processing
     handleMessage(ws, message);
   });
   ws.on('close', () => console.log('Client disconnected'));

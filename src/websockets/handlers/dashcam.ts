@@ -5,7 +5,6 @@ import WebSocket from 'ws';
 
 export const handleDashcamInfo: WebSocketHandler = async (ws: WebSocket) => {
   const dashcamInfo = await getDashcamInfo();
-  console.log('DashcamInfo ----- ', dashcamInfo);
   const message: WebSocketMessage = {
     type: 'dashcamInfo',
     data: dashcamInfo,

@@ -1,5 +1,5 @@
-import { SystemConfig } from "./motionModel";
-import { GnssRecord, ImuRecord } from "./sqlite";
+import { SystemConfig } from './motionModel';
+import { GnssRecord, ImuRecord } from './sqlite';
 
 export enum CameraType {
   Hdc = 'hdc',
