@@ -8,7 +8,7 @@ import {
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { clearAll, deleteFrameKm, getFrameKmName, getFrameKmsCount, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
-import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
+import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata, Landmark, LandmarksByFrame } from 'types/motionModel';
 import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality, getCpuUsage, getSystemTemp } from 'util/index';
 import {
@@ -31,6 +31,7 @@ import { getLatestGnssTime } from 'util/lock';
 import { repairCameraBridge } from 'util/index';
 import { CameraType } from 'types';
 import { exec } from 'child_process';
+import { fetchLandmarksByFrameKmId } from 'sqlite/landmarks';
 
 const AVG_MIN_FRAME_SIZE = 45 * 1024;
 
@@ -170,6 +171,36 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     console.log(error);
   }
 };
+
+export const getLandmarksByFrame = async (frameKmId: number): Promise<LandmarksByFrame> => {
+  const landmarksByFrame: LandmarksByFrame = {};
+  const landmarks: Landmark[] = await fetchLandmarksByFrameKmId(frameKmId);
+  for (let landmark of landmarks) {
+    if (landmark.ready) {
+      for (let image_name of landmark.image_names) {
+        if (!landmarksByFrame[image_name]) {
+          landmarksByFrame[image_name] = [];
+        }
+        landmarksByFrame[image_name].push([
+          landmark.map_feature_id,
+          landmark.lat,
+          landmark.lon,
+          landmark.alt,
+          landmark.azimuth,
+          landmark.width,
+          landmark.height,
+          landmark.class,
+          landmark.box[0],
+          landmark.box[1],
+          landmark.box[2],
+          landmark.box[3],
+          landmark.confidence
+        ]);
+      }
+    }
+  }
+  return landmarksByFrame;
+}
 
 export const getDetectionsByFrame = async (name: string, framesMetadata: FrameKM): Promise<DetectionsByFrame> => {
   const privacyDetections: DetectionsByFrame = {};

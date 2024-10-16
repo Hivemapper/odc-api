@@ -17,7 +17,7 @@ import sizeOf from 'image-size';
 
 import { getStats, sleep } from 'util/index';
 import { Instrumentation } from './instrumentation';
-import { DetectionsByFrame, DetectionsData, FrameKMTelemetry } from 'types/motionModel';
+import { DetectionsByFrame, DetectionsData, FrameKMTelemetry, LandmarksByFrame, LandmarksData } from 'types/motionModel';
 import { getDiskUsage } from 'services/logDiskUsage';
 import { FrameKM } from 'types/sqlite';
 import { getLatestGnssTime } from './lock';
@@ -33,17 +33,24 @@ const retryDelay = 500; // milliseconds
 
 type BytesMap = { [key: string]: number };
 type ExifPerFrame = { [key: string]: { 
-  privacyDetections: DetectionsData[]}
-}
+  privacyDetections: DetectionsData[],
+  landmarks: LandmarksData[],
+  };}
 
 export const prepareExifPerFrame = (
   privacyDetections: DetectionsByFrame = {},
+  landmarks: LandmarksByFrame = {},
 ): ExifPerFrame => {
   const exif: ExifPerFrame = {};
 
   for (const frame in privacyDetections) {
     let frameExif = exif[frame] || {};
     frameExif['privacyDetections'] = privacyDetections[frame];
+    exif[frame] = frameExif;
+  }
+  for (const frame in landmarks) {
+    let frameExif = exif[frame] || {};
+    frameExif['landmarks'] = landmarks[frame];
     exif[frame] = frameExif;
   }
 
