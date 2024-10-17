@@ -56,6 +56,7 @@ export type SystemConfig = {
   SpeedToIncreaseDx?: number;
   HdcSwappiness?: number;
   HdcsSwappiness?: number;
+  BeeSwappiness?: number;
   isProcessingEnabled?: boolean;
   isBrokenImageFixForHdcsEnabled?: boolean;
   isEndToEndTestingEnabled?: boolean;
@@ -148,10 +149,29 @@ export type FramesMetadata = GnssMetadata & {
   gyro_y: number;
   gyro_z: number;
 };
-
-export type DetectionsData = [string, number, number, number, number, number]; // class, box (4 numbers), confidence
+// detections: class, box (4 numbers), confidence
+export type DetectionsData = [string, number, number, number, number, number]; 
+// landmarks: [ [map_feature_id, lat, lon, alt, azimuth, width, height, class, box (4 numbers), confidence] , ... , [ ... ] ]
+export type LandmarksData = [number, number, number, number, number, number, number, string, number, number, number, number, number];
 
 export type DetectionsByFrame = Record<string, DetectionsData[]>;
+export type LandmarksByFrame = Record<string, LandmarksData[]>;
+
+export type Landmark = {
+  map_feature_id: number;
+  framekm_id: number;
+  image_names: string[];
+  lat: number;
+  lon: number;
+  alt: number;
+  azimuth: number;
+  width: number;
+  height: number;
+  class: string;
+  box: [number, number, number, number];
+  confidence: number;
+  ready: boolean;
+};
 
 export type MotionModelCursor = {
   gnssFilePath: string;

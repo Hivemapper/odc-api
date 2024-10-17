@@ -11,8 +11,7 @@ export const FRAMES_ROOT_FOLDER = '/tmp/recording/pics';
 export const FRAMEKM_ROOT_FOLDER = '/data/recording/framekm';
 export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
-export const DB_PATH = '/data/recording/data-logger.v1.4.5.db';
-export const FRAMES_LIST_FOLDER = '/tmp/recording/pics';
+export const DB_PATH = '/data/recording/data-logger.v2.0.0.db';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
@@ -30,6 +29,7 @@ export const ACL_TOOL_PATH = '/opt/dashcam/bin/acl';
 export const FRAMEKM_CLEANUP_SCRIPT = '/opt/odc-api/cleanup_framekm.sh';
 export const DATA_INTEGRITY_SCRIPT = '/opt/odc-api/data_integrity_check.sh';
 export const FIRMWARE_UPDATE_MARKER = '/data/recording/update_in_progress';
+export const FRAMES_LIST_FOLDER = '/tmp/rgb';
 export const ACL_FILES_PATH = '/data';
 export const CACHED_CAMERA_CONFIG = '/data/camera.config';
 export const HEALTH_MARKER_PATH = '/data/healthy.txt';
@@ -64,12 +64,12 @@ export const IMAGER_BRIDGE_PATH =
 export const PREVIEW_ROUTE = ':9001/?action=stream';
 export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/data/camera_bridge_config.json';
-export const MOTION_MODEL_QUERY_WINDOW_SIZE = 10000;
 export const CAMERA_BRIDGE_CONFIG_FILE_HASH = '/data/camera_bridge_config.hash';
 export const GPS_MGA_OFFLINE_FILE = '/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/data/mgaoffline.hash';
 export const DATA_LOGGER_SERVICE = 'hivemapper-data-logger';
 export const FOLDER_PURGER_SERVICE = 'hivemapper-folder-purger';
+export const MOTION_MODEL_QUERY_WINDOW_SIZE = 4000;
 
 export const CAMERA_TYPE: CameraType = CameraType.HdcS;
 

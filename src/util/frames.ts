@@ -1,14 +1,14 @@
-import { FRAMES_ROOT_FOLDER } from 'config';
+import { FRAMES_LIST_FOLDER } from 'config';
 import { readdir } from 'fs';
 import { tmpFrameName } from 'routes/recordings';
 import { IImage } from 'types';
-import { getDateFromUnicodeTimestamp } from 'util/index';
+import { getClockFromFilename, getDateFromUnicodeTimestamp } from 'util/index';
 
 export const getFramesFromFS = async (from: number, to: number): Promise<IImage[]> => {
   return new Promise(resolve => {
     try {
       readdir(
-        FRAMES_ROOT_FOLDER,
+        FRAMES_LIST_FOLDER,
         (err: NodeJS.ErrnoException | null, files: string[]) => {
           try {
             if (files?.length) {
@@ -23,6 +23,7 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
                   return {
                     image_name: filename,
                     system_time: getDateFromUnicodeTimestamp(filename).getTime(),
+                    clock: getClockFromFilename(filename),
                   };
                 });
 

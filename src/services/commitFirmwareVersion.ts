@@ -8,7 +8,7 @@ import { Instrumentation } from 'util/instrumentation';
 export const CommitFirmwareVersion: IService = {
   execute: async () => {
     try {
-      if (CAMERA_TYPE === CameraType.HdcS) {
+      if (CAMERA_TYPE === CameraType.HdcS || CAMERA_TYPE === CameraType.Bee) {
         // Check if firmware update is available
         const upgradeAvailable = await checkFirmwareUpgrade();
         if (upgradeAvailable) {
