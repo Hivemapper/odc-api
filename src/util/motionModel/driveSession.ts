@@ -113,6 +113,7 @@ export class DriveSession {
     //   }
     //   await restoreEndTrim();
     // }
+    // TEMP: FIX BEFORE MERGING
     ignoreTrimStart();
     this.started = true;
   }

@@ -151,7 +151,7 @@ export type FramesMetadata = GnssMetadata & {
 };
 // detections: class, box (4 numbers), confidence
 export type DetectionsData = [string, number, number, number, number, number]; 
-// landmarks: [ [map_feature_id, lat, lon, alt, azimuth, width, height, class_id, box (4 numbers), confidence] , ... , [ ... ] ]
+// landmarks: [ map_feature_id, lat, lon, alt, azimuth, width, height, class_id, box (4 numbers), confidence] , ... , [ ... ] ]
 export type LandmarksData = [number, number, number, number, number, number, number, number, number, number, number, number, number];
 
 export type DetectionsByFrame = Record<string, DetectionsData[]>;

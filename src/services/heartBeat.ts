@@ -162,8 +162,6 @@ export const HeartBeatService: IService = {
           const gpsSample = await fetchGNSSLatestSample();
           if (gpsSample && gpsSample.time_resolved === 1) {
             wasTimeResolved = true;
-            console.log("Time resolved!");
-            console.log(gpsSample);
             setGnssTime(new Date(gpsSample.timestamp).getTime());
             setTime();
             Instrumentation.add({

@@ -181,8 +181,6 @@ const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName
   }));
   const csv = parse(data, { fields });
   await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
-  console.log('Debug copy of csv file:');
-  await promises.writeFile(`${PUBLIC_FOLDER}/${framekmName}.csv`, csv);
 };
 
 export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {
