@@ -1,7 +1,7 @@
-import { FRAMES_LIST_FOLDER } from 'config';
+import { CAMERA_TYPE, FRAMES_LIST_FOLDER } from 'config';
 import { readdir } from 'fs';
 import { tmpFrameName } from 'routes/recordings';
-import { IImage } from 'types';
+import { CameraType, IImage } from 'types';
 import { getClockFromFilename, getDateFromUnicodeTimestamp } from 'util/index';
 
 export const getFramesFromFS = async (from: number, to: number): Promise<IImage[]> => {
@@ -27,9 +27,16 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
                   };
                 });
 
-              const filteredFiles = jpgFiles.filter((file: IImage) => {
+              let filteredFiles = jpgFiles.filter((file: IImage) => {
                 return !(file.system_time < from || file.system_time > to);
               });
+              let buffer = jpgFiles.length - filteredFiles.length;
+              if (buffer < 20 && jpgFiles.length > 290 && CAMERA_TYPE === CameraType.Bee) {
+                console.log("WARNING: Buffer is full!! Preventing first frame selection. They're about to be removed from RAM:");
+                filteredFiles = filteredFiles.sort((a, b) => a.system_time - b.system_time).slice(20);
+              } else {
+                console.log(`Buffer: handicap ${buffer} frames.`);
+              }
 
               resolve(filteredFiles);
             } else {
