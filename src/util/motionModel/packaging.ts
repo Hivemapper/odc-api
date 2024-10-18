@@ -8,7 +8,7 @@ import {
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { clearAll, deleteFrameKm, getFrameKmName, getFrameKmsCount, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
-import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata, Landmark, LandmarksByFrame } from 'types/motionModel';
+import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata, Landmark, LandmarksByFrame, MergedLandmark } from 'types/motionModel';
 import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality, getCpuUsage, getSystemTemp } from 'util/index';
 import {
@@ -31,7 +31,7 @@ import { getLatestGnssTime } from 'util/lock';
 import { repairCameraBridge } from 'util/index';
 import { CameraType } from 'types';
 import { exec } from 'child_process';
-import { fetchLandmarksByFrameKmId } from 'sqlite/landmarks';
+import { fetchLandmarksByFrameKmId, fetchLandmarksWithMapFeatureData } from 'sqlite/landmarks';
 
 const AVG_MIN_FRAME_SIZE = 45 * 1024;
 
@@ -80,7 +80,8 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
-    const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame);
+    const landmarksByFrame = await getLandmarksByFrame(frameKm[0].fkm_id || 0);
+    const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, landmarksByFrame);
 
     const start = getLatestGnssTime();
     const bytesMap = await promiseWithTimeout(
@@ -174,29 +175,27 @@ export const packFrameKm = async (frameKm: FrameKM) => {
 
 export const getLandmarksByFrame = async (frameKmId: number): Promise<LandmarksByFrame> => {
   const landmarksByFrame: LandmarksByFrame = {};
-  const landmarks: Landmark[] = await fetchLandmarksByFrameKmId(frameKmId);
+  const landmarks: MergedLandmark[] = await fetchLandmarksWithMapFeatureData(frameKmId);
   for (let landmark of landmarks) {
-    if (landmark.ready) {
-      for (let image_name of landmark.image_names) {
-        if (!landmarksByFrame[image_name]) {
-          landmarksByFrame[image_name] = [];
-        }
-        landmarksByFrame[image_name].push([
-          landmark.map_feature_id,
-          landmark.lat,
-          landmark.lon,
-          landmark.alt,
-          landmark.azimuth,
-          landmark.width,
-          landmark.height,
-          landmark.class,
-          landmark.box[0],
-          landmark.box[1],
-          landmark.box[2],
-          landmark.box[3],
-          landmark.confidence
-        ]);
+    if (landmark.map_feature_id) {
+      if (!landmarksByFrame[landmark.image_name]) {
+        landmarksByFrame[landmark.image_name] = [];
       }
+      landmarksByFrame[landmark.image_name].push([
+        landmark.map_feature_id,
+        landmark.mf_lat,
+        landmark.mf_lon,
+        landmark.mf_alt,
+        +landmark.mf_azimuth.toFixed(4),
+        +landmark.mf_width.toFixed(4),
+        +landmark.mf_height.toFixed(4),
+        landmark.class_id,
+        landmark.x1,
+        landmark.y1,
+        landmark.x2,
+        landmark.y2,
+        +landmark.confidence.toFixed(4)
+      ]);
     }
   }
   return landmarksByFrame;

@@ -71,7 +71,7 @@ export const DATA_LOGGER_SERVICE = 'hivemapper-data-logger';
 export const FOLDER_PURGER_SERVICE = 'hivemapper-folder-purger';
 export const MOTION_MODEL_QUERY_WINDOW_SIZE = 4000;
 
-export const CAMERA_TYPE: CameraType = CameraType.HdcS;
+export const CAMERA_TYPE: CameraType = CameraType.Bee;
 
 export const CMD = {
   RESTART_CAMERA: 'systemctl restart camera-bridge',

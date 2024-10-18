@@ -4,7 +4,7 @@ import { GnssRecord, ImuRecord } from "./sqlite";
 export enum CameraType {
   Hdc = 'hdc',
   HdcS = 'hdc-s',
-  Bee = 'bee',
+  Bee = 'hdc-s',
 }
 
 export interface ICameraFile {

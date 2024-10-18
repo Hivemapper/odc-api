@@ -34,7 +34,7 @@ const retryDelay = 500; // milliseconds
 type BytesMap = { [key: string]: number };
 type ExifPerFrame = { [key: string]: { 
   privacyDetections: DetectionsData[],
-  landmarks: LandmarksData[],
+  landmarkDetections: LandmarksData[],
   };}
 
 export const prepareExifPerFrame = (
@@ -50,7 +50,7 @@ export const prepareExifPerFrame = (
   }
   for (const frame in landmarks) {
     let frameExif = exif[frame] || {};
-    frameExif['landmarks'] = landmarks[frame];
+    frameExif['landmarkDetections'] = landmarks[frame];
     exif[frame] = frameExif;
   }
 
@@ -181,8 +181,8 @@ const writeCSV = async (exifData: ExifPerFrame, frameFolder: string, framekmName
   }));
   const csv = parse(data, { fields });
   await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
-  // console.log('Debug copy of csv file:');
-  // await promises.writeFile(`${PUBLIC_FOLDER}/${framekmName}.csv`, csv);
+  console.log('Debug copy of csv file:');
+  await promises.writeFile(`${PUBLIC_FOLDER}/${framekmName}.csv`, csv);
 };
 
 export const getFrameKmTelemetry = async (framesFolder: string, meta: FrameKM): Promise<FrameKMTelemetry> => {

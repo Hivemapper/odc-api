@@ -153,6 +153,8 @@ export const performSoftMigrations = async (): Promise<void> => {
     `ALTER TABLE packed_framekms ADD COLUMN cno REAL DEFAULT 0;`,
     `ALTER TABLE framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
     `ALTER TABLE packed_framekms ADD COLUMN clock INTEGER DEFAULT 0;`,
+    `ALTER TABLE framekms ADD COLUMN heading REAL DEFAULT 0;`,
+    `ALTER TABLE packed_framekms ADD COLUMN heading REAL DEFAULT 0;`,
     // Add more ALTER TABLE commands here as needed
   ];
 
@@ -188,6 +190,7 @@ export const createFrameKMTable = async (tableName: string): Promise<void> => {
     hdop REAL,
     eph REAL,
     cno REAL,
+    heading REAL,
     clock INTEGER,
     latitude REAL,
     longitude REAL,
@@ -215,6 +218,7 @@ export const createFrameKMTable = async (tableName: string): Promise<void> => {
     ml_processed_at INTEGER,
     ml_grid INTEGER,
     postponed INTEGER DEFAULT 0,
+    landmarks_processed INTEGER DEFAULT 1,
     orientation INTEGER DEFAULT 1,
     error TEXT
   );`;

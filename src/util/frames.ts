@@ -22,11 +22,12 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
                 .map(filename => {
                   return {
                     image_name: filename,
-                    system_time: getDateFromUnicodeTimestamp(filename).getTime(),
+                    system_time: getDateFromUnicodeTimestamp(filename).getTime() * 10,
                     clock: getClockFromFilename(filename),
                   };
                 });
 
+              console.log("Filtering images", jpgFiles.length, jpgFiles[0].system_time, from);
               const filteredFiles = jpgFiles.filter((file: IImage) => {
                 return !(file.system_time < from || file.system_time > to);
               });

@@ -18,17 +18,19 @@ export async function MotionModelController() {
 
     // Do not query sensor data if dashcam session is not ready
     if (!session.ready()) {
+      console.log("Waiting for session to be ready");
       setTimeout(MotionModelController, MOTION_MODEL_QUERY_WINDOW_SIZE);
       return;
     }
     if (!session.started) {
       session.start();
     }
+    console.log("Iterating...");
 
-    if (await getConfig('isDashcamMLEnabled')) {
-      // Repair ML job if needed
-      await session.checkObjectDetectionService();
-    }
+    // if (await getConfig('isDashcamMLEnabled')) {
+    //   // Repair ML job if needed
+    //   await session.checkObjectDetectionService();
+    // }
 
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(), undefined, true
