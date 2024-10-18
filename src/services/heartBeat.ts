@@ -1,5 +1,6 @@
 import { exec, ExecException, spawnSync } from 'child_process';
 import {
+  CAMERA_TYPE,
   CMD,
   FIRMWARE_UPDATE_MARKER,
   GPS_LATEST_SAMPLE,
@@ -8,7 +9,7 @@ import {
 } from 'config';
 import { existsSync, readFileSync } from 'fs';
 import { jsonrepair } from 'jsonrepair';
-import { IService } from 'types';
+import { CameraType, IService } from 'types';
 import { GNSS } from 'types/motionModel';
 import { Instrumentation } from 'util/instrumentation';
 import { getLatestGnssTime, isTimeSet, setGnssTime, setLockTime, setTime } from 'util/lock';
@@ -153,6 +154,22 @@ export const HeartBeatService: IService = {
           updateLED(COLORS.BLACK, COLORS.BLACK, COLORS.BLACK);
           return;
         }
+      }
+
+      if (CAMERA_TYPE === CameraType.Bee) {
+        // No need to track GPS and camera status for Bee. It's cool by itself
+        if (!wasTimeResolved) {
+          const gpsSample = await fetchGNSSLatestSample();
+          if (gpsSample && gpsSample.time_resolved === 1) {
+            wasTimeResolved = true;
+            setGnssTime(new Date(gpsSample.timestamp).getTime());
+            setTime();
+            Instrumentation.add({
+              event: 'DashcamTimeResolved',
+            });
+          }
+        }
+        return;
       }
 
       const isCameraActive = await isCameraBridgeServiceActive();

@@ -1,14 +1,14 @@
-import { FRAMES_ROOT_FOLDER } from 'config';
+import { CAMERA_TYPE, FRAMES_LIST_FOLDER } from 'config';
 import { readdir } from 'fs';
 import { tmpFrameName } from 'routes/recordings';
-import { IImage } from 'types';
-import { getDateFromUnicodeTimestamp } from 'util/index';
+import { CameraType, IImage } from 'types';
+import { getClockFromFilename, getDateFromUnicodeTimestamp } from 'util/index';
 
 export const getFramesFromFS = async (from: number, to: number): Promise<IImage[]> => {
   return new Promise(resolve => {
     try {
       readdir(
-        FRAMES_ROOT_FOLDER,
+        FRAMES_LIST_FOLDER,
         (err: NodeJS.ErrnoException | null, files: string[]) => {
           try {
             if (files?.length) {
@@ -22,13 +22,21 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
                 .map(filename => {
                   return {
                     image_name: filename,
-                    system_time: getDateFromUnicodeTimestamp(filename).getTime(),
+                    system_time: getDateFromUnicodeTimestamp(filename).getTime() * 10, // TODO: TEMP, FIX ON CAMERA END
+                    clock: getClockFromFilename(filename),
                   };
                 });
 
-              const filteredFiles = jpgFiles.filter((file: IImage) => {
+              let filteredFiles = jpgFiles.filter((file: IImage) => {
                 return !(file.system_time < from || file.system_time > to);
               });
+              let buffer = jpgFiles.length - filteredFiles.length;
+              if (buffer < 20 && jpgFiles.length > 290 && CAMERA_TYPE === CameraType.Bee) {
+                console.log("WARNING: Buffer is full!! Preventing first frame selection. They're about to be removed from RAM:");
+                filteredFiles = filteredFiles.sort((a, b) => a.system_time - b.system_time).slice(20);
+              } else {
+                console.log(`Buffer: handicap ${buffer} frames.`);
+              }
 
               resolve(filteredFiles);
             } else {

@@ -13,6 +13,7 @@ export const RAW_DATA_ROOT_FOLDER = '/mnt/data/raw';
 export const STREAM_REQUEST_FOLDER = '/mnt/data/request';
 export const DB_PATH = '/mnt/data/data-logger.v1.4.5.db';
 export const GPS_ROOT_FOLDER = '/mnt/data/gps';
+export const FRAMES_LIST_FOLDER = '/tmp/recording/pic';
 export const GPS_MGA_OFFLINE_FILE = '/mnt/data/mgaoffline.ubx';
 export const GPS_MGA_OFFLINE_HASH = '/mnt/data/mgaoffline.hash';
 export const METADATA_ROOT_FOLDER = '/mnt/data/metadata';
@@ -62,6 +63,7 @@ export const HEALTH_MARKER_PATH = '/mnt/data/healthy.txt';
 export const CRON_EXECUTED_TASKS_PATH = '/mnt/data/cron_executed';
 export const DATA_LOGGER_SERVICE = 'data-logger';
 export const FOLDER_PURGER_SERVICE = 'folder_purger';
+export const MOTION_MODEL_QUERY_WINDOW_SIZE = 10000;
 export const CAMERA_TYPE: CameraType = CameraType.Hdc;
 export const CAMERA_BRIDGE_CONFIG_FILE_OVERRIDE =
   '/mnt/data/camera_bridge_config.json';

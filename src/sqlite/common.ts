@@ -43,7 +43,6 @@ export const querySensorData = async (
         const imuUntil = gnss[gnss.length - 1].system_time;
         const session = gnss[0].session;
         const imu = await fetchImuLogsByTime(imuSince, imuUntil, session);
-        await sleep(2000); // let frame buffer to fill up if needed
         const images = await getFramesFromFS(imuSince, imuUntil);
         let magnetometer: MagnetometerRecord[] = [];
         if (!ignoreMagnetometer) {
@@ -68,23 +67,6 @@ export const querySensorData = async (
           const delta = Math.abs(current.system_time - current.actual_system_time);
           return delta > maxDelta ? delta : maxDelta;
         }, 0);
-        // console.log('==========GNSS DELTA ===============');
-        // console.log(gnssSystemTimeDelta);
-        // console.log(gnssTimeDelta);
-        // console.log('=====================================');
-        // if (gnssSystemTimeDelta > 1000 || gnssTimeDelta > 1000) {
-        //   // store json for investigation
-        //   const filename = `/mnt/data/gnssDelta_${Date.now()}_${gnssSystemTimeDelta}_${gnssTimeDelta}.json`; // Create a filename with a timestamp
-        //   const dataToSave = JSON.stringify(gnss, null, 2); // Convert the GNSS data array to a formatted JSON string
-
-        //   writeFile(filename, dataToSave, 'utf8', (err) => {
-        //       if (err) {
-        //           console.log('Error writing file:', err);
-        //       } else {
-        //           console.log(`Data saved to ${filename} for investigation.`);
-        //       }
-        //   });
-        // }
         if (gnssSystemTimeDelta > biggestGnssSystemTimeDelta) {
           biggestGnssSystemTimeDelta = gnssSystemTimeDelta;
         }

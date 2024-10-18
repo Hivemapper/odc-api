@@ -91,10 +91,12 @@ export type FrameKmRecord = {
     hdop: number;
     eph: number;
     cno?: number;
+    clock?: number;
     latitude: number;
     longitude: number;
     altitude: number;
     speed: number;
+    heading?: number;
     time: number;
     system_time: number;
     satellites_used: number;

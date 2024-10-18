@@ -86,6 +86,21 @@ export const getDateFromUnicodeTimestamp = (filename: string) => {
   }
 };
 
+export const getClockFromFilename = (filename: string) => {
+  try {
+    const parts = filename.split('_');
+    if (parts.length < 3) {
+      return 0;
+    } else {
+      // separate extention
+      let clock = parts[2].split('.')[0];
+      return Number(clock);
+    }
+  } catch (e) {
+    return 0;
+  }
+}
+
 export const setSessionId = () => {
   sessionId = generate();
 };
@@ -307,8 +322,9 @@ export const addAppConnectedLog = () => {
 }
 
 export const repairCameraBridge = (metadata: any) => {
+  let serviceName = CAMERA_TYPE === CameraType.Bee ? 'map-ai' : 'camera-bridge';
   console.log('Repairing Camera Bridge');
-  exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
+  exec(`journalctl -eu ${serviceName}`, async (error, stdout, stderr) => {
     console.log(stdout || stderr);
     console.log('Restarting Camera-Bridge');
 

@@ -3,8 +3,7 @@ import { DriveSession } from './driveSession';
 import { packFrameKm } from './packaging';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig } from 'sqlite/config';
-
-const QUERY_WINDOW_SIZE = 10 * 1000;
+import { MOTION_MODEL_QUERY_WINDOW_SIZE } from 'config';
 
 let session = new DriveSession();
 
@@ -19,17 +18,19 @@ export async function MotionModelController() {
 
     // Do not query sensor data if dashcam session is not ready
     if (!session.ready()) {
-      setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
+      console.log("Waiting for session to be ready");
+      setTimeout(MotionModelController, MOTION_MODEL_QUERY_WINDOW_SIZE);
       return;
     }
     if (!session.started) {
       session.start();
     }
+    console.log("Iterating...");
 
-    if (await getConfig('isDashcamMLEnabled')) {
-      // Repair ML job if needed
-      await session.checkObjectDetectionService();
-    }
+    // if (await getConfig('isDashcamMLEnabled')) {
+    //   // Repair ML job if needed
+    //   await session.checkObjectDetectionService();
+    // }
 
     const { gnss, imu, images } = await querySensorData(
       await session.getLastTime(), undefined, true
@@ -47,5 +48,5 @@ export async function MotionModelController() {
     session = new DriveSession();
   }
 
-  setTimeout(MotionModelController, QUERY_WINDOW_SIZE);
+  setTimeout(MotionModelController, MOTION_MODEL_QUERY_WINDOW_SIZE);
 }
