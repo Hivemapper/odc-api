@@ -28,6 +28,8 @@ const handleMessage = (ws: WebSocket, message: WebSocket.Data) => {
       case 'getLatestImage':
         handleLatestImage(ws);
         break;
+      case 'getMetadataList':
+        handleMetadataList(ws);
       default:
         console.log('Unknown message type:', parsedMessage.type);
     }
