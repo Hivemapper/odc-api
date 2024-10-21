@@ -90,31 +90,31 @@ export class DriveSession {
   async start() {
     const lastTimeIterated = await getConfig('lastTimeIterated');
     const now = getLatestGnssTime();
-    // if (lastTimeIterated && Math.abs(now - lastTimeIterated) < 1000 * 60 * 4) {
-    //   await restoreEndTrim();
-    //   ignoreTrimStart();
-    //   Instrumentation.add({
-    //     event: 'DashcamReboot',
-    //     size: Math.abs(now - lastTimeIterated)
-    //   })
-    // } else {
-    //   // trim last framekm (end trip trimming)
-    //   const frameKmToTrim = await getPostponedEndTrim();
-    //   const TrimDistance = await getConfig('TrimDistance');
-    //   const DX = getDX();
+    if (lastTimeIterated && Math.abs(now - lastTimeIterated) < 1000 * 60 * 4) {
+      await restoreEndTrim();
+      ignoreTrimStart();
+      Instrumentation.add({
+        event: 'DashcamReboot',
+        size: Math.abs(now - lastTimeIterated)
+      })
+    } else {
+      // trim last framekm (end trip trimming)
+      const frameKmToTrim = await getPostponedEndTrim();
+      const TrimDistance = await getConfig('TrimDistance');
+      const DX = getDX();
 
-    //   const framesToTrim = Math.min(Math.round(TrimDistance / DX), frameKmToTrim.length);
+      const framesToTrim = Math.min(Math.round(TrimDistance / DX), frameKmToTrim.length);
 
-    //   for (let i = 0; i < framesToTrim; i++) {
-    //     const frameToRemove = frameKmToTrim.pop();
-    //     if (frameToRemove?.image_name) {
-    //       await deleteFrame(frameToRemove.image_name, frameToRemove.image_path || '');
-    //     }
-    //   }
-    //   await restoreEndTrim();
-    // }
+      for (let i = 0; i < framesToTrim; i++) {
+        const frameToRemove = frameKmToTrim.pop();
+        if (frameToRemove?.image_name) {
+          await deleteFrame(frameToRemove.image_name, frameToRemove.image_path || '');
+        }
+      }
+      await restoreEndTrim();
+    }
     // TEMP: FIX BEFORE MERGING
-    ignoreTrimStart();
+    // ignoreTrimStart();
     this.started = true;
   }
 

@@ -1,9 +1,9 @@
 import { map } from 'async';
 import {
+  CSV_CACHE_FOLDER,
   FRAMEKM_ROOT_FOLDER,
   FRAMES_ROOT_FOLDER,
   METADATA_ROOT_FOLDER,
-  PUBLIC_FOLDER,
 } from 'config';
 import {
   Stats,
@@ -84,6 +84,11 @@ export const concatFrames = async (
   // 0. MAKE DIR FOR CHUNKS, IF NOT DONE YET
   try {
     await promises.mkdir(FRAMEKM_ROOT_FOLDER, { recursive: true });
+  } catch (e: unknown) {
+    console.error(e);
+  }
+  try {
+    await promises.mkdir(CSV_CACHE_FOLDER, { recursive: true });
   } catch (e: unknown) {
     console.error(e);
   }
@@ -217,7 +222,7 @@ const writeCSV = async (
   await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
   // cache for debugging
   await promises.writeFile(
-    `${PUBLIC_FOLDER}/exif_data_${framekmName}.csv`,
+    `${CSV_CACHE_FOLDER}/exif_data_${framekmName}.csv`,
     csv,
   );
 };

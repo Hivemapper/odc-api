@@ -1,11 +1,13 @@
 import {
   API_VERSION,
   CAMERA_TYPE,
+  FRAMEKM_ROOT_FOLDER,
   FRAMEKM_VERSION,
   METADATA_ROOT_FOLDER,
+  QUARANTINE_METADATA_FOLDER,
   UNPROCESSED_FRAMEKM_ROOT_FOLDER,
 } from 'config';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, renameSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { clearAll, deleteFrameKm, getFrameKmName, getFrameKmsCount, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
 import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata, Landmark, LandmarksByFrame, MergedLandmark } from 'types/motionModel';
@@ -32,8 +34,11 @@ import { repairCameraBridge } from 'util/index';
 import { CameraType } from 'types';
 import { exec } from 'child_process';
 import { fetchLandmarksByFrameKmId, fetchLandmarksWithMapFeatureData } from 'sqlite/landmarks';
+import { countUniqueMapFeatures } from 'util/landmarks';
+import { distance } from 'util/geomath';
 
 const AVG_MIN_FRAME_SIZE = 45 * 1024;
+const MAX_DISTANCE_BETWEEN_FRAMES = 40;
 
 export const packFrameKm = async (frameKm: FrameKM) => {
   console.log('Ready to pack ' + frameKm.length + ' frames');
@@ -79,9 +84,13 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       });
       return;
     }
+    let frameNameSet: Set<string> = new Set();
+    for (let frame of frameKm) {
+      frameNameSet.add(frame.image_name);
+    }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
     const landmarks: MergedLandmark[] = await fetchLandmarksWithMapFeatureData(frameKm[0].fkm_id || 0);
-    const landmarksByFrame = await getLandmarksByFrame(landmarks);
+    const landmarksByFrame = await getLandmarksByFrame(landmarks, frameNameSet);
 
     const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, landmarksByFrame);
 
@@ -175,11 +184,11 @@ export const packFrameKm = async (frameKm: FrameKM) => {
   }
 };
 
-export const getLandmarksByFrame = async (landmarks: MergedLandmark[]): Promise<LandmarksByFrame> => {
+export const getLandmarksByFrame = async (landmarks: MergedLandmark[], frameNameSet: Set<string>): Promise<LandmarksByFrame> => {
   const landmarksByFrame: LandmarksByFrame = {};
   
   for (let landmark of landmarks) {
-    if (landmark.map_feature_id) {
+    if (landmark.map_feature_id && frameNameSet.has(landmark.image_name)) {
       if (!landmarksByFrame[landmark.image_name]) {
         landmarksByFrame[landmark.image_name] = [];
       }
@@ -365,10 +374,12 @@ export const packMetadata = async (
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
   let privacyModelHash = undefined;
+  let isMarkedAsDistanceFault = false;
 
   for (let i = 0; i < framesMetadata.length; i++) {
     const m: FrameKmRecord = framesMetadata[i];
     const bytes = bytesMap[m.image_name || ''];
+    let prevFrame = undefined;
     if (bytes && bytes > MIN_PER_FRAME_BYTES && bytes < MAX_PER_FRAME_BYTES) {
       const frame: FramesMetadata = {
         bytes,
@@ -396,6 +407,14 @@ export const packMetadata = async (
         gyro_z: m.gyro_z
       };
       validatedFrames.push(frame);
+      if (prevFrame && !isMarkedAsDistanceFault) {
+        let distanceBetweenFrames = distance(prevFrame, m);
+        if (distanceBetweenFrames >= MAX_DISTANCE_BETWEEN_FRAMES) {
+          isMarkedAsDistanceFault = true;
+          console.log(`=========== DISTANCE FAULT: framekm: ${name}, frame #:${i} =============`)
+        }
+      }
+      prevFrame = { ...m };
 
       privacyModelHash = m.ml_model_hash || undefined;
       numBytes += bytes;
@@ -433,7 +452,7 @@ export const packMetadata = async (
         pitch: 0,
         roll: 0,
         yaw: 0,
-        landmarks: landmarks.length,
+        landmarks: countUniqueMapFeatures(landmarks),
         gnssAuthBuffer: gnssAuth?.buffer,
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
         gnssAuthBufferHash: gnssAuth?.buffer_hash,
@@ -447,11 +466,27 @@ export const packMetadata = async (
       if (!existsSync(METADATA_ROOT_FOLDER)) {
         mkdirSync(METADATA_ROOT_FOLDER);
       }
-      writeFileSync(
-        METADATA_ROOT_FOLDER + '/' + name + '.json',
-        JSON.stringify(metadataJSON),
-        { encoding: 'utf-8' },
-      );
+
+      if (isMarkedAsDistanceFault) {
+        if (!existsSync(QUARANTINE_METADATA_FOLDER)) {
+          try {
+            writeFileSync(
+              METADATA_ROOT_FOLDER + '/' + name + '.json',
+              JSON.stringify(metadataJSON),
+              { encoding: 'utf-8' },
+            );
+            renameSync(FRAMEKM_ROOT_FOLDER + '/' + name, QUARANTINE_METADATA_FOLDER + '/' + name);
+          } catch (e: unknown) {
+            console.log('Error moving metadata files', e);
+          }
+        }
+      } else {
+        writeFileSync(
+          METADATA_ROOT_FOLDER + '/' + name + '.json',
+          JSON.stringify(metadataJSON),
+          { encoding: 'utf-8' },
+        );
+      }
       console.log('Metadata written for ' + name);
       return metadataJSON.frames;
     } catch (e: unknown) {

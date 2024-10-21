@@ -13,6 +13,8 @@ export const ML_METADATA_ROOT_FOLDER = '/data/recording/ml_metadata';
 export const UNPROCESSED_FRAMEKM_ROOT_FOLDER = '/data/recording/unprocessed_framekm';
 export const DB_PATH = '/data/recording/data-logger.v1.4.5.db';
 export const FRAMES_LIST_FOLDER = '/tmp/recording/pics';
+export const CSV_CACHE_FOLDER = '/data/recording/csv';
+export const QUARANTINE_METADATA_FOLDER = '/data/recording/quarantine';
 export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';

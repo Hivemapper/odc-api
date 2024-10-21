@@ -16,6 +16,8 @@ export const RAW_DATA_ROOT_FOLDER = '/data/raw';
 export const STREAM_REQUEST_FOLDER =
   __dirname + '/../../../data/recording/request';
 export const GPS_ROOT_FOLDER = '/data/recording/gps';
+export const CSV_CACHE_FOLDER = '/data/recording/csv';
+export const QUARANTINE_METADATA_FOLDER = '/data/recording/quarantine';
 export const METADATA_ROOT_FOLDER = '/data/recording/metadata';
 export const UNPROCESSED_METADATA_ROOT_FOLDER = '/data/recording/unprocessed_metadata';
 export const GPS_LATEST_SAMPLE =
