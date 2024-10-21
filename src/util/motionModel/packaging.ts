@@ -80,7 +80,9 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
-    const landmarksByFrame = await getLandmarksByFrame(frameKm[0].fkm_id || 0);
+    const landmarks: MergedLandmark[] = await fetchLandmarksWithMapFeatureData(frameKm[0].fkm_id || 0);
+    const landmarksByFrame = await getLandmarksByFrame(landmarks);
+
     const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, landmarksByFrame);
 
     const start = getLatestGnssTime();
@@ -123,7 +125,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         }
       } else {
         await promiseWithTimeout(
-          packMetadata(finalBundleName, frameKm, bytesMap),
+          packMetadata(finalBundleName, frameKm, bytesMap, landmarks),
           5000,
         );
   
@@ -173,9 +175,9 @@ export const packFrameKm = async (frameKm: FrameKM) => {
   }
 };
 
-export const getLandmarksByFrame = async (frameKmId: number): Promise<LandmarksByFrame> => {
+export const getLandmarksByFrame = async (landmarks: MergedLandmark[]): Promise<LandmarksByFrame> => {
   const landmarksByFrame: LandmarksByFrame = {};
-  const landmarks: MergedLandmark[] = await fetchLandmarksWithMapFeatureData(frameKmId);
+  
   for (let landmark of landmarks) {
     if (landmark.map_feature_id) {
       if (!landmarksByFrame[landmark.image_name]) {
@@ -358,6 +360,7 @@ export const packMetadata = async (
   name: string,
   framesMetadata: FrameKM,
   bytesMap: { [key: string]: number },
+  landmarks: MergedLandmark[],
 ): Promise<FramesMetadata[]> => {
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
@@ -427,6 +430,10 @@ export const packMetadata = async (
         version: FRAMEKM_VERSION,
         privacyModelHash,
         deviceId: deviceId,
+        pitch: 0,
+        roll: 0,
+        yaw: 0,
+        landmarks: landmarks.length,
         gnssAuthBuffer: gnssAuth?.buffer,
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
         gnssAuthBufferHash: gnssAuth?.buffer_hash,

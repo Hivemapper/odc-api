@@ -2,7 +2,7 @@ import { CAMERA_TYPE, FRAMES_LIST_FOLDER } from 'config';
 import { readdir } from 'fs';
 import { tmpFrameName } from 'routes/recordings';
 import { CameraType, IImage } from 'types';
-import { getClockFromFilename, getDateFromUnicodeTimestamp } from 'util/index';
+import { getClockFromFilename, getDateFromUnicodeTimestamp, getUnicodeTimestamp } from 'util/index';
 
 export const getFramesFromFS = async (from: number, to: number): Promise<IImage[]> => {
   return new Promise(resolve => {
@@ -22,7 +22,7 @@ export const getFramesFromFS = async (from: number, to: number): Promise<IImage[
                 .map(filename => {
                   return {
                     image_name: filename,
-                    system_time: getDateFromUnicodeTimestamp(filename).getTime() * 10, // TODO: TEMP, FIX ON CAMERA END
+                    system_time: getUnicodeTimestamp(filename), // TODO: TEMP, FIX ON CAMERA END
                     clock: getClockFromFilename(filename),
                   };
                 });
