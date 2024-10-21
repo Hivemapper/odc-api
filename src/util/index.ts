@@ -99,6 +99,15 @@ export const getDateFromUnicodeTimestamp = (filename: string) => {
   }
 };
 
+export const getUnicodeTimestamp = (filename: string) => {
+  try {
+    const parts = filename.split('_');
+    return Number(parts[0] + parts[1].substring(0, 3));
+  } catch (e) {
+    return 0;
+  }
+};
+
 export const getClockFromFilename = (filename: string) => {
   try {
     const parts = filename.split('_');

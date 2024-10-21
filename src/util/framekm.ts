@@ -215,6 +215,11 @@ const writeCSV = async (
   }));
   const csv = parse(data, { fields });
   await promises.writeFile(`${frameFolder}/exif_data.csv`, csv);
+  // cache for debugging
+  await promises.writeFile(
+    `${PUBLIC_FOLDER}/exif_data_${framekmName}.csv`,
+    csv,
+  );
 };
 
 export const getFrameKmTelemetry = async (
