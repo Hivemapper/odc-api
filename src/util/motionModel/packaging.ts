@@ -8,7 +8,7 @@ import {
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { clearAll, deleteFrameKm, getFrameKmName, getFrameKmsCount, getFramesCount, postponeFrameKm } from 'sqlite/framekm';
-import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata } from 'types/motionModel';
+import { DetectionsByFrame, FrameKMTelemetry, FramesMetadata, Landmark, LandmarksByFrame, MergedLandmark } from 'types/motionModel';
 import { FrameKM, FrameKmRecord, GnssAuthRecord } from 'types/sqlite';
 import { promiseWithTimeout, getQuality, getCpuUsage, getSystemTemp } from 'util/index';
 import {
@@ -31,6 +31,7 @@ import { getLatestGnssTime } from 'util/lock';
 import { repairCameraBridge } from 'util/index';
 import { CameraType } from 'types';
 import { exec } from 'child_process';
+import { fetchLandmarksByFrameKmId, fetchLandmarksWithMapFeatureData } from 'sqlite/landmarks';
 
 const AVG_MIN_FRAME_SIZE = 45 * 1024;
 
@@ -79,7 +80,10 @@ export const packFrameKm = async (frameKm: FrameKM) => {
       return;
     }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
-    const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame);
+    const landmarks: MergedLandmark[] = await fetchLandmarksWithMapFeatureData(frameKm[0].fkm_id || 0);
+    const landmarksByFrame = await getLandmarksByFrame(landmarks);
+
+    const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, landmarksByFrame);
 
     const start = getLatestGnssTime();
     const bytesMap = await promiseWithTimeout(
@@ -121,7 +125,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
         }
       } else {
         await promiseWithTimeout(
-          packMetadata(finalBundleName, frameKm, bytesMap),
+          packMetadata(finalBundleName, frameKm, bytesMap, landmarks),
           5000,
         );
   
@@ -170,6 +174,34 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     console.log(error);
   }
 };
+
+export const getLandmarksByFrame = async (landmarks: MergedLandmark[]): Promise<LandmarksByFrame> => {
+  const landmarksByFrame: LandmarksByFrame = {};
+  
+  for (let landmark of landmarks) {
+    if (landmark.map_feature_id) {
+      if (!landmarksByFrame[landmark.image_name]) {
+        landmarksByFrame[landmark.image_name] = [];
+      }
+      landmarksByFrame[landmark.image_name].push([
+        landmark.map_feature_id,
+        landmark.mf_lat,
+        landmark.mf_lon,
+        landmark.mf_alt,
+        +landmark.mf_azimuth.toFixed(4),
+        +landmark.mf_width.toFixed(4),
+        +landmark.mf_height.toFixed(4),
+        landmark.class_id,
+        landmark.x1,
+        landmark.y1,
+        landmark.x2,
+        landmark.y2,
+        +landmark.confidence.toFixed(4)
+      ]);
+    }
+  }
+  return landmarksByFrame;
+}
 
 export const getDetectionsByFrame = async (name: string, framesMetadata: FrameKM): Promise<DetectionsByFrame> => {
   const privacyDetections: DetectionsByFrame = {};
@@ -328,6 +360,7 @@ export const packMetadata = async (
   name: string,
   framesMetadata: FrameKM,
   bytesMap: { [key: string]: number },
+  landmarks: MergedLandmark[],
 ): Promise<FramesMetadata[]> => {
   let numBytes = 0;
   const validatedFrames: FramesMetadata[] = [];
@@ -397,6 +430,10 @@ export const packMetadata = async (
         version: FRAMEKM_VERSION,
         privacyModelHash,
         deviceId: deviceId,
+        pitch: 0,
+        roll: 0,
+        yaw: 0,
+        landmarks: landmarks.length,
         gnssAuthBuffer: gnssAuth?.buffer,
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,
         gnssAuthBufferHash: gnssAuth?.buffer_hash,

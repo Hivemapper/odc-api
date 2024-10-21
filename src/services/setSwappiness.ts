@@ -6,7 +6,21 @@ import { CameraType, IService } from 'types';
 export const SetSwappinessService: IService = {
   execute: async () => {
     try {
-      const swappiness = await getConfig(CAMERA_TYPE === CameraType.Hdc ? 'HdcSwappiness' : 'HdcsSwappiness');
+      let param = '';
+      switch (CAMERA_TYPE) {
+        case CameraType.Hdc:
+          param = 'HdcSwappiness';
+          break;
+        case CameraType.HdcS:
+          param = 'HdcsSwappiness';
+          break;
+        case CameraType.Bee:
+          param = 'BeeSwappiness';
+          break;
+        default:
+          return;
+      }
+      const swappiness = await getConfig(param);
       if (Number.isInteger(swappiness) && swappiness >= 0 && swappiness <= 100) {
         exec(`sysctl vm.swappiness=${swappiness}`);
       }

@@ -318,7 +318,7 @@ export class DraftFrameKm {
             res.push({
               ...lastIMU, // imu
               ...interpolatedGnssMetadata, // linear-interpolated gnss metadata, like hdop etc
-              ...closestFrame, // frame name and system time
+              ...closestFrame, // frame name and system time, and clock (optional)
               ...frameCoordinates, // lat and lon from curve
               dx: DX,
               orientation: isUpsideDown ? 3 : 1,

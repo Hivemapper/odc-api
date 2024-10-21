@@ -31,6 +31,7 @@ const defaultConfig: SystemConfig = {
   SpeedToIncreaseDx: 24, // in meters per second
   HdcSwappiness: 20,
   HdcsSwappiness: 60,
+  BeeSwappiness: 20,
   isProcessingEnabled: true,
   isBrokenImageFixForHdcsEnabled: true,
   isEndToEndTestingEnabled: false,

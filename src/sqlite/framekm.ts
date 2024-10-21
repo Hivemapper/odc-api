@@ -2,14 +2,13 @@ import { getAsync, runAsync } from './index';
 import { FrameKM, FrameKmRecord } from 'types/sqlite';
 import { distance } from 'util/geomath';
 import { join } from 'path';
-import { FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
+import { CAMERA_TYPE, FRAMES_ROOT_FOLDER, UNPROCESSED_FRAMEKM_ROOT_FOLDER } from 'config';
 import { existsSync, promises } from 'fs';
 import { isPrivateLocation } from 'util/privacy';
 import { insertErrorLog } from './error';
-import { Instrumentation } from 'util/instrumentation';
-import { getConfig, getCutoffIndex, getDX, setConfig } from './config';
+import { getConfig, getCutoffIndex, getDX } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
-import { writeExif } from 'util/index';
+import { CameraType } from 'types';
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -60,7 +59,7 @@ export const getEstimatedProcessingTime = async (): Promise<number> => {
 export const getFrameKmsCount = async (mlEnabled = false): Promise<number> => {
   const query = `SELECT COUNT(DISTINCT fkm_id) AS distinctCount FROM framekms${
     mlEnabled
-      ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0'
+      ? ' WHERE (ml_model_hash IS NOT NULL OR error IS NOT NULL) AND postponed = 0 AND landmarks_processed = 1'
       : ''
   };`;
 
@@ -378,8 +377,8 @@ export const addFramesToFrameKm = async (
           fkm_id, image_name, image_path, dx, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z,
           latitude, longitude, altitude, speed, 
           hdop, gdop, pdop, tdop, vdop, xdop, ydop, orientation,
-          time, system_time, satellites_used, dilution, eph, cno, frame_idx, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          time, system_time, satellites_used, dilution, eph, cno, heading, clock, landmarks_processed, frame_idx, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
 
       for (let i = 0; i < rows.length; i++) {
@@ -390,10 +389,10 @@ export const addFramesToFrameKm = async (
         }
         try {
           const framePath = join(FRAMES_ROOT_FOLDER, row.image_name);
-          const stat = await promises.stat(framePath);
-          if (stat.size < MIN_PER_FRAME_BYTES || stat.size > MAX_PER_FRAME_BYTES) {
-            continue;
-          }
+          // const stat = await promises.stat(framePath);
+          // if (stat.size < MIN_PER_FRAME_BYTES || stat.size > MAX_PER_FRAME_BYTES) {
+          //   continue;
+          // }
           const last = await getLastRecord();
           let fkm_id = 1;
           let frame_idx = 1;
@@ -431,10 +430,13 @@ export const addFramesToFrameKm = async (
           if (!existsSync(destination)) {
             await promises.mkdir(destination, { recursive: true });
           }
-          await promises.copyFile(
-            framePath,
-            join(destination, row.image_name),
-          );
+          if (CAMERA_TYPE !== CameraType.Bee) {
+            // Bee doesn't save frames to disk, they're in-memory
+            await promises.copyFile(
+              framePath,
+              join(destination, row.image_name),
+            );
+          }
           console.log(
             'About to add frame: ',
             row.image_name,
@@ -471,6 +473,9 @@ export const addFramesToFrameKm = async (
             row.dilution,
             row.eph,
             row.cno,
+            row.heading,
+            row.clock || 0,
+            CAMERA_TYPE === CameraType.Bee ? 0 : 1,
             frame_idx,
             Date.now(),
           ]);
