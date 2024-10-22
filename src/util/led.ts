@@ -93,7 +93,7 @@ export const updateLED = async (
   appLED: ILED,
 ) => {
   try {
-    if (CAMERA_TYPE === CameraType.HdcS) {
+    if (CAMERA_TYPE === CameraType.HdcS || CAMERA_TYPE === CameraType.Bee) {
       if (framesLED === COLORS.YELLOW) {
         updateLEDHdcS(255, 255, 0);
       } else if (framesLED === COLORS.RED || framesLED === COLORS.PINK) {

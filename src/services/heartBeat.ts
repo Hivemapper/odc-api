@@ -158,17 +158,28 @@ export const HeartBeatService: IService = {
 
       if (CAMERA_TYPE === CameraType.Bee) {
         // No need to track GPS and camera status for Bee. It's cool by itself
-        if (!wasTimeResolved) {
-          const gpsSample = await fetchGNSSLatestSample();
-          if (gpsSample && gpsSample.time_resolved === 1) {
-            wasTimeResolved = true;
-            setGnssTime(new Date(gpsSample.timestamp).getTime());
-            setTime();
-            Instrumentation.add({
-              event: 'DashcamTimeResolved',
-            });
+        const gpsSample = await fetchGNSSLatestSample();
+        
+        if (gpsSample && gpsSample.time_resolved === 1) {
+          wasTimeResolved = true;
+          setGnssTime(new Date(gpsSample.timestamp).getTime());
+          setTime();
+        }
+        let gpsLED: any = null;
+        if (isGpsLock(gpsSample)) {
+          gpsLED = COLORS.GREEN;
+          lastSuccessfulLock = Date.now();
+        } else {
+          if (gpsSample) {
+            const gpsLostPeriod = lastSuccessfulLock
+              ? Math.abs(Date.now() - lastSuccessfulLock)
+              : 70000;
+            if (gpsLostPeriod > DIM_GPS_LIGHT_DELAY) {
+              gpsLED = COLORS.DIM;
+            }
           }
         }
+        updateLED(COLORS.GREEN, gpsLED, COLORS.GREEN);
         return;
       }
 

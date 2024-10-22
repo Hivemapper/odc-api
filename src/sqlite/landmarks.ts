@@ -36,6 +36,21 @@ export const checkIfLandmarksReady = async (frameKmId: number): Promise<boolean>
     });
 }
 
+export const fetchLastLandmark = async (): Promise<Landmark | undefined> => {
+    const query = `SELECT * FROM landmarks ORDER BY id DESC LIMIT 1`;
+    const db = await getDb();
+    return new Promise((resolve) => {
+        db.get(query, (err: unknown, row: Landmark) => {
+            if (err) {
+                console.log(err);
+                resolve(undefined);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
 export const fetchLandmarksByFrameKmId  = async (frameKmId: number): Promise<Landmark[]> => {
     const query = `SELECT * FROM landmarks WHERE framekm_id = ?`;
     const args = [frameKmId];

@@ -9,6 +9,9 @@ import { insertErrorLog } from './error';
 import { getConfig, getCutoffIndex, getDX } from './config';
 import { MAX_PER_FRAME_BYTES, MIN_PER_FRAME_BYTES } from 'util/framekm';
 import { CameraType } from 'types';
+import { fetchLastLandmark } from './landmarks';
+
+let minFrameKmId = 1;
 
 export const isFrameKmComplete = async (
   mlEnabled = false,
@@ -394,12 +397,15 @@ export const addFramesToFrameKm = async (
           //   continue;
           // }
           const last = await getLastRecord();
-          let fkm_id = 1;
+          let fkm_id = minFrameKmId;
           let frame_idx = 1;
           let cutoffIndex = getCutoffIndex(DX);
 
           if (last && last.fkm_id) {
             const lastFkmId = Number(last.fkm_id) || 1;
+            if (lastFkmId > minFrameKmId) {
+              minFrameKmId = lastFkmId;
+            }
             const forceFrameKmSwitch = force && i === 0;
             fkm_id = forceFrameKmSwitch ? lastFkmId + 1 : lastFkmId;
             // sanity check for accidental insert of the wrong sample into framekm
@@ -420,6 +426,11 @@ export const addFramesToFrameKm = async (
               console.log('FRAMEKM IS COMPLETE!! SWITCHING TO NEXT ONE.');
               fkm_id++;
               frame_idx = 1;
+            }
+          } else {
+            let landmark = await fetchLastLandmark();
+            if (landmark) {
+              fkm_id = landmark.framekm_id + 1;
             }
           }
           // Move frame
