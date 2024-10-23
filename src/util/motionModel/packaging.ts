@@ -33,9 +33,10 @@ import { getLatestGnssTime } from 'util/lock';
 import { repairCameraBridge } from 'util/index';
 import { CameraType } from 'types';
 import { exec } from 'child_process';
-import { fetchLandmarksByFrameKmId, fetchLandmarksWithMapFeatureData } from 'sqlite/landmarks';
+import { fetchLandmarksWithMapFeatureData } from 'sqlite/landmarks';
 import { countUniqueMapFeatures } from 'util/landmarks';
 import { distance } from 'util/geomath';
+import { getLastYaw } from 'sqlite/yaw';
 
 const AVG_MIN_FRAME_SIZE = 45 * 1024;
 const MAX_DISTANCE_BETWEEN_FRAMES = 40;
@@ -433,6 +434,12 @@ export const packMetadata = async (
       gnssAuth = (await fetchGnssAuthLogsByTime(startTime, endTime, 1))[0];
       publicKey = await getPublicKeyFromEeprom();
     }
+    let yaw = 0;
+    try {
+      yaw = await getLastYaw();
+    } catch (e: unknown) {
+      console.log(e);
+    }
 
     const metadataJSON = {
       bundle: {
@@ -451,7 +458,7 @@ export const packMetadata = async (
         deviceId: deviceId,
         pitch: 0,
         roll: 0,
-        yaw: 0,
+        yaw,
         landmarks: countUniqueMapFeatures(landmarks),
         gnssAuthBuffer: gnssAuth?.buffer,
         gnssAuthBufferMessageNum: gnssAuth?.buffer_message_num,

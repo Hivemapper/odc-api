@@ -124,6 +124,11 @@ export type ImuMetadata = {
   gyroscope: IXYZPoint[];
 };
 
+export type YawData = {
+  systemtime: number;
+  yaw: number;
+};
+
 export interface IXYZPoint {
   ts: number;
   x: number;
