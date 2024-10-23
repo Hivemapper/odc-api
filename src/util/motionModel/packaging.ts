@@ -91,6 +91,7 @@ export const packFrameKm = async (frameKm: FrameKM) => {
     }
     const privacyDetectionsByFrame = await getDetectionsByFrame(finalBundleName, frameKm);
     const landmarks: MergedLandmark[] = await fetchLandmarksWithMapFeatureData(frameKm[0].fkm_id || 0);
+    console.log('Related landmarks:', landmarks?.length);
     const landmarksByFrame = await getLandmarksByFrame(landmarks, frameNameSet);
 
     const exifByFrame = prepareExifPerFrame(privacyDetectionsByFrame, landmarksByFrame);
