@@ -17,7 +17,7 @@ import { isCollectionUpsideDown } from 'util/index';
 
 const MIN_DISTANCE_BETWEEN_POINTS = 1;
 const MAX_ALLOWED_IMG_TIME_DROP = 300;
-export const MIN_SPEED = 0.15; // meter per seconds
+export const MIN_SPEED = 1; // meter per seconds
 export const MAX_SPEED = 40; // meter per seconds
 
 export class DraftFrameKm {
@@ -318,7 +318,7 @@ export class DraftFrameKm {
             res.push({
               ...lastIMU, // imu
               ...interpolatedGnssMetadata, // linear-interpolated gnss metadata, like hdop etc
-              ...closestFrame, // frame name and system time
+              ...closestFrame, // frame name and system time, and clock (optional)
               ...frameCoordinates, // lat and lon from curve
               dx: DX,
               orientation: isUpsideDown ? 3 : 1,

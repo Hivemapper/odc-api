@@ -1,5 +1,11 @@
 import { Request } from 'express';
-import { CameraResolution, CameraType, ICameraConfig, ICameraFile, IMU } from 'types';
+import {
+  CameraResolution,
+  CameraType,
+  ICameraConfig,
+  ICameraFile,
+  IMU,
+} from 'types';
 import { generate } from 'shortid';
 import { UpdateCameraConfigService } from 'services/updateCameraConfig';
 import { UpdateCameraResolutionService } from 'services/updateCameraResolution';
@@ -17,12 +23,16 @@ import {
   writeFileSync,
   rmSync,
   existsSync,
+  mkdir,
 } from 'fs';
 import {
+  API_VERSION,
+  BUILD_INFO_PATH,
   CACHED_CAMERA_CONFIG,
   CACHED_RES_CONFIG,
   CAMERA_TYPE,
   FOLDER_PURGER_SERVICE,
+  FRAMEKM_ROOT_FOLDER,
   FRAMES_ROOT_FOLDER,
   NEW_IMAGER_CONFIG_PATH,
   PUBLIC_FOLDER,
@@ -37,6 +47,9 @@ import { parse } from 'json2csv';
 import { promisify } from 'util';
 import { getConfig } from 'sqlite/config';
 import { ImuRecord } from 'types/sqlite';
+import { getDeviceInfo } from 'services/deviceInfo';
+import { getAnonymousID } from 'sqlite/deviceInfo';
+
 const asyncExec = promisify(exec);
 
 let sessionId: string;
@@ -83,6 +96,30 @@ export const getDateFromUnicodeTimestamp = (filename: string) => {
     return new Date(Number(parts[0] + parts[1].substring(0, 3)));
   } catch (e) {
     return new Date();
+  }
+};
+
+export const getUnicodeTimestamp = (filename: string) => {
+  try {
+    const parts = filename.split('_');
+    return Number(parts[0] + parts[1].substring(0, 3));
+  } catch (e) {
+    return 0;
+  }
+};
+
+export const getClockFromFilename = (filename: string) => {
+  try {
+    const parts = filename.split('_');
+    if (parts.length < 3) {
+      return 0;
+    } else {
+      // separate extention
+      const clock = parts[2].split('.')[0];
+      return Number(clock);
+    }
+  } catch (e) {
+    return 0;
   }
 };
 
@@ -137,10 +174,12 @@ export const writeExif = async (data: any[]) => {
     return;
   }
   const csv = parse(data, { fields: Object.keys(data[0]) });
-  const imagePaths = data.map((d) => d.SourceFile);
+  const imagePaths = data.map(d => d.SourceFile);
   const csvPath = `${PUBLIC_FOLDER}/temp_exif.csv`;
   await promises.writeFile(csvPath, csv);
-  await asyncExec(`exiftool -csv="${csvPath}" -overwrite_original ${imagePaths.join(' ')}`);
+  await asyncExec(
+    `exiftool -csv="${csvPath}" -overwrite_original ${imagePaths.join(' ')}`,
+  );
 };
 
 export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
@@ -155,45 +194,46 @@ export const filterBySinceUntil = (files: ICameraFile[], req: Request) => {
   }
 };
 
-export const isCollectionUpsideDown = (
-  imuRecords: ImuRecord[],
-) => {
+export const isCollectionUpsideDown = (imuRecords: ImuRecord[]) => {
   if (imuRecords.length === 0) {
     return false;
   }
 
-  let vals: number[] = imuRecords.map(m => m.acc_z ?? 0);
+  const vals: number[] = imuRecords.map(m => m.acc_z ?? 0);
   return vals.reduce((acc, curr) => (acc += curr >= 0 ? 1 : -1), 0) < 0;
 };
 
 export const stopScriptIfRunning = (scriptPath: string) => {
   return new Promise((resolve, reject) => {
-      exec(`ps aux | grep "${scriptPath}" | grep -v "grep" | awk '{print $2}'`, (error, stdout, stderr) => {
-          if (error) {
-              reject(error);
-              return;
+    exec(
+      `ps aux | grep "${scriptPath}" | grep -v "grep" | awk '{print $2}'`,
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        const pids = stdout.split('\n').filter(pid => pid.trim() !== '');
+
+        if (pids.length === 0) {
+          resolve(false); // Process is not running
+          return;
+        }
+
+        // Kill each found process
+        pids.forEach(pid => {
+          try {
+            if (Number(pid)) {
+              process.kill(Number(pid));
+            }
+          } catch (err) {
+            console.error(`Failed to kill process ${pid}`, err);
           }
+        });
 
-          const pids = stdout.split('\n').filter(pid => pid.trim() !== '');
-
-          if (pids.length === 0) {
-              resolve(false);  // Process is not running
-              return;
-          }
-
-          // Kill each found process
-          pids.forEach(pid => {
-              try {
-                  if (Number(pid)) {
-                    process.kill(Number(pid));
-                  }
-              } catch (err) {
-                  console.error(`Failed to kill process ${pid}`, err);
-              }
-          });
-
-          resolve(true);  // Processes were running and have been terminated
-      });
+        resolve(true); // Processes were running and have been terminated
+      },
+    );
   });
 };
 
@@ -250,23 +290,23 @@ const defaultCameraConfig: ICameraConfig = {
   },
 };
 
-const fileExistsCache: { [key: string]: boolean } = {}; 
+const fileExistsCache: { [key: string]: boolean } = {};
 
 export async function ensureFileExists(filePath: string) {
-    if (fileExistsCache[filePath]) return;
+  if (fileExistsCache[filePath]) return;
 
-    try {
-        await promises.access(filePath, constants.F_OK);
-        fileExistsCache[filePath] = true;  // If access is successful, update the cache.
-    } catch (error: any) {
-        // If the error indicates the file doesn't exist, create it.
-        if (error && error.code === 'ENOENT') {
-            await promises.writeFile(filePath, '');
-            fileExistsCache[filePath] = true;
-        } else {
-            console.error(error);
-        }
+  try {
+    await promises.access(filePath, constants.F_OK);
+    fileExistsCache[filePath] = true; // If access is successful, update the cache.
+  } catch (error: any) {
+    // If the error indicates the file doesn't exist, create it.
+    if (error && error.code === 'ENOENT') {
+      await promises.writeFile(filePath, '');
+      fileExistsCache[filePath] = true;
+    } else {
+      console.error(error);
     }
+  }
 }
 
 export const parseCookie = (cookie: string, name: string): string | null => {
@@ -283,7 +323,7 @@ export const parseCookie = (cookie: string, name: string): string | null => {
   }
 
   return null;
-}
+};
 
 export const addAppConnectedLog = () => {
   let usbConnected = false;
@@ -296,19 +336,21 @@ export const addAppConnectedLog = () => {
     Instrumentation.add({
       event: 'DashcamAppConnected',
       message: JSON.stringify({
-        usbConnected: true
-      })
+        usbConnected: true,
+      }),
     });
   } else {
     Instrumentation.add({
       event: 'DashcamAppConnected',
     });
   }
-}
+};
 
 export const repairCameraBridge = (metadata: any) => {
+  const serviceName =
+    CAMERA_TYPE === CameraType.Bee ? 'map-ai' : 'camera-bridge';
   console.log('Repairing Camera Bridge');
-  exec(`journalctl -eu camera-bridge`, async (error, stdout, stderr) => {
+  exec(`journalctl -eu ${serviceName}`, async (error, stdout, stderr) => {
     console.log(stdout || stderr);
     console.log('Restarting Camera-Bridge');
 
@@ -333,14 +375,17 @@ export const repairCameraBridge = (metadata: any) => {
       console.log('Successfully restarted Folder Purger & Camera Bridge');
       Instrumentation.add({
         event: 'DashcamApiRepaired',
-        message: JSON.stringify({ serviceRepaired: 'camera-bridge', ...metadata }),
+        message: JSON.stringify({
+          serviceRepaired: 'camera-bridge',
+          ...metadata,
+        }),
       });
     });
   });
-}
+};
 
-export const getCpuUsage = () => { 
-  const cpusInfo: any = cpus()
+export const getCpuUsage = () => {
+  const cpusInfo: any = cpus();
 
   let user = 0;
   let nice = 0;
@@ -350,29 +395,32 @@ export const getCpuUsage = () => {
   let total = 0;
 
   for (const cpu of cpusInfo) {
-      user += cpu?.times?.user || 0;
-      nice += cpu?.times?.nice || 0;
-      sys += cpu?.times?.sys || 0;
-      irq += cpu?.times?.irq || 0;
-      idle += cpu?.times?.idle || 0;
+    user += cpu?.times?.user || 0;
+    nice += cpu?.times?.nice || 0;
+    sys += cpu?.times?.sys || 0;
+    irq += cpu?.times?.irq || 0;
+    idle += cpu?.times?.idle || 0;
   }
 
   total = user + nice + sys + idle + irq;
 
-  return total ? Math.round(100 * (total - idle) / total) : 0;
-}
+  return total ? Math.round((100 * (total - idle)) / total) : 0;
+};
 
 export const getSystemTemp = async () => {
   if (await getConfig('isEndToEndTestingEnabled')) return 0;
 
   try {
-      const data = await promises.readFile('/sys/class/thermal/thermal_zone0/temp', 'utf8');
-      return parseInt(data, 10) / 1000;
+    const data = await promises.readFile(
+      '/sys/class/thermal/thermal_zone0/temp',
+      'utf8',
+    );
+    return parseInt(data, 10) / 1000;
   } catch (error) {
-      console.error('Error reading system temperature:', error);
-      return 0;
+    console.error('Error reading system temperature:', error);
+    return 0;
   }
-}
+};
 
 export const getCpuLoad = (callback: (load: number) => void) => {
   try {
@@ -733,4 +781,29 @@ export async function execAsync(command: string): Promise<string> {
       }
     });
   });
+}
+
+export async function getDashcamInfo() {
+  let versionInfo: any = {};
+  try {
+    const versionInfoPayload = readFileSync(BUILD_INFO_PATH, {
+      encoding: 'utf-8',
+    });
+    versionInfo = JSON.parse(versionInfoPayload);
+  } catch (error) {
+    console.log('Build Info file is missing');
+  }
+  const deviceInfo = getDeviceInfo();
+  const deviceId = await getAnonymousID();
+  return {
+    ...versionInfo,
+    ...deviceInfo,
+    dashcam: CAMERA_TYPE,
+    api_version: API_VERSION,
+    deviceId,
+    build_date:
+      versionInfo && versionInfo.build_date
+        ? new Date(versionInfo.build_date).toISOString()
+        : undefined,
+  };
 }

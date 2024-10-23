@@ -87,6 +87,7 @@ export function getSunlightLevelsForSpaceTime(
 }
 
 export function timeIsMostLikelyLight(date: Date, lon: number, lat: number) {
-  const level = getMinSunlightLevelForSpaceTime(date, lon, lat);
-  return MOST_LIKELY_LIGHT.has(level);
+  return true; // TODO: REMOVE THIS, enabled just for extended external testing, such a data is invalidated on server anyways
+  // const level = getMinSunlightLevelForSpaceTime(date, lon, lat);
+  // return MOST_LIKELY_LIGHT.has(level);
 }

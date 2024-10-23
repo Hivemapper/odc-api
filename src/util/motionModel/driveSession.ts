@@ -30,12 +30,13 @@ import { isPrivateZonesInitialised } from 'services/loadPrivacy';
 import { isImuValid } from 'util/imu';
 import { GnssFilter } from 'types/motionModel';
 import { exec, spawnSync } from 'child_process';
-import { DATA_LOGGER_SERVICE } from 'config';
+import { CAMERA_TYPE, DATA_LOGGER_SERVICE } from 'config';
 import { promises } from 'fs';
 import { Instrumentation } from 'util/instrumentation';
 import { getConfig, getDX, setConfig } from 'sqlite/config';
 import { getServiceStatus, setServiceStatus } from 'sqlite/health_state';
 import { repairCameraBridge } from 'util/index';
+import { checkIfLandmarksReady } from 'sqlite/landmarks';
 
 let sessionTrimmed = false;
 
@@ -52,7 +53,7 @@ export class DriveSession {
 
   async ingestData(gnss: GnssRecord[], imu: ImuRecord[], images: IImage[]) {
     // check if no sensor data is missing — otherwise repair services
-    this.checkForMissingSensorData(gnss, imu, images);
+    // this.checkForMissingSensorData(gnss, imu, images);
 
     if (!images.length || !gnss.length) {
       // doesn't make sense to add any data if there's no images or gnss records for the time snippet
@@ -112,6 +113,8 @@ export class DriveSession {
       }
       await restoreEndTrim();
     }
+    // TEMP: FIX BEFORE MERGING
+    // ignoreTrimStart();
     this.started = true;
   }
 
@@ -195,6 +198,12 @@ export class DriveSession {
     const isDashcamMLEnabled = await getConfig('isDashcamMLEnabled');
     if (await isFrameKmComplete(isDashcamMLEnabled)) {
       const fkmId = await getFirstFrameKmId(isDashcamMLEnabled);
+      if (CAMERA_TYPE === CameraType.Bee && fkmId) {
+        if (!await checkIfLandmarksReady(fkmId)) {
+          console.log('================== Landmarks not ready yet ==================');
+          return null;
+        }
+      }
       return await getFrameKm(fkmId);
     } else {
       const isTripTrimmingEnabled = await getConfig('isTripTrimmingEnabled');
@@ -240,7 +249,7 @@ export class DriveSession {
     if (!gnss.length || !imu.length) {
       this.possibleGnssImuProblemCounter++;
       if (this.possibleGnssImuProblemCounter === 3) {
-        await this.repairDataLogger();
+        // await this.repairDataLogger();
         this.possibleGnssImuProblemCounter = 0;
       }
     } else {

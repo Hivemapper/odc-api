@@ -1,9 +1,10 @@
-import { SystemConfig } from "./motionModel";
-import { GnssRecord, ImuRecord } from "./sqlite";
+import { SystemConfig } from './motionModel';
+import { GnssRecord, ImuRecord } from './sqlite';
 
 export enum CameraType {
   Hdc = 'hdc',
   HdcS = 'hdc-s',
+  Bee = 'bee',
 }
 
 export interface ICameraFile {
@@ -70,6 +71,7 @@ export interface IMU {
 export interface IImage {
   system_time: number;
   image_name: string;
+  clock?: number;
 }
 
 export type SensorData = ImuRecord | GnssRecord | IImage;
