@@ -12,6 +12,7 @@ const FIP_PATH = HDCS_ROOT + 'fip.bin';
 
 let message = 'started';
 let errorSeen = false;
+const SUCCESS_MESSAGE = 'Spwan ran successfully';
 
 const runSpawn = (cmd: string) => {
   const child = spawn(cmd, {
@@ -39,7 +40,7 @@ const runSpawn = (cmd: string) => {
         `Closing spawn due to error for cmd ${cmd} stderr: ${err?.toString()}`,
       );
     } else {
-      message = 'Spwan ran successfully';
+      message = SUCCESS_MESSAGE;
     }
   });
 };
@@ -90,7 +91,7 @@ router.get('/install', async (req, res) => {
 });
 
 router.get('/progress', async (req, res) => {
-  res.json({ isRunning: message !== 'Spwan ran successfully', errorSeen });
+  res.json({ isRunning: message !== SUCCESS_MESSAGE, errorSeen });
 });
 
 export default router;
