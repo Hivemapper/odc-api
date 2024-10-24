@@ -31,6 +31,7 @@ import networkRouter from './network';
 import previewRouter from './preview';
 import instrumentationRouter from './instrumentation';
 import dataloggerRouter from './datalogger';
+import firmwareRouter from './firmware';
 import { setMostRecentPing } from 'services/heartBeat';
 import { getLatestGnssTime, getLockTime, isTimeSet } from 'util/lock';
 import {
@@ -71,6 +72,7 @@ router.use('/instrumentation', instrumentationRouter);
 router.use('/network', networkRouter);
 router.use('/preview', previewRouter);
 router.use('/datalogger', dataloggerRouter);
+router.use('/firmware', firmwareRouter);
 
 router.get('/init', configureOnBoot);
 
