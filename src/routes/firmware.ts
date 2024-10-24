@@ -39,6 +39,7 @@ const runSpawn = (cmd: string) => {
       console.error(
         `Closing spawn due to error for cmd ${cmd} stderr: ${err?.toString()}`,
       );
+      errorSeen = true;
     } else {
       message = SUCCESS_MESSAGE;
     }
