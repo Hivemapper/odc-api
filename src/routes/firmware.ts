@@ -6,6 +6,11 @@ const firmwareManager = new FirmwareManager();
 
 router.get('/install', async (req, res) => {
   const firmwareFile = req?.body?.fileName || '';
+  if(!firmwareFile) {
+    res.json({
+        output: "No firmware file provided",
+    })
+  }
   const resp = firmwareManager.installFirmware(firmwareFile);
   res.json(resp);
 });
