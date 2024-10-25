@@ -18,16 +18,8 @@ class FirmwareManager {
     this.errorSeen = false;
   }
 
-  public getMessage(): string {
-    return this.message;
-  }
-
-  public isRunning(): boolean { 
-    return this.message !== SUCCESS_MESSAGE;
-  }
-
-  public getErrorSeen(): boolean {
-    return this.errorSeen;
+  public getProgress() {
+    return { message: this.message !== SUCCESS_MESSAGE, errorSeen: this.errorSeen };
   }
 
   private runSpawn(cmd: string) {

@@ -8,7 +8,7 @@ router.get('/install', async (req, res) => {
   const firmwareFile = req?.body?.fileName || '';
   if(!firmwareFile) {
     res.json({
-        output: "No firmware file provided",
+        error: "No firmware file provided",
     })
   }
   const resp = firmwareManager.installFirmware(firmwareFile);
@@ -16,7 +16,7 @@ router.get('/install', async (req, res) => {
 });
 
 router.get('/progress', async (req, res) => {
-  res.json({ isRunning: firmwareManager.isRunning(), errorSeen: firmwareManager.getErrorSeen() });
+  res.json(firmwareManager.getProgress());
 });
 
 export default router;
