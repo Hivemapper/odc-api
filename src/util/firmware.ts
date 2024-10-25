@@ -10,12 +10,20 @@ const FIP_PATH = HDCS_ROOT + 'fip.bin';
 export const SUCCESS_MESSAGE = 'Spawn ran successfully';
 
 class FirmwareManager {
+  private static instance: FirmwareManager;
   private message: string;
   private errorSeen: boolean;
 
-  constructor() {
+  private constructor() {
     this.message = 'started';
     this.errorSeen = false;
+  }
+  
+  public static getInstance(): FirmwareManager {
+    if (!FirmwareManager.instance) {
+      FirmwareManager.instance = new FirmwareManager();
+    }
+    return FirmwareManager.instance;
   }
 
   public getProgress() {
@@ -40,13 +48,8 @@ class FirmwareManager {
     child.on('close', (code, err) => {
       if (code !== 0) {
         const errMsg =
-          'Closing spawn with code ' +
-          code?.toString() +
-          ' Error: ' +
-          err?.toString();
-        console.error(
-          `Closing spawn due to error for cmd ${cmd}: ${err?.toString()}`,
-        );
+          'Closing spawn with code ' + code?.toString() + ' Error: ' + err?.toString();
+        console.error(`Closing spawn due to error for cmd ${cmd}: ${err?.toString()}`);
         this.message = errMsg;
         this.errorSeen = true;
       } else {
@@ -68,10 +71,7 @@ class FirmwareManager {
         }
         this.runSpawn(`rauc install ${HDC_ROOT + firmwareFile}`);
         return { output: 'received install command' };
-      } else if (
-        CAMERA_TYPE === CameraType.HdcS ||
-        CAMERA_TYPE === CameraType.Bee
-      ) {
+      } else if (CAMERA_TYPE === CameraType.HdcS || CAMERA_TYPE === CameraType.Bee) {
         try {
           execSync(`test -f ${MENDER_PATH} && rm ${MENDER_PATH}`, {
             encoding: 'utf-8',
