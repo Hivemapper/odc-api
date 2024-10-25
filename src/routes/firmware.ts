@@ -16,7 +16,7 @@ router.get('/install', async (req, res) => {
 });
 
 router.get('/progress', async (req, res) => {
-  res.json({ isRunning: firmwareManager.getMessage(), errorSeen: firmwareManager.getErrorSeen() });
+  res.json({ isRunning: firmwareManager.isRunning(), errorSeen: firmwareManager.getErrorSeen() });
 });
 
 export default router;

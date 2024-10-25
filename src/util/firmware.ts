@@ -10,24 +10,20 @@ const FIP_PATH = HDCS_ROOT + 'fip.bin';
 export const SUCCESS_MESSAGE = 'Spawn ran successfully';
 
 class FirmwareManager {
-  private hdcRoot: string;
-  private hdcsRoot: string;
-  private menderPath: string;
-  private fipPath: string;
   private message: string;
   private errorSeen: boolean;
 
   constructor() {
-    this.hdcRoot = HDC_ROOT;
-    this.hdcsRoot = HDCS_ROOT;
-    this.menderPath = MENDER_PATH;
-    this.fipPath = FIP_PATH;
     this.message = 'started';
     this.errorSeen = false;
   }
 
   public getMessage(): string {
     return this.message;
+  }
+
+  public isRunning(): boolean { 
+    return this.message !== SUCCESS_MESSAGE;
   }
 
   public getErrorSeen(): boolean {
@@ -72,20 +68,20 @@ class FirmwareManager {
     try {
       if (CAMERA_TYPE === CameraType.Hdc) {
         try {
-          execSync(`test -f ${this.hdcRoot + firmwareFile}`, {
+          execSync(`test -f ${HDC_ROOT + firmwareFile}`, {
             encoding: 'utf-8',
           });
         } catch (error: unknown) {
           console.log('Rauc file is not present');
         }
-        this.runSpawn(`rauc install ${this.hdcRoot + firmwareFile}`);
+        this.runSpawn(`rauc install ${HDC_ROOT + firmwareFile}`);
         return { output: 'received install command' };
       } else if (
         CAMERA_TYPE === CameraType.HdcS ||
         CAMERA_TYPE === CameraType.Bee
       ) {
         try {
-          execSync(`test -f ${this.menderPath} && rm ${this.menderPath}`, {
+          execSync(`test -f ${MENDER_PATH} && rm ${MENDER_PATH}`, {
             encoding: 'utf-8',
           });
         } catch (error: unknown) {
@@ -94,7 +90,7 @@ class FirmwareManager {
           console.log('Mender file is not present');
         }
         try {
-          execSync(`test -f ${this.fipPath} && rm ${this.fipPath}`, {
+          execSync(`test -f ${FIP_PATH} && rm ${FIP_PATH}`, {
             encoding: 'utf-8',
           });
         } catch (error: unknown) {
@@ -103,7 +99,7 @@ class FirmwareManager {
           console.log('Fip file is not present');
         }
         this.runSpawn(
-          `tar -xzf /data/${firmwareFile} -C /data && os-update --install ${this.menderPath} && movisoc-fwu -a ${this.fipPath}`,
+          `tar -xzf /data/${firmwareFile} -C /data && os-update --install ${MENDER_PATH} && movisoc-fwu -a ${FIP_PATH}`,
         );
         return { output: 'received install command' };
       }
