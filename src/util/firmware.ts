@@ -19,7 +19,7 @@ class FirmwareManager {
   }
 
   public getProgress() {
-    return { message: this.message !== SUCCESS_MESSAGE, errorSeen: this.errorSeen };
+    return { isRunning: this.message !== SUCCESS_MESSAGE, errorSeen: this.errorSeen };
   }
 
   private runSpawn(cmd: string) {
